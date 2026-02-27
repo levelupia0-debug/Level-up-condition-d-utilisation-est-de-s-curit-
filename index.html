@@ -16,7 +16,6 @@
         import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        // Configuration Firebase
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyBBJGVLBN2a2-CaoSH4Jtn3aRjIHqOO-7E",
             authDomain: "bonteia.firebaseapp.com",
@@ -31,7 +30,6 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Export pour usage global
         window.db = db;
         window.appId = appId;
         window.auth = auth;
@@ -70,7 +68,7 @@
 
         .countdown-font { font-family: 'JetBrains Mono', monospace; }
 
-        /* --- PROGRESS BAR PRO --- */
+        /* --- PROGRESS BAR --- */
         .progress-container { position: relative; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
         .progress-bar-fill { 
             position: absolute; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); 
@@ -92,6 +90,7 @@
         }
         .btn-submit { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.35); }
         .btn-tiktok { background: #000; color: white; text-decoration: none; }
+        .btn-outline { border: 2px solid #e2e8f0; color: #64748b; }
 
         /* --- MODAL --- */
         .modal-overlay {
@@ -101,6 +100,14 @@
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .hidden-view { display: none !important; }
+
+        /* --- FORM SPECIFIC --- */
+        .category-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .cat-card {
+            padding: 16px; border-radius: 1rem; border: 2px solid #f1f5f9; cursor: pointer;
+            transition: all 0.2s; font-weight: 700; color: #64748b; text-align: center; background: #fff;
+        }
+        .cat-card.selected { border-color: #3b82f6; background: #eff6ff; color: #3b82f6; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6 pb-24">
@@ -189,29 +196,72 @@
             </div>
         </div>
 
-        <!-- FORM VIEW -->
+        <!-- FORM MULTI-ETAPES -->
         <div id="view-form" class="glass-card rounded-[3.5rem] p-10 hidden-view">
-            <h2 class="text-2xl font-extrabold mb-6">Nouvelle Demande</h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-1 block">Votre Pseudo TikTok</label>
-                    <input type="text" id="f-pseudo" placeholder="@pseudo" class="w-full p-4 rounded-xl bg-slate-100 outline-none border focus:border-blue-500 font-bold">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-1 block">Description de l'Edit</label>
-                    <textarea id="f-desc" placeholder="Détails de votre idée..." class="w-full p-4 rounded-xl bg-slate-100 outline-none border focus:border-blue-500 h-32"></textarea>
-                </div>
-                <button onclick="submitRequest()" class="w-full btn-action btn-submit">Envoyer</button>
-                <button onclick="showDashboard()" class="w-full py-4 text-slate-400 font-bold text-xs uppercase">Annuler</button>
+            <div class="mb-8 flex justify-between items-center">
+                <h2 class="text-2xl font-extrabold text-slate-900">Demander un Édit</h2>
+                <span class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase">Étape <span id="current-step-num">1</span> / 3</span>
             </div>
+
+            <!-- Etape 1: Pseudo & Mail -->
+            <div id="step-1" class="form-step space-y-5">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-2 block">Pseudo (TikTok ou Instagram) *</label>
+                    <input type="text" id="f-pseudo" placeholder="@votre_pseudo" class="w-full p-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-2 block">Votre Email (Optionnel)</label>
+                    <input type="email" id="f-email" placeholder="mail@exemple.com" class="w-full p-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all">
+                    <p class="text-[9px] text-slate-400 mt-2 ml-2 italic">Laissez vide si vous ne souhaitez pas être notifié par mail.</p>
+                </div>
+                <button onclick="goToStep(2)" class="w-full btn-action btn-submit mt-4">Continuer</button>
+            </div>
+
+            <!-- Etape 2: Catégorie -->
+            <div id="step-2" class="form-step hidden-view space-y-5">
+                <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 block mb-4">Choisissez une catégorie *</label>
+                <div class="category-grid">
+                    <div class="cat-card" onclick="selectCategory('Anime', this)">Anime</div>
+                    <div class="cat-card" onclick="selectCategory('Foot', this)">Foot</div>
+                    <div class="cat-card" onclick="selectCategory('Film & Série', this)">Film & Série</div>
+                    <div class="cat-card" onclick="selectCategory('Musique', this)">Musique</div>
+                    <div class="cat-card" onclick="selectCategory('Choix par tendance', this)">Choix par tendance</div>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button onclick="goToStep(1)" class="flex-1 btn-action btn-outline">Retour</button>
+                    <button id="btn-next-step2" onclick="goToStep(3)" class="flex-[2] btn-action btn-submit opacity-50 pointer-events-none">Suivant</button>
+                </div>
+            </div>
+
+            <!-- Etape 3: Détails -->
+            <div id="step-3" class="form-step hidden-view space-y-5">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-2 block">Détails de l'édit & Musique *</label>
+                    <div class="relative">
+                        <textarea id="f-details" maxlength="250" oninput="updateCharCount(this)" placeholder="Explique ton idée, le son que tu aimerais qu'on utilise..." class="w-full p-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none font-medium h-40 resize-none"></textarea>
+                        <span class="absolute bottom-4 right-4 text-[10px] font-black text-slate-300"><span id="char-count">0</span>/250</span>
+                    </div>
+                </div>
+                <div class="flex gap-4 mt-4">
+                    <button onclick="goToStep(2)" class="flex-1 btn-action btn-outline">Retour</button>
+                    <button onclick="submitFinalRequest()" class="flex-[2] btn-action btn-submit">Soumettre ma demande</button>
+                </div>
+            </div>
+
+            <button onclick="showDashboard()" class="w-full py-4 mt-6 text-slate-400 font-bold text-[10px] uppercase tracking-widest">Retour au Dashboard</button>
         </div>
 
         <!-- SUCCESS VIEW -->
-        <div id="view-success" class="glass-card rounded-[3.5rem] p-10 text-center hidden-view">
-            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="check" class="w-10 h-10"></i></div>
-            <h2 class="text-2xl font-bold mb-2">Envoyé !</h2>
-            <p class="text-slate-500 mb-8 font-medium">Ta demande a bien été reçue par le studio.</p>
-            <button onclick="showDashboard()" class="w-full btn-action btn-submit">Retour au Dashboard</button>
+        <div id="view-success" class="glass-card rounded-[3.5rem] p-12 text-center hidden-view">
+            <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-green-100/50">
+                <i data-lucide="check-circle-2" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-4">Demande soumise !</h2>
+            <div class="space-y-4 text-slate-500 text-sm font-medium leading-relaxed mb-10">
+                <p>Votre demande prendra entre <span class="text-blue-600 font-bold">2 à 5 jours</span>. Revenez souvent pour voir l'évolution.</p>
+                <p class="bg-slate-50 p-4 rounded-2xl text-[11px]">Vous serez notifié sur <span class="font-bold">Gmail</span> (si fourni) ou vous serez <span class="font-bold">identifié</span> lors de la publication.</p>
+            </div>
+            <button onclick="location.reload()" class="w-full btn-action btn-submit">Retour au Dashboard</button>
         </div>
 
         <div class="mt-10 text-center">
@@ -223,41 +273,20 @@
         import { doc, onSnapshot, addDoc, collection, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        let studioSettings = {
-            isSessionOpen: false,
-            progress: 0,
-            targetDate: new Date().getTime() + (24 * 60 * 60 * 1000),
-            statusTitle: "En attente",
-            statusDescription: "Prêt pour le prochain drop."
-        };
+        let studioSettings = { isSessionOpen: false, progress: 0, targetDate: Date.now(), statusTitle: "", statusDescription: "" };
+        let currentFormData = { pseudo: "", email: "", category: "", details: "" };
 
         // --- AUTH ---
         onAuthStateChanged(window.auth, (user) => {
-            if (user) {
-                startStudioSync();
-            } else {
-                signInAnonymously(window.auth);
-            }
+            if (user) startStudioSync();
+            else signInAnonymously(window.auth);
         });
 
-        // --- REALTIME SYNC (ROUTE SIMPLIFIÉE) ---
         function startStudioSync() {
-            // ROUTE : artifacts / levelup-studio / public / settings
             const settingsRef = doc(window.db, 'artifacts', window.appId, 'public', 'settings');
-            
-            // Vérifie si le document existe, sinon l'initialise
-            getDoc(settingsRef).then(snap => {
-                if (!snap.exists()) {
-                    setDoc(settingsRef, studioSettings);
-                }
+            onSnapshot(settingsRef, (snap) => {
+                if (snap.exists()) { studioSettings = snap.data(); updateUI(); }
             });
-
-            onSnapshot(settingsRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    studioSettings = docSnap.data();
-                    updateUI();
-                }
-            }, (error) => console.error("Firestore Error:", error));
         }
 
         function updateUI() {
@@ -294,6 +323,47 @@
             lucide.createIcons();
         }
 
+        // --- GESTION FORMULAIRE ETAPES ---
+        window.goToStep = (step) => {
+            if (step === 2 && !document.getElementById('f-pseudo').value) return;
+            
+            document.querySelectorAll('.form-step').forEach(s => s.classList.add('hidden-view'));
+            document.getElementById(`step-${step}`).classList.remove('hidden-view');
+            document.getElementById('current-step-num').innerText = step;
+        };
+
+        window.selectCategory = (cat, el) => {
+            currentFormData.category = cat;
+            document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('btn-next-step2').classList.remove('opacity-50', 'pointer-events-none');
+        };
+
+        window.updateCharCount = (el) => {
+            document.getElementById('char-count').innerText = el.value.length;
+        };
+
+        window.submitFinalRequest = async () => {
+            const details = document.getElementById('f-details').value;
+            if (!details) return;
+
+            currentFormData.pseudo = document.getElementById('f-pseudo').value;
+            currentFormData.email = document.getElementById('f-email').value;
+            currentFormData.details = details;
+
+            try {
+                const reqRef = collection(window.db, 'artifacts', window.appId, 'public', 'requests');
+                await addDoc(reqRef, {
+                    ...currentFormData,
+                    timestamp: Date.now(),
+                    uid: window.auth.currentUser.uid
+                });
+                document.getElementById('view-form').classList.add('hidden-view');
+                document.getElementById('view-success').classList.remove('hidden-view');
+                lucide.createIcons();
+            } catch (e) { console.error(e); }
+        };
+
         window.handleMainAction = () => {
             if (studioSettings.isSessionOpen) {
                 document.getElementById('view-dashboard').classList.add('hidden-view');
@@ -301,22 +371,6 @@
             } else {
                 document.getElementById('session-modal').classList.add('active');
             }
-        };
-
-        window.submitRequest = async () => {
-            const pseudo = document.getElementById('f-pseudo').value;
-            const desc = document.getElementById('f-desc').value;
-            if (!pseudo || !desc) return;
-            try {
-                // Les requêtes sont stockées dans une collection 'requests' sous 'public'
-                const reqRef = collection(window.db, 'artifacts', window.appId, 'public', 'requests');
-                await addDoc(reqRef, {
-                    pseudo, desc, timestamp: new Date().getTime(), uid: window.auth.currentUser.uid
-                });
-                document.getElementById('view-form').classList.add('hidden-view');
-                document.getElementById('view-success').classList.remove('hidden-view');
-                lucide.createIcons();
-            } catch (e) { console.error(e); }
         };
 
         window.showDashboard = () => {
@@ -328,7 +382,7 @@
 
         // Timer
         setInterval(() => {
-            const diff = (studioSettings.targetDate || 0) - new Date().getTime();
+            const diff = (studioSettings.targetDate || 0) - Date.now();
             if (diff < 0) return;
             document.getElementById('days').innerText = Math.floor(diff / 86400000).toString().padStart(2, '0');
             document.getElementById('hours').innerText = Math.floor((diff % 86400000) / 3600000).toString().padStart(2, '0');
@@ -339,7 +393,7 @@
         setTimeout(() => {
             document.getElementById('intro-loader').classList.add('loader-hidden');
             document.querySelector('main').classList.remove('opacity-0');
-        }, 2500);
+        }, 2000);
     </script>
 </body>
 </html>
