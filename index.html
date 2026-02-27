@@ -3,460 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LevelUp - Studio Dashboard</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'><path d='M12 2L14.81 8.62L22 9.24L16.5 13.97L18.18 21L12 17.27L5.82 21L7.5 13.97L2 9.24L9.19 8.62L12 2Z' /></svg>">
+    <title>LevelUp - Fonctionnement & Règles</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%232563eb%22><path d=%22M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z%22/></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap');
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
-            margin: 0;
-            overflow-x: hidden;
+        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        .legal-gradient { background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); }
+        
+        /* --- ÉTOILE ANIMÉE AVEC CHANGEMENT DE COULEUR --- */
+        .star-animated { 
+            animation: rotateStar 4s linear infinite, colorChange 8s linear infinite; 
         }
 
-        /* --- LOADER --- */
-        #intro-loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #ffffff; display: flex; align-items: center; justify-content: center;
-            z-index: 9999; transition: transform 0.8s cubic-bezier(0.87, 0, 0.13, 1), opacity 0.5s;
-        }
-        .text-levelup { font-size: 3.5rem; font-weight: 800; color: #1e40af; letter-spacing: -0.05em; opacity: 0; transform: translateY(20px); animation: slide-up 0.8s ease-out forwards; }
-        .star-svg { width: 40px; height: 40px; fill: #3b82f6; animation: rotate-star 4s linear infinite; }
-        @keyframes rotate-star { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes slide-up { to { transform: translateY(0); opacity: 1; } }
-        .loader-hidden { transform: translateY(-100%) !important; }
-
-        /* --- GLASS DESIGN --- */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.12);
+        @keyframes rotateStar { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
         }
 
-        .countdown-font { font-family: 'JetBrains Mono', monospace; }
-
-        /* --- PROGRESS BAR --- */
-        .progress-container { position: relative; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
-        .progress-bar-fill { 
-            position: absolute; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); 
-            transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        @keyframes colorChange {
+            0%, 100% { color: #2563eb; } /* Bleu */
+            25% { color: #8b5cf6; }    /* Violet */
+            50% { color: #10b981; }    /* Émeraude */
+            75% { color: #f59e0b; }    /* Ambre */
         }
 
-        .step-node { width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; position: relative; z-index: 2; border: 3px solid #fff; transition: all 0.3s; }
-        .step-node.active { background: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
-        .step-node.completed { background: #10b981; }
-
-        .status-info { background: #f8fafc; border-radius: 1.5rem; padding: 1.5rem; border: 1px solid #f1f5f9; }
-
-        /* --- BUTTONS --- */
-        .btn-action {
-            position: relative; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; align-items: center; justify-content: center; height: 72px;
-            font-weight: 700; border-radius: 1.5rem; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;
-        }
-        .btn-submit { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.35); }
-        .btn-outline { border: 2px solid #e2e8f0; color: #64748b; }
-
-        /* --- MODAL --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px); z-index: 10000; display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 20px;
-        }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .hidden-view { display: none !important; }
-
-        .category-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-        .cat-card {
-            padding: 16px; border-radius: 1rem; border: 2px solid #f1f5f9; cursor: pointer;
-            transition: all 0.2s; font-weight: 700; color: #64748b; text-align: center; background: #fff;
-        }
-        .cat-card.selected { border-color: #3b82f6; background: #eff6ff; color: #3b82f6; }
+        .nav-link:hover { color: #3b82f6; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-6 pb-12">
+<body class="bg-white text-slate-800">
 
-    <!-- LOADER -->
-    <div id="intro-loader">
-        <div class="logo-container flex flex-col items-center">
-            <div class="flex items-center gap-3">
-                <h1 class="text-levelup">LevelUp</h1>
-                <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2L14.81 8.62L22 9.24L16.5 13.97L18.18 21L12 17.27L5.82 21L7.5 13.97L2 9.24L9.19 8.62L12 2Z" /></svg>
+    <header class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl font-extrabold tracking-tighter text-blue-600">LevelUp</span>
+                <svg class="star-animated" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                </svg>
             </div>
-            <p class="text-[0.9rem] font-bold text-slate-400 uppercase tracking-[0.4em] mt-2">Edit</p>
-        </div>
-    </div>
-
-    <!-- MODALE SESSION FERMÉE -->
-    <div id="session-modal" class="modal-overlay" onclick="closeModal()">
-        <div class="modal-content glass-card rounded-[2.5rem] p-8 max-w-sm w-full text-center" onclick="event.stopPropagation()">
-            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <i data-lucide="clock" class="w-8 h-8"></i>
-            </div>
-            <h3 class="text-xl font-extrabold text-slate-900 mb-4">Édit en cours...</h3>
-            <p class="text-slate-500 text-sm leading-relaxed mb-8">
-                Une demande est en cours de traitement. Revenez au plus vite à la fin du compte à rebours pour assurer d'avoir une place. N'oubliez pas de vous abonner !
-            </p>
-            <button onclick="closeModal()" class="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm uppercase tracking-widest">Compris</button>
-        </div>
-    </div>
-
-    <main class="w-full max-w-lg opacity-0 transition-opacity duration-700">
-        
-        <!-- DASHBOARD VIEW -->
-        <div id="view-dashboard" class="glass-card rounded-[3.5rem] p-8 md:p-12">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-extrabold text-blue-900 tracking-tighter">LevelUp</h1>
-                <p class="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em]">Edit</p>
-            </div>
-
-            <!-- COUNTDOWN -->
-            <div class="text-center mb-10">
-                <div class="inline-block bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-6 border border-blue-100">
-                    Prochains posts Dans :
-                </div>
-                <div class="grid grid-cols-4 gap-4">
-                    <div class="flex flex-col"><span id="days" class="countdown-font text-3xl font-bold text-slate-900 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Jours</span></div>
-                    <div class="flex flex-col"><span id="hours" class="countdown-font text-3xl font-bold text-slate-900 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Heures</span></div>
-                    <div class="flex flex-col"><span id="mins" class="countdown-font text-3xl font-bold text-slate-900 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Mins</span></div>
-                    <div class="flex flex-col"><span id="secs" class="countdown-font text-3xl font-bold text-blue-600 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Secs</span></div>
-                </div>
-            </div>
-
-            <!-- PROGRESS -->
-            <div class="mb-10 px-2">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progression du Montage</span>
-                    <span id="progress-percent" class="text-[10px] font-black text-blue-600 uppercase tracking-widest">0%</span>
-                </div>
-                <div class="progress-container">
-                    <div id="main-progress-bar" class="progress-bar-fill" style="width: 0%"></div>
-                </div>
-                <div class="flex justify-between mt-4">
-                    <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-1" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">Soumis</span></div>
-                    <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-2" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">En attente</span></div>
-                    <div class="flex flex-col items-center gap-2 w-20 text-center"><div id="node-3" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">En cours de traitement</span></div>
-                    <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-4" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">Publié</span></div>
-                </div>
-            </div>
-
-            <!-- STATUS BOX -->
-            <div id="status-box" class="status-info mb-8">
-                <div class="animate-pulse flex space-y-4 flex-col">
-                    <div class="h-2 bg-slate-200 rounded w-1/2"></div>
-                    <div class="h-4 bg-slate-200 rounded"></div>
-                </div>
-            </div>
-
-            <!-- BUTTONS -->
-            <div class="flex flex-col gap-4">
-                <button id="main-action-btn" onclick="handleMainAction()" class="btn-action btn-submit w-full">
-                    Chargement...
-                </button>
-                <a href="https://www.tiktok.com/@levelup.rb" target="_blank" class="btn-action btn-tiktok w-full" style="background-color: #000; color: #fff;">
-                    <svg class="h-[22px] mr-3" viewBox="0 0 448 512" fill="currentColor"><path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z"/></svg>
-                    Suivre sur TikTok
-                </a>
+            <div class="hidden md:flex gap-8 text-sm font-semibold text-slate-500">
+                <a href="#intro" class="nav-link transition">Le Concept</a>
+                <a href="#identifiants" class="nav-link transition">Identifiants</a>
+                <a href="#delais" class="nav-link transition">Délais</a>
+                <a href="#contact" class="nav-link transition">Contact</a>
             </div>
         </div>
+    </header>
 
-        <!-- FORM MULTI-ETAPES -->
-        <div id="view-form" class="glass-card rounded-[3.5rem] p-10 hidden-view">
-            <div class="mb-8 flex justify-between items-center">
-                <h2 class="text-2xl font-extrabold text-slate-900">Demander un Édit</h2>
-                <span class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase">Étape <span id="current-step-num">1</span> / 3</span>
+    <main class="pt-32 pb-20 px-6">
+        <div class="max-w-4xl mx-auto">
+            
+            <div class="mb-12 border-l-4 border-blue-600 pl-6">
+                <h1 class="text-4xl font-extrabold text-slate-900 mb-4">Fonctionnement et Règles de Demande</h1>
+                <p class="text-slate-500 font-medium">Plateforme Communautaire — <span class="text-slate-900 font-bold">Projet d'amélioration</span></p>
+                <p class="text-slate-500 font-medium">Dernière mise à jour : Février 2026</p>
+                <p class="text-slate-500 font-medium">Créateur & Monteur : <span class="text-blue-600 font-bold">Richelieu Bonte</span></p>
             </div>
 
-            <!-- Etape 1: Pseudo & Mail -->
-            <div id="step-1" class="form-step space-y-5">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-2 block">Pseudo (TikTok ou Instagram) *</label>
-                    <input type="text" id="f-pseudo" placeholder="@votre_pseudo" class="w-full p-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all">
+            <section id="intro" class="mb-16">
+                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">01</span> Pourquoi ce site ? (Mon Objectif)
+                </h2>
+                <div class="prose prose-slate max-w-none text-slate-600 space-y-4">
+                    <p>L'application <strong>LevelUp ★</strong> a été conçue avec un but très précis : centraliser vos demandes de montages vidéo (edits) afin de me permettre d'<strong>améliorer mes propres compétences en montage</strong>.</p>
+                    <p>En me proposant vos idées (animes, musiques, ambiances), vous me donnez de nouveaux défis à relever. J'ai grandement besoin de vos recommandations et de votre inspiration pour m'exercer, tester de nouveaux effets, et vous offrir des vidéos de meilleure qualité à chaque nouveau drop.</p>
+                    <p>En soumettant une idée ici, vous participez directement à mon évolution en tant que créateur de contenu !</p>
                 </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-2 block">Votre Email (Optionnel)</label>
-                    <input type="email" id="f-email" placeholder="mail@exemple.com" class="w-full p-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all">
-                </div>
-                <button onclick="goToStep(2)" class="w-full btn-action btn-submit mt-4">Continuer</button>
-            </div>
+            </section>
 
-            <!-- Etape 2: Catégorie -->
-            <div id="step-2" class="form-step hidden-view space-y-5">
-                <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 block mb-4">Choisissez une catégorie *</label>
-                <div class="category-grid">
-                    <div class="cat-card" onclick="selectCategory('Anime', this)">Anime</div>
-                    <div class="cat-card" onclick="selectCategory('Foot', this)">Foot</div>
-                    <div class="cat-card" onclick="selectCategory('Film & Série', this)">Film & Série</div>
-                    <div class="cat-card" onclick="selectCategory('Musique', this)">Musique</div>
-                    <div class="cat-card" onclick="selectCategory('Choix par tendance', this)">Choix par tendance</div>
-                </div>
-                <div class="flex gap-4 mt-6">
-                    <button onclick="goToStep(1)" class="flex-1 btn-action btn-outline">Retour</button>
-                    <button id="btn-next-step2" onclick="goToStep(3)" class="flex-[2] btn-action btn-submit opacity-50 pointer-events-none">Suivant</button>
-                </div>
-            </div>
-
-            <!-- Etape 3: Détails -->
-            <div id="step-3" class="form-step hidden-view space-y-5">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-2 block">Détails de l'édit & Musique *</label>
-                    <div class="relative">
-                        <textarea id="f-details" maxlength="250" oninput="updateCharCount(this)" placeholder="Explique ton idée, le son que tu aimerais qu'on utilise..." class="w-full p-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none font-medium h-40 resize-none"></textarea>
-                        <span class="absolute bottom-4 right-4 text-[10px] font-black text-slate-300"><span id="char-count">0</span>/250</span>
+            <section id="identifiants" class="mb-16 bg-slate-50 p-8 rounded-3xl border border-slate-100">
+                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">02</span> Identifiants et Mentions
+                </h2>
+                <div class="space-y-6 text-slate-600">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm">
+                        <h3 class="font-bold text-slate-900 mb-2">Vrais Pseudos Obligatoires</h3>
+                        <p class="text-sm">Lors de la soumission de votre idée sur la plateforme, vous devez impérativement entrer votre <strong>vrai identifiant Instagram ou TikTok</strong>.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm">
+                        <h3 class="font-bold text-slate-900 mb-2">Pourquoi cette règle ?</h3>
+                        <p class="text-sm">Cela me permet de vous identifier facilement. Une fois l'edit terminé et publié sur les réseaux sociaux, je pourrai vous mentionner (tag) pour vous créditer correctement en tant que commanditaire de l'idée.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-amber-500">
+                        <h3 class="font-bold text-slate-900 mb-2">Identifiant introuvable ou faux</h3>
+                        <p class="text-sm italic">"Si vous fournissez un faux pseudo ou un identifiant introuvable, je ne pourrai pas vous identifier lors de la publication. Votre demande risque d'être traitée sans crédit ou ignorée."</p>
                     </div>
                 </div>
-                <div class="flex gap-4 mt-4">
-                    <button onclick="goToStep(2)" class="flex-1 btn-action btn-outline">Retour</button>
-                    <button id="btn-final-submit" onclick="submitFinalRequest()" class="flex-[2] btn-action btn-submit">Soumettre ma demande</button>
+            </section>
+
+            <section id="delais" class="mb-16">
+                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">03</span> Temps de Création et Attente
+                </h2>
+                <div class="bg-red-50 border border-red-100 p-8 rounded-3xl space-y-4">
+                    <p class="text-red-900 font-bold uppercase tracking-wider text-xs">Information Importante sur les Délais</p>
+                    <p class="text-red-800 text-sm leading-relaxed">
+                        Une fois que votre idée est sélectionnée et passe "En Production", vous pouvez vous attendre à ce que votre edit soit prêt et publié dans un délai <strong>maximum de 5 jours</strong>.
+                    </p>
+                    <ul class="list-disc pl-5 text-red-800 text-sm space-y-2">
+                        <li><strong>La qualité demande du temps :</strong> je travaille sur chaque transition et effet pour m'améliorer.</li>
+                        <li><strong>Délai maximum :</strong> Le processus de création ne dépassera normalement pas 5 jours.</li>
+                        <li>Si le délai est dépassé, vous êtes en droit de me relancer via les contacts ci-dessous.</li>
+                    </ul>
                 </div>
-            </div>
+            </section>
 
-            <button onclick="showDashboard()" class="w-full py-4 mt-6 text-slate-400 font-bold text-[10px] uppercase tracking-widest">Retour au Dashboard</button>
-        </div>
-
-        <!-- SUCCESS VIEW -->
-        <div id="view-success" class="glass-card rounded-[3.5rem] p-8 md:p-12 text-center hidden-view">
-            <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-green-100/50">
-                <i data-lucide="check-circle-2" class="w-10 h-10"></i>
-            </div>
-            
-            <h2 class="text-2xl font-extrabold text-slate-900 mb-6">Demande soumise avec succès !</h2>
-            
-            <div class="space-y-5 text-slate-600 text-[13px] font-semibold leading-relaxed mb-10 text-center">
-                <p>Votre demande prendra entre <span class="text-blue-600 font-bold">2 à 5 jours</span> pour être prête.</p>
-                
-                <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-amber-800 text-xs">
-                    <div class="flex items-center gap-2 mb-2 justify-center">
-                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
-                        <span class="font-black uppercase tracking-wider">Vérification de sécurité</span>
+            <section id="contact" class="mb-16 text-center py-12 border-t border-slate-100">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4">Toujours pas d'edit après 5 jours ?</h2>
+                <p class="text-slate-500 mb-8 max-w-2xl mx-auto">Si votre attente dépasse les 5 jours maximum, envoyez-moi un message pour vérifier le statut de votre demande. <strong>Les boutons ci-dessous ouvriront un email déjà pré-rempli</strong> pour vous faire gagner du temps !</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm transition hover:shadow-md">
+                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Email Principal</p>
+                        <a href="mailto:levelup.ia0@gmail.com?subject=Relance%20-%20Demande%20d'edit%20LevelUp&body=Salut%2C%20j'ai%20fait%20une%20demande%20d'edit%20sur%20LevelUp%20il%20y%20a%20plus%20de%205%20jours.%20%0A%0AMon%20pseudo%20Insta%2FTikTok%20est%20%3A%20%0A%0AMerci%20de%20me%20tenir%20au%20courant%20!" class="text-blue-600 font-bold text-lg hover:text-blue-700">levelup.ia0@gmail.com</a>
                     </div>
-                    Le système vérifiera si votre compte est <strong>privé</strong> ou s'il <strong>existe</strong> réellement. Si vous avez un compte privé ou si vous avez fourni de faux identifiants, votre demande sera <strong>suspendue et rejetée</strong>.
+                    <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm transition hover:shadow-md">
+                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Email Secondaire</p>
+                        <a href="mailto:s07074855@gmail.com?subject=Relance%20-%20Demande%20d'edit%20LevelUp&body=Salut%2C%20j'ai%20fait%20une%20demande%20d'edit%20sur%20LevelUp%20il%20y%20a%20plus%20de%205%20jours.%20%0A%0AMon%20pseudo%20Insta%2FTikTok%20est%20%3A%20%0A%0AMerci%20de%20me%20tenir%20au%20courant%20!" class="text-blue-600 font-bold text-lg hover:text-blue-700">s07074855@gmail.com</a>
+                    </div>
                 </div>
-                
-                <p>Revenez de temps en temps pour voir l'avancée de votre demande.</p>
-                
-                <a href="https://levelupia0-debug.github.io/Level-up-condition-d-utilisation-est-de-s-curit-/" target="_blank" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold border-b-2 border-blue-100 pb-1 mt-2">
-                    <i data-lucide="external-link" class="w-4 h-4"></i>
-                    Consulter notre page officielle
-                </a>
-            </div>
+            </section>
 
-            <button onclick="location.reload()" class="w-full btn-action btn-submit">Retour au Hub</button>
-        </div>
-
-        <div class="mt-10 text-center">
-            <p class="text-[8px] font-black text-slate-300 tracking-[0.3em] uppercase">LevelUp © 2026</p>
+            <footer class="text-center text-slate-400 text-sm">
+                <p>© 2026 LevelUp ★ — Créé par Richelieu Bonte.</p>
+                <p>Plateforme communautaire de demandes d'edits.</p>
+            </footer>
         </div>
     </main>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyBBJGVLBN2a2-CaoSH4Jtn3aRjIHqOO-7E",
-            authDomain: "bonteia.firebaseapp.com",
-            projectId: "bonteia",
-            storageBucket: "bonteia.firebasestorage.app",
-            messagingSenderId: "665809390410",
-            appId: "1:665809390410:web:4fd0930b09aecd8f90cfb3"
-        };
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'levelup-studio';
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        let studioSettings = { 
-            isSessionOpen: false, 
-            progress: 0, 
-            targetDate: "+30",
-            statusTitle: "", 
-            statusDescription: "" 
-        };
-
-        let calculatedTargetTime = null;
-
-        async function initAuth() {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) startStudioSync();
-        });
-
-        initAuth();
-
-        function startStudioSync() {
-            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
-            onSnapshot(settingsRef, (snap) => {
-                if (snap.exists()) { 
-                    const newData = snap.data();
-                    if (newData.targetDate !== studioSettings.targetDate) {
-                        calculateTarget(newData.targetDate);
-                    }
-                    studioSettings = newData; 
-                    updateUI(); 
-                } else {
-                    calculateTarget(studioSettings.targetDate);
-                }
-            });
-        }
-
-        function calculateTarget(val) {
-            if (typeof val === 'string' && val.startsWith('+')) {
-                const mins = parseInt(val.substring(1));
-                calculatedTargetTime = Date.now() + (mins * 60000);
-            } else if (typeof val === 'string') {
-                calculatedTargetTime = new Date(val.replace(/-/g, "/")).getTime();
-            } else {
-                calculatedTargetTime = val || 0;
-            }
-        }
-
-        function updateUI() {
-            const statusBox = document.getElementById('status-box');
-            const mainBtn = document.getElementById('main-action-btn');
-            
-            if (statusBox) {
-                const isOpen = studioSettings.isSessionOpen;
-                statusBox.innerHTML = `
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Les détails de la demande</span>
-                        <div class="flex items-center gap-1.5 px-2 py-1 ${isOpen ? 'bg-green-50' : 'bg-orange-50'} rounded-full border ${isOpen ? 'border-green-100' : 'border-orange-100'}">
-                            <div class="w-1.5 h-1.5 ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-orange-500'} rounded-full"></div>
-                            <span class="text-[9px] font-bold ${isOpen ? 'text-green-600' : 'text-orange-600'}">${isOpen ? 'Session Ouverte' : 'En cours de traitement'}</span>
-                        </div>
-                    </div>
-                    <h4 class="text-xs font-black text-slate-900 mb-1 uppercase tracking-tight">${studioSettings.statusTitle || 'LevelUp Studio'}</h4>
-                    <p class="text-[10px] text-slate-500 leading-relaxed font-bold">${studioSettings.statusDescription || 'Mise à jour en attente...'}</p>
-                `;
-            }
-
-            if (mainBtn) {
-                mainBtn.innerText = studioSettings.isSessionOpen ? "Demander un Edit" : "Session Fermée";
-            }
-            
-            const p = studioSettings.progress || 0;
-            const progressBar = document.getElementById('main-progress-bar');
-            const progressPercent = document.getElementById('progress-percent');
-            if (progressBar) progressBar.style.width = `${p}%`;
-            if (progressPercent) progressPercent.innerText = `${p}%`;
-            
-            const nodes = ['node-1', 'node-2', 'node-3', 'node-4'];
-            nodes.forEach((id, i) => {
-                const node = document.getElementById(id);
-                if (node) {
-                    const threshold = (i / (nodes.length - 1)) * 100;
-                    node.classList.remove('active', 'completed');
-                    if (p > threshold) node.classList.add('completed');
-                    else if (p === threshold || (i === 0 && p < 10)) node.classList.add('active');
-                }
-            });
-            lucide.createIcons();
-        }
-
-        window.goToStep = (step) => {
-            const pseudo = document.getElementById('f-pseudo').value;
-            if (step === 2 && (!pseudo || pseudo.trim() === "")) {
-                document.getElementById('f-pseudo').classList.add('border-red-500');
-                return;
-            } else {
-                document.getElementById('f-pseudo').classList.remove('border-red-500');
-            }
-            document.querySelectorAll('.form-step').forEach(s => s.classList.add('hidden-view'));
-            document.getElementById(`step-${step}`).classList.remove('hidden-view');
-            document.getElementById('current-step-num').innerText = step;
-        };
-
-        window.selectCategory = (cat, el) => {
-            document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            document.getElementById('btn-next-step2').classList.remove('opacity-50', 'pointer-events-none');
-            window.selectedCat = cat;
-        };
-
-        window.updateCharCount = (el) => {
-            document.getElementById('char-count').innerText = el.value.length;
-        };
-
-        window.submitFinalRequest = async () => {
-            const details = document.getElementById('f-details').value;
-            if (!details || details.trim() === "") return;
-
-            const submitBtn = document.getElementById('btn-final-submit');
-            submitBtn.innerText = "Envoi...";
-            submitBtn.classList.add('opacity-50', 'pointer-events-none');
-
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'requests'), {
-                    pseudo: document.getElementById('f-pseudo').value,
-                    email: document.getElementById('f-email').value,
-                    category: window.selectedCat,
-                    details: details,
-                    timestamp: Date.now()
-                });
-                document.getElementById('view-form').classList.add('hidden-view');
-                document.getElementById('view-success').classList.remove('hidden-view');
-                lucide.createIcons();
-            } catch (e) {
-                submitBtn.innerText = "Réessayer";
-                submitBtn.classList.remove('opacity-50', 'pointer-events-none');
-            }
-        };
-
-        window.handleMainAction = () => {
-            if (studioSettings.isSessionOpen) {
-                document.getElementById('view-dashboard').classList.add('hidden-view');
-                document.getElementById('view-form').classList.remove('hidden-view');
-            } else {
-                document.getElementById('session-modal').classList.add('active');
-            }
-        };
-
-        window.showDashboard = () => {
-            document.getElementById('view-form').classList.add('hidden-view');
-            document.getElementById('view-dashboard').classList.remove('hidden-view');
-        };
-
-        window.closeModal = () => {
-            document.getElementById('session-modal').classList.remove('active');
-        };
-
-        setInterval(() => {
-            if (!calculatedTargetTime) return;
-
-            const diff = calculatedTargetTime - Date.now();
-            if (diff <= 0) {
-                ['days', 'hours', 'mins', 'secs'].forEach(id => document.getElementById(id).innerText = "00");
-                return;
-            }
-            document.getElementById('days').innerText = Math.floor(diff / 86400000).toString().padStart(2, '0');
-            document.getElementById('hours').innerText = Math.floor((diff % 86400000) / 3600000).toString().padStart(2, '0');
-            document.getElementById('mins').innerText = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-            document.getElementById('secs').innerText = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-        }, 1000);
-
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('intro-loader').classList.add('loader-hidden');
-                document.querySelector('main').classList.remove('opacity-0');
-            }, 1000);
-        });
-    </script>
 </body>
 </html>
