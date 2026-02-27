@@ -122,7 +122,7 @@
             <!-- COUNTDOWN -->
             <div class="text-center mb-10">
                 <div class="inline-block bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-6 border border-blue-100">
-                    Prochains post Dans :
+                    Prochains posts Dans :
                 </div>
                 <div class="grid grid-cols-4 gap-4">
                     <div class="flex flex-col"><span id="days" class="countdown-font text-3xl font-bold text-slate-900 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Jours</span></div>
@@ -224,15 +224,33 @@
         </div>
 
         <!-- SUCCESS VIEW -->
-        <div id="view-success" class="glass-card rounded-[3.5rem] p-12 text-center hidden-view">
+        <div id="view-success" class="glass-card rounded-[3.5rem] p-8 md:p-12 text-center hidden-view">
             <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-green-100/50">
                 <i data-lucide="check-circle-2" class="w-10 h-10"></i>
             </div>
-            <h2 class="text-2xl font-extrabold text-slate-900 mb-4">Demande soumise !</h2>
-            <div class="space-y-4 text-slate-500 text-sm font-medium leading-relaxed mb-10 text-left">
-                <p>Votre demande prendra entre <span class="text-blue-600 font-bold">2 à 5 jours</span>.</p>
+            
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-6">Demande soumise avec succès !</h2>
+            
+            <div class="space-y-5 text-slate-600 text-[13px] font-semibold leading-relaxed mb-10 text-center">
+                <p>Votre demande prendra entre <span class="text-blue-600 font-bold">2 à 5 jours</span> pour être prête.</p>
+                
+                <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-amber-800 text-xs">
+                    <div class="flex items-center gap-2 mb-2 justify-center">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                        <span class="font-black uppercase tracking-wider">Vérification de sécurité</span>
+                    </div>
+                    Le système vérifiera si votre compte est <strong>privé</strong> ou s'il <strong>existe</strong> réellement. Si vous avez un compte privé ou si vous avez fourni de faux identifiants, votre demande sera <strong>suspendue et rejetée</strong>.
+                </div>
+                
+                <p>Revenez de temps en temps pour voir l'avancée de votre demande.</p>
+                
+                <a href="https://levelupia0-debug.github.io/Level-up-condition-d-utilisation-est-de-s-curit-/" target="_blank" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold border-b-2 border-blue-100 pb-1 mt-2">
+                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                    Consulter notre page officielle
+                </a>
             </div>
-            <button onclick="location.reload()" class="w-full btn-action btn-submit">Retour au Dashboard</button>
+
+            <button onclick="location.reload()" class="w-full btn-action btn-submit">Retour au Hub</button>
         </div>
 
         <div class="mt-10 text-center">
@@ -259,11 +277,10 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // ASTUCE : Tu peux mettre "+30" pour dire "dans 30 minutes"
         let studioSettings = { 
             isSessionOpen: false, 
             progress: 0, 
-            targetDate: "+30", // Exemple: "+30" pour 30min, ou "2026-03-15 20:00"
+            targetDate: "+30",
             statusTitle: "", 
             statusDescription: "" 
         };
@@ -289,14 +306,12 @@
             onSnapshot(settingsRef, (snap) => {
                 if (snap.exists()) { 
                     const newData = snap.data();
-                    // Si targetDate change ou est nouveau, on recalcule
                     if (newData.targetDate !== studioSettings.targetDate) {
                         calculateTarget(newData.targetDate);
                     }
                     studioSettings = newData; 
                     updateUI(); 
                 } else {
-                    // Fallback si pas de données Firestore
                     calculateTarget(studioSettings.targetDate);
                 }
             });
@@ -360,6 +375,8 @@
             if (step === 2 && (!pseudo || pseudo.trim() === "")) {
                 document.getElementById('f-pseudo').classList.add('border-red-500');
                 return;
+            } else {
+                document.getElementById('f-pseudo').classList.remove('border-red-500');
             }
             document.querySelectorAll('.form-step').forEach(s => s.classList.add('hidden-view'));
             document.getElementById(`step-${step}`).classList.remove('hidden-view');
@@ -395,6 +412,7 @@
                 });
                 document.getElementById('view-form').classList.add('hidden-view');
                 document.getElementById('view-success').classList.remove('hidden-view');
+                lucide.createIcons();
             } catch (e) {
                 submitBtn.innerText = "Réessayer";
                 submitBtn.classList.remove('opacity-50', 'pointer-events-none');
