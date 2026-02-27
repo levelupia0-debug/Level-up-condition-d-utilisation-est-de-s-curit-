@@ -3,137 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LevelUp - Fonctionnement & Règles</title>
-    
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%232563eb%22><path d=%22M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z%22/></svg>">
-    
+    <title>LevelUp IA - Accès Prioritaire</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+            authDomain: "levelup-ia.firebaseapp.com",
+            projectId: "levelup-ia",
+            storageBucket: "levelup-ia.firebasestorage.app",
+            messagingSenderId: "229420004282",
+            appId: "1:229420004282:web:6735f059a947f0936ae383",
+            measurementId: "G-MSRDY2574K"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'levelup-ia';
+
+        // Éléments de navigation (Pages)
+        const pageLogin = document.getElementById('page-login');
+        const pageConfirm = document.getElementById('page-confirm');
+        const pageKey = document.getElementById('page-key');
+
+        // Boutons et Textes
+        const googleBtn = document.getElementById('google-btn');
+        const generateBtn = document.getElementById('generate-btn');
+        const userKeyText = document.getElementById('user-key');
+        const timerText = document.getElementById('timer');
+        const userNameText = document.getElementById('user-name');
+
+        let countdownInterval;
+
+        // 1. Authentification Google
+        googleBtn.addEventListener('click', async () => {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                userNameText.innerText = result.user.displayName;
+                showPage(pageConfirm);
+            } catch (error) {
+                console.error("Erreur Google Auth:", error);
+            }
+        });
+
+        // 2. Génération de la clé
+        generateBtn.addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            generateBtn.disabled = true;
+            generateBtn.innerText = "Génération...";
+
+            try {
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'early_access', user.uid);
+                const userDoc = await getDoc(userRef);
+
+                let accessKey;
+                if (userDoc.exists()) {
+                    accessKey = userDoc.data().accessKey;
+                } else {
+                    accessKey = 'LU-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                    await setDoc(userRef, {
+                        userId: user.uid,
+                        email: user.email,
+                        accessKey: accessKey,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                userKeyText.innerText = accessKey;
+                showPage(pageKey);
+                startTimer(180); // 3 minutes
+            } catch (error) {
+                console.error("Erreur Firestore:", error);
+            }
+        });
+
+        // Fonction de navigation simple
+        function showPage(page) {
+            [pageLogin, pageConfirm, pageKey].forEach(p => p.classList.add('hidden'));
+            page.classList.remove('hidden');
+        }
+
+        // Compte à rebours
+        function startTimer(seconds) {
+            clearInterval(countdownInterval);
+            let timeLeft = seconds;
+
+            countdownInterval = setInterval(() => {
+                const mins = Math.floor(timeLeft / 60);
+                const secs = timeLeft % 60;
+                timerText.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    userKeyText.innerText = "EXPIRÉ";
+                    userKeyText.classList.add('text-red-500');
+                    document.getElementById('security-notice').innerText = "Par mesure de sécurité, la clé a été masquée. Rechargez la page pour la revoir.";
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        // Copie
+        window.copyKey = () => {
+            const text = userKeyText.innerText;
+            if (text === "EXPIRÉ") return;
+            navigator.clipboard.writeText(text);
+            const copyBtn = document.querySelector('.copy-btn');
+            copyBtn.innerText = "Copié !";
+            setTimeout(() => copyBtn.innerText = "Copier", 2000);
+        };
+
+        lucide.createIcons();
+    </script>
+
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
-        .legal-gradient { background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); }
-        
-        /* --- ÉTOILE ANIMÉE AVEC CHANGEMENT DE COULEUR --- */
-        .star-animated { 
-            animation: rotateStar 4s linear infinite, colorChange 8s linear infinite; 
-        }
-
-        @keyframes rotateStar { 
-            from { transform: rotate(0deg); } 
-            to { transform: rotate(360deg); } 
-        }
-
-        @keyframes colorChange {
-            0%, 100% { color: #2563eb; } /* Bleu */
-            25% { color: #8b5cf6; }    /* Violet */
-            50% { color: #10b981; }    /* Émeraude */
-            75% { color: #f59e0b; }    /* Ambre */
-        }
-
-        .nav-link:hover { color: #3b82f6; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #ffffff; }
+        .star-rotate { animation: rotate-360 4s linear infinite; }
+        @keyframes rotate-360 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .text-levelup { color: #2563eb; }
+        .text-ia { color: #3b82f6; }
     </style>
 </head>
-<body class="bg-white text-slate-800">
+<body class="flex items-center justify-center min-h-screen p-6 text-slate-900">
 
-    <header class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="text-xl font-extrabold tracking-tighter text-blue-600">LevelUp</span>
-                <svg class="star-animated" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                </svg>
-            </div>
-            <div class="hidden md:flex gap-8 text-sm font-semibold text-slate-500">
-                <a href="#intro" class="nav-link transition">Le Concept</a>
-                <a href="#identifiants" class="nav-link transition">Identifiants</a>
-                <a href="#delais" class="nav-link transition">Délais</a>
-                <a href="#contact" class="nav-link transition">Contact</a>
+    <div class="w-full max-w-sm">
+        <!-- Logo commun -->
+        <div class="flex items-center justify-center gap-3 mb-12">
+            <h1 class="text-3xl font-black text-levelup">LevelUp <span class="text-ia">IA</span></h1>
+            <div class="star-rotate">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="#5891b8"><path d="M12 2L14.81 8.62L22 9.24L16.5 13.97L18.18 21L12 17.27L5.82 21L7.5 13.97L2 9.24L9.19 8.62L12 2Z" /></svg>
             </div>
         </div>
-    </header>
 
-    <main class="pt-32 pb-20 px-6">
-        <div class="max-w-4xl mx-auto">
+        <!-- PAGE 1 : CONNEXION GOOGLE -->
+        <div id="page-login" class="space-y-8 animate-[fadeIn_0.5s]">
+            <div class="text-center">
+                <h2 class="text-xl font-bold mb-2">Accès Anticipé</h2>
+                <p class="text-gray-500 text-sm italic">Authentifiez-vous pour réserver votre place.</p>
+            </div>
             
-            <div class="mb-12 border-l-4 border-blue-600 pl-6">
-                <h1 class="text-4xl font-extrabold text-slate-900 mb-4">Fonctionnement et Règles de Demande</h1>
-                <p class="text-slate-500 font-medium">Plateforme Communautaire — <span class="text-slate-900 font-bold">Projet d'amélioration</span></p>
-                <p class="text-slate-500 font-medium">Dernière mise à jour : Février 2026</p>
-                <p class="text-slate-500 font-medium">Créateur & Monteur : <span class="text-blue-600 font-bold">Richelieu Bonte</span></p>
+            <button id="google-btn" class="w-full flex items-center justify-center gap-3 py-3.5 px-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-semibold shadow-sm">
+                <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+                Continuer avec Google
+            </button>
+        </div>
+
+        <!-- PAGE 2 : CONFIRMATION -->
+        <div id="page-confirm" class="hidden space-y-8 animate-[fadeIn_0.5s] text-center">
+            <div>
+                <h2 class="text-xl font-bold mb-1">Salut, <span id="user-name">Ami</span> !</h2>
+                <p class="text-gray-500 text-sm">Prêt à rejoindre l'aventure ?</p>
+            </div>
+            
+            <button id="generate-btn" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+                Générer mon code d'accès
+            </button>
+        </div>
+
+        <!-- PAGE 3 : AFFICHAGE CLÉ + TIMER -->
+        <div id="page-key" class="hidden space-y-6 animate-[fadeIn_0.5s]">
+            <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-8 text-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-3">
+                    <div class="bg-blue-100 text-blue-600 text-[10px] font-black px-2 py-1 rounded-lg flex items-center gap-1">
+                        <i data-lucide="clock" class="w-3 h-3"></i>
+                        <span id="timer">3:00</span>
+                    </div>
+                </div>
+                
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Votre Identifiant Unique</p>
+                <div id="user-key" class="text-2xl font-mono font-black text-blue-700 tracking-tighter mb-6 select-all">LU-LOADING...</div>
+                
+                <button onclick="copyKey()" class="copy-btn w-full py-2.5 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-600 hover:shadow-sm transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Copier
+                </button>
             </div>
 
-            <section id="intro" class="mb-16">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">01</span> Pourquoi ce site ? (Mon Objectif)
-                </h2>
-                <div class="prose prose-slate max-w-none text-slate-600 space-y-4">
-                    <p>L'application <strong>LevelUp ★</strong> a été conçue avec un but très précis : centraliser vos demandes de montages vidéo (edits) afin de me permettre d'<strong>améliorer mes propres compétences en montage</strong>.</p>
-                    <p>En me proposant vos idées (animes, musiques, ambiances), vous me donnez de nouveaux défis à relever. J'ai grandement besoin de vos recommandations et de votre inspiration pour m'exercer, tester de nouveaux effets, et vous offrir des vidéos de meilleure qualité à chaque nouveau drop.</p>
-                    <p>En soumettant une idée ici, vous participez directement à mon évolution en tant que créateur de contenu !</p>
-                </div>
-            </section>
-
-            <section id="identifiants" class="mb-16 bg-slate-50 p-8 rounded-3xl border border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">02</span> Identifiants et Mentions
-                </h2>
-                <div class="space-y-6 text-slate-600">
-                    <div class="bg-white p-5 rounded-2xl shadow-sm">
-                        <h3 class="font-bold text-slate-900 mb-2">Vrais Pseudos Obligatoires</h3>
-                        <p class="text-sm">Lors de la soumission de votre idée sur la plateforme, vous devez impérativement entrer votre <strong>vrai identifiant Instagram ou TikTok</strong>.</p>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm">
-                        <h3 class="font-bold text-slate-900 mb-2">Pourquoi cette règle ?</h3>
-                        <p class="text-sm">Cela me permet de vous identifier facilement. Une fois l'edit terminé et publié sur les réseaux sociaux, je pourrai vous mentionner (tag) pour vous créditer correctement en tant que commanditaire de l'idée.</p>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-amber-500">
-                        <h3 class="font-bold text-slate-900 mb-2">Identifiant introuvable ou faux</h3>
-                        <p class="text-sm italic">"Si vous fournissez un faux pseudo ou un identifiant introuvable, je ne pourrai pas vous identifier lors de la publication. Votre demande risque d'être traitée sans crédit ou ignorée."</p>
-                    </div>
-                </div>
-            </section>
-
-            <section id="delais" class="mb-16">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">03</span> Temps de Création et Attente
-                </h2>
-                <div class="bg-red-50 border border-red-100 p-8 rounded-3xl space-y-4">
-                    <p class="text-red-900 font-bold uppercase tracking-wider text-xs">Information Importante sur les Délais</p>
-                    <p class="text-red-800 text-sm leading-relaxed">
-                        Une fois que votre idée est sélectionnée et passe "En Production", vous pouvez vous attendre à ce que votre edit soit prêt et publié dans un délai <strong>maximum de 5 jours</strong>.
-                    </p>
-                    <ul class="list-disc pl-5 text-red-800 text-sm space-y-2">
-                        <li><strong>La qualité demande du temps :</strong> je travaille sur chaque transition et effet pour m'améliorer.</li>
-                        <li><strong>Délai maximum :</strong> Le processus de création ne dépassera normalement pas 5 jours.</li>
-                        <li>Si le délai est dépassé, vous êtes en droit de me relancer via les contacts ci-dessous.</li>
-                    </ul>
-                </div>
-            </section>
-
-            <section id="contact" class="mb-16 text-center py-12 border-t border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-900 mb-4">Toujours pas d'edit après 5 jours ?</h2>
-                <p class="text-slate-500 mb-8 max-w-2xl mx-auto">Si votre attente dépasse les 5 jours maximum, envoyez-moi un message pour vérifier le statut de votre demande. <strong>Les boutons ci-dessous ouvriront un email déjà pré-rempli</strong> pour vous faire gagner du temps !</p>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm transition hover:shadow-md">
-                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Email Principal</p>
-                        <a href="mailto:levelup.ia0@gmail.com?subject=Relance%20-%20Demande%20d'edit%20LevelUp&body=Salut%2C%20j'ai%20fait%20une%20demande%20d'edit%20sur%20LevelUp%20il%20y%20a%20plus%20de%205%20jours.%20%0A%0AMon%20pseudo%20Insta%2FTikTok%20est%20%3A%20%0A%0AMerci%20de%20me%20tenir%20au%20courant%20!" class="text-blue-600 font-bold text-lg hover:text-blue-700">levelup.ia0@gmail.com</a>
-                    </div>
-                    <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm transition hover:shadow-md">
-                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Email Secondaire</p>
-                        <a href="mailto:s07074855@gmail.com?subject=Relance%20-%20Demande%20d'edit%20LevelUp&body=Salut%2C%20j'ai%20fait%20une%20demande%20d'edit%20sur%20LevelUp%20il%20y%20a%20plus%20de%205%20jours.%20%0A%0AMon%20pseudo%20Insta%2FTikTok%20est%20%3A%20%0A%0AMerci%20de%20me%20tenir%20au%20courant%20!" class="text-blue-600 font-bold text-lg hover:text-blue-700">s07074855@gmail.com</a>
-                    </div>
-                </div>
-            </section>
-
-            <footer class="text-center text-slate-400 text-sm">
-                <p>© 2026 LevelUp ★ — Créé par Richelieu Bonte.</p>
-                <p>Plateforme communautaire de demandes d'edits.</p>
-            </footer>
+            <p id="security-notice" class="text-[10px] text-center text-gray-400 px-4 leading-relaxed">
+                Cet identifiant est strictement personnel. Il expirera visuellement dans 3 minutes pour votre sécurité. Notez-le bien.
+            </p>
         </div>
-    </main>
+
+        <!-- Footer -->
+        <div class="mt-16 text-center">
+            <div class="w-12 h-0.5 bg-gray-100 mx-auto rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500/20 w-1/2 animate-[progress_2s_infinite]"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </body>
 </html>
-
