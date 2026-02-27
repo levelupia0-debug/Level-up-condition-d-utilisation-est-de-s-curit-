@@ -16,7 +16,7 @@
         import { getFirestore, doc, onSnapshot, collection, addDoc, query, limit } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        // Configuration Firebase (Utilisation des variables d'environnement si disponibles)
+        // Configuration Firebase
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyBBJGVLBN2a2-CaoSH4Jtn3aRjIHqOO-7E",
             authDomain: "bonteia.firebaseapp.com",
@@ -114,7 +114,7 @@
                 <h1 class="text-levelup">LevelUp</h1>
                 <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2L14.81 8.62L22 9.24L16.5 13.97L18.18 21L12 17.27L5.82 21L7.5 13.97L2 9.24L9.19 8.62L12 2Z" /></svg>
             </div>
-            <p class="text-[0.9rem] font-bold text-slate-400 uppercase tracking-[0.4em] mt-2">Studio</p>
+            <p class="text-[0.9rem] font-bold text-slate-400 uppercase tracking-[0.4em] mt-2">Edit</p>
         </div>
     </div>
 
@@ -138,7 +138,7 @@
         <div id="view-dashboard" class="glass-card rounded-[3.5rem] p-8 md:p-12">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-extrabold text-blue-900 tracking-tighter">LevelUp</h1>
-                <p class="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em]">Studio Management</p>
+                <p class="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em]">Edit</p>
             </div>
 
             <!-- COUNTDOWN -->
@@ -164,10 +164,10 @@
                     <div id="main-progress-bar" class="progress-bar-fill" style="width: 0%"></div>
                 </div>
                 <div class="flex justify-between mt-4">
-                    <div class="flex flex-col items-center gap-2"><div id="node-1" class="step-node"></div><span class="text-[8px] font-bold text-slate-400">DÉBUT</span></div>
-                    <div class="flex flex-col items-center gap-2"><div id="node-2" class="step-node"></div><span class="text-[8px] font-bold text-slate-400">ÉDITION</span></div>
-                    <div class="flex flex-col items-center gap-2"><div id="node-3" class="step-node"></div><span class="text-[8px] font-bold text-slate-400">FX</span></div>
-                    <div class="flex flex-col items-center gap-2"><div id="node-4" class="step-node"></div><span class="text-[8px] font-bold text-slate-400">PRÊT</span></div>
+                    <div class="flex flex-col items-center gap-2"><div id="node-1" class="step-node"></div><span class="text-[8px] font-bold text-slate-400 uppercase text-center leading-tight">Soumis</span></div>
+                    <div class="flex flex-col items-center gap-2"><div id="node-2" class="step-node"></div><span class="text-[8px] font-bold text-slate-400 uppercase text-center leading-tight">En entente</span></div>
+                    <div class="flex flex-col items-center gap-2"><div id="node-3" class="step-node"></div><span class="text-[8px] font-bold text-slate-400 uppercase text-center leading-tight">En cours de<br>traitement</span></div>
+                    <div class="flex flex-col items-center gap-2"><div id="node-4" class="step-node"></div><span class="text-[8px] font-bold text-slate-400 uppercase text-center leading-tight">Publier</span></div>
                 </div>
             </div>
 
@@ -192,7 +192,7 @@
             </div>
         </div>
 
-        <!-- FORMULAIRE (Vue simple pour le moment) -->
+        <!-- FORMULAIRE -->
         <div id="view-form" class="glass-card rounded-[3.5rem] p-10 hidden-view">
             <h2 class="text-2xl font-extrabold mb-4">Envoyer votre demande</h2>
             <div class="space-y-4">
@@ -242,10 +242,8 @@
 
         // --- REALTIME SYNC ---
         function startStudioSync() {
-            // Document path: artifacts/{appId}/public/data/settings
             const settingsRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'settings');
             
-            // Créer les paramètres par défaut s'ils n'existent pas (pour ton premier lancement)
             getDoc(settingsRef).then(snap => {
                 if (!snap.exists()) {
                     setDoc(settingsRef, studioSettings);
@@ -294,6 +292,8 @@
                 if (prog >= threshold && prog > 0) {
                     node.classList.add(prog > threshold ? 'completed' : 'active');
                 }
+                // Si à 0%, reset nodes
+                if (prog === 0) node.classList.remove('active', 'completed');
             });
 
             lucide.createIcons();
