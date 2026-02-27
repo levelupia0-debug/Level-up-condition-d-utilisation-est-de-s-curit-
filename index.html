@@ -2,53 +2,385 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nouveau Design LevelUp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>LevelUp · hub créatif</title>
+    <!-- Font Awesome 6 (free) pour icônes pro -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts : Inter (pro et lisible) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
-        /* Add professional design optimized for Instagram mobile viewing */
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        header { background: #f0f0f0; text-align: center; padding: 20px; }
-        section { margin: 20px 10%; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        .rotate { animation: rotation 5s infinite linear; }
-        @keyframes rotation { 100% { transform: rotate(360deg); } }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fb;
+            color: #1e293b;
+            line-height: 1.5;
+            padding: 20px 16px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 580px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* carte générale */
+        .card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 24px 22px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05), 0 4px 10px rgba(0, 0, 0, 0.02);
+            margin-bottom: 18px;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            transition: transform 0.2s ease;
+        }
+
+        .card:active {
+            transform: scale(0.99);
+        }
+
+        /* header spécial avec animation étoile */
+        .welcome-header {
+            background: linear-gradient(135deg, #0f1825, #1e2a3a);
+            color: white;
+            border: none;
+            text-align: center;
+            padding: 32px 22px;
+            border-radius: 36px;
+            margin-bottom: 24px;
+            box-shadow: 0 18px 30px -8px rgba(0, 20, 40, 0.3);
+        }
+
+        .star-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+            margin-bottom: 12px;
+        }
+
+        .star-title i {
+            font-size: 2.2rem;
+            color: #ffd966;
+            filter: drop-shadow(0 0 6px #fbbf24);
+            /* animation : rotation unique sur 5 secondes */
+            animation: spinStar 5s 1 ease-in-out;
+            display: inline-block;
+        }
+
+        @keyframes spinStar {
+            0% { transform: rotate(0deg) scale(1); }
+            30% { transform: rotate(180deg) scale(1.1); }
+            60% { transform: rotate(300deg) scale(1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .version-badge {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(4px);
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 60px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #e0e7ff;
+            margin-top: 8px;
+        }
+
+        .version-badge i {
+            margin-right: 6px;
+            color: #a5f3fc;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 6px solid #2563eb;
+            padding-left: 16px;
+        }
+
+        h2 i {
+            color: #2563eb;
+            font-size: 1.5rem;
+        }
+
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            background: #eef2ff;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #2563eb;
+            font-size: 1.2rem;
+        }
+
+        p {
+            font-size: 1rem;
+            color: #334155;
+            margin-bottom: 14px;
+            font-weight: 400;
+        }
+
+        .highlight {
+            background: #fef9e7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px 18px;
+            border-radius: 20px;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+
+        .highlight i {
+            color: #f59e0b;
+            margin-right: 8px;
+        }
+
+        .btn {
+            background: #0f1825;
+            color: white;
+            border: none;
+            padding: 16px 22px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #1e2a3a;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.02);
+            margin: 16px 0 8px;
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+            color: #ffd966;
+        }
+
+        .btn-secondary {
+            background: #f1f4f9;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            box-shadow: none;
+            margin-top: 8px;
+        }
+
+        .btn-secondary i {
+            color: #2563eb;
+        }
+
+        .btn:hover {
+            background: #1e2a3a;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px -8px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary:hover {
+            background: #e6eaef;
+            transform: translateY(-2px);
+        }
+
+        /* liste d'infos compacte */
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 14px 0;
+            background: #f8fafc;
+            padding: 14px 18px;
+            border-radius: 22px;
+        }
+
+        .info-row i {
+            font-size: 1.4rem;
+            color: #2563eb;
+            min-width: 32px;
+            text-align: center;
+        }
+
+        .email-chip {
+            background: #e6edf7;
+            border-radius: 60px;
+            padding: 12px 20px;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #0b1c33;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin: 6px 0;
+            border: 1px solid #bdd3eb;
+        }
+
+        .footer-note {
+            background: #eaf0f6;
+            border-radius: 28px;
+            padding: 24px;
+            margin-top: 18px;
+            font-size: 0.9rem;
+            color: #1e3a5f;
+            border: 1px solid #bed9ff;
+            text-align: center;
+        }
+
+        .footer-note i {
+            color: #dc2626;
+            margin-right: 4px;
+        }
+
+        .divider {
+            height: 2px;
+            background: linear-gradient(to right, transparent, #cbd5e1, transparent);
+            margin: 26px 0 16px;
+        }
+
+        /* drapeau RDC (emoji uniquement) */
+        .lingala-flag {
+            font-size: 1.8rem;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        /* petits ajustements mobiles */
+        @media (max-width: 400px) {
+            .star-title {
+                font-size: 1.5rem;
+            }
+            .card {
+                padding: 20px 16px;
+            }
+        }
+
+        /* animation d'apparition douce */
+        .fade-in {
+            animation: fadeSlide 0.6s ease backwards;
+        }
+
+        @keyframes fadeSlide {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
-    <header>
-        <h1 class="rotate">Bienvenue dans l'univers LevelUp</h1>
-        <p>Version: v0.2 - Date: Février 2026</p>
-    </header>
-    <section>
-        <h2>Edits/Video Montage</h2>
-        <p>Description of video editing and montage services.</p>
-    </section>
-    <section>
-        <h2>Présentation</h2>
-        <p>Limite de soumission quotidienne: 1 par jour, 5-6 par semaine.</p>
-    </section>
-    <section>
-        <h2>Identifiants</h2>
-        <p>Dites que votre TikTok/Instagram est requis (ID non personnel).</p>
-    </section>
-    <section>
-        <h2>Support</h2>
-        <p>Pour ceux qui ont besoin d'aide, contactez-nous à notre adresse mail.</p>
-    </section>
-    <section>
-        <h2>Section Apprentissage Lingala</h2>
-        <p>Ressources pour l'apprentissage de Lingala.</p>
-    </section>
-    <section>
-        <h2>Section LevelUp AI</h2>
-        <p>À venir, détails sur Gemini.</p>
-    </section>
-    <section>
-        <h2>Actions</h2>
-        <p><button>Soumettre des demandes</button></p>
-    </section>
-    <footer>
-        <p>Avis de confidentialité sur les comptes.</p>
-        <p>Contact emails: example@example.com</p>
-    </footer>
+    <div class="container">
+
+        <!-- HEADER AVEC ÉTOILE (animation 5s) -->
+        <div class="welcome-header fade-in" style="animation-delay: 0.1s;">
+            <div class="star-title">
+                <span>Bienvenue dans l’univers</span>
+                <span>LevelUp <i class="fas fa-star" style="--fa-primary-color: #ffd966; --fa-secondary-color: #fbbf24;"></i></span>
+            </div>
+            <div class="version-badge">
+                <i class="fas fa-code-branch"></i> Mise à jour · v0.02 · Février 2026
+            </div>
+        </div>
+
+        <!-- SECTION 1 : EDITS / MONTAGE (explication détaillée) -->
+        <div class="card fade-in" style="animation-delay: 0.2s;">
+            <h2><i class="fas fa-film"></i> Edits & montage vidéo</h2>
+            <p>👋 Moi c’est l’enveloppe (LevelUp). Je suis là pour vous aider à réaliser vos idées, et j’ai besoin de <strong>VOUS</strong> pour améliorer mes compétences en montage et édition.</p>
+            <div class="highlight">
+                <i class="fas fa-lightbulb"></i> <strong>Fonctionnement :</strong> Vous pouvez soumettre <strong>1 demande par jour</strong> (max 5 à 6 par semaine). Chaque demande sera traitée et publiée sous <strong>5 jours</strong>. Vous serez identifié(e) sur la publication.
+            </div>
+            <p><i class="fas fa-user-check" style="color:#2563eb; margin-right: 8px;"></i> Pour toute demande personnelle (anniversaire, vlog, événement) envoyez vos photos et description par mail, je vous retournerai l’edit directement dans votre boîte.</p>
+        </div>
+
+        <!-- SECTION 2 : IDENTIFIANTS (explication claire) -->
+        <div class="card fade-in" style="animation-delay: 0.25s;">
+            <h2><i class="fas fa-id-card"></i> Identifiants (TikTok / Instagram)</h2>
+            <div class="info-row">
+                <i class="fab fa-tiktok"></i>
+                <span><strong>Votre pseudo public</strong> (pas de nom personnel) — c’est obligatoire pour être notifié lors de la publication.</span>
+            </div>
+            <div class="info-row">
+                <i class="fas fa-lock-open"></i>
+                <span><strong>Compte public exigé :</strong> si votre compte est privé, nous ne pourrons pas vous identifier et votre demande sera automatiquement refusée.</span>
+            </div>
+            <p style="margin-top: 12px;"><i class="fas fa-shield-alt" style="color:#059669;"></i> Aucune donnée personnelle n’est stockée. Seul votre nom d’utilisateur sert à vous créditer.</p>
+        </div>
+
+        <!-- SECTION 3 : SUPPORT & AIDE (emails) -->
+        <div class="card fade-in" style="animation-delay: 0.3s;">
+            <h2><i class="fas fa-headset"></i> Support & demandes spéciales</h2>
+            <p>✉️ Vous avez besoin d’un edit mais vous n’osez pas demander ? Ou votre demande n’a pas encore été publiée ? Écrivez-nous :</p>
+            <div class="email-chip">
+                <i class="fas fa-envelope"></i> levelup.edits@support.com
+            </div>
+            <p class="highlight" style="margin: 16px 0 0;"><i class="fas fa-clock"></i> Si vous avez déjà soumis une demande et qu’elle dépasse les délais, contactez ce mail avec votre pseudo, on traite en priorité.</p>
+        </div>
+
+        <!-- SECTION 4 : APPRENTISSAGE LINGALA (fierté congolaise) -->
+        <div class="card fade-in" style="animation-delay: 0.35s;">
+            <h2><span class="lingala-flag">🇨🇩</span> Lingala & culture</h2>
+            <p><strong>Fier Congolais, je veux partager ma langue avec vous.</strong> Je mets en place un système d’apprentissage progressif pour parler lingala (vocabulaire, phrases, expressions).</p>
+            <div class="info-row">
+                <i class="fas fa-language"></i>
+                <span>Bientôt : mini-leçons, audios et exercices directement accessibles ici. <strong>Bilinguisme pour tous !</strong></span>
+            </div>
+            <p style="margin-top: 10px;"><i class="fas fa-earth-africa"></i> Pas de drapeau ? Le cœur y est. 🇨🇩 (RDC)</p>
+        </div>
+
+        <!-- SECTION 5 : LEVELUP IA (Gemini / Google) -->
+        <div class="card fade-in" style="animation-delay: 0.4s;">
+            <h2><i class="fas fa-robot"></i> LevelUp AI · <span style="font-size: 0.9rem; background: #dbeafe; padding: 4px 12px; border-radius: 30px;">Gemini inside</span></h2>
+            <p>🧠 <strong>Bientôt disponible</strong> — une IA personnelle alimentée par l’écosystème Google (Gemini, bases de données, Cloud).</p>
+            <p>Je travaille dessus depuis presque un an. L’IA vous aidera à analyser des liens, générer du contenu et bien plus. Toute l’infrastructure repose sur des outils Google sécurisés.</p>
+            <!-- bouton visiteur (placeholder) -->
+            <button class="btn btn-secondary" onclick="window.open('#','_blank');"><i class="fas fa-rocket"></i> Visiter LevelUp AI (démo à venir)</button>
+        </div>
+
+        <!-- SECTION 6 : ACTIONS (boutons & rappels) -->
+        <div class="card fade-in" style="animation-delay: 0.45s;">
+            <h2><i class="fas fa-paper-plane"></i> Actions</h2>
+            <button class="btn" onclick="alert('🔗 Lien vers formulaire (à intégrer)');"><i class="fas fa-upload"></i> Soumettre une demande</button>
+            <button class="btn btn-secondary" style="margin-top: 14px;" onclick="alert('📧 Redirection vers mail');"><i class="fas fa-question-circle"></i> Contacter support édits</button>
+            <p style="margin-top: 22px; font-size: 0.9rem; background: #fff7ed; padding: 14px; border-radius: 22px;"><i class="fas fa-eye-slash"></i> <strong>Compte privé ?</strong> Votre demande ne pourra pas être identifiée → elle sera ignorée. Passez votre compte en public avant de soumettre.</p>
+        </div>
+
+        <!-- PIED DE PAGE : AVIS + EMAILS -->
+        <div class="footer-note">
+            <i class="fas fa-lock" style="margin-right: 8px;"></i> Avis de confidentialité : nous n’utilisons vos identifiants que pour vous créditer. Aucune donnée personnelle n’est conservée.<br><br>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 15px 0;">
+                <span class="email-chip" style="background: #ffffff;"><i class="fas fa-pen-fancy"></i> levelup.edits@support.com</span>
+                <span class="email-chip" style="background: #ffffff;"><i class="fas fa-microchip"></i> levelup.ai@dev.eco</span>
+            </div>
+            <div style="margin-top: 20px; font-size: 0.85rem; color: #2c3e5c;">
+                <i class="fas fa-crown"></i> LevelUp · écosystème créatif · v0.02
+            </div>
+        </div>
+
+        <!-- petit rappel développement (bouton develop factice) -->
+        <div style="text-align: center; margin-top: 20px;">
+            <span style="background: #0000000f; padding: 8px 24px; border-radius: 60px; font-size: 0.8rem; color: #4b5563;"><i class="fas fa-code"></i> develop · interface hub</span>
+        </div>
+    </div>
+
+    <!-- script optionnel pour animation supplémentaire (rien de nécessaire) -->
+    <!-- l'étoile tourne automatiquement 5s grâce à la CSS -->
 </body>
 </html>
