@@ -87,6 +87,18 @@
         .btn-submit { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.35); }
         .btn-tiktok { background: #000; color: white; text-decoration: none; }
 
+        /* DEBUG CONSOLE STYLES */
+        #debug-console {
+            position: fixed; bottom: 10px; left: 10px; right: 10px;
+            background: rgba(15, 23, 42, 0.95); color: #10b981;
+            font-family: 'JetBrains Mono', monospace; font-size: 10px;
+            padding: 10px; border-radius: 12px; z-index: 10001;
+            max-height: 150px; overflow-y: auto; border: 1px solid #334155;
+            display: block;
+        }
+        .debug-err { color: #ef4444; }
+        .debug-warn { color: #f59e0b; }
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(8px); z-index: 10000; display: flex; align-items: center; justify-content: center;
@@ -96,7 +108,7 @@
         .hidden-view { display: none !important; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-6">
+<body class="flex flex-col items-center justify-center min-h-screen p-6 pb-24">
 
     <div id="intro-loader">
         <div class="logo-container flex flex-col items-center">
@@ -106,6 +118,11 @@
             </div>
             <p class="text-[0.9rem] font-bold text-slate-400 uppercase tracking-[0.4em] mt-2">Edit</p>
         </div>
+    </div>
+
+    <!-- DEBUG CONSOLE -->
+    <div id="debug-console">
+        <div>> Système de diagnostic initialisé...</div>
     </div>
 
     <div id="session-modal" class="modal-overlay" onclick="closeModal()">
@@ -176,6 +193,7 @@
             </div>
         </div>
 
+        <!-- FORM AND SUCCESS VIEWS (OMITTED FOR BREVITY, REMAIN SAME) -->
         <div id="view-form" class="glass-card rounded-[3.5rem] p-10 hidden-view">
             <h2 class="text-2xl font-extrabold mb-4">Envoyer votre demande</h2>
             <div class="space-y-4">
@@ -202,6 +220,15 @@
         import { doc, onSnapshot, addDoc, collection, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
+        const debugEl = document.getElementById('debug-console');
+        function log(msg, type = '') {
+            const div = document.createElement('div');
+            if(type) div.className = `debug-${type}`;
+            div.innerText = `> ${msg}`;
+            debugEl.appendChild(div);
+            debugEl.scrollTop = debugEl.scrollHeight;
+        }
+
         let studioSettings = {
             isSessionOpen: false,
             progress: 0,
@@ -211,6 +238,7 @@
         };
 
         function updateUIFromSettings() {
+            log("Mise à jour de l'interface avec les données reçues...");
             const statusBox = document.getElementById('status-box');
             const mainBtn = document.getElementById('main-action-btn');
             
@@ -238,7 +266,7 @@
                 const threshold = (index / (nodes.length - 1)) * 100;
                 node.classList.remove('active', 'completed');
                 if (prog >= threshold) {
-                    if (prog > threshold || index === nodes.length - 1 && prog === 100) {
+                    if (prog > threshold || (index === nodes.length - 1 && prog === 100)) {
                         node.classList.add('completed');
                     } else {
                         node.classList.add('active');
@@ -250,30 +278,47 @@
         }
 
         function startStudioSync() {
+            const path = `artifacts/${window.appId}/public/data/settings`;
+            log(`Tentative de lecture du chemin : ${path}`);
+            
             const settingsRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'settings');
             
             onSnapshot(settingsRef, (docSnap) => {
                 if (docSnap.exists()) {
+                    log("Succès : Document 'settings' trouvé !", "success");
                     studioSettings = docSnap.data();
+                    log(`Données : Session=${studioSettings.isSessionOpen}, Progrès=${studioSettings.progress}`);
                     updateUIFromSettings();
                 } else {
-                    console.log("Document 'settings' non trouvé. Création des valeurs par défaut...");
-                    setDoc(settingsRef, studioSettings);
+                    log("Avertissement : Document 'settings' absent dans Firebase.", "warn");
+                    log("Création d'un document par défaut...");
+                    setDoc(settingsRef, studioSettings)
+                        .then(() => log("Document par défaut créé avec succès."))
+                        .catch(err => log(`Erreur de création : ${err.message}`, "err"));
                 }
             }, (error) => {
-                console.error("Erreur Firestore :", error);
-                document.getElementById('status-box').innerHTML = "<p class='text-red-500 text-[10px]'>Erreur de connexion Firebase. Vérifiez les règles de sécurité.</p>";
+                log(`Erreur Firebase Firestore : ${error.code}`, "err");
+                log(`Message : ${error.message}`, "err");
+                if(error.code === 'permission-denied') {
+                    log("ACTION REQUISE : Vérifiez vos règles de sécurité Firestore !", "err");
+                }
             });
         }
 
+        log("Initialisation de l'authentification...");
         onAuthStateChanged(window.auth, (user) => {
             if (user) {
+                log(`Utilisateur connecté (UID: ${user.uid.substring(0,8)}...)`);
                 startStudioSync();
             } else {
-                signInAnonymously(window.auth);
+                log("Utilisateur non connecté. Tentative de connexion anonyme...");
+                signInAnonymously(window.auth)
+                    .then(() => log("Connexion anonyme réussie."))
+                    .catch(err => log(`Erreur Auth : ${err.message}`, "err"));
             }
         });
 
+        // ACTIONS GLOBALES
         window.handleMainAction = () => {
             if (studioSettings.isSessionOpen) {
                 document.getElementById('view-dashboard').classList.add('hidden-view');
@@ -287,15 +332,19 @@
             const pseudo = document.getElementById('f-pseudo').value;
             const desc = document.getElementById('f-desc').value;
             if (!pseudo || !desc) return;
+            log(`Envoi de la demande pour ${pseudo}...`);
 
             try {
                 await addDoc(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'requests'), {
                     pseudo, desc, timestamp: new Date().getTime(), userId: window.auth.currentUser.uid
                 });
+                log("Demande enregistrée avec succès !");
                 document.getElementById('view-form').classList.add('hidden-view');
                 document.getElementById('view-success').classList.remove('hidden-view');
                 lucide.createIcons();
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                log(`Erreur lors de l'envoi : ${e.message}`, "err");
+            }
         };
 
         window.showDashboard = () => {
@@ -306,13 +355,11 @@
 
         window.closeModal = () => document.getElementById('session-modal').classList.remove('active');
 
+        // Timer Logic
         setInterval(() => {
             const now = new Date().getTime();
             const distance = (studioSettings.targetDate || now) - now;
-            if (distance < 0) {
-                ['days','hours','mins','secs'].forEach(id => document.getElementById(id).innerText = "00");
-                return;
-            }
+            if (distance < 0) return;
             document.getElementById('days').innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
             document.getElementById('hours').innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
             document.getElementById('mins').innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
