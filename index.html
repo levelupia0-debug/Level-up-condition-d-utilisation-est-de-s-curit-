@@ -75,32 +75,15 @@
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .hidden-view { display: none !important; }
 
-        /* --- FORM SPECIFIC --- */
         .category-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
         .cat-card {
             padding: 16px; border-radius: 1rem; border: 2px solid #f1f5f9; cursor: pointer;
             transition: all 0.2s; font-weight: 700; color: #64748b; text-align: center; background: #fff;
         }
         .cat-card.selected { border-color: #3b82f6; background: #eff6ff; color: #3b82f6; }
-
-        /* --- DEBUG CONSOLE --- */
-        #debug-console {
-            position: fixed; bottom: 10px; left: 10px; right: 10px; height: 100px;
-            background: rgba(15, 23, 42, 0.95); border-radius: 1rem; padding: 12px;
-            color: #10b981; font-family: 'JetBrains Mono', monospace; font-size: 10px;
-            overflow-y: auto; z-index: 99999; border: 1px solid #334155;
-            display: flex; flex-direction: column-reverse;
-        }
-        .log-entry { margin-bottom: 4px; border-left: 2px solid #3b82f6; padding-left: 8px; }
-        .log-err { border-left-color: #ef4444; color: #ef4444; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-6 pb-24">
-
-    <!-- DEBUG CONSOLE -->
-    <div id="debug-console">
-        <div class="log-entry">Système prêt. Attente des données...</div>
-    </div>
+<body class="flex items-center justify-center min-h-screen p-6 pb-12">
 
     <!-- LOADER -->
     <div id="intro-loader">
@@ -139,7 +122,7 @@
             <!-- COUNTDOWN -->
             <div class="text-center mb-10">
                 <div class="inline-block bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-6 border border-blue-100">
-                    Prochain Drop Dans :
+                    Prochains post Dans :
                 </div>
                 <div class="grid grid-cols-4 gap-4">
                     <div class="flex flex-col"><span id="days" class="countdown-font text-3xl font-bold text-slate-900 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Jours</span></div>
@@ -161,7 +144,7 @@
                 <div class="flex justify-between mt-4">
                     <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-1" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">Soumis</span></div>
                     <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-2" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">En attente</span></div>
-                    <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-3" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">Traitement</span></div>
+                    <div class="flex flex-col items-center gap-2 w-20 text-center"><div id="node-3" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">En cours de traitement</span></div>
                     <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-4" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">Publié</span></div>
                 </div>
             </div>
@@ -202,7 +185,6 @@
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-2 block">Votre Email (Optionnel)</label>
                     <input type="email" id="f-email" placeholder="mail@exemple.com" class="w-full p-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none font-bold transition-all">
-                    <p class="text-[9px] text-slate-400 mt-2 ml-2 italic">Laissez vide si vous ne souhaitez pas être notifié par mail.</p>
                 </div>
                 <button onclick="goToStep(2)" class="w-full btn-action btn-submit mt-4">Continuer</button>
             </div>
@@ -248,8 +230,7 @@
             </div>
             <h2 class="text-2xl font-extrabold text-slate-900 mb-4">Demande soumise !</h2>
             <div class="space-y-4 text-slate-500 text-sm font-medium leading-relaxed mb-10 text-left">
-                <p>Votre demande prendra entre <span class="text-blue-600 font-bold">2 à 5 jours</span>. Revenez souvent pour voir l'évolution.</p>
-                <p class="bg-slate-50 p-4 rounded-2xl text-[11px]">Vous serez notifié sur <span class="font-bold">Gmail</span> (si fourni) ou vous serez <span class="font-bold">identifié</span> lors de la publication TikTok.</p>
+                <p>Votre demande prendra entre <span class="text-blue-600 font-bold">2 à 5 jours</span>.</p>
             </div>
             <button onclick="location.reload()" class="w-full btn-action btn-submit">Retour au Dashboard</button>
         </div>
@@ -259,24 +240,10 @@
         </div>
     </main>
 
-    <!-- Firebase SDKs & Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-
-        // --- CONSOLE UTILITY ---
-        function debugLog(msg, isError = false) {
-            const consoleEl = document.getElementById('debug-console');
-            if (consoleEl) {
-                const entry = document.createElement('div');
-                entry.className = `log-entry ${isError ? 'log-err' : ''}`;
-                const time = new Date().toLocaleTimeString('fr-FR', { hour12: false });
-                entry.innerText = `[${time}] ${msg}`;
-                consoleEl.appendChild(entry);
-                if (consoleEl.children.length > 20) consoleEl.removeChild(consoleEl.firstChild);
-            }
-        }
 
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyBBJGVLBN2a2-CaoSH4Jtn3aRjIHqOO-7E",
@@ -292,56 +259,34 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        debugLog(`Initialisation de l'App ID: ${appId}`);
+        let studioSettings = { 
+            isSessionOpen: false, 
+            progress: 0, 
+            targetDate: "2026-03-01 20:00", 
+            statusTitle: "", 
+            statusDescription: "" 
+        };
 
-        // State & Settings
-        let studioSettings = { isSessionOpen: false, progress: 0, targetDate: Date.now(), statusTitle: "", statusDescription: "" };
-        let currentFormData = { pseudo: "", email: "", category: "", details: "" };
-
-        // --- AUTH (RÈGLE 3) ---
         async function initAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    debugLog("Auth avec token personnalisé...");
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    debugLog("Connexion anonyme...");
-                    await signInAnonymously(auth);
-                }
-            } catch (e) {
-                debugLog("Erreur Auth: " + e.message, true);
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
             }
         }
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                debugLog(`Authentifié: ${user.uid.substring(0, 8)}`);
-                startStudioSync();
-            }
+            if (user) startStudioSync();
         });
 
         initAuth();
 
         function startStudioSync() {
-            if (!auth.currentUser) return;
-            
-            debugLog("Synchronisation Firestore (Mandatory Path)...");
-            // RÈGLE 1 : /artifacts/{appId}/public/data/{collectionName}
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
-            
             onSnapshot(settingsRef, (snap) => {
                 if (snap.exists()) { 
                     studioSettings = snap.data(); 
-                    debugLog("Paramètres reçus de Firestore.");
                     updateUI(); 
-                } else {
-                    debugLog("Document 'settings/main' manquant. Vérifiez vos chemins.", true);
-                    updateUI();
-                }
-            }, (err) => {
-                debugLog("Erreur Snapshot: " + err.message, true);
-                if (err.code === 'permission-denied') {
-                    debugLog("Détail: Le chemin 'artifacts/" + appId + "/public/data/settings/main' est requis.", true);
                 }
             });
         }
@@ -351,21 +296,22 @@
             const mainBtn = document.getElementById('main-action-btn');
             
             if (statusBox) {
+                const isOpen = studioSettings.isSessionOpen;
                 statusBox.innerHTML = `
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Studio Status</span>
-                        <div class="flex items-center gap-1.5 px-2 py-1 ${studioSettings.isSessionOpen ? 'bg-green-50' : 'bg-red-50'} rounded-full border ${studioSettings.isSessionOpen ? 'border-green-100' : 'border-red-100'}">
-                            <div class="w-1.5 h-1.5 ${studioSettings.isSessionOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'} rounded-full"></div>
-                            <span class="text-[9px] font-bold ${studioSettings.isSessionOpen ? 'text-green-600' : 'text-red-600'}">${studioSettings.isSessionOpen ? 'Disponible' : 'Indisponible'}</span>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Les détails de la demande</span>
+                        <div class="flex items-center gap-1.5 px-2 py-1 ${isOpen ? 'bg-green-50' : 'bg-orange-50'} rounded-full border ${isOpen ? 'border-green-100' : 'border-orange-100'}">
+                            <div class="w-1.5 h-1.5 ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-orange-500'} rounded-full"></div>
+                            <span class="text-[9px] font-bold ${isOpen ? 'text-green-600' : 'text-orange-600'}">${isOpen ? 'Session Ouverte' : 'En cours de traitement'}</span>
                         </div>
                     </div>
-                    <h4 class="text-xs font-black text-slate-900 mb-1 uppercase tracking-tight">${studioSettings.statusTitle || 'Studio LevelUp'}</h4>
-                    <p class="text-[10px] text-slate-500 leading-relaxed font-bold">${studioSettings.statusDescription || 'En attente de mise à jour...'}</p>
+                    <h4 class="text-xs font-black text-slate-900 mb-1 uppercase tracking-tight">${studioSettings.statusTitle || 'LevelUp Studio'}</h4>
+                    <p class="text-[10px] text-slate-500 leading-relaxed font-bold">${studioSettings.statusDescription || 'Mise à jour en attente...'}</p>
                 `;
             }
 
             if (mainBtn) {
-                mainBtn.innerText = studioSettings.isSessionOpen ? "Demander un Edit" : "Session Fermée (Traitement)";
+                mainBtn.innerText = studioSettings.isSessionOpen ? "Demander un Edit" : "Session Fermée";
             }
             
             const p = studioSettings.progress || 0;
@@ -384,32 +330,25 @@
                     else if (p === threshold || (i === 0 && p < 10)) node.classList.add('active');
                 }
             });
-
             lucide.createIcons();
         }
 
-        // --- GLOBALS EXPOSED TO WINDOW ---
         window.goToStep = (step) => {
             const pseudo = document.getElementById('f-pseudo').value;
             if (step === 2 && (!pseudo || pseudo.trim() === "")) {
                 document.getElementById('f-pseudo').classList.add('border-red-500');
-                debugLog("Validation: Pseudo manquant.", true);
                 return;
             }
-            document.getElementById('f-pseudo').classList.remove('border-red-500');
-            
             document.querySelectorAll('.form-step').forEach(s => s.classList.add('hidden-view'));
-            const targetStep = document.getElementById(`step-${step}`);
-            if (targetStep) targetStep.classList.remove('hidden-view');
+            document.getElementById(`step-${step}`).classList.remove('hidden-view');
             document.getElementById('current-step-num').innerText = step;
         };
 
         window.selectCategory = (cat, el) => {
-            currentFormData.category = cat;
             document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
             el.classList.add('selected');
-            const nextBtn = document.getElementById('btn-next-step2');
-            if (nextBtn) nextBtn.classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('btn-next-step2').classList.remove('opacity-50', 'pointer-events-none');
+            window.selectedCat = cat;
         };
 
         window.updateCharCount = (el) => {
@@ -417,39 +356,24 @@
         };
 
         window.submitFinalRequest = async () => {
-            if (!auth.currentUser) return;
-
             const details = document.getElementById('f-details').value;
-            const submitBtn = document.getElementById('btn-final-submit');
-            
-            if (!details || details.trim() === "") {
-                document.getElementById('f-details').classList.add('border-red-500');
-                return;
-            }
+            if (!details || details.trim() === "") return;
 
-            debugLog("Envoi de la demande (Strict Path)...");
+            const submitBtn = document.getElementById('btn-final-submit');
             submitBtn.innerText = "Envoi...";
             submitBtn.classList.add('opacity-50', 'pointer-events-none');
 
-            currentFormData.pseudo = document.getElementById('f-pseudo').value;
-            currentFormData.email = document.getElementById('f-email').value;
-            currentFormData.details = details;
-
             try {
-                // RÈGLE 1 : Chemin public obligatoire
-                const reqCollection = collection(db, 'artifacts', appId, 'public', 'data', 'requests');
-                await addDoc(reqCollection, {
-                    ...currentFormData,
-                    timestamp: Date.now(),
-                    uid: auth.currentUser.uid
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'requests'), {
+                    pseudo: document.getElementById('f-pseudo').value,
+                    email: document.getElementById('f-email').value,
+                    category: window.selectedCat,
+                    details: details,
+                    timestamp: Date.now()
                 });
-
-                debugLog("Succès : Demande enregistrée !");
                 document.getElementById('view-form').classList.add('hidden-view');
                 document.getElementById('view-success').classList.remove('hidden-view');
-                lucide.createIcons();
-            } catch (e) { 
-                debugLog("Erreur envoi: " + e.message, true);
+            } catch (e) {
                 submitBtn.innerText = "Réessayer";
                 submitBtn.classList.remove('opacity-50', 'pointer-events-none');
             }
@@ -460,8 +384,7 @@
                 document.getElementById('view-dashboard').classList.add('hidden-view');
                 document.getElementById('view-form').classList.remove('hidden-view');
             } else {
-                const modal = document.getElementById('session-modal');
-                if (modal) modal.classList.add('active');
+                document.getElementById('session-modal').classList.add('active');
             }
         };
 
@@ -471,43 +394,33 @@
         };
 
         window.closeModal = () => {
-            const modal = document.getElementById('session-modal');
-            if (modal) modal.classList.remove('active');
+            document.getElementById('session-modal').classList.remove('active');
         };
 
-        // --- TIMER ---
         setInterval(() => {
-            const diff = (studioSettings.targetDate || 0) - Date.now();
-            if (diff < 0) {
-                ['days', 'hours', 'mins', 'secs'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.innerText = "00";
-                });
+            let target;
+            if (typeof studioSettings.targetDate === 'string') {
+                target = new Date(studioSettings.targetDate.replace(/-/g, "/")).getTime();
+            } else {
+                target = studioSettings.targetDate || 0;
+            }
+
+            const diff = target - Date.now();
+            if (diff <= 0) {
+                ['days', 'hours', 'mins', 'secs'].forEach(id => document.getElementById(id).innerText = "00");
                 return;
             }
-            const d = Math.floor(diff / 86400000);
-            const h = Math.floor((diff % 86400000) / 3600000);
-            const m = Math.floor((diff % 3600000) / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            
-            const elD = document.getElementById('days');
-            const elH = document.getElementById('hours');
-            const elM = document.getElementById('mins');
-            const elS = document.getElementById('secs');
-            
-            if (elD) elD.innerText = d.toString().padStart(2, '0');
-            if (elH) elH.innerText = h.toString().padStart(2, '0');
-            if (elM) elM.innerText = m.toString().padStart(2, '0');
-            if (elS) elS.innerText = s.toString().padStart(2, '0');
+            document.getElementById('days').innerText = Math.floor(diff / 86400000).toString().padStart(2, '0');
+            document.getElementById('hours').innerText = Math.floor((diff % 86400000) / 3600000).toString().padStart(2, '0');
+            document.getElementById('mins').innerText = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+            document.getElementById('secs').innerText = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
         }, 1000);
 
-        // --- INITIAL ANIMATION ---
         window.addEventListener('load', () => {
             setTimeout(() => {
-                const loader = document.getElementById('intro-loader');
-                if (loader) loader.classList.add('loader-hidden');
+                document.getElementById('intro-loader').classList.add('loader-hidden');
                 document.querySelector('main').classList.remove('opacity-0');
-            }, 1500);
+            }, 1000);
         });
     </script>
 </body>
