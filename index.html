@@ -30,6 +30,7 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        // Export global pour le script principal
         window.db = db;
         window.appId = appId;
         window.auth = auth;
@@ -87,17 +88,17 @@
         .btn-submit { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.35); }
         .btn-tiktok { background: #000; color: white; text-decoration: none; }
 
-        /* DEBUG CONSOLE STYLES */
+        /* DEBUG CONSOLE */
         #debug-console {
             position: fixed; bottom: 10px; left: 10px; right: 10px;
             background: rgba(15, 23, 42, 0.95); color: #10b981;
             font-family: 'JetBrains Mono', monospace; font-size: 10px;
             padding: 10px; border-radius: 12px; z-index: 10001;
-            max-height: 150px; overflow-y: auto; border: 1px solid #334155;
-            display: block;
+            max-height: 120px; overflow-y: auto; border: 1px solid #334155;
         }
         .debug-err { color: #ef4444; }
         .debug-warn { color: #f59e0b; }
+        .debug-success { color: #10b981; font-weight: bold; }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6);
@@ -110,6 +111,7 @@
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6 pb-24">
 
+    <!-- LOADER -->
     <div id="intro-loader">
         <div class="logo-container flex flex-col items-center">
             <div class="flex items-center gap-3">
@@ -120,11 +122,12 @@
         </div>
     </div>
 
-    <!-- DEBUG CONSOLE -->
+    <!-- CONSOLE DE DEBUG -->
     <div id="debug-console">
-        <div>> Système de diagnostic initialisé...</div>
+        <div>> Diagnostic : Démarrage...</div>
     </div>
 
+    <!-- MODAL SESSION FERMÉE -->
     <div id="session-modal" class="modal-overlay" onclick="closeModal()">
         <div class="modal-content glass-card rounded-[2.5rem] p-8 max-w-sm w-full text-center" onclick="event.stopPropagation()">
             <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -140,12 +143,14 @@
 
     <main class="w-full max-w-lg opacity-0 transition-opacity duration-700">
         
+        <!-- DASHBOARD VIEW -->
         <div id="view-dashboard" class="glass-card rounded-[3.5rem] p-8 md:p-12">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-extrabold text-blue-900 tracking-tighter">LevelUp</h1>
                 <p class="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em]">Edit</p>
             </div>
 
+            <!-- COUNTDOWN -->
             <div class="text-center mb-10">
                 <div class="inline-block bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-6 border border-blue-100">
                     Prochain Drop Dans :
@@ -158,6 +163,7 @@
                 </div>
             </div>
 
+            <!-- PROGRESS -->
             <div class="mb-10 px-2">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progression du Montage</span>
@@ -168,47 +174,55 @@
                 </div>
                 <div class="flex justify-between mt-4">
                     <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-1" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">Soumis</span></div>
-                    <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-2" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">En entente</span></div>
+                    <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-2" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">En attente</span></div>
                     <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-3" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">Traitement</span></div>
-                    <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-4" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">Publier</span></div>
+                    <div class="flex flex-col items-center gap-2 w-16 text-center"><div id="node-4" class="step-node mx-auto"></div><span class="text-[8px] font-bold text-slate-400 uppercase leading-tight">Publié</span></div>
                 </div>
             </div>
 
+            <!-- STATUS BOX -->
             <div id="status-box" class="status-info mb-8">
                 <div class="animate-pulse flex space-y-4 flex-col">
                     <div class="h-2 bg-slate-200 rounded w-1/2"></div>
                     <div class="h-4 bg-slate-200 rounded"></div>
-                    <div class="h-2 bg-slate-200 rounded w-3/4"></div>
                 </div>
             </div>
 
+            <!-- BUTTONS -->
             <div class="flex flex-col gap-4">
                 <button id="main-action-btn" onclick="handleMainAction()" class="btn-action btn-submit w-full">
                     Chargement...
                 </button>
-                <a href="https://www.tiktok.com/@levelup.rb?_r=1&_t=ZP-94EO8cwhZni" target="_blank" class="btn-action btn-tiktok w-full">
+                <a href="https://www.tiktok.com/@levelup.rb" target="_blank" class="btn-action btn-tiktok w-full">
                     <svg class="h-[22px] mr-3" viewBox="0 0 448 512" fill="currentColor"><path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z"/></svg>
-                    Suivre sur TikTok
+                    TikTok
                 </a>
             </div>
         </div>
 
-        <!-- FORM AND SUCCESS VIEWS (OMITTED FOR BREVITY, REMAIN SAME) -->
+        <!-- FORM VIEW -->
         <div id="view-form" class="glass-card rounded-[3.5rem] p-10 hidden-view">
-            <h2 class="text-2xl font-extrabold mb-4">Envoyer votre demande</h2>
+            <h2 class="text-2xl font-extrabold mb-6">Nouvelle Demande</h2>
             <div class="space-y-4">
-                <input type="text" id="f-pseudo" placeholder="Pseudo TikTok" class="w-full p-4 rounded-xl bg-slate-100 outline-none border focus:border-blue-500">
-                <textarea id="f-desc" placeholder="Votre idée d'edit..." class="w-full p-4 rounded-xl bg-slate-100 outline-none border focus:border-blue-500 h-32"></textarea>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-1 block">Votre Pseudo</label>
+                    <input type="text" id="f-pseudo" placeholder="@pseudo" class="w-full p-4 rounded-xl bg-slate-100 outline-none border focus:border-blue-500 font-bold">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-1 block">Description de l'Edit</label>
+                    <textarea id="f-desc" placeholder="Détails..." class="w-full p-4 rounded-xl bg-slate-100 outline-none border focus:border-blue-500 h-32"></textarea>
+                </div>
                 <button onclick="submitRequest()" class="w-full btn-action btn-submit">Envoyer</button>
-                <button onclick="showDashboard()" class="w-full py-4 text-slate-400 font-bold text-xs uppercase">Retour</button>
+                <button onclick="showDashboard()" class="w-full py-4 text-slate-400 font-bold text-xs uppercase">Annuler</button>
             </div>
         </div>
 
+        <!-- SUCCESS VIEW -->
         <div id="view-success" class="glass-card rounded-[3.5rem] p-10 text-center hidden-view">
             <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="check" class="w-10 h-10"></i></div>
-            <h2 class="text-2xl font-bold mb-2">Demande Reçue !</h2>
-            <p class="text-slate-500 mb-8">Nous reviendrons vers vous dès que possible.</p>
-            <button onclick="showDashboard()" class="w-full btn-action btn-submit">Fermer</button>
+            <h2 class="text-2xl font-bold mb-2">Envoyé !</h2>
+            <p class="text-slate-500 mb-8 font-medium">Ta demande a bien été reçue par le studio.</p>
+            <button onclick="showDashboard()" class="w-full btn-action btn-submit">Retour au Dashboard</button>
         </div>
 
         <div class="mt-10 text-center">
@@ -217,7 +231,7 @@
     </main>
 
     <script type="module">
-        import { doc, onSnapshot, addDoc, collection, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { doc, onSnapshot, addDoc, collection, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         const debugEl = document.getElementById('debug-console');
@@ -237,88 +251,69 @@
             statusDescription: "Prêt pour le prochain drop."
         };
 
-        function updateUIFromSettings() {
-            log("Mise à jour de l'interface avec les données reçues...");
+        function updateUI() {
             const statusBox = document.getElementById('status-box');
             const mainBtn = document.getElementById('main-action-btn');
             
             statusBox.innerHTML = `
                 <div class="flex items-center justify-between mb-3">
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Statut du Studio</span>
-                    <div class="flex items-center gap-1.5 px-2 py-1 ${studioSettings.isSessionOpen ? 'bg-green-500/10' : 'bg-red-500/10'} rounded-full border ${studioSettings.isSessionOpen ? 'border-green-500/20' : 'border-red-500/20'}">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Studio Status</span>
+                    <div class="flex items-center gap-1.5 px-2 py-1 ${studioSettings.isSessionOpen ? 'bg-green-50' : 'bg-red-50'} rounded-full border ${studioSettings.isSessionOpen ? 'border-green-100' : 'border-red-100'}">
                         <div class="w-1.5 h-1.5 ${studioSettings.isSessionOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'} rounded-full"></div>
-                        <span class="text-[9px] font-bold ${studioSettings.isSessionOpen ? 'text-green-600' : 'text-red-600'}">${studioSettings.isSessionOpen ? 'Ouvert' : 'Session Fermée'}</span>
+                        <span class="text-[9px] font-bold ${studioSettings.isSessionOpen ? 'text-green-600' : 'text-red-600'}">${studioSettings.isSessionOpen ? 'Disponible' : 'Indisponible'}</span>
                     </div>
                 </div>
-                <h4 class="text-xs font-extrabold text-slate-900 mb-1 tracking-tight uppercase">${studioSettings.statusTitle}</h4>
-                <p class="text-[10px] text-slate-500 leading-relaxed font-medium">${studioSettings.statusDescription}</p>
+                <h4 class="text-xs font-black text-slate-900 mb-1 uppercase">${studioSettings.statusTitle}</h4>
+                <p class="text-[10px] text-slate-500 leading-relaxed font-bold">${studioSettings.statusDescription}</p>
             `;
 
-            mainBtn.innerText = studioSettings.isSessionOpen ? "Envoyer ma demande" : "Édit en cours (Traitement)";
+            mainBtn.innerText = studioSettings.isSessionOpen ? "Demander un Edit" : "Traitement en cours";
             
-            const prog = studioSettings.progress || 0;
-            document.getElementById('main-progress-bar').style.width = `${prog}%`;
-            document.getElementById('progress-percent').innerText = `${prog}%`;
+            const p = studioSettings.progress || 0;
+            document.getElementById('main-progress-bar').style.width = `${p}%`;
+            document.getElementById('progress-percent').innerText = `${p}%`;
             
-            const nodes = ['node-1', 'node-2', 'node-3', 'node-4'];
-            nodes.forEach((id, index) => {
+            ['node-1', 'node-2', 'node-3', 'node-4'].forEach((id, i) => {
                 const node = document.getElementById(id);
-                const threshold = (index / (nodes.length - 1)) * 100;
+                const threshold = (i / 3) * 100;
                 node.classList.remove('active', 'completed');
-                if (prog >= threshold) {
-                    if (prog > threshold || (index === nodes.length - 1 && prog === 100)) {
-                        node.classList.add('completed');
-                    } else {
-                        node.classList.add('active');
-                    }
-                }
+                if (p > threshold) node.classList.add('completed');
+                else if (p === threshold || (i === 0 && p < 33)) node.classList.add('active');
             });
 
             lucide.createIcons();
         }
 
-        function startStudioSync() {
-            const path = `artifacts/${window.appId}/public/data/settings`;
-            log(`Tentative de lecture du chemin : ${path}`);
+        function listenSettings() {
+            // NOUVELLE ROUTE basés sur ta capture d'écran 00.19.17
+            // La route est : artifacts / levelup-studio / public / settings
+            const pathSettings = doc(window.db, 'artifacts', window.appId, 'public', 'settings');
             
-            const settingsRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'settings');
+            log(`Écoute active sur : artifacts/${window.appId}/public/settings`);
             
-            onSnapshot(settingsRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    log("Succès : Document 'settings' trouvé !", "success");
-                    studioSettings = docSnap.data();
-                    log(`Données : Session=${studioSettings.isSessionOpen}, Progrès=${studioSettings.progress}`);
-                    updateUIFromSettings();
+            onSnapshot(pathSettings, (snap) => {
+                if (snap.exists()) {
+                    log("Données reçues avec succès !", "success");
+                    studioSettings = snap.data();
+                    updateUI();
                 } else {
-                    log("Avertissement : Document 'settings' absent dans Firebase.", "warn");
-                    log("Création d'un document par défaut...");
-                    setDoc(settingsRef, studioSettings)
-                        .then(() => log("Document par défaut créé avec succès."))
-                        .catch(err => log(`Erreur de création : ${err.message}`, "err"));
+                    log("Document 'settings' introuvable dans la collection 'public'.", "err");
+                    log("Vérifie que l'ID du document est bien 'settings'.", "warn");
                 }
-            }, (error) => {
-                log(`Erreur Firebase Firestore : ${error.code}`, "err");
-                log(`Message : ${error.message}`, "err");
-                if(error.code === 'permission-denied') {
-                    log("ACTION REQUISE : Vérifiez vos règles de sécurité Firestore !", "err");
-                }
+            }, (err) => {
+                log(`Erreur Firestore : ${err.code}`, "err");
             });
         }
 
-        log("Initialisation de l'authentification...");
         onAuthStateChanged(window.auth, (user) => {
             if (user) {
-                log(`Utilisateur connecté (UID: ${user.uid.substring(0,8)}...)`);
-                startStudioSync();
+                log(`Connecté : ${user.uid.substring(0,6)}`);
+                listenSettings();
             } else {
-                log("Utilisateur non connecté. Tentative de connexion anonyme...");
-                signInAnonymously(window.auth)
-                    .then(() => log("Connexion anonyme réussie."))
-                    .catch(err => log(`Erreur Auth : ${err.message}`, "err"));
+                signInAnonymously(window.auth).catch(e => log(e.message, "err"));
             }
         });
 
-        // ACTIONS GLOBALES
         window.handleMainAction = () => {
             if (studioSettings.isSessionOpen) {
                 document.getElementById('view-dashboard').classList.add('hidden-view');
@@ -332,45 +327,38 @@
             const pseudo = document.getElementById('f-pseudo').value;
             const desc = document.getElementById('f-desc').value;
             if (!pseudo || !desc) return;
-            log(`Envoi de la demande pour ${pseudo}...`);
-
             try {
+                // On garde les requêtes dans public/data/requests pour l'organisation
                 await addDoc(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'requests'), {
-                    pseudo, desc, timestamp: new Date().getTime(), userId: window.auth.currentUser.uid
+                    pseudo, desc, date: new Date().getTime(), uid: window.auth.currentUser.uid
                 });
-                log("Demande enregistrée avec succès !");
                 document.getElementById('view-form').classList.add('hidden-view');
                 document.getElementById('view-success').classList.remove('hidden-view');
                 lucide.createIcons();
-            } catch (e) { 
-                log(`Erreur lors de l'envoi : ${e.message}`, "err");
-            }
+            } catch (e) { log(e.message, "err"); }
         };
 
         window.showDashboard = () => {
-            document.getElementById('view-form').classList.add('hidden-view');
-            document.getElementById('view-success').classList.add('hidden-view');
+            document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden-view'));
             document.getElementById('view-dashboard').classList.remove('hidden-view');
         };
 
         window.closeModal = () => document.getElementById('session-modal').classList.remove('active');
 
-        // Timer Logic
+        // Timer
         setInterval(() => {
-            const now = new Date().getTime();
-            const distance = (studioSettings.targetDate || now) - now;
-            if (distance < 0) return;
-            document.getElementById('days').innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-            document.getElementById('hours').innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-            document.getElementById('mins').innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-            document.getElementById('secs').innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            const diff = (studioSettings.targetDate || 0) - new Date().getTime();
+            if (diff < 0) return;
+            document.getElementById('days').innerText = Math.floor(diff / 86400000).toString().padStart(2, '0');
+            document.getElementById('hours').innerText = Math.floor((diff % 86400000) / 3600000).toString().padStart(2, '0');
+            document.getElementById('mins').innerText = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+            document.getElementById('secs').innerText = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
         }, 1000);
 
         setTimeout(() => {
             document.getElementById('intro-loader').classList.add('loader-hidden');
             document.querySelector('main').classList.remove('opacity-0');
-        }, 2500);
-
+        }, 2000);
     </script>
 </body>
 </html>
