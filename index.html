@@ -3,256 +3,358 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LevelUp IA - Accès Prioritaire</title>
+    <title>LevelUp - Studio Dashboard</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'><path d='M12 2L14.81 8.62L22 9.24L16.5 13.97L18.18 21L12 17.27L5.82 21L7.5 13.97L2 9.24L9.19 8.62L12 2Z' /></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+
+    <!-- Firebase SDKs -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, query, limit } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-            authDomain: "levelup-ia.firebaseapp.com",
-            projectId: "levelup-ia",
-            storageBucket: "levelup-ia.firebasestorage.app",
-            messagingSenderId: "229420004282",
-            appId: "1:229420004282:web:6735f059a947f0936ae383",
-            measurementId: "G-MSRDY2574K"
+        // Configuration Firebase (Utilisation des variables d'environnement si disponibles)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBBJGVLBN2a2-CaoSH4Jtn3aRjIHqOO-7E",
+            authDomain: "bonteia.firebaseapp.com",
+            projectId: "bonteia",
+            storageBucket: "bonteia.firebasestorage.app",
+            messagingSenderId: "665809390410",
+            appId: "1:665809390410:web:4fd0930b09aecd8f90cfb3"
         };
 
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'levelup-studio';
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
-        const currentAppId = "levelup-ia";
+        const auth = getAuth(app);
 
-        const pageLogin = document.getElementById('page-login');
-        const pageConfirm = document.getElementById('page-confirm');
-        const pageKey = document.getElementById('page-key');
-        const googleBtn = document.getElementById('google-btn');
-        const generateBtn = document.getElementById('generate-btn');
-        const userKeyText = document.getElementById('user-key');
-        const timerText = document.getElementById('timer');
-        const userNameText = document.getElementById('user-name');
-        const securityNotice = document.getElementById('security-notice');
-
-        let countdownInterval;
-
-        googleBtn.addEventListener('click', async () => {
-            try {
-                const result = await signInWithPopup(auth, provider);
-                userNameText.innerText = result.user.displayName;
-                showPage(pageConfirm);
-            } catch (error) {
-                console.error("Erreur Auth:", error);
-            }
-        });
-
-        generateBtn.addEventListener('click', async () => {
-            const user = auth.currentUser;
-            if (!user) return;
-
-            generateBtn.disabled = true;
-            generateBtn.innerText = "Sécurisation du profil...";
-
-            try {
-                const userRef = doc(db, 'artifacts', currentAppId, 'public', 'data', 'early_access', user.uid);
-                const userDoc = await getDoc(userRef);
-
-                let accessKey;
-                if (userDoc.exists()) {
-                    accessKey = userDoc.data().accessKey;
-                } else {
-                    accessKey = 'LU-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-                    await setDoc(userRef, {
-                        userId: user.uid,
-                        email: user.email,
-                        accessKey: accessKey,
-                        createdAt: new Date().toISOString()
-                    });
-                }
-
-                userKeyText.innerText = accessKey;
-                showPage(pageKey);
-                startTimer(180); 
-            } catch (error) {
-                console.error("Erreur Firestore:", error);
-                generateBtn.disabled = false;
-                generateBtn.innerText = "Réessayer";
-            }
-        });
-
-        function showPage(page) {
-            [pageLogin, pageConfirm, pageKey].forEach(p => p.classList.add('hidden'));
-            page.classList.remove('hidden');
-        }
-
-        function startTimer(seconds) {
-            clearInterval(countdownInterval);
-            let timeLeft = seconds;
-            countdownInterval = setInterval(() => {
-                const mins = Math.floor(timeLeft / 60);
-                const secs = timeLeft % 60;
-                timerText.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    userKeyText.innerText = "EXPIRÉ";
-                    userKeyText.classList.add('text-red-500');
-                    securityNotice.innerHTML = `
-                        <div class="p-4 bg-red-50/80 backdrop-blur-sm rounded-2xl border border-red-100 mt-4 text-left animate-[fadeIn_0.5s]">
-                            <p class="text-red-700 font-bold text-xs mb-1">Sécurité activée</p>
-                            <p class="text-[10px] text-red-600 leading-tight">
-                                Par mesure de protection, votre clé a été masquée. 
-                                <strong>C'est votre identifiant unique :</strong> vous ne pourrez pas en obtenir d'autre. 
-                                Si vous ne l'avez pas notée, rafraîchissez la page pour la réafficher temporairement.
-                            </p>
-                        </div>
-                    `;
-                }
-                timeLeft--;
-            }, 1000);
-        }
-
-        window.copyKey = () => {
-            const text = userKeyText.innerText;
-            if (text === "EXPIRÉ" || text === "...") return;
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            const copyBtn = document.querySelector('.copy-btn');
-            copyBtn.innerText = "Copié !";
-            setTimeout(() => copyBtn.innerText = "Copier l'ID", 2000);
-        };
-
-        lucide.createIcons();
+        // Export pour usage global
+        window.db = db;
+        window.appId = appId;
+        window.auth = auth;
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
-        
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: linear-gradient(-45deg, #f8fafc, #eff6ff, #f1f5f9, #ffffff);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            overflow-x: hidden;
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* --- LOADER --- */
+        #intro-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #ffffff; display: flex; align-items: center; justify-content: center;
+            z-index: 9999; transition: transform 0.8s cubic-bezier(0.87, 0, 0.13, 1), opacity 0.5s;
         }
+        .text-levelup { font-size: 3.5rem; font-weight: 800; color: #1e40af; letter-spacing: -0.05em; opacity: 0; transform: translateY(20px); animation: slide-up 0.8s ease-out forwards; }
+        .star-svg { width: 40px; height: 40px; fill: #3b82f6; animation: rotate-star 4s linear infinite; }
+        @keyframes rotate-star { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes slide-up { to { transform: translateY(0); opacity: 1; } }
+        .loader-hidden { transform: translateY(-100%) !important; }
 
-        .star-anim {
-            animation: rotate-360 4s linear infinite, colorShift 8s ease-in-out infinite;
-        }
-
-        @keyframes rotate-360 {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes colorShift {
-            0%, 100% { fill: #3b82f6; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5)); }
-            33% { fill: #6366f1; filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.5)); }
-            66% { fill: #06b6d4; filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.5)); }
-        }
-
-        .text-levelup { color: #1e40af; }
-        .text-ia { color: #3b82f6; }
-        
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(10px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-
+        /* --- GLASS DESIGN --- */
         .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.12);
         }
+
+        .countdown-font { font-family: 'JetBrains Mono', monospace; }
+
+        /* --- PROGRESS BAR PRO --- */
+        .progress-container { position: relative; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .progress-bar-fill { 
+            position: absolute; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); 
+            transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+        .step-node { width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; position: relative; z-index: 2; border: 3px solid #fff; }
+        .step-node.active { background: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
+        .step-node.completed { background: #10b981; }
+
+        .status-info { background: #f8fafc; border-radius: 1.5rem; padding: 1.5rem; border: 1px solid #f1f5f9; }
+
+        /* --- BUTTONS --- */
+        .btn-action {
+            position: relative; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center; height: 72px;
+            font-weight: 700; border-radius: 1.5rem; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .btn-submit { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.35); }
+        .btn-tiktok { background: #000; color: white; text-decoration: none; }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px); z-index: 10000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .hidden-view { display: none !important; }
+
+        .category-card { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .category-card.selected { border-color: #3b82f6; background-color: #eff6ff; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-6 text-slate-900">
+<body class="flex items-center justify-center min-h-screen p-6">
 
-    <div class="w-full max-w-sm">
-        <!-- Logo avec étoile magique -->
-        <div class="flex items-center justify-center gap-3 mb-10">
-            <h1 class="text-3xl font-black text-levelup tracking-tighter">LevelUp <span class="text-ia">IA</span></h1>
-            <div class="star-anim">
-                <svg width="32" height="32" viewBox="0 0 24 24"><path d="M12 2L14.81 8.62L22 9.24L16.5 13.97L18.18 21L12 17.27L5.82 21L7.5 13.97L2 9.24L9.19 8.62L12 2Z" /></svg>
+    <div id="intro-loader">
+        <div class="logo-container flex flex-col items-center">
+            <div class="flex items-center gap-3">
+                <h1 class="text-levelup">LevelUp</h1>
+                <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2L14.81 8.62L22 9.24L16.5 13.97L18.18 21L12 17.27L5.82 21L7.5 13.97L2 9.24L9.19 8.62L12 2Z" /></svg>
             </div>
-        </div>
-
-        <!-- Warning Dev -->
-        <div class="glass-card rounded-2xl p-4 mb-8 text-center animate-[fadeIn_0.5s] shadow-sm">
-            <p class="text-[11px] font-bold text-blue-700 uppercase tracking-widest mb-1">Status: Développement Alpha</p>
-            <p class="text-[10px] text-slate-500 leading-tight">L'écosystème LevelUp IA est en cours de déploiement. Votre place est réservée.</p>
-        </div>
-
-        <!-- PAGE 1 : CONNEXION -->
-        <div id="page-login" class="space-y-8 animate-[fadeIn_0.5s]">
-            <div class="text-center">
-                <h2 class="text-2xl font-black mb-2 tracking-tight">Accès Prioritaire</h2>
-                <p class="text-slate-400 text-sm">Authentifiez-vous pour sécuriser votre identifiant unique.</p>
-            </div>
-            <button id="google-btn" class="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all font-bold shadow-xl shadow-slate-100/50 group">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20" alt="Google" class="group-hover:scale-110 transition-transform">
-                Réserver avec Google
-            </button>
-        </div>
-
-        <!-- PAGE 2 : CONFIRMATION -->
-        <div id="page-confirm" class="hidden space-y-8 animate-[fadeIn_0.5s] text-center">
-            <div>
-                <h2 class="text-2xl font-black mb-1 tracking-tight">Bienvenue, <br><span id="user-name" class="text-blue-600">Ami</span></h2>
-                <p class="text-slate-400 text-sm mt-3 px-4 leading-relaxed">Le système est prêt. Générez votre code pour finaliser la réservation.</p>
-            </div>
-            <button id="generate-btn" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95">
-                CRÉER MON CODE UNIQUE
-            </button>
-        </div>
-
-        <!-- PAGE 3 : CLÉ -->
-        <div id="page-key" class="hidden space-y-6 animate-[fadeIn_0.5s]">
-            <div class="glass-card border-2 border-dashed border-blue-200 rounded-[32px] p-8 text-center relative overflow-hidden shadow-2xl shadow-blue-100/50">
-                <div class="absolute top-0 right-0 p-4">
-                    <div class="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-blue-200">
-                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                        <span id="timer">3:00</span>
-                    </div>
-                </div>
-                
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Identifiant Personnel</p>
-                
-                <div id="user-key" class="text-3xl font-mono font-black text-blue-800 tracking-tighter mb-8 drop-shadow-sm">...</div>
-                
-                <button onclick="copyKey()" class="copy-btn w-full py-3.5 bg-white border border-slate-100 rounded-2xl text-sm font-black text-slate-700 flex items-center justify-center gap-2 hover:bg-slate-50 hover:shadow-md transition-all active:scale-95">
-                    <i data-lucide="copy" class="w-4 h-4 text-blue-500"></i> Copier l'ID
-                </button>
-            </div>
-            
-            <div id="security-notice" class="text-center space-y-4 px-2">
-                <p class="text-[11px] font-semibold text-slate-500 leading-relaxed">
-                    <span class="text-blue-600 font-bold underline decoration-blue-200 underline-offset-4">Important :</span> Ce code est lié à vie à votre compte Google. Vous n'en recevrez jamais d'autre.
-                </p>
-            </div>
-        </div>
-
-        <!-- Footer Decoration -->
-        <div class="mt-12 text-center">
-            <div class="inline-flex gap-2">
-                <div class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
-                <div class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse [animation-delay:0.2s]"></div>
-                <div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse [animation-delay:0.4s]"></div>
-            </div>
+            <p class="text-[0.9rem] font-bold text-slate-400 uppercase tracking-[0.4em] mt-2">Studio</p>
         </div>
     </div>
+
+    <!-- Modale "Session Fermée" -->
+    <div id="session-modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-content glass-card rounded-[2.5rem] p-8 max-w-sm w-full text-center" onclick="event.stopPropagation()">
+            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <i data-lucide="clock" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-4">Édit en cours...</h3>
+            <p id="modal-text" class="text-slate-500 text-sm leading-relaxed mb-8">
+                Une demande est en cours de traitement. Revenez au plus vite à la fin du compte à rebours pour assurer d'avoir une place. N'oubliez pas de vous abonner !
+            </p>
+            <button onclick="closeModal()" class="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm uppercase tracking-widest">Compris</button>
+        </div>
+    </div>
+
+    <main class="w-full max-w-lg opacity-0 transition-opacity duration-700">
+        
+        <!-- DASHBOARD -->
+        <div id="view-dashboard" class="glass-card rounded-[3.5rem] p-8 md:p-12">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-blue-900 tracking-tighter">LevelUp</h1>
+                <p class="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em]">Studio Management</p>
+            </div>
+
+            <!-- COUNTDOWN -->
+            <div class="text-center mb-10">
+                <div class="inline-block bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-6 border border-blue-100">
+                    Prochain Drop Dans :
+                </div>
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="flex flex-col"><span id="days" class="countdown-font text-3xl font-bold text-slate-900 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Jours</span></div>
+                    <div class="flex flex-col"><span id="hours" class="countdown-font text-3xl font-bold text-slate-900 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Heures</span></div>
+                    <div class="flex flex-col"><span id="mins" class="countdown-font text-3xl font-bold text-slate-900 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Mins</span></div>
+                    <div class="flex flex-col"><span id="secs" class="countdown-font text-3xl font-bold text-blue-600 tracking-tighter">00</span><span class="text-[8px] font-black text-slate-400 uppercase mt-2">Secs</span></div>
+                </div>
+            </div>
+
+            <!-- PROGRESS BAR -->
+            <div class="mb-10 px-2">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="progress-status-label" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progression du Montage</span>
+                    <span id="progress-percent" class="text-[10px] font-black text-blue-600 uppercase tracking-widest">0%</span>
+                </div>
+                <div class="progress-container">
+                    <div id="main-progress-bar" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between mt-4">
+                    <div class="flex flex-col items-center gap-2"><div id="node-1" class="step-node"></div><span class="text-[8px] font-bold text-slate-400">DÉBUT</span></div>
+                    <div class="flex flex-col items-center gap-2"><div id="node-2" class="step-node"></div><span class="text-[8px] font-bold text-slate-400">ÉDITION</span></div>
+                    <div class="flex flex-col items-center gap-2"><div id="node-3" class="step-node"></div><span class="text-[8px] font-bold text-slate-400">FX</span></div>
+                    <div class="flex flex-col items-center gap-2"><div id="node-4" class="step-node"></div><span class="text-[8px] font-bold text-slate-400">PRÊT</span></div>
+                </div>
+            </div>
+
+            <!-- STATUS CARD -->
+            <div id="status-box" class="status-info mb-8">
+                <!-- Sync from Firebase -->
+                <div class="animate-pulse flex space-y-4 flex-col">
+                    <div class="h-2 bg-slate-200 rounded w-1/2"></div>
+                    <div class="h-4 bg-slate-200 rounded"></div>
+                    <div class="h-2 bg-slate-200 rounded w-3/4"></div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <button id="main-action-btn" onclick="handleMainAction()" class="btn-action btn-submit w-full">
+                    Chargement...
+                </button>
+                <a href="https://www.tiktok.com/@levelup.rb?_r=1&_t=ZP-94EO8cwhZni" target="_blank" class="btn-action btn-tiktok w-full">
+                    <svg class="h-[22px] mr-3" viewBox="0 0 448 512" fill="currentColor"><path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z"/></svg>
+                    Suivre sur TikTok
+                </a>
+            </div>
+        </div>
+
+        <!-- FORMULAIRE (Vue simple pour le moment) -->
+        <div id="view-form" class="glass-card rounded-[3.5rem] p-10 hidden-view">
+            <h2 class="text-2xl font-extrabold mb-4">Envoyer votre demande</h2>
+            <div class="space-y-4">
+                <input type="text" id="f-pseudo" placeholder="Pseudo TikTok" class="w-full p-4 rounded-xl bg-slate-100 outline-none border focus:border-blue-500">
+                <textarea id="f-desc" placeholder="Votre idée..." class="w-full p-4 rounded-xl bg-slate-100 outline-none border focus:border-blue-500 h-32"></textarea>
+                <button onclick="submitRequest()" class="w-full btn-action btn-submit">Envoyer</button>
+                <button onclick="showDashboard()" class="w-full py-4 text-slate-400 font-bold text-xs uppercase">Retour</button>
+            </div>
+        </div>
+
+        <!-- SUCCESS -->
+        <div id="view-success" class="glass-card rounded-[3.5rem] p-10 text-center hidden-view">
+            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="check" class="w-10 h-10"></i></div>
+            <h2 class="text-2xl font-bold mb-2">Demande Reçue !</h2>
+            <p class="text-slate-500 mb-8">Nous reviendrons vers vous dès que possible.</p>
+            <button onclick="showDashboard()" class="w-full btn-action btn-submit">Fermer</button>
+        </div>
+
+        <div class="mt-10 text-center">
+            <p class="text-[8px] font-black text-slate-300 tracking-[0.3em] uppercase">LevelUp © 2026</p>
+        </div>
+    </main>
+
+    <script type="module">
+        import { doc, onSnapshot, addDoc, collection, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+        let studioSettings = {
+            isSessionOpen: false,
+            progress: 0,
+            targetDate: new Date().getTime() + (48 * 60 * 60 * 1000),
+            statusTitle: "Initialisation",
+            statusDescription: "Synchronisation avec le studio LevelUp..."
+        };
+
+        let user = null;
+
+        // --- AUTH ---
+        onAuthStateChanged(window.auth, (u) => {
+            if (u) {
+                user = u;
+                startStudioSync();
+            } else {
+                signInAnonymously(window.auth);
+            }
+        });
+
+        // --- REALTIME SYNC ---
+        function startStudioSync() {
+            // Document path: artifacts/{appId}/public/data/settings
+            const settingsRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'settings');
+            
+            // Créer les paramètres par défaut s'ils n'existent pas (pour ton premier lancement)
+            getDoc(settingsRef).then(snap => {
+                if (!snap.exists()) {
+                    setDoc(settingsRef, studioSettings);
+                }
+            });
+
+            onSnapshot(settingsRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    studioSettings = docSnap.data();
+                    updateUIFromSettings();
+                }
+            }, (error) => console.error("Sync Error:", error));
+        }
+
+        function updateUIFromSettings() {
+            const statusBox = document.getElementById('status-box');
+            const mainBtn = document.getElementById('main-action-btn');
+            
+            // 1. Status Box
+            statusBox.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Studio Status</span>
+                    <div class="flex items-center gap-1.5 px-2 py-1 ${studioSettings.isSessionOpen ? 'bg-green-500/10' : 'bg-red-500/10'} rounded-full border ${studioSettings.isSessionOpen ? 'border-green-500/20' : 'border-red-500/20'}">
+                        <div class="w-1.5 h-1.5 ${studioSettings.isSessionOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'} rounded-full"></div>
+                        <span class="text-[9px] font-bold ${studioSettings.isSessionOpen ? 'text-green-600' : 'text-red-600'}">${studioSettings.isSessionOpen ? 'Ouvert' : 'Session Fermée'}</span>
+                    </div>
+                </div>
+                <h4 class="text-xs font-extrabold text-slate-900 mb-1 tracking-tight uppercase">${studioSettings.statusTitle}</h4>
+                <p class="text-[10px] text-slate-500 leading-relaxed font-medium">${studioSettings.statusDescription}</p>
+            `;
+
+            // 2. Button
+            mainBtn.innerText = studioSettings.isSessionOpen ? "Envoyer ma demande" : "Édit en cours (Traitement)";
+            
+            // 3. Progress Bar
+            const prog = studioSettings.progress || 0;
+            document.getElementById('main-progress-bar').style.width = `${prog}%`;
+            document.getElementById('progress-percent').innerText = `${prog}%`;
+            
+            // Nodes active states
+            const nodes = ['node-1', 'node-2', 'node-3', 'node-4'];
+            nodes.forEach((id, index) => {
+                const node = document.getElementById(id);
+                const threshold = (index / (nodes.length - 1)) * 100;
+                node.classList.remove('active', 'completed');
+                if (prog >= threshold && prog > 0) {
+                    node.classList.add(prog > threshold ? 'completed' : 'active');
+                }
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- ACTIONS ---
+        window.handleMainAction = () => {
+            if (studioSettings.isSessionOpen) {
+                document.getElementById('view-dashboard').classList.add('hidden-view');
+                document.getElementById('view-form').classList.remove('hidden-view');
+            } else {
+                document.getElementById('session-modal').classList.add('active');
+            }
+        }
+
+        window.submitRequest = async () => {
+            const pseudo = document.getElementById('f-pseudo').value;
+            const desc = document.getElementById('f-desc').value;
+            if (!pseudo || !desc) return;
+
+            try {
+                await addDoc(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'requests'), {
+                    pseudo, desc, timestamp: new Date().getTime(), userId: window.auth.currentUser.uid
+                });
+                document.getElementById('view-form').classList.add('hidden-view');
+                document.getElementById('view-success').classList.remove('hidden-view');
+                lucide.createIcons();
+            } catch (e) { console.error(e); }
+        }
+
+        window.showDashboard = () => {
+            document.getElementById('view-form').classList.add('hidden-view');
+            document.getElementById('view-success').classList.add('hidden-view');
+            document.getElementById('view-dashboard').classList.remove('hidden-view');
+        }
+
+        window.closeModal = () => document.getElementById('session-modal').classList.remove('active');
+
+        // --- TIMER ---
+        setInterval(() => {
+            const now = new Date().getTime();
+            const distance = (studioSettings.targetDate || now) - now;
+            if (distance < 0) return;
+
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('days').innerText = d.toString().padStart(2, '0');
+            document.getElementById('hours').innerText = h.toString().padStart(2, '0');
+            document.getElementById('mins').innerText = m.toString().padStart(2, '0');
+            document.getElementById('secs').innerText = s.toString().padStart(2, '0');
+        }, 1000);
+
+        // Intro Loader
+        setTimeout(() => {
+            document.getElementById('intro-loader').classList.add('loader-hidden');
+            document.querySelector('main').classList.remove('opacity-0');
+        }, 3000);
+
+    </script>
 </body>
 </html>
