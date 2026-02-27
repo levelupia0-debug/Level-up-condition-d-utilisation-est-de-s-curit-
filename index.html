@@ -259,13 +259,16 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        // ASTUCE : Tu peux mettre "+30" pour dire "dans 30 minutes"
         let studioSettings = { 
             isSessionOpen: false, 
             progress: 0, 
-            targetDate: "2026-03-01 20:00", 
+            targetDate: "+30", // Exemple: "+30" pour 30min, ou "2026-03-15 20:00"
             statusTitle: "", 
             statusDescription: "" 
         };
+
+        let calculatedTargetTime = null;
 
         async function initAuth() {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -285,10 +288,29 @@
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             onSnapshot(settingsRef, (snap) => {
                 if (snap.exists()) { 
-                    studioSettings = snap.data(); 
+                    const newData = snap.data();
+                    // Si targetDate change ou est nouveau, on recalcule
+                    if (newData.targetDate !== studioSettings.targetDate) {
+                        calculateTarget(newData.targetDate);
+                    }
+                    studioSettings = newData; 
                     updateUI(); 
+                } else {
+                    // Fallback si pas de données Firestore
+                    calculateTarget(studioSettings.targetDate);
                 }
             });
+        }
+
+        function calculateTarget(val) {
+            if (typeof val === 'string' && val.startsWith('+')) {
+                const mins = parseInt(val.substring(1));
+                calculatedTargetTime = Date.now() + (mins * 60000);
+            } else if (typeof val === 'string') {
+                calculatedTargetTime = new Date(val.replace(/-/g, "/")).getTime();
+            } else {
+                calculatedTargetTime = val || 0;
+            }
         }
 
         function updateUI() {
@@ -398,14 +420,9 @@
         };
 
         setInterval(() => {
-            let target;
-            if (typeof studioSettings.targetDate === 'string') {
-                target = new Date(studioSettings.targetDate.replace(/-/g, "/")).getTime();
-            } else {
-                target = studioSettings.targetDate || 0;
-            }
+            if (!calculatedTargetTime) return;
 
-            const diff = target - Date.now();
+            const diff = calculatedTargetTime - Date.now();
             if (diff <= 0) {
                 ['days', 'hours', 'mins', 'secs'].forEach(id => document.getElementById(id).innerText = "00");
                 return;
