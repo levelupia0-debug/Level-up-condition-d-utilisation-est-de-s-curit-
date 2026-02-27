@@ -3,17 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LevelUp - Fonctionnement & Règles</title>
+    <title>LevelUp - Écosystème Premium</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%232563eb%22><path d=%22M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z%22/></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
-        .legal-gradient { background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); }
         
-        /* --- ÉTOILE ANIMÉE AVEC CHANGEMENT DE COULEUR --- */
+        /* --- ANIMATION D'INTRO (5 SECONDES) --- */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeOut 0.8s ease 5s forwards;
+        }
+
+        .star-intro {
+            animation: rotate360 4s linear infinite;
+            color: #2563eb;
+        }
+
+        @keyframes rotate360 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        /* --- ÉTOILE ANIMÉE (HEADER) --- */
         .star-animated { 
             animation: rotateStar 4s linear infinite, colorChange 8s linear infinite; 
         }
@@ -24,115 +49,313 @@
         }
 
         @keyframes colorChange {
-            0%, 100% { color: #2563eb; } /* Bleu */
-            25% { color: #8b5cf6; }    /* Violet */
-            50% { color: #10b981; }    /* Émeraude */
-            75% { color: #f59e0b; }    /* Ambre */
+            0%, 100% { color: #2563eb; }
+            25% { color: #8b5cf6; }
+            50% { color: #10b981; }
+            75% { color: #f59e0b; }
         }
 
-        .nav-link:hover { color: #3b82f6; }
+        /* --- BOUTONS STYLÉS --- */
+        .btn-premium {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            font-weight: 800;
+            padding: 1.4rem;
+            border-radius: 1.2rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            display: block;
+            width: 100%;
+            text-decoration: none;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+        }
+        .btn-premium:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.5); }
+
+        .btn-ai {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            font-weight: 700;
+            padding: 1.2rem;
+            border-radius: 1.2rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: block;
+            width: 100%;
+            text-decoration: none;
+        }
+        .btn-ai:hover { border-color: #38bdf8; transform: translateY(-3px); }
+
+        .btn-mail-styled {
+            background: #f8fafc;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+            font-weight: 700;
+            padding: 1rem;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .btn-mail-styled:hover { border-color: #2563eb; color: #2563eb; background: #f0f9ff; }
+
+        .pulse-effect { animation: pulse-blue 2s infinite; }
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #2563eb, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-white text-slate-800">
 
+    <!-- 1. INITIALISATION & INTRO (0-5s) -->
+    <div id="loader">
+        <svg class="star-intro" width="80" height="80" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+        </svg>
+    </div>
+
+    <!-- HEADER -->
     <header class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div class="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <span class="text-xl font-extrabold tracking-tighter text-blue-600">LevelUp</span>
+                <span class="text-xl font-extrabold tracking-tighter text-blue-600 uppercase">LevelUp</span>
                 <svg class="star-animated" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
                 </svg>
             </div>
-            <div class="hidden md:flex gap-8 text-sm font-semibold text-slate-500">
-                <a href="#intro" class="nav-link transition">Le Concept</a>
-                <a href="#identifiants" class="nav-link transition">Identifiants</a>
-                <a href="#delais" class="nav-link transition">Délais</a>
-                <a href="#contact" class="nav-link transition">Contact</a>
-            </div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Écosystème V0.02</div>
         </div>
     </header>
 
     <main class="pt-32 pb-20 px-6">
-        <div class="max-w-4xl mx-auto">
+        <div class="max-w-3xl mx-auto">
             
-            <div class="mb-12 border-l-4 border-blue-600 pl-6">
-                <h1 class="text-4xl font-extrabold text-slate-900 mb-4">Fonctionnement et Règles de Demande</h1>
-                <p class="text-slate-500 font-medium">Plateforme Communautaire — <span class="text-slate-900 font-bold">Projet d'amélioration</span></p>
-                <p class="text-slate-500 font-medium">Dernière mise à jour : Février 2026</p>
-                <p class="text-slate-500 font-medium">Créateur & Monteur : <span class="text-blue-600 font-bold">Richelieu Bonte</span></p>
-            </div>
-
-            <section id="intro" class="mb-16">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">01</span> Pourquoi ce site ? (Mon Objectif)
-                </h2>
-                <div class="prose prose-slate max-w-none text-slate-600 space-y-4">
-                    <p>L'application <strong>LevelUp ★</strong> a été conçue avec un but très précis : centraliser vos demandes de montages vidéo (edits) afin de me permettre d'<strong>améliorer mes propres compétences en montage</strong>.</p>
-                    <p>En me proposant vos idées (animes, musiques, ambiances), vous me donnez de nouveaux défis à relever. J'ai grandement besoin de vos recommandations et de votre inspiration pour m'exercer, tester de nouveaux effets, et vous offrir des vidéos de meilleure qualité à chaque nouveau drop.</p>
-                    <p>En soumettant une idée ici, vous participez directement à mon évolution en tant que créateur de contenu !</p>
+            <!-- 2. SECTION 1 — HERO -->
+            <section class="mb-16 border-l-4 border-blue-600 pl-6">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight uppercase">BIENVENUE DANS L’UNIVERS <span class="gradient-text">LEVEL UP</span></h1>
+                <div class="mb-6">
+                    <h2 class="text-slate-900 font-bold uppercase tracking-wider text-sm">Mise à jour – Version V0.02 | Février 2026</h2>
                 </div>
+                <p class="text-slate-500 font-medium leading-relaxed max-w-2xl text-lg italic">
+                    "Plus qu'un projet, une vision. Créer, apprendre et évoluer ensemble dans un univers numérique sans limites."
+                </p>
             </section>
 
-            <section id="identifiants" class="mb-16 bg-slate-50 p-8 rounded-3xl border border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">02</span> Identifiants et Mentions
-                </h2>
+            <!-- 3. SECTION 2 — EDITS & MÉDIAS -->
+            <section class="mb-12 bg-slate-50 p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-blue-600 rounded-lg text-white">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    </div>
+                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">EDITS & MÉDIAS</h2>
+                </div>
                 <div class="space-y-6 text-slate-600">
-                    <div class="bg-white p-5 rounded-2xl shadow-sm">
-                        <h3 class="font-bold text-slate-900 mb-2">Vrais Pseudos Obligatoires</h3>
-                        <p class="text-sm">Lors de la soumission de votre idée sur la plateforme, vous devez impérativement entrer votre <strong>vrai identifiant Instagram ou TikTok</strong>.</p>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm">
-                        <h3 class="font-bold text-slate-900 mb-2">Pourquoi cette règle ?</h3>
-                        <p class="text-sm">Cela me permet de vous identifier facilement. Une fois l'edit terminé et publié sur les réseaux sociaux, je pourrai vous mentionner (tag) pour vous créditer correctement en tant que commanditaire de l'idée.</p>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-amber-500">
-                        <h3 class="font-bold text-slate-900 mb-2">Identifiant introuvable ou faux</h3>
-                        <p class="text-sm italic">"Si vous fournissez un faux pseudo ou un identifiant introuvable, je ne pourrai pas vous identifier lors de la publication. Votre demande risque d'être traitée sans crédit ou ignorée."</p>
-                    </div>
-                </div>
-            </section>
-
-            <section id="delais" class="mb-16">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">03</span> Temps de Création et Attente
-                </h2>
-                <div class="bg-red-50 border border-red-100 p-8 rounded-3xl space-y-4">
-                    <p class="text-red-900 font-bold uppercase tracking-wider text-xs">Information Importante sur les Délais</p>
-                    <p class="text-red-800 text-sm leading-relaxed">
-                        Une fois que votre idée est sélectionnée et passe "En Production", vous pouvez vous attendre à ce que votre edit soit prêt et publié dans un délai <strong>maximum de 5 jours</strong>.
+                    <p class="font-medium leading-relaxed">
+                        Le montage est mon terrain d'expression. Je développe mes compétences en montage vidéo et en création d’edits complexes. Pour que cet écosystème vive, **votre interaction est la clé.** Proposez vos concepts les plus fous ou soumettez une demande structurée.
                     </p>
-                    <ul class="list-disc pl-5 text-red-800 text-sm space-y-2">
-                        <li><strong>La qualité demande du temps :</strong> je travaille sur chaque transition et effet pour m'améliorer.</li>
-                        <li><strong>Délai maximum :</strong> Le processus de création ne dépassera normalement pas 5 jours.</li>
-                        <li>Si le délai est dépassé, vous êtes en droit de me relancer via les contacts ci-dessous.</li>
-                    </ul>
+                    
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-bold text-slate-900 text-sm mb-2 uppercase">Flux de travail</h3>
+                            <ul class="space-y-2 text-xs font-semibold">
+                                <li class="text-blue-600">• Analyse de la demande sous 24h</li>
+                                <li class="text-slate-500">• Production & Color Grade</li>
+                                <li class="text-slate-500">• Publication sous 5 jours max</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-bold text-slate-900 text-sm mb-2 uppercase">Limites & Quotas</h3>
+                            <ul class="space-y-2 text-xs font-semibold">
+                                <li class="text-slate-500">• 1 demande par utilisateur/jour</li>
+                                <li class="text-blue-600">• Sélection de 5-6 projets/semaine</li>
+                                <li class="text-slate-500">• Mention garantie sur le post</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-2xl text-xs leading-relaxed text-amber-900 font-bold">
+                        SÉCURITÉ & PRIVACY : Nous ne demandons JAMAIS de mot de passe. Seul votre @utilisateur (TikTok/Insta) est requis pour l'identification publique. Note : Les comptes en "Privé" ne peuvent pas être tagués et les demandes seront ignorées.
+                    </div>
                 </div>
             </section>
 
-            <section id="contact" class="mb-16 text-center py-12 border-t border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-900 mb-4">Toujours pas d'edit après 5 jours ?</h2>
-                <p class="text-slate-500 mb-8 max-w-2xl mx-auto">Si votre attente dépasse les 5 jours maximum, envoyez-moi un message pour vérifier le statut de votre demande. <strong>Les boutons ci-dessous ouvriront un email déjà pré-rempli</strong> pour vous faire gagner du temps !</p>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm transition hover:shadow-md">
-                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Email Principal</p>
-                        <a href="mailto:levelup.ia0@gmail.com?subject=Relance%20-%20Demande%20d'edit%20LevelUp&body=Salut%2C%20j'ai%20fait%20une%20demande%20d'edit%20sur%20LevelUp%20il%20y%20a%20plus%20de%205%20jours.%20%0A%0AMon%20pseudo%20Insta%2FTikTok%20est%20%3A%20%0A%0AMerci%20de%20me%20tenir%20au%20courant%20!" class="text-blue-600 font-bold text-lg hover:text-blue-700">levelup.ia0@gmail.com</a>
+            <!-- 4. SECTION 3 — EDIT PERSONNALISÉ (DÉTAILLÉ) -->
+            <section class="mb-12 p-8 rounded-[2rem] border-2 border-dashed border-blue-200 bg-blue-50/20">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 15l-2 5L9 9l11 1-5 2m-6 6l-5 1.5L5 5l1.5 5"/></svg>
                     </div>
-                    <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm transition hover:shadow-md">
-                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Email Secondaire</p>
-                        <a href="mailto:s07074855@gmail.com?subject=Relance%20-%20Demande%20d'edit%20LevelUp&body=Salut%2C%20j'ai%20fait%20une%20demande%20d'edit%20sur%20LevelUp%20il%20y%20a%20plus%20de%205%20jours.%20%0A%0AMon%20pseudo%20Insta%2FTikTok%20est%20%3A%20%0A%0AMerci%20de%20me%20tenir%20au%20courant%20!" class="text-blue-600 font-bold text-lg hover:text-blue-700">s07074855@gmail.com</a>
+                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">OFFRE VIP : EDIT PRIVÉ</h2>
+                </div>
+                <div class="text-slate-600 space-y-4">
+                    <p class="font-bold text-blue-600 text-sm uppercase tracking-widest">Service 100% Gratuit — Abonne-toi pour soutenir !</p>
+                    <p class="font-medium leading-relaxed">
+                        Vous avez besoin d’un edit mais vous n’osez pas le proposer publiquement ? Vous souhaitez un contenu exclusif pour un événement privé ? Vous pouvez nous envoyer vos fichiers sources par email. 
+                    </p>
+                    <div class="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+                        <p class="font-bold text-slate-800 mb-3 text-sm">Types de projets acceptés :</p>
+                        <div class="grid grid-cols-2 gap-3 text-[11px] font-black uppercase text-slate-500">
+                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Anniversaire</div>
+                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Vlog de voyage</div>
+                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Souvenir familial</div>
+                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Hommage & Legacy</div>
+                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Gaming Montages</div>
+                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Short Story-telling</div>
+                        </div>
+                    </div>
+                    <p class="text-xs italic text-slate-500 font-medium">L’edit finalisé sera traité avec soin et envoyé directement à votre adresse email. Aucune publication sans votre accord.</p>
+                </div>
+                <div class="mt-8">
+                    <a href="mailto:levelup.ia0@gmail.com" class="btn-mail-styled">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <span>Demander mon Edit (Gratuit - Abonne toi !)</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- 5. SECTION 4 — APPRENTISSAGE LINGALA (DÉTAILLÉ) -->
+            <section class="mb-12 bg-emerald-50/50 p-8 rounded-[2rem] border border-emerald-100 shadow-sm relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-200/20 rounded-full blur-3xl"></div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-emerald-600 rounded-lg text-white">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-1 3.222-2.487 6.34-4.42 9.33M4 19c1.753-1.983 3.585-3.83 5.504-5.54"/></svg>
+                    </div>
+                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">APPRENDRE LE LINGALA</h2>
+                </div>
+                <div class="space-y-4 text-slate-600 font-medium">
+                    <p class="leading-relaxed">
+                        En tant que Congolais, partager ma langue est une fierté. Le **Lingala** est une langue vibrante, musicale et essentielle pour comprendre la culture d'Afrique Centrale. Nous mettons en place un cursus digital progressif :
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="flex gap-4 items-start bg-white p-4 rounded-xl border border-emerald-100">
+                            <span class="text-emerald-500 font-black text-lg">01.</span>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm uppercase">Basics & Slang</h4>
+                                <p class="text-[10px] text-slate-500 uppercase mt-1">Salutations, chiffres et argot de Kinshasa.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 items-start bg-white p-4 rounded-xl border border-emerald-100">
+                            <span class="text-emerald-500 font-black text-lg">02.</span>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm uppercase">Conversation</h4>
+                                <p class="text-[10px] text-slate-500 uppercase mt-1">Savoir se présenter et tenir un dialogue réel.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 items-start bg-white p-4 rounded-xl border border-emerald-100">
+                            <span class="text-emerald-500 font-black text-lg">03.</span>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm uppercase">Phonétique</h4>
+                                <p class="text-[10px] text-slate-500 uppercase mt-1">Maîtriser les accents et les tons spécifiques.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 items-start bg-white p-4 rounded-xl border border-emerald-100">
+                            <span class="text-emerald-500 font-black text-lg">04.</span>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm uppercase">Culture</h4>
+                                <p class="text-[10px] text-slate-500 uppercase mt-1">Histoires, proverbes et traditions congolaises.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="pt-4 font-bold text-emerald-900 bg-emerald-100/50 p-4 rounded-xl text-center text-sm border border-emerald-200">
+                        Objectif : Briser les barrières linguistiques et vous donner les clés de la RDC.
+                    </p>
+                </div>
+            </section>
+
+            <!-- 6. SECTION 5 — LEVEL UP AI -->
+            <section class="mb-16 bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-6">
+                    <span class="bg-blue-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">STATUT : EN DÉVELOPPEMENT</span>
+                </div>
+                
+                <h2 class="text-2xl font-black mb-2 uppercase tracking-tight">LEVEL UP AI — Bientôt disponible</h2>
+                <div class="mt-8 space-y-6 text-slate-300 font-medium">
+                    <p class="leading-relaxed">
+                        Le futur de l'écosystème repose sur l'intelligence artificielle. Depuis près d'un an, nous travaillons sur une IA dédiée aux créateurs.
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 text-sm font-bold text-blue-400 uppercase">
+                            <div class="w-1 h-1 bg-blue-400 rounded-full"></div> Infrastructure Google Cloud & Gemini
+                        </div>
+                        <p class="text-xs text-slate-400 leading-loose pl-4">
+                            Hébergement ultra-rapide, protection des données par chiffrement, et modèles de langage avancés pour une compréhension contextuelle parfaite de vos besoins créatifs.
+                        </p>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-slate-700">
+                        <p class="font-bold text-white mb-3 text-sm uppercase">Fonctionnalités attendues :</p>
+                        <p class="text-xs leading-loose text-blue-200 italic font-semibold">
+                            Analyse sémantique de liens, Brainstorming automatisé, Génération de scripts, Aide au découpage vidéo et personnalisation de l'expérience utilisateur.
+                        </p>
                     </div>
                 </div>
             </section>
 
-            <footer class="text-center text-slate-400 text-sm">
-                <p>© 2026 LevelUp ★ — Créé par Richelieu Bonte.</p>
-                <p>Plateforme communautaire de demandes d'edits.</p>
+            <!-- 7. INTÉGRATION DES BOUTONS (ACTIONS) -->
+            <section class="mb-16 space-y-6">
+                <a href="https://levelupia0-debug.github.io/levelup.edit/" class="btn-premium pulse-effect uppercase tracking-widest text-lg">
+                    Soumettre une demande publique
+                </a>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <a href="https://levelupia0-debug.github.io/levelupia/" class="btn-ai uppercase text-sm tracking-wider flex items-center justify-center gap-2">
+                        <span>Lancer Level Up AI</span>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </a>
+                    <a href="mailto:levelup.ia0@gmail.com" class="btn-mail-styled uppercase text-[10px] tracking-wider">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        Edit Privé (Gratuit - Abonne toi !)
+                    </a>
+                </div>
+            </section>
+
+            <!-- 8. FOOTER & SUPPORT -->
+            <footer class="text-center pt-10 border-t border-slate-100">
+                <div class="mb-10">
+                    <p class="text-xs font-black text-slate-400 uppercase mb-6 tracking-[0.2em]">Contact & Centre d'assistance</p>
+                    <div class="flex flex-col items-center gap-4">
+                        <a href="mailto:levelup.ia0@gmail.com" class="btn-mail-styled text-[11px] w-full max-w-sm">
+                            <span class="text-slate-400 font-bold uppercase">Assistance :</span> levelup.ia0@gmail.com
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="bg-slate-50 p-6 rounded-3xl mb-8 border border-slate-100 max-w-xl mx-auto">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-3 tracking-widest">Confidentialité & Données</p>
+                    <p class="text-[10px] text-slate-500 leading-relaxed font-semibold uppercase">
+                        Aucun pistage commercial. Les identifiants sont stockés temporairement pour le traitement des demandes et supprimés après publication.
+                    </p>
+                </div>
+                
+                <p class="text-slate-300 text-[9px] font-black uppercase tracking-[0.5em] pb-10">
+                    © 2026 Level Up Project — Built for Creators.
+                </p>
             </footer>
+
         </div>
     </main>
+
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                if(loader) loader.style.display = 'none';
+            }, 5000);
+        });
+    </script>
 </body>
 </html>
