@@ -10,31 +10,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyBBJGVLBN2a2-CaoSH4Jtn3aRjIHqOO-7E",
-            authDomain: "bonteia.firebaseapp.com",
-            projectId: "bonteia",
-            storageBucket: "bonteia.firebasestorage.app",
-            messagingSenderId: "665809390410",
-            appId: "1:665809390410:web:4fd0930b09aecd8f90cfb3"
-        };
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'levelup-studio';
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        window.db = db;
-        window.appId = appId;
-        window.auth = auth;
-    </script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap');
@@ -107,9 +82,25 @@
             transition: all 0.2s; font-weight: 700; color: #64748b; text-align: center; background: #fff;
         }
         .cat-card.selected { border-color: #3b82f6; background: #eff6ff; color: #3b82f6; }
+
+        /* --- DEBUG CONSOLE --- */
+        #debug-console {
+            position: fixed; bottom: 10px; left: 10px; right: 10px; height: 100px;
+            background: rgba(15, 23, 42, 0.95); border-radius: 1rem; padding: 12px;
+            color: #10b981; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+            overflow-y: auto; z-index: 99999; border: 1px solid #334155;
+            display: flex; flex-direction: column-reverse;
+        }
+        .log-entry { margin-bottom: 4px; border-left: 2px solid #3b82f6; padding-left: 8px; }
+        .log-err { border-left-color: #ef4444; color: #ef4444; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6 pb-24">
+
+    <!-- DEBUG CONSOLE -->
+    <div id="debug-console">
+        <div class="log-entry">Système prêt. Attente des données...</div>
+    </div>
 
     <!-- LOADER -->
     <div id="intro-loader">
@@ -268,24 +259,91 @@
         </div>
     </main>
 
+    <!-- Firebase SDKs & Script -->
     <script type="module">
-        import { doc, onSnapshot, addDoc, collection, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
+        // --- CONSOLE UTILITY ---
+        function debugLog(msg, isError = false) {
+            const consoleEl = document.getElementById('debug-console');
+            if (consoleEl) {
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${isError ? 'log-err' : ''}`;
+                const time = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+                entry.innerText = `[${time}] ${msg}`;
+                consoleEl.appendChild(entry);
+                if (consoleEl.children.length > 20) consoleEl.removeChild(consoleEl.firstChild);
+            }
+        }
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBBJGVLBN2a2-CaoSH4Jtn3aRjIHqOO-7E",
+            authDomain: "bonteia.firebaseapp.com",
+            projectId: "bonteia",
+            storageBucket: "bonteia.firebasestorage.app",
+            messagingSenderId: "665809390410",
+            appId: "1:665809390410:web:4fd0930b09aecd8f90cfb3"
+        };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'levelup-studio';
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        debugLog(`Initialisation de l'App ID: ${appId}`);
+
+        // State & Settings
         let studioSettings = { isSessionOpen: false, progress: 0, targetDate: Date.now(), statusTitle: "", statusDescription: "" };
         let currentFormData = { pseudo: "", email: "", category: "", details: "" };
 
-        // --- AUTH ---
-        onAuthStateChanged(window.auth, (user) => {
-            if (user) startStudioSync();
-            else signInAnonymously(window.auth);
+        // --- AUTH (RÈGLE 3) ---
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    debugLog("Auth avec token personnalisé...");
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    debugLog("Connexion anonyme...");
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                debugLog("Erreur Auth: " + e.message, true);
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                debugLog(`Authentifié: ${user.uid.substring(0, 8)}`);
+                startStudioSync();
+            }
         });
 
+        initAuth();
+
         function startStudioSync() {
-            const settingsRef = doc(window.db, 'artifacts', window.appId, 'public', 'settings');
+            if (!auth.currentUser) return;
+            
+            debugLog("Synchronisation Firestore (Mandatory Path)...");
+            // RÈGLE 1 : /artifacts/{appId}/public/data/{collectionName}
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+            
             onSnapshot(settingsRef, (snap) => {
-                if (snap.exists()) { studioSettings = snap.data(); updateUI(); }
-            }, (err) => console.error("Firestore error:", err));
+                if (snap.exists()) { 
+                    studioSettings = snap.data(); 
+                    debugLog("Paramètres reçus de Firestore.");
+                    updateUI(); 
+                } else {
+                    debugLog("Document 'settings/main' manquant. Vérifiez vos chemins.", true);
+                    updateUI();
+                }
+            }, (err) => {
+                debugLog("Erreur Snapshot: " + err.message, true);
+                if (err.code === 'permission-denied') {
+                    debugLog("Détail: Le chemin 'artifacts/" + appId + "/public/data/settings/main' est requis.", true);
+                }
+            });
         }
 
         function updateUI() {
@@ -301,8 +359,8 @@
                             <span class="text-[9px] font-bold ${studioSettings.isSessionOpen ? 'text-green-600' : 'text-red-600'}">${studioSettings.isSessionOpen ? 'Disponible' : 'Indisponible'}</span>
                         </div>
                     </div>
-                    <h4 class="text-xs font-black text-slate-900 mb-1 uppercase tracking-tight">${studioSettings.statusTitle || 'Initialisation...'}</h4>
-                    <p class="text-[10px] text-slate-500 leading-relaxed font-bold">${studioSettings.statusDescription || 'Récupération des données du studio.'}</p>
+                    <h4 class="text-xs font-black text-slate-900 mb-1 uppercase tracking-tight">${studioSettings.statusTitle || 'Studio LevelUp'}</h4>
+                    <p class="text-[10px] text-slate-500 leading-relaxed font-bold">${studioSettings.statusDescription || 'En attente de mise à jour...'}</p>
                 `;
             }
 
@@ -330,11 +388,12 @@
             lucide.createIcons();
         }
 
-        // --- GESTION FORMULAIRE ETAPES ---
+        // --- GLOBALS EXPOSED TO WINDOW ---
         window.goToStep = (step) => {
             const pseudo = document.getElementById('f-pseudo').value;
             if (step === 2 && (!pseudo || pseudo.trim() === "")) {
                 document.getElementById('f-pseudo').classList.add('border-red-500');
+                debugLog("Validation: Pseudo manquant.", true);
                 return;
             }
             document.getElementById('f-pseudo').classList.remove('border-red-500');
@@ -358,6 +417,8 @@
         };
 
         window.submitFinalRequest = async () => {
+            if (!auth.currentUser) return;
+
             const details = document.getElementById('f-details').value;
             const submitBtn = document.getElementById('btn-final-submit');
             
@@ -366,7 +427,7 @@
                 return;
             }
 
-            // UI Feedback
+            debugLog("Envoi de la demande (Strict Path)...");
             submitBtn.innerText = "Envoi...";
             submitBtn.classList.add('opacity-50', 'pointer-events-none');
 
@@ -375,23 +436,22 @@
             currentFormData.details = details;
 
             try {
-                // Envoi vers Firestore
-                const reqCollection = collection(window.db, 'artifacts', window.appId, 'public', 'requests');
+                // RÈGLE 1 : Chemin public obligatoire
+                const reqCollection = collection(db, 'artifacts', appId, 'public', 'data', 'requests');
                 await addDoc(reqCollection, {
                     ...currentFormData,
                     timestamp: Date.now(),
-                    uid: window.auth.currentUser ? window.auth.currentUser.uid : 'anon'
+                    uid: auth.currentUser.uid
                 });
 
-                // Basculer vers l'écran de succès
+                debugLog("Succès : Demande enregistrée !");
                 document.getElementById('view-form').classList.add('hidden-view');
                 document.getElementById('view-success').classList.remove('hidden-view');
                 lucide.createIcons();
             } catch (e) { 
-                console.error("Submission error:", e);
+                debugLog("Erreur envoi: " + e.message, true);
                 submitBtn.innerText = "Réessayer";
                 submitBtn.classList.remove('opacity-50', 'pointer-events-none');
-                alert("Erreur lors de l'envoi. Vérifie ta connexion.");
             }
         };
 
@@ -415,7 +475,7 @@
             if (modal) modal.classList.remove('active');
         };
 
-        // Timer
+        // --- TIMER ---
         setInterval(() => {
             const diff = (studioSettings.targetDate || 0) - Date.now();
             if (diff < 0) {
@@ -441,6 +501,7 @@
             if (elS) elS.innerText = s.toString().padStart(2, '0');
         }, 1000);
 
+        // --- INITIAL ANIMATION ---
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const loader = document.getElementById('intro-loader');
