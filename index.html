@@ -27,7 +27,9 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'levelup-ia';
+        
+        // Utilisation d'un ID fixe pour les tests si __app_id n'est pas défini
+        const currentAppId = "levelup-ia";
 
         // Éléments UI
         const pageLogin = document.getElementById('page-login');
@@ -51,43 +53,51 @@
 
         let countdownInterval;
 
-        // 1. Authentification Google
-        googleBtn.addEventListener('click', async () => {
-            logStatus("Tentative de connexion Google...");
-            try {
-                const result = await signInWithPopup(auth, provider);
-                userNameText.innerText = result.user.displayName;
-                logStatus("Connecté en tant que : " + result.user.email);
-                showPage(pageConfirm);
-            } catch (error) {
-                logStatus("Erreur Auth : " + error.message, true);
-                console.error(error);
+        // Écouter l'état de connexion pour éviter les erreurs de permission
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                logStatus("Utilisateur authentifié : " + user.email);
             }
         });
 
-        // 2. Génération de la clé avec vérification Firestore réelle
+        // 1. Authentification Google
+        googleBtn.addEventListener('click', async () => {
+            logStatus("Ouverture du pop-up Google...");
+            try {
+                const result = await signInWithPopup(auth, provider);
+                userNameText.innerText = result.user.displayName;
+                logStatus("Connecté avec succès !");
+                showPage(pageConfirm);
+            } catch (error) {
+                logStatus("Erreur Auth : " + error.message, true);
+                if (error.code === 'auth/popup-blocked') {
+                    logStatus("Erreur : Le pop-up a été bloqué par le navigateur.", true);
+                }
+            }
+        });
+
+        // 2. Génération de la clé avec vérification Firestore
         generateBtn.addEventListener('click', async () => {
             const user = auth.currentUser;
             if (!user) {
-                logStatus("Erreur : Aucun utilisateur détecté.", true);
+                logStatus("Erreur : Vous devez être connecté pour générer un code.", true);
                 return;
             }
 
             generateBtn.disabled = true;
-            generateBtn.innerText = "Vérification base de données...";
-            logStatus("Communication avec Firestore...");
+            generateBtn.innerText = "Vérification...";
+            logStatus("Tentative d'écriture dans Firestore...");
 
             try {
-                // Chemin strict pour ton projet
-                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'early_access', user.uid);
+                // Chemin d'accès simplifié pour correspondre aux règles de sécurité suggérées
+                const userRef = doc(db, 'artifacts', currentAppId, 'public', 'data', 'early_access', user.uid);
                 const userDoc = await getDoc(userRef);
 
                 let accessKey;
                 if (userDoc.exists()) {
                     accessKey = userDoc.data().accessKey;
-                    logStatus("Clé existante récupérée.");
+                    logStatus("Code existant récupéré avec succès.");
                 } else {
-                    // On ne génère la clé QUE si on arrive à écrire dans la base
                     accessKey = 'LU-' + Math.random().toString(36).substr(2, 9).toUpperCase();
                     await setDoc(userRef, {
                         userId: user.uid,
@@ -95,14 +105,16 @@
                         accessKey: accessKey,
                         createdAt: new Date().toISOString()
                     });
-                    logStatus("Nouvelle clé créée et enregistrée.");
+                    logStatus("Nouveau code enregistré avec succès !");
                 }
 
                 userKeyText.innerText = accessKey;
                 showPage(pageKey);
                 startTimer(180); 
             } catch (error) {
-                logStatus("Erreur Firestore : " + error.message, true);
+                console.error(error);
+                logStatus("Erreur Permission/Firestore : " + error.message, true);
+                logStatus("Conseil : Vérifiez les 'Rules' dans la console Firebase.", true);
                 generateBtn.disabled = false;
                 generateBtn.innerText = "Réessayer";
             }
@@ -131,13 +143,15 @@
 
         window.copyKey = () => {
             const text = userKeyText.innerText;
-            if (text === "EXPIRÉ" || text.includes("...")) return;
+            if (text === "EXPIRÉ" || text === "...") return;
+            
             const textArea = document.createElement("textarea");
             textArea.value = text;
             document.body.appendChild(textArea);
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
+            
             const copyBtn = document.querySelector('.copy-btn');
             copyBtn.innerText = "Copié !";
             setTimeout(() => copyBtn.innerText = "Copier", 2000);
@@ -207,10 +221,10 @@
             <p class="text-[10px] text-center text-gray-400">Note bien ce code, il disparaîtra dans 3 minutes.</p>
         </div>
 
-        <!-- CONSOLE DE DEBUG (Très utile pour toi) -->
+        <!-- CONSOLE DE DEBUG -->
         <div id="debug-console" class="mt-12 p-3 bg-gray-50 rounded-lg border border-gray-200 hidden">
             <p class="text-[9px] uppercase font-bold text-gray-400 mb-1">Status Console :</p>
-            <p id="debug-msg" class="text-[10px] font-mono"></p>
+            <p id="debug-msg" class="text-[10px] font-mono whitespace-pre-wrap"></p>
         </div>
     </div>
 
