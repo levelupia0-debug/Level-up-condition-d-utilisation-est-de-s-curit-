@@ -3,118 +3,314 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LevelUp - Mentions Légales et Sécurité</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Accès Système • Récupération</title>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
-        .legal-gradient { background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); }
-        .star-animated { animation: rotateStar 4s linear infinite; }
-        @keyframes rotateStar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .nav-link:hover { color: #3b82f6; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #fafafa;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- TERMINAL HACKER --- */
+        #terminal-screen {
+            background-color: #0c0c0c;
+            width: 100%;
+            height: 100vh;
+            color: #00ff41;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .command-line { margin-bottom: 10px; }
+        .cursor { display: inline-block; width: 10px; height: 18px; background: #00ff41; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+        
+        #terminal-input {
+            background: transparent;
+            border: none;
+            color: #00ff41;
+            font-family: inherit;
+            font-size: 16px;
+            outline: none;
+            width: 80%;
+        }
+
+        #code-display {
+            font-size: 12px;
+            line-height: 1.2;
+            white-space: pre-wrap;
+            overflow-y: hidden;
+            flex-grow: 1;
+        }
+
+        .progress-container { width: 100%; border: 1px solid #00ff41; height: 20px; margin-top: 10px; display: none; }
+        .progress-bar { width: 0%; height: 100%; background: #00ff41; transition: width 0.1s; }
+
+        /* --- CONTENEUR GLOBAL --- */
+        .container {
+            background-color: #fff;
+            border: 1px solid #dbdbdb;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            box-sizing: border-box;
+            display: none;
+        }
+        .container.active { display: block; }
+
+        /* --- STYLE INSTAGRAM --- */
+        h1 { font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #262626; }
+        p { font-size: 14px; color: #8e8e8e; margin-bottom: 20px; }
+        
+        .profile-display {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 1px solid #dbdbdb;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            background-color: #efefef;
+            position: relative;
+        }
+        
+        .profile-display img { width: 100%; height: 100%; object-fit: cover; }
+        .username-text { font-weight: 600; font-size: 18px; margin-bottom: 20px; color: #262626; }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 3px;
+            background-color: #fafafa;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* --- CROPPER STYLES --- */
+        .crop-container {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 2px dashed #dbdbdb;
+            margin: 20px auto;
+            overflow: hidden;
+            position: relative;
+            background: #fafafa;
+            cursor: move;
+        }
+        #profile-preview { position: absolute; cursor: grab; display: none; transform-origin: center; }
+        .zoom-controls { margin-bottom: 20px; }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="bg-white text-slate-800">
+<body>
 
-    <!-- Header -->
-    <header class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="text-xl font-extrabold tracking-tighter text-blue-600">LevelUp</span>
-                <svg class="star-animated text-blue-600" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                </svg>
-            </div>
-            <div class="hidden md:flex gap-8 text-sm font-semibold text-slate-500">
-                <a href="#intro" class="nav-link transition">Introduction</a>
-                <a href="#donnees" class="nav-link transition">Données</a>
-                <a href="#responsabilite" class="nav-link transition">Responsabilité</a>
-                <a href="#contact" class="nav-link transition">Contact</a>
-            </div>
+    <!-- SECTION 1: LE TERMINAL -->
+    <div id="terminal-screen">
+        <div id="output">
+            <div class="command-line">root@system:~# INITIALIZING_HACK_V3...</div>
+            <div class="command-line">root@system:~# ENTER_TARGET_USERNAME: <input type="text" id="terminal-input" autofocus autocomplete="off"></div>
         </div>
-    </header>
+        <div id="code-display"></div>
+        <div class="progress-container" id="progress-box">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <button id="terminal-ok-btn" class="hidden" style="background:#00ff41; color:#000; margin-top:20px; width:auto; padding: 10px 40px;">OK</button>
+    </div>
 
-    <!-- Main Content -->
-    <main class="pt-32 pb-20 px-6">
-        <div class="max-w-4xl mx-auto">
+    <!-- SECTION 2: AJUSTEMENT PHOTO -->
+    <div id="photo-screen" class="container">
+        <h1>Photo de profil</h1>
+        <p>Ajustez votre photo de profil librement.</p>
+        <div class="crop-container" id="crop-area">
+            <img id="profile-preview" src="" alt="Aperçu">
+            <div id="no-photo-text" style="color:#ccc; padding-top: 80px;">Aucune photo</div>
+        </div>
+        <div class="zoom-controls">
+            <input type="range" id="zoom-slider" min="0.1" max="4" step="0.01" value="1" style="width: 80%;">
+        </div>
+        <input type="file" id="file-input" accept="image/*" class="hidden">
+        <button onclick="document.getElementById('file-input').click()" style="background:#efefef; color:#262626; margin-bottom:10px;">Choisir photo</button>
+        <button id="goto-final-btn">Continuer</button>
+    </div>
+
+    <!-- SECTION 3: RÉCUPÉRATION FINALE INSTAGRAM -->
+    <div id="final-screen" class="container">
+        <h1>Récupération</h1>
+        <div class="profile-display" id="final-photo-container">
+            <!-- La photo ajustée sera injectée ici -->
+        </div>
+        <div class="username-text" id="final-username">@utilisateur</div>
+        <p>Veuillez choisir un nouveau mot de passe sécurisé pour votre compte.</p>
+        <input type="password" placeholder="Nouveau mot de passe">
+        <button onclick="alert('Mot de passe mis à jour !')">Réinitialiser le mot de passe</button>
+    </div>
+
+<script>
+    // --- VARIABLES D'ÉTAT ---
+    let username = "";
+    let photoData = { src: "", x: 0, y: 0, scale: 1 };
+    
+    // --- LOGIQUE TERMINAL ---
+    const termInput = document.getElementById('terminal-input');
+    const codeDisplay = document.getElementById('code-display');
+    const progressBox = document.getElementById('progress-box');
+    const progressBar = document.getElementById('progress-bar');
+    const terminalBtn = document.getElementById('terminal-ok-btn');
+
+    termInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && this.value.trim() !== "") {
+            username = this.value;
+            this.disabled = true;
+            startHacking();
+        }
+    });
+
+    function startHacking() {
+        progressBox.style.display = 'block';
+        const lines = [
+            "CONNECTING TO INSTA_SERVER_X99...", "BYPASSING FIREWALL...", "ACCESSING DATABASE...",
+            "ENCRYPTING SQL_INJECTION...", "DECRYPTING USER_DATA...", "FETCHING RSA_KEYS...",
+            "HANDSHAKE SUCCESSFUL", "EXTRACTING PROFILE_INFO...", "PAYLOAD DELIVERED."
+        ];
+        
+        let i = 0;
+        let progress = 0;
+        
+        const interval = setInterval(() => {
+            // Ajouter du code aléatoire
+            const randomCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            codeDisplay.innerHTML += `<div>${lines[i % lines.length]} - ${randomCode}</div>`;
+            codeDisplay.scrollTop = codeDisplay.scrollHeight;
             
-            <div class="mb-12 border-l-4 border-blue-600 pl-6">
-                <h1 class="text-4xl font-extrabold text-slate-900 mb-4">Conditions Générales d'Utilisation et Protocole de Sécurité</h1>
-                <p class="text-slate-500 font-medium">Version 2.2 — <span class="text-slate-900 font-bold">Projet créé en Juin 2025</span></p>
-                <p class="text-slate-500 font-medium">Dernière mise à jour : 24 Février 2026</p>
-                <p class="text-slate-500 font-medium">Développeur Principal : <span class="text-blue-600 font-bold">Richelieu Bonte</span></p>
-            </div>
+            progress += 1.5;
+            progressBar.style.width = progress + "%";
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                terminalBtn.classList.remove('hidden');
+            }
+            i++;
+        }, 50);
+    }
 
-            <section id="intro" class="mb-16">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">01</span> Préambule et Collaboration
-                </h2>
-                <div class="prose prose-slate max-w-none text-slate-600 space-y-4">
-                    <p>L'application <strong>LevelUp</strong> est un assistant de travail de nouvelle génération dont le développement a été initié en <strong>juin 2025</strong>. Le service est propulsé par les technologies de pointe de <strong>Google Studio</strong> et alimenté par le modèle de langage <strong>Gemini</strong>.</p>
-                    <p>Cette collaboration technologique permet à LevelUp d'offrir des fonctionnalités de recherche en temps réel, d'analyse d'images complexes, de traitement de liens web et de documents volumineux pour accompagner les utilisateurs dans leur productivité quotidienne.</p>
-                    <p>En accédant à LevelUp, vous reconnaissez avoir pris connaissance du présent document qui régit les relations entre l'utilisateur et le développeur Richelieu Bonte.</p>
-                </div>
-            </section>
+    terminalBtn.addEventListener('click', () => {
+        document.getElementById('terminal-screen').style.display = 'none';
+        document.getElementById('photo-screen').classList.add('active');
+    });
 
-            <section id="donnees" class="mb-16 bg-slate-50 p-8 rounded-3xl border border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">02</span> Gestion et Sécurité des Données
-                </h2>
-                <div class="space-y-6 text-slate-600">
-                    <div class="bg-white p-5 rounded-2xl shadow-sm">
-                        <h3 class="font-bold text-slate-900 mb-2">Stockage Firebase</h3>
-                        <p class="text-sm">Toutes vos données, y compris vos profils et historiques, sont stockées via l'infrastructure sécurisée <strong>Google Firebase</strong>. Nous utilisons des protocoles de chiffrement de bout en bout pour garantir que vos informations restent inaccessibles à des tiers non autorisés.</p>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm">
-                        <h3 class="font-bold text-slate-900 mb-2">Utilisation des Conversations</h3>
-                        <p class="text-sm">Conformément à nos politiques d'amélioration, LevelUp se réserve le droit d'analyser les interactions entre l'utilisateur et l'intelligence artificielle. Ces données peuvent être utilisées pour entraîner nos modèles internes ou pour assurer la sécurité globale du système en cas de signalement d'abus.</p>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-amber-500">
-                        <h3 class="font-bold text-slate-900 mb-2">Clause de Rapport de Sécurité</h3>
-                        <p class="text-sm italic">"En cas d'incident majeur ou de détection de comportement anormal sur l'application, les données de l'utilisateur peuvent être extraites et utilisées par le support pour assurer une assistance rapide et résoudre les problèmes techniques ou de sécurité."</p>
-                    </div>
-                </div>
-            </section>
+    // --- LOGIQUE PHOTO (CROPPER) ---
+    const fileInput = document.getElementById('file-input');
+    const preview = document.getElementById('profile-preview');
+    const zoomSlider = document.getElementById('zoom-slider');
+    const cropArea = document.getElementById('crop-area');
+    const noPhotoText = document.getElementById('no-photo-text');
 
-            <section id="responsabilite" class="mb-16">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span class="p-2 bg-blue-50 rounded-lg text-blue-600">03</span> Limitation de Responsabilité et Clause de Non-Recours
-                </h2>
-                <div class="bg-red-50 border border-red-100 p-8 rounded-3xl space-y-4">
-                    <p class="text-red-900 font-bold uppercase tracking-wider text-xs">Avis Juridique Important</p>
-                    <p class="text-red-800 text-sm leading-relaxed">
-                        L'utilisation de LevelUp se fait à la seule discrétion et aux risques de l'utilisateur. En aucun cas, le créateur de l'application, <strong>Richelieu Bonte</strong>, ou ses collaborateurs, ne pourront être traduits en justice ou tenus pour responsables de dommages directs ou indirects résultant de l'utilisation de l'intelligence artificielle.
-                    </p>
-                    <ul class="list-disc pl-5 text-red-800 text-sm space-y-2">
-                        <li>Vous êtes l'unique responsable des décisions prises suite aux conseils de l'IA.</li>
-                        <li><strong>Non-Recours :</strong> Le développeur Richelieu Bonte et ses partenaires Google ne peuvent être traduits en justice pour tout préjudice financier, moral ou physique lié à l'usage de l'app.</li>
-                        <li>L'exactitude des informations fournies par Gemini via LevelUp n'est pas garantie à 100%.</li>
-                    </ul>
-                </div>
-            </section>
+    let isDragging = false;
+    let startX, startY;
 
-            <section id="contact" class="mb-16 text-center py-12 border-t border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-900 mb-8">Besoin d'assistance ?</h2>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Informations Générales</p>
-                        <a href="mailto:levelup.ia0@gmail.com" class="text-blue-600 font-bold text-lg">levelup.ia0@gmail.com</a>
-                    </div>
-                    <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Assistance Technique</p>
-                        <a href="mailto:s07074855@gmail.com" class="text-blue-600 font-bold text-lg">s07074855@gmail.com</a>
-                    </div>
-                </div>
-            </section>
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+                noPhotoText.style.display = 'none';
+                photoData.src = event.target.result;
+                resetPhoto();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
-            <footer class="text-center text-slate-400 text-sm">
-                <p>© 2026 LevelUp Studio — Développé par Richelieu Bonte.</p>
-                <p>Propulsé par Google Gemini Technology.</p>
-            </footer>
-        </div>
-    </main>
+    function resetPhoto() {
+        photoData.x = 0; photoData.y = 0; photoData.scale = 1;
+        zoomSlider.value = 1;
+        updateTransform();
+    }
+
+    function updateTransform() {
+        preview.style.transform = `translate(${photoData.x}px, ${photoData.y}px) scale(${photoData.scale})`;
+    }
+
+    zoomSlider.addEventListener('input', (e) => {
+        photoData.scale = e.target.value;
+        updateTransform();
+    });
+
+    // Drag Logic
+    const startDrag = (e) => {
+        if(!preview.src) return;
+        isDragging = true;
+        const cX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const cY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        startX = cX - photoData.x;
+        startY = cY - photoData.y;
+    };
+    const doDrag = (e) => {
+        if(!isDragging) return;
+        const cX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const cY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        photoData.x = cX - startX;
+        photoData.y = cY - startY;
+        updateTransform();
+    };
+    const endDrag = () => isDragging = false;
+
+    cropArea.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', doDrag);
+    window.addEventListener('mouseup', endDrag);
+    cropArea.addEventListener('touchstart', startDrag);
+    window.addEventListener('touchmove', doDrag);
+    window.addEventListener('touchend', endDrag);
+
+    // --- LOGIQUE FINALE ---
+    const gotoFinalBtn = document.getElementById('goto-final-btn');
+    const finalScreen = document.getElementById('final-screen');
+    const finalPhotoContainer = document.getElementById('final-photo-container');
+    const finalUsername = document.getElementById('final-username');
+
+    gotoFinalBtn.addEventListener('click', () => {
+        // On prépare l'interface finale
+        finalUsername.innerText = "@" + username;
+        
+        // On clone la preview pour garder le cadrage (visual-only pour la démo)
+        const finalImg = preview.cloneNode();
+        finalImg.style.position = 'absolute';
+        finalImg.style.width = '100%'; 
+        finalImg.style.height = 'auto';
+        
+        // On vide et on remplit le cercle final
+        finalPhotoContainer.innerHTML = "";
+        finalPhotoContainer.appendChild(finalImg);
+        
+        document.getElementById('photo-screen').classList.remove('active');
+        finalScreen.classList.add('active');
+    });
+
+</script>
 </body>
 </html>
