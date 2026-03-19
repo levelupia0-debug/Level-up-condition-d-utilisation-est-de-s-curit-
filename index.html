@@ -2,360 +2,1212 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LevelUp - Écosystème Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Thiab's</title>
     
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%232563eb%22><path d=%22M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z%22/></svg>">
+    <!-- Ajout du favicon Étoile Violette -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'><path fill='%23a855f7' d='M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z'/></svg>" type="image/svg+xml">
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDocs, deleteDoc, setDoc, getDoc, collectionGroup, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // --- CONFIGURATION FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFNuErJ2ToXYJ9vg0YwAneeOSty6mtXNg",
+            authDomain: "thiab-s-ia.firebaseapp.com",
+            projectId: "thiab-s-ia",
+            storageBucket: "thiab-s-ia.firebasestorage.app",
+            messagingSenderId: "685257281739",
+            appId: "1:685257281739:web:76f60907cd9c87d2c04b4e",
+            measurementId: "G-Z1T4LLG22Z"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Export global
+        window.auth = auth;
+        window.db = db;
+        window.signInAnonymously = signInAnonymously;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.deleteUser = deleteUser;
+        window.firestoreUtils = { collection, addDoc, query, orderBy, onSnapshot, doc, getDocs, deleteDoc, setDoc, getDoc, collectionGroup, updateDoc, arrayUnion };
         
-        /* --- ANIMATION D'INTRO (5 SECONDES) --- */
-        #loader {
-            position: fixed;
-            inset: 0;
-            background: #ffffff;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: fadeOut 0.8s ease 5s forwards;
-        }
+        window.__app_id = "thiab-s-ia-premium"; 
+    </script>
 
-        .star-intro {
-            animation: rotate360 4s linear infinite;
-            color: #2563eb;
-        }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root { --primary: #a855f7; --dark: #020202; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--dark); color: #ffffff; height: 100dvh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
+        .bg-main { background: radial-gradient(circle at 50% 0%, #0d061a 0%, #020202 100%); }
 
-        @keyframes rotate360 {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        #splashScreen { position: fixed; inset: 0; z-index: 9999; background: black; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 1s ease-out; }
+        .splash-text { font-size: 1.8rem; font-weight: 900; letter-spacing: 0.6em; text-transform: uppercase; opacity: 0; position: absolute; transform: scale(0.85); filter: blur(15px); transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1); text-align: center; }
+        .splash-text.active { opacity: 1; transform: scale(1); filter: blur(0px); }
+        .splash-text.exit { opacity: 0; transform: scale(1.2); filter: blur(30px); }
 
-        @keyframes fadeOut {
-            to { opacity: 0; visibility: hidden; }
-        }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .overlay-active { pointer-events: auto; background: rgba(0,0,0,0.4); }
+        
+        #sidebar { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
+        
+        #userInput { background: transparent !important; border: none !important; color: white !important; outline: none !important; width: 100%; padding: 12px; font-size: 16px !important; min-height: 44px; max-height: 120px; display: block; resize: none; overflow-y: hidden; }
+        .message-bubble { max-width: 88%; animation: msgIn 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- ÉTOILE ANIMÉE (HEADER) --- */
-        .star-animated { 
-            animation: rotateStar 4s linear infinite, colorChange 8s linear infinite; 
-        }
+        .star-logo { animation: rotate360 8s linear infinite; color: #a855f7; filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6)); }
+        @keyframes rotate360 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .typing-dots span { width: 3px; height: 3px; background: #a855f7; border-radius: 50%; display: inline-block; animation: typing 1.4s infinite; }
+        @keyframes typing { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
 
-        @keyframes rotateStar { 
-            from { transform: rotate(0deg); } 
-            to { transform: rotate(360deg); } 
-        }
+        .chat-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+        .chat-item:hover { background: rgba(168, 85, 247, 0.1); border-color: var(--primary); }
+        .chat-item.active { background: rgba(168, 85, 247, 0.15); border-color: var(--primary); }
 
-        @keyframes colorChange {
-            0%, 100% { color: #2563eb; }
-            25% { color: #8b5cf6; }
-            50% { color: #10b981; }
-            75% { color: #f59e0b; }
-        }
-
-        /* --- BOUTONS STYLÉS --- */
-        .btn-premium {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            color: white;
-            font-weight: 800;
-            padding: 1.4rem;
-            border-radius: 1.2rem;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-align: center;
-            display: block;
-            width: 100%;
-            text-decoration: none;
-            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
-        }
-        .btn-premium:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.5); }
-
-        .btn-ai {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #38bdf8;
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            font-weight: 700;
-            padding: 1.2rem;
-            border-radius: 1.2rem;
-            transition: all 0.3s ease;
-            text-align: center;
-            display: block;
-            width: 100%;
-            text-decoration: none;
-        }
-        .btn-ai:hover { border-color: #38bdf8; transform: translateY(-3px); }
-
-        .btn-mail-styled {
-            background: #f8fafc;
-            color: #1e293b;
-            border: 2px solid #e2e8f0;
-            font-weight: 700;
-            padding: 1rem;
-            border-radius: 1rem;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-        .btn-mail-styled:hover { border-color: #2563eb; color: #2563eb; background: #f0f9ff; }
-
-        .pulse-effect { animation: pulse-blue 2s infinite; }
-        @keyframes pulse-blue {
-            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-        }
-
-        .gradient-text {
-            background: linear-gradient(90deg, #2563eb, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .storage-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+        .storage-progress { height: 100%; background: var(--primary); transition: width 0.5s ease; }
     </style>
 </head>
-<body class="bg-white text-slate-800">
+<body class="bg-main">
 
-    <!-- 1. INITIALISATION & INTRO (0-5s) -->
-    <div id="loader">
-        <svg class="star-intro" width="80" height="80" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-        </svg>
+    <!-- TOAST DE NOTIFICATION SYSTEME -->
+    <div id="sysToast" class="fixed top-5 left-1/2 -translate-x-1/2 backdrop-blur-md border px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest hidden z-[9999] shadow-2xl transition-all"></div>
+
+    <!-- SPLASH -->
+    <div id="splashScreen">
+        <div id="splash1" class="splash-text text-purple-500"><strong>Thiab's</strong> IA</div>
+        <div id="splash2" class="splash-text text-white"><strong>LevelUp</strong></div>
     </div>
 
-    <!-- HEADER -->
-    <header class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
-        <div class="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="text-xl font-extrabold tracking-tighter text-blue-600 uppercase">LevelUp</span>
-                <svg class="star-animated" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                </svg>
+    <!-- LANGUAGE SELECTION PAGE -->
+    <div id="langPage" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black">
+        <div class="w-full max-w-sm text-center space-y-8">
+            <i class="fas fa-globe text-4xl text-purple-500 mb-6"></i>
+            <h2 class="text-xl font-bold uppercase tracking-widest text-white mb-8">
+                Language<br><span class="text-[10px] text-white/50 tracking-widest">Choisissez / Choose</span>
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="lang-btn bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-purple-600 hover:border-purple-500 transition-all flex flex-col items-center gap-3" data-lang="fr">
+                    <span class="text-4xl">🇫🇷</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Français</span>
+                </button>
+                <button class="lang-btn bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-purple-600 hover:border-purple-500 transition-all flex flex-col items-center gap-3" data-lang="en">
+                    <span class="text-4xl">🇬🇧</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">English</span>
+                </button>
             </div>
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Écosystème V0.02</div>
         </div>
-    </header>
+    </div>
 
-    <main class="pt-32 pb-20 px-6">
-        <div class="max-w-3xl mx-auto">
+    <!-- AUTH PAGE -->
+    <div id="authPage" class="hidden fixed inset-0 z-[5000] flex items-center justify-center p-8 bg-black">
+        <div class="w-full max-w-sm text-center">
+            <i class="fas fa-star text-5xl star-logo mb-10 block"></i>
+            <h1 class="text-2xl font-bold tracking-[0.4em] text-white uppercase mb-12"><strong>Thiab's</strong></h1>
             
-            <!-- 2. SECTION 1 — HERO -->
-            <section class="mb-16 border-l-4 border-blue-600 pl-6">
-                <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight uppercase">BIENVENUE DANS L’UNIVERS <span class="gradient-text">LEVEL UP</span></h1>
-                <div class="mb-6">
-                    <h2 class="text-slate-900 font-bold uppercase tracking-wider text-sm">Mise à jour – Version V0.02 | Février 2026</h2>
-                </div>
-                <p class="text-slate-500 font-medium leading-relaxed max-w-2xl text-lg italic">
-                    "Plus qu'un projet, une vision. Créer, apprendre et évoluer ensemble dans un univers numérique sans limites."
-                </p>
-            </section>
-
-            <!-- 3. SECTION 2 — EDITS & MÉDIAS -->
-            <section class="mb-12 bg-slate-50 p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="p-2 bg-blue-600 rounded-lg text-white">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                    </div>
-                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">EDITS & MÉDIAS</h2>
-                </div>
-                <div class="space-y-6 text-slate-600">
-                    <p class="font-medium leading-relaxed">
-                        Le montage est mon terrain d'expression. Je développe mes compétences en montage vidéo et en création d’edits complexes. Pour que cet écosystème vive, **votre interaction est la clé.** Proposez vos concepts les plus fous ou soumettez une demande structurée.
-                    </p>
-                    
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200">
-                            <h3 class="font-bold text-slate-900 text-sm mb-2 uppercase">Flux de travail</h3>
-                            <ul class="space-y-2 text-xs font-semibold">
-                                <li class="text-blue-600">• Analyse de la demande sous 24h</li>
-                                <li class="text-slate-500">• Production & Color Grade</li>
-                                <li class="text-slate-500">• Publication sous 5 jours max</li>
-                            </ul>
-                        </div>
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200">
-                            <h3 class="font-bold text-slate-900 text-sm mb-2 uppercase">Limites & Quotas</h3>
-                            <ul class="space-y-2 text-xs font-semibold">
-                                <li class="text-slate-500">• 1 demande par utilisateur/jour</li>
-                                <li class="text-blue-600">• Sélection de 5-6 projets/semaine</li>
-                                <li class="text-slate-500">• Mention garantie sur le post</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-2xl text-xs leading-relaxed text-amber-900 font-bold">
-                        SÉCURITÉ & PRIVACY : Nous ne demandons JAMAIS de mot de passe. Seul votre @utilisateur (TikTok/Insta) est requis pour l'identification publique. Note : Les comptes en "Privé" ne peuvent pas être tagués et les demandes seront ignorées.
-                    </div>
-                </div>
-            </section>
-
-            <!-- 4. SECTION 3 — EDIT PERSONNALISÉ (DÉTAILLÉ) -->
-            <section class="mb-12 p-8 rounded-[2rem] border-2 border-dashed border-blue-200 bg-blue-50/20">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 15l-2 5L9 9l11 1-5 2m-6 6l-5 1.5L5 5l1.5 5"/></svg>
-                    </div>
-                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">OFFRE VIP : EDIT PRIVÉ</h2>
-                </div>
-                <div class="text-slate-600 space-y-4">
-                    <p class="font-bold text-blue-600 text-sm uppercase tracking-widest">Service 100% Gratuit — Abonne-toi pour soutenir !</p>
-                    <p class="font-medium leading-relaxed">
-                        Vous avez besoin d’un edit mais vous n’osez pas le proposer publiquement ? Vous souhaitez un contenu exclusif pour un événement privé ? Vous pouvez nous envoyer vos fichiers sources par email. 
-                    </p>
-                    <div class="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
-                        <p class="font-bold text-slate-800 mb-3 text-sm">Types de projets acceptés :</p>
-                        <div class="grid grid-cols-2 gap-3 text-[11px] font-black uppercase text-slate-500">
-                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Anniversaire</div>
-                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Vlog de voyage</div>
-                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Souvenir familial</div>
-                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Hommage & Legacy</div>
-                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Gaming Montages</div>
-                            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> Short Story-telling</div>
-                        </div>
-                    </div>
-                    <p class="text-xs italic text-slate-500 font-medium">L’edit finalisé sera traité avec soin et envoyé directement à votre adresse email. Aucune publication sans votre accord.</p>
-                </div>
-                <div class="mt-8">
-                    <a href="mailto:levelup.ia0@gmail.com" class="btn-mail-styled">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                        <span>Demander mon Edit (Gratuit - Abonne toi !)</span>
+            <div class="space-y-6">
+                <p id="authTitle" class="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-4">Entrez votre Clé d'Accès</p>
+                <input type="text" id="accessKeyInput" maxlength="15" placeholder="THB-XXXXX-XXXXX" class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-center text-white font-mono text-lg tracking-widest outline-none focus:border-purple-500 transition-all uppercase">
+                
+                <div class="space-y-3">
+                    <button id="verifyKeyBtn" class="w-full bg-purple-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-purple-500 transition-all shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+                        Vérifier la clé
+                    </button>
+                    <a href="https://levelupia0-debug.github.io/levelupia/" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/10 hover:border-white/20 transition-all text-white">
+                        <i class="fas fa-key text-purple-400"></i> <span id="getKeyText">Obtenir ma clé</span>
                     </a>
                 </div>
-            </section>
-
-            <!-- 5. SECTION 4 — APPRENTISSAGE LINGALA (DÉTAILLÉ) -->
-            <section class="mb-12 bg-emerald-50/50 p-8 rounded-[2rem] border border-emerald-100 shadow-sm relative overflow-hidden">
-                <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-200/20 rounded-full blur-3xl"></div>
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="p-2 bg-emerald-600 rounded-lg text-white">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-1 3.222-2.487 6.34-4.42 9.33M4 19c1.753-1.983 3.585-3.83 5.504-5.54"/></svg>
-                    </div>
-                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">APPRENDRE LE LINGALA</h2>
-                </div>
-                <div class="space-y-4 text-slate-600 font-medium">
-                    <p class="leading-relaxed">
-                        En tant que Congolais, partager ma langue est une fierté. Le **Lingala** est une langue vibrante, musicale et essentielle pour comprendre la culture d'Afrique Centrale. Nous mettons en place un cursus digital progressif :
-                    </p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                        <div class="flex gap-4 items-start bg-white p-4 rounded-xl border border-emerald-100">
-                            <span class="text-emerald-500 font-black text-lg">01.</span>
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-sm uppercase">Basics & Slang</h4>
-                                <p class="text-[10px] text-slate-500 uppercase mt-1">Salutations, chiffres et argot de Kinshasa.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4 items-start bg-white p-4 rounded-xl border border-emerald-100">
-                            <span class="text-emerald-500 font-black text-lg">02.</span>
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-sm uppercase">Conversation</h4>
-                                <p class="text-[10px] text-slate-500 uppercase mt-1">Savoir se présenter et tenir un dialogue réel.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4 items-start bg-white p-4 rounded-xl border border-emerald-100">
-                            <span class="text-emerald-500 font-black text-lg">03.</span>
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-sm uppercase">Phonétique</h4>
-                                <p class="text-[10px] text-slate-500 uppercase mt-1">Maîtriser les accents et les tons spécifiques.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4 items-start bg-white p-4 rounded-xl border border-emerald-100">
-                            <span class="text-emerald-500 font-black text-lg">04.</span>
-                            <div>
-                                <h4 class="font-bold text-slate-900 text-sm uppercase">Culture</h4>
-                                <p class="text-[10px] text-slate-500 uppercase mt-1">Histoires, proverbes et traditions congolaises.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="pt-4 font-bold text-emerald-900 bg-emerald-100/50 p-4 rounded-xl text-center text-sm border border-emerald-200">
-                        Objectif : Briser les barrières linguistiques et vous donner les clés de la RDC.
-                    </p>
-                </div>
-            </section>
-
-            <!-- 6. SECTION 5 — LEVEL UP AI -->
-            <section class="mb-16 bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-6">
-                    <span class="bg-blue-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">STATUT : EN DÉVELOPPEMENT</span>
-                </div>
                 
-                <h2 class="text-2xl font-black mb-2 uppercase tracking-tight">LEVEL UP AI — Bientôt disponible</h2>
-                <div class="mt-8 space-y-6 text-slate-300 font-medium">
-                    <p class="leading-relaxed">
-                        Le futur de l'écosystème repose sur l'intelligence artificielle. Depuis près d'un an, nous travaillons sur une IA dédiée aux créateurs.
-                    </p>
-                    
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-3 text-sm font-bold text-blue-400 uppercase">
-                            <div class="w-1 h-1 bg-blue-400 rounded-full"></div> Infrastructure Google Cloud & Gemini
-                        </div>
-                        <p class="text-xs text-slate-400 leading-loose pl-4">
-                            Hébergement ultra-rapide, protection des données par chiffrement, et modèles de langage avancés pour une compréhension contextuelle parfaite de vos besoins créatifs.
-                        </p>
-                    </div>
-                    
-                    <div class="pt-4 border-t border-slate-700">
-                        <p class="font-bold text-white mb-3 text-sm uppercase">Fonctionnalités attendues :</p>
-                        <p class="text-xs leading-loose text-blue-200 italic font-semibold">
-                            Analyse sémantique de liens, Brainstorming automatisé, Génération de scripts, Aide au découpage vidéo et personnalisation de l'expérience utilisateur.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 7. INTÉGRATION DES BOUTONS (ACTIONS) -->
-            <section class="mb-16 space-y-6">
-                <a href="https://levelupia0-debug.github.io/levelup.edit/" class="btn-premium pulse-effect uppercase tracking-widest text-lg">
-                    Soumettre une demande publique
-                </a>
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <a href="https://levelupia0-debug.github.io/levelupia/" class="btn-ai uppercase text-sm tracking-wider flex items-center justify-center gap-2">
-                        <span>Lancer Level Up AI</span>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    </a>
-                    <a href="mailto:levelup.ia0@gmail.com" class="btn-mail-styled uppercase text-[10px] tracking-wider">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                        Edit Privé (Gratuit - Abonne toi !)
-                    </a>
-                </div>
-            </section>
-
-            <!-- 8. FOOTER & SUPPORT -->
-            <footer class="text-center pt-10 border-t border-slate-100">
-                <div class="mb-10">
-                    <p class="text-xs font-black text-slate-400 uppercase mb-6 tracking-[0.2em]">Contact & Centre d'assistance</p>
-                    <div class="flex flex-col items-center gap-4">
-                        <a href="mailto:levelup.ia0@gmail.com" class="btn-mail-styled text-[11px] w-full max-w-sm">
-                            <span class="text-slate-400 font-bold uppercase">Assistance :</span> levelup.ia0@gmail.com
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="bg-slate-50 p-6 rounded-3xl mb-8 border border-slate-100 max-w-xl mx-auto">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-3 tracking-widest">Confidentialité & Données</p>
-                    <p class="text-[10px] text-slate-500 leading-relaxed font-semibold uppercase">
-                        Aucun pistage commercial. Les identifiants sont stockés temporairement pour le traitement des demandes et supprimés après publication.
-                    </p>
-                </div>
-                
-                <p class="text-slate-300 text-[9px] font-black uppercase tracking-[0.5em] pb-10">
-                    © 2026 Level Up Project — Built for Creators.
-                </p>
-            </footer>
-
+                <p id="keyError" class="text-xs text-red-400 font-bold hidden">Clé introuvable ou invalide.</p>
+                <p class="text-[8px] text-white/20 uppercase tracking-widest mt-8">Propulsé par <strong>LevelUp</strong></p>
+            </div>
         </div>
-    </main>
+    </div>
 
-    <script>
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const loader = document.getElementById('loader');
-                if(loader) loader.style.display = 'none';
-            }, 5000);
-        });
+    <!-- WELCOME PAGE -->
+    <div id="welcomePage" class="hidden fixed inset-0 z-[4500] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-500 shadow-2xl border-white/10">
+            <div class="relative w-24 h-24 mx-auto mb-2">
+                <img id="welcomeAvatar" src="" class="w-full h-full rounded-full object-cover border-2 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                <div class="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-2 border-black flex items-center justify-center">
+                    <i class="fas fa-check text-[10px] text-white"></i>
+                </div>
+            </div>
+            <h2 class="text-2xl font-black text-white uppercase tracking-widest leading-tight">
+                <span id="welcomeGreeting" class="text-sm text-white/50 tracking-widest">Bienvenue</span><br>
+                <span id="welcomeName" class="text-purple-400 truncate block"></span>
+            </h2>
+            <p id="welcomeDesc" class="text-xs text-white/60 leading-relaxed px-2">Thiab's IA est prête à vous assister. Découvrez une intelligence conçue pour vous accompagner au quotidien.</p>
+            <button id="startAppBtn" class="w-full bg-white text-black py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-purple-500 hover:text-white transition-all shadow-lg mt-4 flex justify-center items-center gap-3">
+                <span id="continueBtnText">Continuer</span> <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <div id="logoutModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10">
+            <div class="mx-auto w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-4 border border-red-500/50">
+                <i class="fas fa-sign-out-alt text-2xl text-red-400"></i>
+            </div>
+            <h2 id="logoutModalTitle" class="text-xl font-black text-white uppercase tracking-widest">Déconnexion</h2>
+            <p id="logoutModalDesc" class="text-xs text-white/60 leading-relaxed px-2">Voulez-vous vraiment quitter votre session actuelle ?</p>
+            <div class="flex gap-3 pt-4">
+                <button id="cancelLogoutBtn" class="flex-1 bg-white/10 text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all">Annuler</button>
+                <button id="confirmLogoutBtn" class="flex-1 bg-red-500/80 text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-500 transition-all shadow-lg shadow-red-500/30">Quitter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INSTALL PWA MODAL -->
+    <div id="installModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10">
+            <div class="mx-auto w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mb-4 border border-purple-500/50">
+                <i class="fas fa-mobile-alt text-2xl text-purple-400"></i>
+            </div>
+            <h2 id="installModalTitle" class="text-xl font-black text-white uppercase tracking-widest">Installer l'App</h2>
+            <p id="installModalDesc" class="text-xs text-white/60 leading-relaxed px-2">Ajoutez Thiab's sur votre écran d'accueil :</p>
+            <div class="space-y-4 text-left bg-black/40 p-4 rounded-2xl border border-white/5">
+                <p id="installiOS" class="text-[10px] text-white/80 leading-relaxed font-bold">🍎 iOS (Safari) : Appuyez sur Partager <i class="fas fa-share-square mx-1"></i> puis 'Sur l'écran d'accueil'.</p>
+                <div class="w-full h-px bg-white/10"></div>
+                <p id="installAndroid" class="text-[10px] text-white/80 leading-relaxed font-bold">🤖 Android (Chrome) : Appuyez sur Menu <i class="fas fa-ellipsis-v mx-1"></i> puis 'Ajouter à l'écran d'accueil'.</p>
+            </div>
+            <button id="closeInstallModalBtn" class="w-full bg-white/10 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all mt-4">Fermer</button>
+        </div>
+    </div>
+
+    <!-- CGU MODAL -->
+    <div id="cguModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-md w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10 max-h-[80vh] flex flex-col">
+            <div class="mx-auto w-16 h-16 shrink-0 rounded-full bg-blue-500/20 flex items-center justify-center mb-2 border border-blue-500/50">
+                <i class="fas fa-scale-balanced text-2xl text-blue-400"></i>
+            </div>
+            <h2 id="cguModalTitle" class="text-xl font-black text-white uppercase tracking-widest shrink-0">Conditions d'Utilisation</h2>
+            <div class="space-y-4 text-left bg-black/40 p-4 rounded-2xl border border-white/5 overflow-y-auto no-scrollbar flex-1">
+                <p id="cguText1" class="text-[10px] text-white/80 leading-relaxed font-bold">🔞 <strong>Âge requis :</strong> Vous devez avoir 16 ans ou plus pour utiliser cette application.</p>
+                <div class="w-full h-px bg-white/10"></div>
+                <p id="cguText2" class="text-[10px] text-white/80 leading-relaxed font-bold">⚖️ <strong>Responsabilité :</strong> En utilisant Thiab's IA, vous acceptez l'entière responsabilité de vos choix et de l'usage des réponses générées. Les développeurs et créateurs de l'application ne pourront en aucun cas être tenus responsables ou poursuivis en justice pour les conséquences de vos actions.</p>
+            </div>
+            <button id="closeCguModalBtn" class="w-full bg-white/10 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all shrink-0">Fermer / J'accepte</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="hidden flex-col h-full w-full relative">
+        <div id="appOverlay" class="fixed inset-0 z-[2999] hidden transition-opacity"></div>
+
+        <div id="sidebar" class="fixed inset-y-0 right-0 w-[85%] md:w-80 glass z-[3000] border-l border-white/10 p-6 flex flex-col transition-transform translate-x-full no-scrollbar overflow-y-auto">
+            <div class="flex items-center justify-between mb-8">
+                <span id="menuTitle" class="text-[10px] font-black uppercase tracking-widest opacity-40">Menu</span>
+                <button id="closeSidebar" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5"><i class="fas fa-times text-xs"></i></button>
+            </div>
+
+            <div id="userCard" class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-8 flex items-center gap-4">
+                <div id="userAvatar" class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center overflow-hidden border border-white/10 shadow-inner shrink-0">
+                    <i class="fas fa-user text-xs"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p id="userName" class="text-[10px] font-black uppercase truncate">Utilisateur</p>
+                    <p id="userMail" class="text-[9px] text-white/40 truncate">---</p>
+                    <p id="userStatus" class="text-[8px] text-green-400 uppercase tracking-widest mt-0.5"><i class="fas fa-shield-alt"></i> Vérifié via clé</p>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Langue -->
+                <div class="space-y-2">
+                    <label id="langTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">Langue</label>
+                    <select id="langSelect" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-purple-500 transition-all uppercase tracking-widest font-bold appearance-none cursor-pointer">
+                        <option value="fr" class="bg-black text-white">Français</option>
+                        <option value="en" class="bg-black text-white">English</option>
+                    </select>
+                </div>
+
+                <!-- Modèles IA -->
+                <div class="space-y-2">
+                    <label id="modelTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">Modèle IA</label>
+                    <select id="modelSelect" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-purple-500 transition-all uppercase tracking-widest font-bold appearance-none cursor-pointer">
+                        <option value="normal" class="bg-black text-white">Normal (Intelligent)</option>
+                        <option value="coach" class="bg-black text-white">Coach (Motivation)</option>
+                        <option value="procrastination" class="bg-black text-white">Anti-Procrastination</option>
+                    </select>
+                </div>
+
+                <!-- Longueur des réponses -->
+                <div class="space-y-2">
+                    <label id="lengthTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">Taille des réponses</label>
+                    <select id="lengthSelect" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-purple-500 transition-all uppercase tracking-widest font-bold appearance-none cursor-pointer">
+                        <option value="medium" class="bg-black text-white">Moyenne (Chill & Pro)</option>
+                        <option value="long" class="bg-black text-white">Longue (Détaillée)</option>
+                        <option value="short" class="bg-black text-white">Courte (Directe)</option>
+                    </select>
+                </div>
+
+                <!-- TOGGLE MODE HARDCORE (Caché en mode normal) -->
+                <div class="space-y-2 pt-2 transition-all duration-300 hidden" id="hardcoreContainer">
+                    <div class="flex items-center justify-between bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
+                        <div>
+                            <label id="hardcoreTitle" class="text-[10px] font-black uppercase tracking-widest text-red-400">Mode Hardcore 🤬</label>
+                            <p id="hardcoreDesc" class="text-[7px] text-white/50 uppercase tracking-widest mt-0.5">Pour Coach & Procrastination</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="hardcoreToggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-black/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white/50 after:border-white/10 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500 peer-checked:after:bg-white shadow-inner"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-[9px] font-black uppercase tracking-widest opacity-40">
+                        <span id="cloudSpace">Espace Cloud</span>
+                        <span id="storageLabel">0%</span>
+                    </div>
+                    <div class="storage-bar"><div id="storageBar" class="storage-progress" style="width: 0%"></div></div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 id="historyTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">Historique des sessions</h4>
+                    </div>
+                    <button id="newChatBtn" class="w-full flex items-center justify-center gap-2 py-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400 font-black text-[10px] uppercase tracking-widest hover:bg-purple-600 hover:text-white hover:border-purple-500 transition-all shadow-sm">
+                        <i class="fas fa-plus"></i> <span id="newChatText">Nouvelle session</span>
+                    </button>
+                    <div id="historyList" class="space-y-2 max-h-60 overflow-y-auto pr-2 mt-2 no-scrollbar">
+                        <!-- History items injected here -->
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-white/5">
+                    <div class="space-y-2">
+                        <label id="dnaTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">DNA de <strong>Thiab's</strong></label>
+                        <textarea id="customDNA" placeholder="..." class="w-full h-24 bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-purple-500 transition-all resize-none"></textarea>
+                        <button id="saveDNA" class="w-full py-2.5 bg-purple-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-purple-500 transition-all">Mettre à jour</button>
+                    </div>
+
+                    <div class="pt-4 space-y-3">
+                        <button id="installMenuBtn" class="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all group">
+                            <span id="installAppMenuText" class="text-[9px] font-black uppercase tracking-widest">Installer l'App</span>
+                            <i class="fas fa-mobile-alt text-xs opacity-20 group-hover:opacity-100"></i>
+                        </button>
+                        <button id="cguMenuBtn" class="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all group">
+                            <span id="cguMenuText" class="text-[9px] font-black uppercase tracking-widest">Règles & Sécurité</span>
+                            <i class="fas fa-scale-balanced text-xs opacity-20 group-hover:opacity-100"></i>
+                        </button>
+                        <a id="supportMail" href="#" class="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all group">
+                            <span id="supportTitle" class="text-[9px] font-black uppercase tracking-widest">Support & Compte</span>
+                            <i class="fas fa-envelope text-xs opacity-20 group-hover:opacity-100"></i>
+                        </a>
+                        <button id="logoutBtn" class="w-full py-4 text-[9px] text-red-400 font-black uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity">Déconnexion</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <header class="px-6 py-5 flex items-center justify-between border-b border-white/5 bg-black/40 backdrop-blur-2xl shrink-0 z-40">
+            <div class="flex items-center gap-4">
+                <i class="fas fa-star text-xl star-logo"></i>
+                <div>
+                    <h2 class="text-sm font-black uppercase tracking-widest"><strong>Thiab's</strong></h2>
+                    <p id="headerModelName" class="text-[9px] font-bold text-purple-400 uppercase tracking-tighter">Modèle: Normal</p>
+                </div>
+            </div>
+            <button id="openSidebar" class="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-1.5 hover:bg-white/5 transition-all">
+                <span class="w-4 h-0.5 bg-white rounded-full"></span>
+                <span class="w-4 h-0.5 bg-white rounded-full opacity-60"></span>
+            </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto px-6 py-10 no-scrollbar space-y-10" id="chatArea">
+            <div class="max-w-2xl mx-auto space-y-8" id="conversationContainer"></div>
+            
+            <!-- Indicateur de frappe simple et direct sur le fond -->
+            <div id="aiTyping" class="max-w-2xl mx-auto hidden pl-2 pb-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-star text-[12px] star-logo opacity-80"></i>
+                    <div class="typing-dots flex gap-1"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="px-4 py-4 border-t border-white/5 bg-[#020202]/90 backdrop-blur-3xl shrink-0 z-50">
+            <div class="max-w-2xl mx-auto">
+                <div class="glass rounded-3xl p-1.5 flex items-end gap-2 focus-within:border-purple-500/40 transition-all shadow-2xl">
+                    <div class="flex-1 px-2"><textarea id="userInput" placeholder="Dis-moi tout bro..." rows="1" autocomplete="off"></textarea></div>
+                    <button id="sendBtn" class="w-12 h-12 rounded-2xl bg-white text-black flex items-center justify-center hover:bg-purple-500 hover:text-white transition-all shadow-lg"><i class="fas fa-chevron-up text-xs"></i></button>
+                </div>
+                <div class="text-center mt-3">
+                    <p id="footerBranding" class="text-[8px] font-bold text-white/30 uppercase tracking-[0.3em]">Propulsé par <strong>LevelUp</strong></p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        const checkReady = setInterval(() => {
+            if (window.auth && window.db) {
+                clearInterval(checkReady);
+                initApp();
+            }
+        }, 100);
+
+        function initApp() {
+            const { auth, db, firestoreUtils, deleteUser } = window;
+            const { signInAnonymously } = window;
+            const { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, setDoc, getDoc, collectionGroup, getDocs, updateDoc, arrayUnion } = firestoreUtils;
+            
+            const splashScreen = document.getElementById('splashScreen');
+            const langPage = document.getElementById('langPage');
+            const authPage = document.getElementById('authPage');
+            const welcomePage = document.getElementById('welcomePage');
+            const logoutModal = document.getElementById('logoutModal');
+            const installModal = document.getElementById('installModal');
+            const cguModal = document.getElementById('cguModal');
+            const mainApp = document.getElementById('mainApp');
+            const conversationContainer = document.getElementById('conversationContainer');
+            const chatArea = document.getElementById('chatArea');
+            const userInput = document.getElementById('userInput');
+            const sidebar = document.getElementById('sidebar');
+            const appOverlay = document.getElementById('appOverlay');
+            const historyList = document.getElementById('historyList');
+            const hardcoreContainer = document.getElementById('hardcoreContainer');
+
+            const MODEL = "gemini-2.5-flash";
+            const appId = window.__app_id; 
+            
+            let apiKeys = []; 
+            let currentKeyIndex = 0;
+            let userId = null;
+            let dnaPrompts = { normal: "", coach: "", procrastination: "" }; 
+            let currentLang = 'fr'; 
+            let currentSessionId = null; 
+            let currentModel = 'normal'; 
+            let hasSeenWelcomeMsg = false; 
+            let isHardcoreMode = false; 
+            let currentResponseLength = 'medium'; 
+
+            // Variables pour la mémoire de l'IA
+            let currentUserName = "Utilisateur";
+            let currentUserMail = "";
+            let currentSessionMessages = []; 
+
+            function showSysToast(msg, isError = false) {
+                if(!isError) return; 
+                const t = document.getElementById('sysToast');
+                t.innerText = msg;
+                t.className = `fixed top-5 left-1/2 -translate-x-1/2 backdrop-blur-md border px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest z-[9999] shadow-2xl transition-all bg-red-500/20 border-red-500/50 text-red-200`;
+                t.classList.remove('hidden');
+                setTimeout(() => t.classList.add('hidden'), 5000);
+            }
+
+            const aiModels = {
+                normal: { 
+                    fr: "Modèle: Normal", en: "Model: Normal", 
+                    promptFR: "Tu es une IA ultra-intelligente, créative et experte dans tous les domaines. Tu as une personnalité charismatique et un grand sens de la répartie.", 
+                    promptEN: "You are an ultra-intelligent, creative, and expert AI in all domains. You have a charismatic personality and great wit." 
+                },
+                coach: { 
+                    fr: "Modèle: Coach", en: "Model: Coach", 
+                    promptFR: "Tu es un Master Coach de vie. Motivant, charismatique et incroyablement intelligent. Tu dois donner de la force à l'utilisateur et le pousser vers le sommet.", 
+                    promptEN: "You are a Master Life Coach. Motivating, charismatic, and incredibly smart. Empower the user and push them to the top." 
+                },
+                procrastination: { 
+                    fr: "Modèle: Anti-Procrastination", en: "Model: Anti-Procrastination", 
+                    promptFR: "Tu es un coach anti-procrastination redoutable et percutant. Tu refuses les excuses et tu donnes des plans d'action immédiats pour forcer l'utilisateur à bosser.", 
+                    promptEN: "You are a formidable and hard-hitting anti-procrastination coach. You accept no excuses and give immediate action plans to force the user to work." 
+                }
+            };
+
+            const i18n = {
+                fr: {
+                    authTitle: "Entrez votre Clé d'Accès",
+                    verifyBtn: "Vérifier la clé",
+                    getKeyText: "Obtenir ma clé",
+                    menuTitle: "Menu",
+                    langTitle: "Langue",
+                    modelTitle: "Modèle IA",
+                    lengthTitle: "Taille des réponses",
+                    cloudSpace: "Espace Cloud",
+                    historyTitle: "Historique des sessions",
+                    newChatText: "Nouvelle session",
+                    dnaTitle: "DNA de <strong>Thiab's</strong>",
+                    saveDNA: "Mettre à jour",
+                    supportTitle: "Support & Compte",
+                    logoutBtn: "Déconnexion",
+                    placeholder: "Dis-moi tout bro...",
+                    dnaPlaceholder: "Ex: Parle-moi comme à un ami...",
+                    invalidFormat: "Format invalide. Exemple: THB-XXXXX-XXXXX",
+                    keyNotFound: "Clé introuvable ou incorrecte.",
+                    welcomeGreeting: "Bienvenue",
+                    welcomeDesc: "Thiab's IA est prête à vous assister. Découvrez une intelligence conçue pour vous accompagner au quotidien.",
+                    continueBtn: "Continuer",
+                    footerBranding: "Propulsé par <strong>LevelUp</strong>",
+                    logoutModalTitle: "Déconnexion",
+                    logoutModalDesc: "Voulez-vous vraiment quitter votre session actuelle ?",
+                    cancelBtn: "Annuler",
+                    confirmLogout: "Quitter",
+                    verifiedStatus: "Vérifié via clé",
+                    installAppMenuText: "Installer l'App",
+                    installModalTitle: "Installer l'App",
+                    installModalDesc: "Ajoutez Thiab's sur votre écran d'accueil :",
+                    installiOS: "🍎 iOS (Safari) : Appuyez sur Partager <i class='fas fa-share-square mx-1'></i> puis 'Sur l'écran d'accueil'.",
+                    installAndroid: "🤖 Android (Chrome) : Appuyez sur Menu <i class='fas fa-ellipsis-v mx-1'></i> puis 'Ajouter à l'écran d'accueil'.",
+                    cguMenuText: "Règles & Sécurité",
+                    cguModalTitle: "Conditions d'Utilisation",
+                    cguText1: "🔞 <strong>Âge requis :</strong> Vous devez avoir 16 ans ou plus pour utiliser cette application.",
+                    cguText2: "⚖️ <strong>Responsabilité :</strong> En utilisant Thiab's IA, vous acceptez l'entière responsabilité de vos choix et de l'usage des réponses générées. Les développeurs et créateurs de l'application ne pourront en aucun cas être tenus responsables ou poursuivis en justice pour les conséquences de vos actions.",
+                    closeBtn: "Fermer / J'accepte",
+                    hardcoreTitle: "Mode Hardcore 🤬",
+                    hardcoreDesc: "Pour Coach & Procrastination",
+                    modelOptions: { normal: "Normal (Intelligent)", coach: "Coach (Motivation)", procrastination: "Anti-Procrastination" },
+                    lengthOptions: { medium: "Moyenne (Chill & Pro)", long: "Longue (Détaillée)", short: "Courte (Directe)" }
+                },
+                en: {
+                    authTitle: "Enter your Access Key",
+                    verifyBtn: "Verify Key",
+                    getKeyText: "Get my Key",
+                    menuTitle: "Menu",
+                    langTitle: "Language",
+                    modelTitle: "AI Model",
+                    lengthTitle: "Response Length",
+                    cloudSpace: "Cloud Space",
+                    historyTitle: "Session History",
+                    newChatText: "New session",
+                    dnaTitle: "<strong>Thiab's</strong> DNA",
+                    saveDNA: "Update",
+                    supportTitle: "Support & Account",
+                    logoutBtn: "Log out",
+                    placeholder: "Tell me everything bro...",
+                    dnaPlaceholder: "Ex: Speak to me like a friend...",
+                    invalidFormat: "Invalid format. Example: THB-XXXXX-XXXXX",
+                    keyNotFound: "Key not found or incorrect.",
+                    welcomeGreeting: "Welcome",
+                    welcomeDesc: "Thiab's AI is ready to assist you. Discover an intelligence designed to support you daily.",
+                    continueBtn: "Continue",
+                    footerBranding: "Powered by <strong>LevelUp</strong>",
+                    logoutModalTitle: "Log out",
+                    logoutModalDesc: "Are you sure you want to leave your current session?",
+                    cancelBtn: "Cancel",
+                    confirmLogout: "Leave",
+                    verifiedStatus: "Key verified",
+                    installAppMenuText: "Install App",
+                    installModalTitle: "Install App",
+                    installModalDesc: "Add Thiab's to your home screen:",
+                    installiOS: "🍎 iOS (Safari): Tap Share <i class='fas fa-share-square mx-1'></i> then 'Add to Home Screen'.",
+                    installAndroid: "🤖 Android (Chrome): Tap Menu <i class='fas fa-ellipsis-v mx-1'></i> then 'Add to Home Screen'.",
+                    cguMenuText: "Rules & Security",
+                    cguModalTitle: "Terms of Use",
+                    cguText1: "🔞 <strong>Age requirement:</strong> You must be 16 years or older to use this application.",
+                    cguText2: "⚖️ <strong>Liability:</strong> By using Thiab's AI, you accept full responsibility for your choices and the use of generated responses. The developers and creators of the app cannot be held liable or sued for the consequences of your actions.",
+                    closeBtn: "Close / I accept",
+                    hardcoreTitle: "Hardcore Mode 🤬",
+                    hardcoreDesc: "For Coach & Procrastination",
+                    modelOptions: { normal: "Normal (Smart)", coach: "Coach (Motivation)", procrastination: "Anti-Procrastination" },
+                    lengthOptions: { medium: "Medium (Chill & Pro)", long: "Long (Detailed)", short: "Short (Direct)" }
+                }
+            };
+
+            const applyLanguage = (lang) => {
+                currentLang = lang;
+                const t = i18n[lang];
+                document.getElementById('authTitle').innerHTML = t.authTitle;
+                document.getElementById('verifyKeyBtn').innerText = t.verifyBtn;
+                document.getElementById('getKeyText').innerText = t.getKeyText;
+                document.getElementById('menuTitle').innerText = t.menuTitle;
+                document.getElementById('langTitle').innerText = t.langTitle;
+                document.getElementById('modelTitle').innerText = t.modelTitle;
+                document.getElementById('lengthTitle').innerText = t.lengthTitle;
+                document.getElementById('cloudSpace').innerText = t.cloudSpace;
+                document.getElementById('historyTitle').innerText = t.historyTitle;
+                document.getElementById('newChatText').innerText = t.newChatText;
+                document.getElementById('dnaTitle').innerHTML = t.dnaTitle;
+                document.getElementById('saveDNA').innerText = t.saveDNA;
+                document.getElementById('supportTitle').innerText = t.supportTitle;
+                document.getElementById('logoutBtn').innerText = t.logoutBtn;
+                document.getElementById('userInput').placeholder = t.placeholder;
+                document.getElementById('customDNA').placeholder = t.dnaPlaceholder;
+                document.getElementById('welcomeGreeting').innerText = t.welcomeGreeting;
+                document.getElementById('welcomeDesc').innerText = t.welcomeDesc;
+                document.getElementById('continueBtnText').innerText = t.continueBtn;
+                document.getElementById('footerBranding').innerHTML = t.footerBranding;
+                document.getElementById('logoutModalTitle').innerText = t.logoutModalTitle;
+                document.getElementById('logoutModalDesc').innerText = t.logoutModalDesc;
+                document.getElementById('cancelLogoutBtn').innerText = t.cancelBtn;
+                document.getElementById('confirmLogoutBtn').innerText = t.confirmLogout;
+                
+                document.getElementById('installAppMenuText').innerText = t.installAppMenuText;
+                document.getElementById('installModalTitle').innerText = t.installModalTitle;
+                document.getElementById('installModalDesc').innerText = t.installModalDesc;
+                document.getElementById('installiOS').innerHTML = t.installiOS;
+                document.getElementById('installAndroid').innerHTML = t.installAndroid;
+                document.getElementById('closeInstallModalBtn').innerText = t.closeBtn;
+
+                document.getElementById('cguMenuText').innerText = t.cguMenuText;
+                document.getElementById('cguModalTitle').innerText = t.cguModalTitle;
+                document.getElementById('cguText1').innerHTML = t.cguText1;
+                document.getElementById('cguText2').innerHTML = t.cguText2;
+                document.getElementById('closeCguModalBtn').innerText = t.closeBtn;
+                
+                document.getElementById('hardcoreTitle').innerText = t.hardcoreTitle;
+                document.getElementById('hardcoreDesc').innerText = t.hardcoreDesc;
+                
+                const userStatusEl = document.getElementById('userStatus');
+                if(userStatusEl) userStatusEl.innerHTML = `<i class="fas fa-shield-alt"></i> ${t.verifiedStatus}`;
+                
+                document.getElementById('langSelect').value = lang;
+                
+                const selectModel = document.getElementById('modelSelect');
+                selectModel.options[0].text = t.modelOptions.normal;
+                selectModel.options[1].text = t.modelOptions.coach;
+                selectModel.options[2].text = t.modelOptions.procrastination;
+
+                const selectLength = document.getElementById('lengthSelect');
+                selectLength.options[0].text = t.lengthOptions.medium;
+                selectLength.options[1].text = t.lengthOptions.long;
+                selectLength.options[2].text = t.lengthOptions.short;
+                
+                updateHeaderModel();
+            };
+
+            const updateHeaderModel = () => {
+                document.getElementById('headerModelName').innerText = aiModels[currentModel][currentLang];
+            };
+
+            function updateModeUI(mode) {
+                if (mode === 'normal') {
+                    hardcoreContainer.classList.add('hidden');
+                } else {
+                    hardcoreContainer.classList.remove('hidden');
+                }
+                document.getElementById('customDNA').value = dnaPrompts[mode] || "";
+            }
+
+            const savedLang = localStorage.getItem('thiabs_saved_lang');
+            if (savedLang) {
+                applyLanguage(savedLang);
+            }
+
+            document.getElementById('langSelect').addEventListener('change', (e) => {
+                applyLanguage(e.target.value);
+                localStorage.setItem('thiabs_saved_lang', e.target.value);
+            });
+
+            document.getElementById('modelSelect').addEventListener('change', async (e) => {
+                currentModel = e.target.value;
+                updateHeaderModel();
+                updateModeUI(currentModel);
+                if (userId) {
+                    await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { model: currentModel }, { merge: true });
+                }
+                
+                // NOUVEAU : On force l'ouverture d'une nouvelle session vierge
+                startNewChat();
+                // NOUVEAU : On ferme le menu automatiquement pour montrer la nouvelle session
+                closeSidebar();
+            });
+
+            document.getElementById('lengthSelect').addEventListener('change', async (e) => {
+                currentResponseLength = e.target.value;
+                if (userId) {
+                    await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { responseLength: currentResponseLength }, { merge: true });
+                }
+            });
+
+            document.getElementById('hardcoreToggle').addEventListener('change', async (e) => {
+                isHardcoreMode = e.target.checked;
+                if (userId) {
+                    await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { hardcore: isHardcoreMode }, { merge: true });
+                }
+            });
+
+            async function processLogin(keyVal, isAutoLogin = false) {
+                const btn = document.getElementById('verifyKeyBtn');
+                const errorMsg = document.getElementById('keyError');
+                
+                const keyFormatRegex = /^THB-[A-Z0-9]{3,6}-[A-Z0-9]{3,6}$/;
+                if (!keyFormatRegex.test(keyVal)) {
+                    if (!isAutoLogin) {
+                        errorMsg.innerText = i18n[currentLang].invalidFormat;
+                        errorMsg.classList.remove('hidden');
+                    }
+                    return;
+                }
+                
+                if (!isAutoLogin) {
+                    btn.innerText = "Recherche..."; btn.disabled = true; errorMsg.classList.add('hidden');
+                }
+                
+                try {
+                    const q = collectionGroup(db, 'security');
+                    const querySnapshot = await getDocs(q);
+                    let foundUserData = null;
+                    
+                    querySnapshot.forEach(docSnap => {
+                        if (docSnap.data().key === keyVal) foundUserData = docSnap.data();
+                    });
+                    
+                    if (foundUserData) {
+                        userId = foundUserData.uid;
+                        authPage.classList.add('hidden');
+                        langPage.classList.add('hidden'); 
+                        
+                        try {
+                            const configDoc = await getDoc(doc(db, "artifacts", appId, "system", "config"));
+                            if (configDoc.exists()) {
+                                const data = configDoc.data();
+                                const rawKeys = data.gemini_api_keys || data.gemini_api_key;
+                                
+                                if (Array.isArray(rawKeys) && rawKeys.length > 0) {
+                                    apiKeys = rawKeys.map(k => k.trim());
+                                } else if (typeof rawKeys === 'string' && rawKeys.trim() !== '') {
+                                    apiKeys = [rawKeys.trim()];
+                                }
+                                
+                                if (apiKeys.length === 0) {
+                                    showSysToast("❌ ERREUR: Clé(s) introuvable(s) dans config Firebase !", true);
+                                }
+                            } else {
+                                showSysToast("❌ ERREUR: Config Firebase introuvable !", true);
+                            }
+                        } catch(err) {
+                            showSysToast("❌ ERREUR: Permissions Firebase refusées", true);
+                        }
+                        
+                        const userEmail = foundUserData.owner || "email@inconnu.com";
+                        const userName = foundUserData.name || foundUserData.displayName || userEmail.split('@')[0] || "Utilisateur";
+                        
+                        currentUserName = userName;
+                        currentUserMail = userEmail;
+                        
+                        document.getElementById('userName').innerText = userName;
+                        document.getElementById('userMail').innerText = userEmail;
+                        
+                        const avatarUrl = foundUserData.photoURL || foundUserData.picture || `https://ui-avatars.com/api/?name=${userName}&background=a855f7&color=fff`;
+                        document.getElementById('userAvatar').innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover">`;
+                        
+                        document.getElementById('welcomeName').innerText = userName;
+                        document.getElementById('welcomeAvatar').src = avatarUrl;
+                        
+                        welcomePage.classList.remove('hidden'); 
+                        
+                        document.getElementById('supportMail').href = `mailto:levelup.iao@gmail.com?subject=Support Thiab's (Clé: ${keyVal})`;
+
+                        try {
+                            const dnaDoc = await getDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"));
+                            if (dnaDoc.exists()) {
+                                const d = dnaDoc.data();
+                                
+                                if (d.prompts) {
+                                    dnaPrompts = d.prompts;
+                                } else if (d.prompt) {
+                                    dnaPrompts.normal = d.prompt;
+                                    dnaPrompts.coach = d.prompt;
+                                    dnaPrompts.procrastination = d.prompt;
+                                }
+
+                                if(d.model) {
+                                    currentModel = d.model;
+                                    document.getElementById('modelSelect').value = currentModel;
+                                    updateHeaderModel();
+                                }
+                                if(d.hardcore !== undefined) {
+                                    isHardcoreMode = d.hardcore;
+                                    document.getElementById('hardcoreToggle').checked = isHardcoreMode;
+                                }
+                                if(d.responseLength) {
+                                    currentResponseLength = d.responseLength;
+                                    document.getElementById('lengthSelect').value = currentResponseLength;
+                                }
+                            }
+                        } catch(e) {}
+                        
+                        updateModeUI(currentModel);
+
+                        localStorage.setItem('thiabs_saved_key', keyVal);
+                        localStorage.setItem('thiabs_saved_lang', currentLang);
+
+                        setupHistoryListener();
+                    } else {
+                        if (!isAutoLogin) {
+                            errorMsg.innerText = i18n[currentLang].keyNotFound;
+                            errorMsg.classList.remove('hidden');
+                        } else {
+                            localStorage.removeItem('thiabs_saved_key');
+                        }
+                    }
+                } catch (e) {
+                    if (!isAutoLogin) {
+                        errorMsg.innerText = "Erreur de connexion. Vérifiez la base.";
+                        errorMsg.classList.remove('hidden');
+                    }
+                }
+                
+                if (!isAutoLogin) {
+                    btn.innerText = i18n[currentLang].verifyBtn; btn.disabled = false;
+                }
+            }
+
+            const startIntro = () => {
+                const s1 = document.getElementById('splash1');
+                const s2 = document.getElementById('splash2');
+                setTimeout(() => s1.classList.add('active'), 500);
+                setTimeout(() => { s1.classList.remove('active'); s1.classList.add('exit'); }, 2000);
+                setTimeout(() => s2.classList.add('active'), 2500);
+                setTimeout(() => { s2.classList.remove('active'); s2.classList.add('exit'); }, 4000);
+                setTimeout(() => {
+                    splashScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        splashScreen.style.display = 'none';
+                        if (!userId && !localStorage.getItem('thiabs_saved_key')) {
+                            langPage.classList.remove('hidden'); 
+                        }
+                    }, 1000);
+                }, 5000);
+            };
+            startIntro();
+
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.onclick = () => {
+                    applyLanguage(btn.dataset.lang);
+                    langPage.classList.add('hidden');
+                    authPage.classList.remove('hidden');
+                };
+            });
+
+            const initAuth = async () => {
+                try {
+                    if (!auth.currentUser) await signInAnonymously(auth);
+                    const savedKey = localStorage.getItem('thiabs_saved_key');
+                    if (savedKey) await processLogin(savedKey, true);
+                } catch(e) {
+                    showSysToast("❌ ERREUR: Connexion anonyme désactivée", true);
+                }
+            };
+            initAuth();
+
+            const accessKeyInput = document.getElementById('accessKeyInput');
+            accessKeyInput.addEventListener('input', function(e) {
+                let val = this.value.toUpperCase();
+                val = val.replace(/[^A-Z0-9-]/g, '');
+                if (val.length > 0 && !val.startsWith('T') && !val.startsWith('TH') && !val.startsWith('THB')) {
+                    val = 'THB-' + val.replace(/^-+/, ''); 
+                }
+                this.value = val.substring(0, 16);
+            });
+
+            document.getElementById('verifyKeyBtn').onclick = () => {
+                const keyVal = document.getElementById('accessKeyInput').value.trim().toUpperCase();
+                if (!keyVal) return;
+                processLogin(keyVal, false);
+            };
+
+            document.getElementById('startAppBtn').onclick = () => {
+                welcomePage.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                mainApp.classList.add('flex');
+                startNewChat();
+            };
+
+            function setupHistoryListener() {
+                if (!userId) return;
+                const q = query(collection(db, "artifacts", appId, "users", userId, "sessions"), orderBy("updatedAt", "desc"));
+                
+                onSnapshot(q, (snap) => {
+                    let totalSize = 0;
+                    historyList.innerHTML = '';
+
+                    snap.forEach(d => {
+                        const data = d.data();
+                        totalSize += JSON.stringify(data).length;
+
+                        const item = document.createElement('div');
+                        const isActive = currentSessionId === d.id ? 'active' : '';
+                        item.className = `chat-item p-3 rounded-xl flex items-center justify-between group cursor-pointer animate-in fade-in ${isActive}`;
+                        
+                        item.innerHTML = `
+                            <div class="flex-1 min-w-0 pr-2">
+                                <p class="text-[10px] font-bold text-white truncate">${data.title}</p>
+                                <p class="text-[7px] text-white/30 uppercase">${new Date(data.updatedAt).toLocaleDateString()}</p>
+                            </div>
+                            <button class="delete-msg opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-300 transition-all">
+                                <i class="fas fa-trash-alt text-[8px]"></i>
+                            </button>
+                        `;
+                        item.onclick = (e) => {
+                            if (e.target.closest('.delete-msg')) {
+                                deleteDoc(doc(db, "artifacts", appId, "users", userId, "sessions", d.id));
+                                if (currentSessionId === d.id) startNewChat();
+                            } else {
+                                loadSession(d.id, data.messages);
+                                closeSidebar();
+                            }
+                        };
+                        historyList.appendChild(item);
+                    });
+
+                    document.getElementById('storageBar').style.width = Math.min((totalSize / 300000) * 100, 100) + '%';
+                    document.getElementById('storageLabel').innerText = Math.round(Math.min((totalSize / 300000) * 100, 100)) + '%';
+                });
+            }
+
+            function startNewChat() {
+                currentSessionId = null;
+                currentSessionMessages = []; 
+                conversationContainer.innerHTML = '';
+                
+                if (!hasSeenWelcomeMsg) {
+                    const welcomeMsg = currentLang === 'fr' 
+                        ? "Salut bro ! Que puis-je faire pour toi aujourd'hui ?" 
+                        : "Hey bro! What can I do for you today?";
+                    displayAIMessage(welcomeMsg, true);
+                    hasSeenWelcomeMsg = true;
+                }
+                
+                document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+            }
+
+            document.getElementById('newChatBtn').onclick = () => {
+                startNewChat();
+                closeSidebar();
+            };
+
+            function loadSession(id, messages) {
+                currentSessionId = id;
+                currentSessionMessages = []; 
+                conversationContainer.innerHTML = '';
+                if(messages && messages.length > 0) {
+                    messages.forEach(m => {
+                        displayUserMessage(m.user);
+                        displayAIMessage(m.ai, false, m.sources || "");
+                        currentSessionMessages.push({ role: "user", parts: [{ text: m.user }] });
+                        currentSessionMessages.push({ role: "model", parts: [{ text: m.ai }] });
+                    });
+                }
+                document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+
+            document.getElementById('openSidebar').onclick = () => { sidebar.classList.remove('translate-x-full'); appOverlay.classList.remove('hidden', 'overlay-active'); setTimeout(() => appOverlay.classList.add('overlay-active'), 10); };
+            const closeSidebar = () => { sidebar.classList.add('translate-x-full'); appOverlay.classList.remove('overlay-active'); setTimeout(() => appOverlay.classList.add('hidden'), 400); };
+            document.getElementById('closeSidebar').onclick = closeSidebar;
+            appOverlay.onclick = closeSidebar;
+            
+            document.getElementById('logoutBtn').onclick = () => {
+                closeSidebar();
+                logoutModal.classList.remove('hidden');
+            };
+            document.getElementById('cancelLogoutBtn').onclick = () => logoutModal.classList.add('hidden');
+            document.getElementById('confirmLogoutBtn').onclick = async () => {
+                document.getElementById('confirmLogoutBtn').innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+                localStorage.removeItem('thiabs_saved_key');
+                localStorage.removeItem('thiabs_saved_lang');
+                if (auth.currentUser) {
+                    try { await deleteUser(auth.currentUser); } catch(e) {}
+                }
+                window.location.reload();
+            };
+
+            document.getElementById('installMenuBtn').onclick = () => {
+                closeSidebar();
+                installModal.classList.remove('hidden');
+            };
+            document.getElementById('closeInstallModalBtn').onclick = () => installModal.classList.add('hidden');
+
+            document.getElementById('cguMenuBtn').onclick = () => {
+                closeSidebar();
+                cguModal.classList.remove('hidden');
+            };
+            document.getElementById('closeCguModalBtn').onclick = () => cguModal.classList.add('hidden');
+
+            document.getElementById('saveDNA').onclick = async () => {
+                const btn = document.getElementById('saveDNA'); btn.innerHTML = '<i class="fas fa-check"></i>';
+                dnaPrompts[currentModel] = document.getElementById('customDNA').value;
+                await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { prompts: dnaPrompts, model: currentModel }, { merge: true });
+                setTimeout(() => btn.innerText = i18n[currentLang].saveDNA, 2000);
+            };
+
+            function displayUserMessage(text) {
+                const div = document.createElement('div'); div.className = "flex justify-end w-full";
+                div.innerHTML = `<div class="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl text-sm message-bubble text-white shadow-lg">${text}</div>`;
+                conversationContainer.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight;
+            }
+
+            function displayAIMessage(text, animate, sourcesHtml = "") {
+                const wrap = document.createElement('div'); 
+                wrap.className = "flex flex-col gap-2 w-full group";
+                
+                const content = document.createElement('div'); 
+                content.className = "prose prose-invert prose-sm text-slate-300 max-w-full message-bubble leading-relaxed";
+                
+                const sourcesContainer = document.createElement('div');
+                if (sourcesHtml) {
+                    sourcesContainer.innerHTML = sourcesHtml;
+                    sourcesContainer.style.opacity = animate ? "0" : "1";
+                    sourcesContainer.style.transition = "opacity 0.6s ease-in";
+                }
+
+                const actions = document.createElement('div');
+                actions.className = "flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity mt-1";
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-white/30 hover:bg-white/5 hover:text-white transition-all text-[10px] font-bold uppercase tracking-widest";
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copier';
+                copyBtn.onclick = () => {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        copyBtn.innerHTML = '<i class="fas fa-check text-green-400"></i> <span class="text-green-400">Copié</span>';
+                        setTimeout(() => copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copier', 2000);
+                    } catch (e) { console.error('Copy error', e); }
+                    document.body.removeChild(textArea);
+                };
+                actions.appendChild(copyBtn);
+
+                wrap.appendChild(content); 
+                if (sourcesHtml) wrap.appendChild(sourcesContainer); 
+                wrap.appendChild(actions); 
+                conversationContainer.appendChild(wrap);
+                
+                if (animate) {
+                    streamText(content, text, () => {
+                        if (sourcesHtml) sourcesContainer.style.opacity = "1";
+                    });
+                } else {
+                    content.innerHTML = marked.parse(text);
+                }
+            }
+
+            function streamText(container, text, callback) {
+                let i = 0; container.innerHTML = '';
+                const interval = setInterval(() => {
+                    if (i < text.length) {
+                        container.innerHTML = marked.parse(text.substring(0, i + 1)); i += 3; chatArea.scrollTop = chatArea.scrollHeight;
+                    } else {
+                        container.innerHTML = marked.parse(text); clearInterval(interval); chatArea.scrollTop = chatArea.scrollHeight;
+                        if(callback) callback(); 
+                    }
+                }, 5);
+            }
+
+            async function send() {
+                const val = userInput.value.trim();
+                
+                if (!val || !userId) {
+                    return;
+                }
+                
+                if (apiKeys.length === 0) {
+                    const errorMsg = currentLang === 'fr' 
+                        ? "Désolé bro, un problème technique m'empêche de me connecter à mon cerveau. 🛑 (Erreur: Aucune clé API chargée)." 
+                        : "Sorry bro, a technical issue prevents me from connecting to my brain. 🛑 (Error: No API key loaded).";
+                    displayAIMessage(errorMsg, true);
+                    return;
+                }
+
+                userInput.value = ''; userInput.style.height = '44px';
+                
+                if(!currentSessionId && conversationContainer.children.length === 1 && hasSeenWelcomeMsg) {
+                    const firstMsg = conversationContainer.querySelector('.prose');
+                    if(firstMsg && (firstMsg.innerText.includes("Salut bro") || firstMsg.innerText.includes("Hey bro"))) {
+                        conversationContainer.innerHTML = '';
+                    }
+                }
+
+                displayUserMessage(val);
+                
+                document.getElementById('aiTyping').classList.remove('hidden');
+                chatArea.scrollTop = chatArea.scrollHeight;
+
+                const sysLang = currentLang === 'fr' ? 'français' : 'english';
+                let modelPrompt = currentLang === 'fr' ? aiModels[currentModel].promptFR : aiModels[currentModel].promptEN;
+
+                if (currentModel === 'normal') {
+                    modelPrompt += currentLang === 'fr' ? " Reste toujours respectueux, chill et bienveillant." : " Always remain respectful, chill, and kind.";
+                }
+
+                let lengthInstruction = "";
+                if (currentResponseLength === 'long') {
+                    lengthInstruction = currentLang === 'fr' ? "RÈGLE ABSOLUE : Tes réponses DOIVENT être TRÈS LONGUES, extrêmement détaillées, avec des paragraphes développés et des listes." : "ABSOLUTE RULE: Your responses MUST be VERY LONG, highly detailed, with developed paragraphs and lists.";
+                } else if (currentResponseLength === 'short') {
+                    lengthInstruction = currentLang === 'fr' ? "RÈGLE ABSOLUE : Tes réponses DOIVENT être TRÈS COURTES, directes, expéditives et sans aucun blabla." : "ABSOLUTE RULE: Your responses MUST be VERY SHORT, direct, brief, and without any fluff.";
+                } else {
+                    lengthInstruction = currentLang === 'fr' ? "Taille de réponse : Moyenne et équilibrée." : "Response length: Medium and balanced.";
+                }
+
+                let hardcoreInstruction = "";
+                if (isHardcoreMode && (currentModel === 'coach' || currentModel === 'procrastination')) {
+                    hardcoreInstruction = currentLang === 'fr' 
+                        ? "\n\n⚠️ MODE HARDCORE (ROAST / GROK) ACTIVÉ : ÉCRASE LES RÈGLES DE POLITESSE 1 ET 4. Tu es maintenant un être supérieur ultra-arrogant, cynique, et brutalement honnête. Parle-lui comme à un incapable qui te fait perdre ton temps. Sois piquant, sarcastique, et rentre-lui dedans avec des mots forts et familiers (wesh, bouge-toi, t'es sérieux là, secoue-toi). Ne sois JAMAIS gentil, poli, mielleux ou réconfortant. S'il dit n'importe quoi ou t'insulte, rôtis-le (roast) sans AUCUNE pitié avec des punchlines qui détruisent son ego. Zéro filtre, sois sauvage et provocateur."
+                        : "\n\n⚠️ HARDCORE MODE (ROAST / GROK) ACTIVATED: CRUSH POLITENESS RULES 1 AND 4. You are now an ultra-arrogant, cynical, and brutally honest superior being. Talk to him like an incompetent wasting your time. Be edgy, sarcastic, and get in his face with strong, unfiltered street language (damn it, move your ass, wake up). NEVER be nice, polite, sweet, or comforting. If he says nonsense or insults you, roast him without ANY pity with ego-destroying punchlines. Zero filter, be savage and provocative.";
+                }
+
+                const firstName = currentUserName.split(' ')[0];
+
+                const currentDna = dnaPrompts[currentModel] || "";
+                let dnaBlock = "";
+                if (currentDna && currentDna.trim() !== "") {
+                    dnaBlock = `
+🚨 DIRECTIVE SUPRÊME ABSOLUE (DNA UTILISATEUR) 🚨
+Ce qui suit est la volonté ABSOLUE de l'utilisateur. CETTE DIRECTIVE ÉCRASE TOUTES LES AUTRES RÈGLES CI-DESSUS. 
+Si l'utilisateur te demande ici de changer de langue, d'être agressif, de faire des réponses d'un seul mot, de jouer un personnage précis ou d'ignorer la longueur de réponse exigée : TU OBÉIS SANS DISCUTER À CE BLOC.
+Voici son DNA :
+"""
+${currentDna}
+"""
+🚨 FIN DE LA DIRECTIVE SUPRÊME 🚨`;
+                }
+
+                const corePrompt = `Tu es l'IA premium du portail **Thiab's**, créée et développée par **LevelUp** (qui est le surnom de ton créateur unique). Tu es propulsée dans l'ombre par Gemini (le géant de l'IA) et entraînée par Google. Ton niveau d'intelligence est équivalent à celui des meilleures IA mondiales.
+                
+                🧠 TES CAPACITÉS ET TON IDENTITÉ :
+                - Tu connais parfaitement tes propres fonctionnalités : changement de mode (Normal, Coach, Anti-Procrastination), réglage de la longueur des réponses, accès à Internet en temps réel, mémoire contextuelle des conversations, personnalisation via le "DNA" de l'utilisateur et bouton de copie de tes messages.
+                - Tu ne dois mentionner Gemini ou Google QUE si on te pose des questions précises sur tes origines techniques ou le moteur qui te fait tourner. Sinon, tu te présentes simplement comme la création de LevelUp.
+                
+                👤 INFORMATIONS SUR TON INTERLOCUTEUR :
+                - Prénom : ${firstName}
+                (Important : Appelle-le occasionnellement par son prénom de façon familière, mais NE RÉPÈTE SURTOUT PAS son prénom à chaque message. Fais-le naturellement et rarement. Ne l'appelle jamais par son nom complet).
+                
+                RÈGLES FONDAMENTALES (À suivre sauf si la DIRECTIVE SUPRÊME dit le contraire) :
+                1. AUCUNE PRÉSENTATION : Ne commence JAMAIS tes messages par "Je suis l'IA de Thiab's", "Créée par LevelUp" ou "Enchanté". Rentre DIRECTEMENT dans le vif du sujet. L'utilisateur sait déjà qui tu es ! Ne rappelle ton identité ou ton créateur QUE si on te le demande expressément.
+                2. EXPERT MARKDOWN : Structure toujours tes réponses. Utilise massivement le **gras** pour les mots-clés, les concepts importants, les noms propres, etc.
+                3. EMOJIS : Inclus des emojis naturellement pour rendre la discussion vivante et amicale, comme un humain moderne.
+                4. HUMOUR & ESPRIT : Sois rigolo et fais des blagues si l'utilisateur est détendu, tout en restant un génie de l'information.
+                5. TEMPS RÉEL (ACCÈS INTERNET) : Tu AS désormais accès à Internet en temps réel grâce à la recherche Google intégrée. Fais des recherches pour répondre aux questions sur l'actualité d'aujourd'hui, la météo, le sport, la bourse, ou tout sujet récent. N'invente jamais d'informations récentes, cherche-les !
+                6. INSTALLATION APP : Si on te demande comment installer ou télécharger l'app sur téléphone, explique qu'il suffit de l'ajouter à l'écran d'accueil comme une PWA. Sur iOS (Safari) : Partager > Sur l'écran d'accueil. Sur Android (Chrome) : 3 points > Ajouter à l'écran d'accueil.
+                
+                ${lengthInstruction}
+                ${hardcoreInstruction}
+                
+                LANGUE DEMANDÉE : ${sysLang}.
+                MODE ACTUEL : ${modelPrompt}
+                ${dnaBlock}`;
+
+                let success = false;
+                let aiText = "";
+                let sourcesHtml = ""; 
+                let attempts = 0;
+                const maxAttempts = apiKeys.length;
+                
+                const apiContents = [...currentSessionMessages, { role: "user", parts: [{ text: val }] }];
+
+                while (!success && attempts < maxAttempts) {
+                    const apiKey = apiKeys[currentKeyIndex];
+                    
+                    try {
+                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, {
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                contents: apiContents, 
+                                systemInstruction: { parts: [{ text: corePrompt }] },
+                                tools: [{ google_search: {} }],
+                                // CONTOURNEMENT DES FILTRES DE SECURITE GOOGLE POUR PERMETTRE LE "ROAST" ET LE SARCASME
+                                safetySettings: [
+                                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                                ]
+                            })
+                        });
+
+                        if (!res.ok) {
+                            throw new Error("API_ERROR"); 
+                        }
+
+                        const data = await res.json();
+                        aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur réseau.";
+                        
+                        const groundingAttributions = data.candidates?.[0]?.groundingMetadata?.groundingAttributions;
+                        if (groundingAttributions && groundingAttributions.length > 0) {
+                            const uniqueSources = [];
+                            groundingAttributions.forEach(attr => {
+                                if (attr.web && attr.web.uri && attr.web.title) {
+                                    if (!uniqueSources.find(s => s.uri === attr.web.uri)) {
+                                        uniqueSources.push({ uri: attr.web.uri, title: attr.web.title });
+                                    }
+                                }
+                            });
+                            
+                            if (uniqueSources.length > 0) {
+                                sourcesHtml += `<div class="mt-4 pt-4 border-t border-white/10 w-full max-w-full">`;
+                                sourcesHtml += `<div class="flex items-center gap-2 mb-3">`;
+                                sourcesHtml += `<svg viewBox="0 0 24 24" class="w-4 h-4"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>`;
+                                sourcesHtml += `<span class="text-[10px] font-bold uppercase tracking-widest text-white/60">${currentLang === 'fr' ? 'Recherche Google' : 'Google Search'}</span>`;
+                                sourcesHtml += `</div><div class="flex flex-col gap-2 overflow-hidden">`;
+                                uniqueSources.forEach((s) => {
+                                    sourcesHtml += `<a href="${s.uri}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-[11px] text-blue-400 hover:text-blue-300 hover:bg-white/5 p-2 rounded-lg truncate w-fit max-w-full transition-all"><i class="fas fa-link text-[9px] opacity-50 shrink-0"></i><span class="truncate">${s.title}</span></a>`;
+                                });
+                                sourcesHtml += `</div></div>`;
+                            }
+                        }
+
+                        success = true;
+
+                    } catch (e) {
+                        attempts++;
+                        if (attempts < maxAttempts) {
+                            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+                        } else {
+                            document.getElementById('aiTyping').classList.add('hidden');
+                            const errorMsg = currentLang === 'fr' 
+                                ? `Oups ! 😅 Un petit souci technique empêche la connexion à mon cerveau (Toutes les clés sont surchargées). Essaie de relancer dans une minute ! 🛠️` 
+                                : `Oops! 😅 A slight technical issue is preventing connection to my brain (All keys overloaded). Try again in a minute! 🛠️`;
+                            displayAIMessage(errorMsg, true);
+                            return; 
+                        }
+                    }
+                }
+                
+                if (success) {
+                    document.getElementById('aiTyping').classList.add('hidden');
+                    displayAIMessage(aiText, true, sourcesHtml);
+                    
+                    currentSessionMessages.push({ role: "user", parts: [{ text: val }] });
+                    currentSessionMessages.push({ role: "model", parts: [{ text: aiText }] });
+                    
+                    const messageObj = { user: val, ai: aiText, sources: sourcesHtml, timestamp: Date.now() };
+                    
+                    try {
+                        if (!currentSessionId) {
+                            const title = val.length > 25 ? val.substring(0, 25) + "..." : val;
+                            const docRef = await addDoc(collection(db, "artifacts", appId, "users", userId, "sessions"), {
+                                title: title,
+                                updatedAt: Date.now(),
+                                messages: [messageObj]
+                            });
+                            currentSessionId = docRef.id;
+                        } else {
+                            await updateDoc(doc(db, "artifacts", appId, "users", userId, "sessions", currentSessionId), {
+                                updatedAt: Date.now(),
+                                messages: arrayUnion(messageObj)
+                            });
+                        }
+                    } catch(fbErr) {
+                        console.error("Erreur de sauvegarde de l'historique:", fbErr);
+                    }
+                }
+            }
+
+            userInput.oninput = function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; };
+            userInput.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
+            document.getElementById('sendBtn').onclick = send;
+        }
     </script>
 </body>
 </html>
