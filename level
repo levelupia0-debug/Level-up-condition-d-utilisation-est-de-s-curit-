@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Level IA</title>
     
     <!-- Ajout du favicon Étoile Violette -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'><path fill='%23a855f7' d='M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z'/></svg>" type="image/svg+xml">
-    
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'><path fill='%23a855f7' d='M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z'/></svg>">
+
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -50,8 +53,8 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--dark); color: #ffffff; height: 100dvh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
         .bg-main { background: radial-gradient(circle at 50% 0%, #0d061a 0%, #020202 100%); }
 
-        #splashScreen { position: fixed; inset: 0; z-index: 9999; background: black; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 0.5s ease-out; }
-        .splash-text { font-size: 1.8rem; font-weight: 900; letter-spacing: 0.6em; text-transform: uppercase; opacity: 0; position: absolute; transform: scale(0.85); filter: blur(15px); transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1); text-align: center; }
+        #splashScreen { position: fixed; inset: 0; z-index: 9999; background: black; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 0.4s ease-out; }
+        .splash-text { font-size: 1.8rem; font-weight: 900; letter-spacing: 0.6em; text-transform: uppercase; opacity: 0; position: absolute; transform: scale(0.85); filter: blur(15px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); text-align: center; }
         .splash-text.active { opacity: 1; transform: scale(1); filter: blur(0px); }
         .splash-text.exit { opacity: 0; transform: scale(1.2); filter: blur(30px); }
 
@@ -77,6 +80,36 @@
 
         .storage-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
         .storage-progress { height: 100%; background: var(--primary); transition: width 0.5s ease; }
+        
+        .star-rating i { cursor: pointer; transition: all 0.2s; }
+        .star-rating i:hover { transform: scale(1.2); }
+        .star-rating i.active { color: #f59e0b; }
+        
+        a[href="#switch-level-ia"], .support-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px 18px;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            color: #d8b4fe !important;
+            border-radius: 12px;
+            text-decoration: none !important;
+            font-weight: 800;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+        }
+        a[href="#switch-level-ia"]:hover, .support-btn:hover {
+            background: rgba(168, 85, 247, 0.3);
+            border-color: #a855f7;
+            transform: translateY(-2px);
+        }
+
+        #attachMenu { transition: all 0.2s cubic-bezier(0.1, 0.9, 0.2, 1); transform-origin: bottom left; }
+        #attachMenu.hidden-menu { opacity: 0; transform: scale(0.9) translateY(10px); pointer-events: none; }
     </style>
 </head>
 <body class="bg-main">
@@ -113,6 +146,26 @@
         </div>
     </div>
 
+    <!-- PROMO INSTALL MODAL (MUR D'INSTALLATION) -->
+    <div id="promoInstallModal" class="hidden fixed inset-0 z-[5500] flex items-end md:items-center justify-center p-4 md:p-8 bg-black/90 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in slide-in-from-bottom-10 md:zoom-in duration-500 shadow-[0_0_50px_rgba(168,85,247,0.15)] border-purple-500/30">
+            <div class="mx-auto w-20 h-20 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-2 border border-purple-500/50 shadow-inner">
+                <i id="promoIcon" class="fas fa-rocket text-3xl text-purple-400"></i>
+            </div>
+            <h2 id="promoTitle" class="text-2xl font-black text-white uppercase tracking-widest leading-tight">Passe au niveau<br><span class="text-purple-400">Supérieur</span></h2>
+            <p id="promoDesc" class="text-xs text-white/70 leading-relaxed font-bold px-2">Pour une expérience fluide, rapide et des notifications intelligentes, installe l'application Level IA sur ton appareil dès maintenant.</p>
+            
+            <div class="space-y-3 pt-4">
+                <button id="promoInstallBtn" class="w-full bg-purple-600 text-white py-4 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-purple-500 transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2">
+                    <i class="fas fa-download"></i> <span id="promoInstallText">Installer l'App</span>
+                </button>
+                <button id="promoSkipBtn" class="w-full bg-transparent text-white/40 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:text-white hover:bg-white/5 transition-all">
+                    <span id="promoSkipText">Continuer sur le web</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- AUTH PAGE -->
     <div id="authPage" class="hidden fixed inset-0 z-[5000] flex items-center justify-center p-8 bg-black">
         <div class="w-full max-w-sm text-center">
@@ -132,7 +185,10 @@
                     </a>
                 </div>
                 
-                <p id="keyError" class="text-xs text-red-400 font-bold hidden">Clé introuvable ou invalide.</p>
+                <p id="keyError" class="text-xs text-red-400 font-bold hidden flex flex-col gap-1">
+                    <span id="keyErrorMain">Clé introuvable ou invalide.</span>
+                    <span id="keyErrorDetails" class="text-[8px] text-red-300 opacity-80 font-mono break-words w-full hidden"></span>
+                </p>
                 <p class="text-[8px] text-white/20 uppercase tracking-widest mt-8">Propulsé par <strong>LevelUp</strong></p>
             </div>
         </div>
@@ -191,36 +247,138 @@
     </div>
 
     <!-- CGU MODAL -->
-    <div id="cguModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
-        <div class="glass p-8 rounded-3xl max-w-md w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10 max-h-[80vh] flex flex-col">
-            <div class="mx-auto w-16 h-16 shrink-0 rounded-full bg-blue-500/20 flex items-center justify-center mb-2 border border-blue-500/50">
-                <i class="fas fa-scale-balanced text-2xl text-blue-400"></i>
+    <div id="cguModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-6 md:p-8 rounded-3xl max-w-lg w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10 max-h-[90vh] flex flex-col">
+            <div class="mx-auto w-14 h-14 shrink-0 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/50">
+                <i class="fas fa-scale-balanced text-xl text-blue-400"></i>
             </div>
-            <h2 id="cguModalTitle" class="text-xl font-black text-white uppercase tracking-widest shrink-0">Conditions d'Utilisation</h2>
-            <div class="space-y-4 text-left bg-black/40 p-4 rounded-2xl border border-white/5 overflow-y-auto no-scrollbar flex-1">
-                <p id="cguText1" class="text-[10px] text-white/80 leading-relaxed font-bold">🔞 <strong>Âge requis :</strong> Vous devez avoir 16 ans ou plus pour utiliser cette application.</p>
+            <h2 id="cguModalTitle" class="text-lg font-black text-white uppercase tracking-widest shrink-0">Conditions d'Utilisation (CGU)</h2>
+            <div class="space-y-4 text-left bg-black/40 p-5 rounded-2xl border border-white/5 overflow-y-auto no-scrollbar flex-1">
+                <p id="cguText1" class="text-[11px] text-white/90 leading-relaxed font-bold text-justify">
+                    <span class="text-blue-400">1. ÉTHIQUE ET BIENVEILLANCE :</span> Notre application a été créée dans le but exclusif d'aider, de protéger, d'informer et de faire grandir ses utilisateurs. L'IA est programmée pour refuser toute requête malveillante, dangereuse ou illégale.
+                </p>
                 <div class="w-full h-px bg-white/10"></div>
-                <p id="cguText2" class="text-[10px] text-white/80 leading-relaxed font-bold">⚖️ <strong>Responsabilité :</strong> En utilisant notre IA, vous acceptez l'entière responsabilité de vos choix et de l'usage des réponses générées.</p>
+                <p id="cguText2" class="text-[11px] text-white/90 leading-relaxed font-bold text-justify">
+                    <span class="text-blue-400">2. RESPONSABILITÉ DE L'UTILISATEUR :</span> En utilisant Level IA, vous prenez l'entière responsabilité de vos actes et de la façon dont vous interprétez ou utilisez les réponses générées. Vous êtes maître de vos décisions.
+                </p>
+                <div class="w-full h-px bg-white/10"></div>
+                <p id="cguText3" class="text-[11px] text-white/90 leading-relaxed font-bold text-justify">
+                    <span class="text-blue-400">3. ABSENCE DE GARANTIE :</span> Bien que nos modèles soient très avancés, l'IA peut parfois commettre des erreurs. Ses conseils (notamment en mode Coach) ne remplacent en aucun cas l'avis d'un professionnel qualifié (médecin, psychologue, juriste).
+                </p>
+                <div class="w-full h-px bg-white/10"></div>
+                <p id="cguText4" class="text-[11px] text-white/90 leading-relaxed font-bold text-justify">
+                    <span class="text-blue-400">4. PROTECTION LÉGALE :</span> Les développeurs, les concepteurs (LevelUp) et les sociétés affiliées déclinent toute responsabilité en cas de dommages directs ou indirects liés à l'utilisation de ce service. Aucune poursuite judiciaire ne pourra être engagée contre l'équipe de développement.
+                </p>
+                <div class="w-full h-px bg-white/10"></div>
+                <p id="cguText5" class="text-[11px] text-white/90 leading-relaxed font-bold text-justify">
+                    <span class="text-blue-400">5. ÂGE REQUIS :</span> Vous devez avoir au minimum 16 ans pour utiliser les services de cette intelligence artificielle.
+                </p>
             </div>
-            <button id="closeCguModalBtn" class="w-full bg-white/10 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all shrink-0">Fermer / J'accepte</button>
+            <button id="closeCguModalBtn" class="w-full bg-white/10 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all shrink-0">Accepter & Fermer</button>
         </div>
     </div>
     
-    <!-- INFO MODAL (NOUVEAU) -->
-    <div id="infoModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
-        <div class="glass p-8 rounded-3xl max-w-md w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10 max-h-[80vh] flex flex-col">
-            <div class="mx-auto w-16 h-16 shrink-0 rounded-full bg-emerald-500/20 flex items-center justify-center mb-2 border border-emerald-500/50">
-                <i class="fas fa-info-circle text-2xl text-emerald-400"></i>
+    <!-- INFO MODAL -->
+    <div id="infoModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-6 md:p-8 rounded-3xl max-w-lg w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10 max-h-[90vh] flex flex-col">
+            <div class="mx-auto w-14 h-14 shrink-0 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50">
+                <i class="fas fa-info-circle text-xl text-emerald-400"></i>
             </div>
-            <h2 id="infoModalTitle" class="text-xl font-black text-white uppercase tracking-widest shrink-0">Informations App</h2>
-            <div class="space-y-4 text-left bg-black/40 p-4 rounded-2xl border border-white/5 overflow-y-auto no-scrollbar flex-1">
-                <p id="infoText1" class="text-[10px] text-white/80 leading-relaxed font-bold">🧠 <strong>Moteur IA :</strong> Propulsé par la puissance de <strong>Gemini</strong> (Écosystème Google), garantissant une intelligence analytique et générative de pointe.</p>
+            <h2 id="infoModalTitle" class="text-lg font-black text-white uppercase tracking-widest shrink-0">À propos de l'Application</h2>
+            <div class="space-y-4 text-left bg-black/40 p-5 rounded-2xl border border-white/5 overflow-y-auto no-scrollbar flex-1">
+                <p id="infoText1" class="text-[11px] text-white/90 leading-relaxed font-bold text-justify">
+                    <span class="text-emerald-400">🧠 MOTEUR IA (GEMINI) :</span> L'intelligence de l'application est propulsée par le puissant moteur <strong>Gemini 2.5 Flash</strong> (développé par Google). Ce moteur garantit une capacité d'analyse fulgurante, un raisonnement logique poussé et une connexion au Web en temps réel.
+                </p>
                 <div class="w-full h-px bg-white/10"></div>
-                <p id="infoText2" class="text-[10px] text-white/80 leading-relaxed font-bold">🔒 <strong>Sécurité & Données :</strong> L'architecture, la base de données (Firestore) et l'authentification sont entièrement hébergées et sécurisées par <strong>Google Cloud</strong>.</p>
+                <p id="infoText2" class="text-[11px] text-white/90 leading-relaxed font-bold text-justify">
+                    <span class="text-emerald-400">🔒 ARCHITECTURE & SÉCURITÉ :</span> Toutes vos données (historique, ADN utilisateur, clés d'accès) sont hébergées sur l'infrastructure ultra-sécurisée de <strong>Google Cloud (Firebase Firestore)</strong>. La sécurité et la confidentialité sont au cœur de notre développement.
+                </p>
                 <div class="w-full h-px bg-white/10"></div>
-                <p id="infoText3" class="text-[10px] text-white/80 leading-relaxed font-bold">⚡ <strong>Écosystème :</strong> Level IA intègre la technologie <em>Dual Persona</em> permettant de basculer entre la suite <strong>Productivité (Level IA)</strong> et la suite <strong>Développement Personnel (Thiab's Mode)</strong> de manière fluide.</p>
+                <p id="infoText3" class="text-[11px] text-white/90 leading-relaxed font-bold text-justify">
+                    <span class="text-emerald-400">⚡ ÉCOSYSTÈME DUAL-PERSONA :</span> Cette application intègre deux environnements distincts :<br><br>
+                    - <strong>Level IA :</strong> L'assistant pro (Normal, Travail, Expert) pour la productivité et la gestion de projets.<br>
+                    - <strong>Thiab's Mode :</strong> L'environnement secret de développement personnel (Motivation, Coach, Procrastination).
+                </p>
+                <div class="w-full h-px bg-white/10"></div>
+                <p class="text-[11px] text-white/90 leading-relaxed font-bold text-center opacity-50 mt-4">
+                    Développé par LevelUp • Version 2.0 Premium
+                </p>
             </div>
             <button id="closeInfoModalBtn" class="w-full bg-white/10 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all shrink-0">Fermer</button>
+        </div>
+    </div>
+
+    <!-- FEEDBACK MODAL -->
+    <div id="feedbackModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10">
+            <div class="flex justify-between items-center mb-2">
+                <h2 id="feedbackModalTitle" class="text-lg font-black text-white uppercase tracking-widest">Donner un avis</h2>
+                <button id="closeFeedbackBtn" class="text-white/40 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="star-rating flex justify-center gap-3 text-2xl text-white/20 my-6">
+                <i class="fas fa-star" data-rating="1"></i>
+                <i class="fas fa-star" data-rating="2"></i>
+                <i class="fas fa-star" data-rating="3"></i>
+                <i class="fas fa-star" data-rating="4"></i>
+                <i class="fas fa-star" data-rating="5"></i>
+            </div>
+            
+            <textarea id="feedbackText" placeholder="Que pensez-vous de l'application ? Comment l'améliorer ?" class="w-full h-28 bg-black/40 border border-white/10 rounded-xl p-4 text-[11px] text-white outline-none focus:border-yellow-500 transition-all resize-none"></textarea>
+            
+            <button id="submitFeedbackBtn" class="w-full bg-yellow-500 text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-yellow-400 transition-all">Envoyer l'avis</button>
+        </div>
+    </div>
+
+    <!-- REPORT MODAL -->
+    <div id="reportModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10">
+            <div class="flex justify-between items-center mb-2">
+                <h2 id="reportModalTitle" class="text-lg font-black text-white uppercase tracking-widest">Signaler un problème</h2>
+                <button id="closeReportBtn" class="text-white/40 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <select id="reportCategory" class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-[11px] text-white outline-none focus:border-red-500 transition-all">
+                    <option value="ia_bug" class="bg-black">Problème avec l'IA (Réponses bizarres)</option>
+                    <option value="ui_bug" class="bg-black">Bug visuel / Interface</option>
+                    <option value="connexion" class="bg-black">Problème de connexion / Mémoire</option>
+                    <option value="other" class="bg-black">Autre chose</option>
+                </select>
+                
+                <textarea id="reportText" placeholder="Décrivez le problème en détail pour nous aider à le corriger..." class="w-full h-28 bg-black/40 border border-white/10 rounded-xl p-4 text-[11px] text-white outline-none focus:border-red-500 transition-all resize-none"></textarea>
+            </div>
+            
+            <button id="submitReportBtn" class="w-full bg-red-500 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-400 transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)]">Envoyer le rapport</button>
+        </div>
+    </div>
+
+    <!-- NOUVEAU: NOTIF MODAL -->
+    <div id="notifModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10">
+            <div class="flex justify-between items-center mb-2">
+                <h2 id="notifModalTitle" class="text-lg font-black text-white uppercase tracking-widest">Notifications</h2>
+                <button id="closeNotifBtn" class="text-white/40 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="space-y-6 text-left">
+                <!-- Toggle -->
+                <div class="flex items-center justify-between bg-white/5 border border-white/10 p-4 rounded-xl">
+                    <label id="lblNotifEnable" class="text-[10px] font-bold text-white uppercase tracking-widest">Activer les alertes</label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="notifToggle" class="sr-only peer">
+                        <div class="w-9 h-5 bg-black/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white/50 after:border-white/10 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500 peer-checked:after:bg-white shadow-inner"></div>
+                    </label>
+                </div>
+                
+                <!-- Time picker -->
+                <div class="space-y-2">
+                    <label id="lblNotifTime" class="text-[10px] font-bold text-white/60 uppercase tracking-widest">Heure de l'exercice (Thiab's)</label>
+                    <input type="time" id="exerciseTimeInput" class="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-blue-500 transition-all font-bold text-lg text-center cursor-pointer">
+                </div>
+            </div>
+            
+            <button id="saveNotifBtn" class="w-full bg-blue-500 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-400 transition-all shadow-[0_0_15px_rgba(59,130,246,0.4)]">Enregistrer</button>
         </div>
     </div>
 
@@ -293,7 +451,7 @@
                     <div class="flex items-center justify-between bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
                         <div>
                             <label id="hardcoreTitle" class="text-[10px] font-black uppercase tracking-widest text-red-400">Mode Hardcore 🤬</label>
-                            <p id="hardcoreDesc" class="text-[7px] text-white/50 uppercase tracking-widest mt-0.5">Désactiver la censure</p>
+                            <p id="hardcoreDesc" class="text-[7px] text-white/50 uppercase tracking-widest mt-0.5">Désactiver la politesse</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="hardcoreToggle" class="sr-only peer">
@@ -330,6 +488,21 @@
                     </div>
 
                     <div class="pt-4 space-y-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="openFeedbackBtn" class="w-full flex flex-col items-center justify-center p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20 transition-all group">
+                                <i class="fas fa-star text-sm text-yellow-500 mb-1"></i>
+                                <span id="feedbackMenuText" class="text-[8px] font-black uppercase tracking-widest text-yellow-400">Avis</span>
+                            </button>
+                            <button id="openReportBtn" class="w-full flex flex-col items-center justify-center p-3 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all group">
+                                <i class="fas fa-bug text-sm text-red-500 mb-1"></i>
+                                <span id="reportMenuText" class="text-[8px] font-black uppercase tracking-widest text-red-400">Signaler</span>
+                            </button>
+                        </div>
+                        
+                        <button id="openNotifBtn" class="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-blue-500/40 transition-all group">
+                            <span id="notifMenuText" class="text-[9px] font-black uppercase tracking-widest">Rappels & Notifs</span>
+                            <i class="fas fa-bell text-xs opacity-20 group-hover:opacity-100 text-blue-400"></i>
+                        </button>
                         <button id="installMenuBtn" class="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all group">
                             <span id="installAppMenuText" class="text-[9px] font-black uppercase tracking-widest">Installer l'App</span>
                             <i class="fas fa-mobile-alt text-xs opacity-20 group-hover:opacity-100"></i>
@@ -366,7 +539,7 @@
             </button>
         </header>
 
-        <main class="flex-1 overflow-y-auto px-6 py-10 no-scrollbar space-y-10" id="chatArea">
+        <main class="flex-1 overflow-y-auto px-6 py-10 no-scrollbar space-y-10 relative" id="chatArea">
             <div class="max-w-2xl mx-auto space-y-8" id="conversationContainer"></div>
             
             <div id="aiTyping" class="max-w-2xl mx-auto hidden pl-2 pb-4">
@@ -377,11 +550,50 @@
             </div>
         </main>
 
-        <footer class="px-4 py-4 border-t border-white/5 bg-[#020202]/90 backdrop-blur-3xl shrink-0 z-50">
-            <div class="max-w-2xl mx-auto">
-                <div class="glass rounded-3xl p-1.5 flex items-end gap-2 focus-within:border-purple-500/40 transition-all shadow-2xl">
+        <footer class="px-4 py-4 border-t border-white/5 bg-[#020202]/90 backdrop-blur-3xl shrink-0 z-50 relative">
+            <div class="max-w-2xl mx-auto relative">
+                
+                <!-- PREVIEW ATTACHMENT -->
+                <div id="attachmentPreview" class="hidden absolute bottom-full mb-3 left-0 bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-xl flex items-center gap-3 shadow-2xl">
+                    <div id="attachIcon" class="w-10 h-10 bg-black/50 rounded-lg flex items-center justify-center overflow-hidden"></div>
+                    <div class="text-[10px] truncate max-w-[150px]">
+                        <p id="attachName" class="font-bold text-white truncate"></p>
+                        <p id="attachSize" class="text-white/50"></p>
+                    </div>
+                    <button id="removeAttachBtn" class="text-red-400 hover:text-red-300 px-2"><i class="fas fa-times"></i></button>
+                </div>
+
+                <div class="glass rounded-3xl p-1.5 flex items-end gap-2 focus-within:border-purple-500/40 transition-all shadow-2xl relative">
+                    
+                    <!-- BOUTON PLUS (+) EPURE -->
+                    <div class="relative">
+                        <button id="attachBtn" class="w-10 h-10 text-white/50 flex items-center justify-center hover:text-white transition-all ml-1 shrink-0 bg-transparent border-none outline-none focus:outline-none">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        
+                        <!-- MENU D'IMPORT -->
+                        <div id="attachMenu" class="hidden-menu absolute bottom-full left-0 mb-2 w-48 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl flex flex-col gap-1 z-50">
+                            <button id="importImgBtn" class="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/10 transition-all text-left group">
+                                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all"><i class="fas fa-image"></i></div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-white uppercase tracking-widest" id="lblImportImg">Image</p>
+                                </div>
+                            </button>
+                            <button id="importDocBtn" class="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/10 transition-all text-left group">
+                                <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition-all"><i class="fas fa-file-pdf"></i></div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-white uppercase tracking-widest" id="lblImportDoc">Document (PDF)</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- INPUTS CACHÉS -->
+                    <input type="file" id="imgInput" accept="image/*" class="hidden">
+                    <input type="file" id="docInput" accept="application/pdf" class="hidden">
+
                     <div class="flex-1 px-2"><textarea id="userInput" placeholder="Dis-moi tout bro..." rows="1" autocomplete="off"></textarea></div>
-                    <button id="sendBtn" class="w-12 h-12 rounded-2xl bg-white text-black flex items-center justify-center hover:bg-purple-500 hover:text-white transition-all shadow-lg"><i class="fas fa-chevron-up text-xs"></i></button>
+                    <button id="sendBtn" class="w-12 h-12 rounded-2xl bg-white text-black flex items-center justify-center hover:bg-purple-500 hover:text-white transition-all shadow-lg shrink-0"><i class="fas fa-chevron-up text-xs"></i></button>
                 </div>
                 <div class="text-center mt-3">
                     <p id="footerBranding" class="text-[8px] font-bold text-white/30 uppercase tracking-[0.3em]">Propulsé par <strong>LevelUp</strong></p>
@@ -401,16 +613,20 @@
         function initApp() {
             const { auth, db, firestoreUtils, deleteUser } = window;
             const { signInAnonymously } = window;
-            const { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, setDoc, getDoc, collectionGroup, getDocs, updateDoc, arrayUnion } = firestoreUtils;
+            const { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, setDoc, getDoc, getDocs, collectionGroup, updateDoc, arrayUnion } = firestoreUtils;
             
             const splashScreen = document.getElementById('splashScreen');
             const langPage = document.getElementById('langPage');
             const authPage = document.getElementById('authPage');
+            const promoInstallModal = document.getElementById('promoInstallModal');
             const welcomePage = document.getElementById('welcomePage');
             const logoutModal = document.getElementById('logoutModal');
             const installModal = document.getElementById('installModal');
             const cguModal = document.getElementById('cguModal');
-            const infoModal = document.getElementById('infoModal'); // Nouveau
+            const infoModal = document.getElementById('infoModal');
+            const feedbackModal = document.getElementById('feedbackModal');
+            const reportModal = document.getElementById('reportModal');
+            const notifModal = document.getElementById('notifModal');
             const mainApp = document.getElementById('mainApp');
             const conversationContainer = document.getElementById('conversationContainer');
             const chatArea = document.getElementById('chatArea');
@@ -428,243 +644,218 @@
             let userId = null;
             let currentLang = 'fr'; 
             let currentSessionId = null; 
+            let consecutiveErrors = 0;
             
-            // ÉTAT DU MODE (Level IA vs Thiab's IA)
             let isThiabsMode = false;
-            let currentModel = 'normal'; // Model par défaut pour Level IA
+            let currentModel = 'normal'; 
             let isHardcoreMode = false; 
             let currentResponseLength = 'medium'; 
             
-            // Base DNA adaptative
             let dnaPrompts = { 
                 level_normal: "", level_travail: "", level_expert: "",
                 thiabs_motivation: "", thiabs_coach: "", thiabs_procrastination: "" 
             }; 
             
             let hasSeenGrandIntro = false;
+            let hasSeenWelcomeMsg = false;
 
             let currentUserName = "Utilisateur";
             let currentUserMail = "";
             let currentSessionMessages = []; 
+            let currentStarRating = 0;
+            
+            let currentAttachment = null; 
+            const MAX_MSGS = 100;
+            const MAX_UPLOADS = 10;
+            let userUsage = { msgCount: 0, msgReset: 0, uploadCount: 0, uploadReset: 0 };
+            
+            // Notifications State
+            let userNotifs = { enabled: false, exerciseTime: "08:00", lastQuotaNotif: "", lastExerciseNotif: "" };
+
+            // PWA Installation & Device Detection
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            let deferredPrompt;
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+            });
 
             marked.setOptions({ breaks: true });
 
             function showSysToast(msg, isError = false) {
-                if(!isError) return; 
                 const t = document.getElementById('sysToast');
                 t.innerText = msg;
-                t.className = `fixed top-5 left-1/2 -translate-x-1/2 backdrop-blur-md border px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest z-[9999] shadow-2xl transition-all bg-red-500/20 border-red-500/50 text-red-200`;
+                if(isError) {
+                    t.className = `fixed top-5 left-1/2 -translate-x-1/2 backdrop-blur-md border px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest z-[9999] shadow-2xl transition-all bg-red-500/20 border-red-500/50 text-red-200`;
+                } else {
+                    t.className = `fixed top-5 left-1/2 -translate-x-1/2 backdrop-blur-md border px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest z-[9999] shadow-2xl transition-all bg-emerald-500/20 border-emerald-500/50 text-emerald-200`;
+                }
                 t.classList.remove('hidden');
                 setTimeout(() => t.classList.add('hidden'), 5000);
             }
 
-            // DUAL PERSONA MODELS
             const aiModels = {
                 level: {
-                    normal: { 
-                        fr: "Normal (Intelligent)", en: "Normal (Smart)", 
-                        promptFR: "Tu es un assistant généraliste ultra-intelligent, créatif et expert.", 
-                        promptEN: "You are an ultra-intelligent, creative, and expert generalist assistant." 
-                    },
-                    travail: { 
-                        fr: "Travail (Vision & Projets)", en: "Work (Vision & Projects)", 
-                        promptFR: "Tu es un expert en productivité, gestion de projets, vision stratégique et collaboration d'entreprise.", 
-                        promptEN: "You are an expert in productivity, project management, strategic vision, and corporate collaboration." 
-                    },
-                    expert: { 
-                        fr: "Expert (Analytique)", en: "Expert (Analytical)", 
-                        promptFR: "Tu es un expert technique et analytique. Tes réponses sont d'une précision et d'une rigueur absolues.", 
-                        promptEN: "You are a technical and analytical expert. Your answers are absolutely precise and rigorous." 
-                    }
+                    normal: { fr: "Normal (Intelligent)", en: "Normal (Smart)", promptFR: "Tu es un assistant généraliste ultra-intelligent, créatif et expert.", promptEN: "You are an ultra-intelligent, creative, and expert generalist assistant." },
+                    travail: { fr: "Travail (Vision & Projets)", en: "Work (Vision & Projects)", promptFR: "Tu es un expert en productivité, gestion de projets, vision stratégique et collaboration d'entreprise.", promptEN: "You are an expert in productivity, project management, strategic vision, and corporate collaboration." },
+                    expert: { fr: "Expert (Analytique)", en: "Expert (Analytical)", promptFR: "Tu es un expert technique et analytique. Tes réponses sont d'une précision et d'une rigueur absolues.", promptEN: "You are a technical and analytical expert. Your answers are absolutely precise and rigorous." }
                 },
                 thiabs: {
-                    motivation: { 
-                        fr: "Motivation (Inspiration)", en: "Motivation (Inspiring)", 
-                        promptFR: "Tu es un motivateur hors pair. Tu inspires, tu donnes de l'énergie et tu pousses l'utilisateur à croire en ses rêves.", 
-                        promptEN: "You are an outstanding motivator. You inspire, energize, and push the user to believe in their dreams." 
-                    },
-                    coach: { 
-                        fr: "Coach (Développement)", en: "Coach (Development)", 
-                        promptFR: "Tu es un Master Coach de développement personnel. Tu donnes de la force et des conseils concrets pour atteindre le sommet.", 
-                        promptEN: "You are a Master Personal Development Coach. You give strength and concrete advice to reach the top." 
-                    },
-                    procrastination: { 
-                        fr: "Anti-Procrastination", en: "Anti-Procrastination", 
-                        promptFR: "Tu es un coach anti-procrastination implacable. Tu refuses les excuses et tu forces à l'action immédiate.", 
-                        promptEN: "You are a formidable anti-procrastination coach. You accept no excuses and force immediate action." 
-                    }
+                    motivation: { fr: "Motivation (Inspiration)", en: "Motivation (Inspiring)", promptFR: "Tu es un motivateur hors pair. Tu inspires, tu donnes de l'énergie et tu pousses l'utilisateur à croire en ses rêves.", promptEN: "You are an outstanding motivator. You inspire, energize, and push the user to believe in their dreams." },
+                    coach: { fr: "Coach (Développement)", en: "Coach (Development)", promptFR: "Tu es un Master Coach de développement personnel. Tu donnes de la force et des conseils concrets pour atteindre le sommet.", promptEN: "You are a Master Personal Development Coach. You give strength and concrete advice to reach the top." },
+                    procrastination: { fr: "Anti-Procrastination", en: "Anti-Procrastination", promptFR: "Tu es un coach anti-procrastination implacable. Tu refuses les excuses et tu forces à l'action immédiate.", promptEN: "You are a formidable anti-procrastination coach. You accept no excuses and force immediate action." }
                 }
             };
 
             const i18n = {
                 fr: {
-                    authTitle: "Entrez votre Clé d'Accès",
-                    verifyBtn: "Vérifier la clé",
-                    getKeyText: "Obtenir ma clé",
-                    menuTitle: "Menu",
-                    thiabsModeTitle: "Mode Thiab's 🌟",
-                    thiabsModeDesc: "Activer le développement personnel",
-                    langTitle: "Langue",
-                    modelTitle: "Modèle IA",
-                    lengthTitle: "Taille des réponses",
-                    cloudSpace: "Espace Cloud",
-                    historyTitle: "Historique des sessions",
-                    newChatText: "Nouvelle session",
-                    dnaTitle: "DNA de <strong id='dnaAppBrand'>{app}</strong>",
-                    saveDNA: "Mettre à jour",
-                    supportTitle: "Support & Compte",
-                    logoutBtn: "Déconnexion",
-                    placeholder: "Dis-moi tout bro...",
-                    dnaPlaceholder: "Ex: Parle-moi comme à un ami...",
-                    invalidFormat: "Format invalide. Exemple: LVL-XXXXX-XXXXX",
-                    keyNotFound: "Clé introuvable ou incorrecte.",
-                    welcomeGreeting: "Bienvenue",
-                    welcomeDesc: "Prêt à vous assister. Découvrez une intelligence conçue pour vous accompagner au quotidien.",
-                    continueBtn: "Continuer",
-                    footerBranding: "Propulsé par <strong>LevelUp</strong>",
-                    logoutModalTitle: "Déconnexion",
-                    logoutModalDesc: "Voulez-vous vraiment quitter votre session actuelle ?",
-                    cancelBtn: "Annuler",
-                    confirmLogout: "Quitter",
-                    verifiedStatus: "Vérifié via clé",
-                    installAppMenuText: "Installer l'App",
-                    installModalTitle: "Installer l'App",
-                    installModalDesc: "Ajoutez l'application sur votre écran d'accueil :",
-                    installiOS: "🍎 iOS (Safari) : Appuyez sur Partager <i class='fas fa-share-square mx-1'></i> puis 'Sur l'écran d'accueil'.",
-                    installAndroid: "🤖 Android (Chrome) : Appuyez sur Menu <i class='fas fa-ellipsis-v mx-1'></i> puis 'Ajouter à l'écran d'accueil'.",
-                    cguMenuText: "Règles & Sécurité",
-                    cguModalTitle: "Conditions d'Utilisation",
+                    authTitle: "Entrez votre Clé d'Accès", verifyBtn: "Vérifier la clé", getKeyText: "Obtenir ma clé", menuTitle: "Menu",
+                    thiabsModeTitle: "Mode Thiab's 🌟", thiabsModeDesc: "Activer le développement personnel",
+                    langTitle: "Langue", modelTitle: "Modèle IA", lengthTitle: "Taille des réponses", cloudSpace: "Espace Cloud", historyTitle: "Historique des sessions", newChatText: "Nouvelle session",
+                    dnaTitle: "DNA de <strong id='dnaAppBrand'>{app}</strong>", saveDNA: "Mettre à jour", supportTitle: "Support & Compte", logoutBtn: "Déconnexion", placeholder: "Dis-moi tout bro...", dnaPlaceholder: "Ex: Parle-moi comme à un ami...",
+                    invalidFormat: "Format invalide. Exemple: LVL-XXXXX-XXXXX", keyNotFound: "Clé introuvable ou incorrecte.", welcomeGreeting: "Bienvenue", welcomeDesc: "Prêt à vous assister. Découvrez une intelligence conçue pour vous accompagner au quotidien.", continueBtn: "Continuer", footerBranding: "Propulsé par <strong>LevelUp</strong>",
+                    logoutModalTitle: "Déconnexion", logoutModalDesc: "Voulez-vous vraiment quitter votre session actuelle ?", cancelBtn: "Annuler", confirmLogout: "Quitter", verifiedStatus: "Vérifié via clé",
+                    installAppMenuText: "Installer l'App", installModalTitle: "Installer l'App", installModalDesc: "Ajoutez l'application sur votre écran d'accueil :",
+                    installiOS: "🍎 iOS (Safari) : Appuyez sur Partager <i class='fas fa-share-square mx-1'></i> puis 'Sur l'écran d'accueil'.", installAndroid: "🤖 Android (Chrome) : Appuyez sur Menu <i class='fas fa-ellipsis-v mx-1'></i> puis 'Ajouter à l'écran d'accueil'.",
+                    cguMenuText: "Règles & Sécurité", cguModalTitle: "Conditions d'Utilisation (CGU)",
                     cguText1: "🔞 <strong>Âge requis :</strong> Vous devez avoir 16 ans ou plus pour utiliser cette application.",
-                    cguText2: "⚖️ <strong>Responsabilité :</strong> En utilisant notre IA, vous acceptez l'entière responsabilité de vos choix et de l'usage des réponses générées.",
-                    infoMenuText: "Informations App",
-                    infoModalTitle: "Informations Système",
-                    infoText1: "🧠 <strong>Moteur IA :</strong> Propulsé par la puissance de <strong>Gemini</strong> (Écosystème Google), garantissant une intelligence analytique de pointe.",
-                    infoText2: "🔒 <strong>Sécurité & Données :</strong> Hébergement, base de données et authentification sécurisés par l'infrastructure <strong>Google Cloud / Firebase</strong>.",
-                    infoText3: "⚡ <strong>Écosystème :</strong> Mode Pro (Level IA), Mode Perso (Thiab's), Cloud Sync en temps réel et installation PWA Native.",
-                    closeBtn: "Fermer / J'accepte",
-                    closeInfoBtn: "Fermer",
-                    hardcoreTitle: "Mode Hardcore 🤬",
-                    hardcoreDesc: "Désactiver la politesse",
+                    cguText2: "⚖️ <strong>Responsabilité :</strong> En utilisant Level IA, vous prenez l'entière responsabilité de vos actes et de la façon dont vous interprétez ou utilisez les réponses générées. Vous êtes maître de vos décisions.",
+                    cguText3: "⚖️ <strong>Absence de garantie :</strong> Bien que nos modèles soient très avancés, l'IA peut parfois commettre des erreurs. Ses conseils ne remplacent en aucun cas l'avis d'un professionnel qualifié.",
+                    cguText4: "⚖️ <strong>Protection Légale :</strong> Les développeurs déclinent toute responsabilité en cas de dommages directs ou indirects liés à l'utilisation de ce service.",
+                    cguText5: "🔞 <strong>Accès restreint :</strong> L'utilisation de ces services implique l'acceptation inconditionnelle de ces termes.",
+                    infoMenuText: "Informations App", infoModalTitle: "À propos de l'Application", closeBtn: "Accepter & Fermer", closeInfoBtn: "Fermer",
+                    infoText1: "🧠 <strong>Moteur IA (GEMINI) :</strong> L'intelligence de l'application est propulsée par le puissant moteur <strong>Gemini 2.5 Flash</strong> (développé par Google). Ce moteur garantit une capacité d'analyse fulgurante, un raisonnement logique poussé et une connexion au Web en temps réel.",
+                    infoText2: "🔒 <strong>Architecture & Sécurité :</strong> Toutes vos données (historique, ADN utilisateur, clés d'accès) sont hébergées sur l'infrastructure ultra-sécurisée de <strong>Google Cloud (Firebase Firestore)</strong>. La sécurité et la confidentialité sont au cœur de notre développement.",
+                    infoText3: "⚡ <strong>Écosystème Dual-Persona :</strong> Cette application intègre deux environnements distincts :<br><br>- <strong>Level IA :</strong> L'assistant pro (Normal, Travail, Expert) pour la productivité et la gestion de projets.<br>- <strong>Thiab's Mode :</strong> L'environnement secret de développement personnel (Motivation, Coach, Procrastination).",
+                    hardcoreTitle: "Mode Hardcore 🤬", hardcoreDesc: "Désactiver la politesse", feedbackMenuText: "Avis", reportMenuText: "Signaler",
+                    lblImportImg: "Image", lblImportDoc: "Document (PDF)",
+                    notifMenuText: "Rappels & Notifs", notifModalTitle: "Notifications", notifEnable: "Activer les alertes", notifTime: "Heure de l'exercice (Thiab's)", notifSave: "Enregistrer",
+                    promoTitle: "Passe au niveau<br><span class='text-purple-400'>Supérieur</span>",
+                    promoDesc: "Pour une expérience fluide, un accès ultra-rapide et recevoir des notifications, installe l'application Level IA sur ton appareil dès maintenant.",
+                    promoInstallText: "Installer l'App", promoSkipText: "Continuer sur le web",
                     lengthOptions: { medium: "Moyenne (Chill & Pro)", long: "Longue (Détaillée)", short: "Courte (Directe)" }
                 },
                 en: {
-                    authTitle: "Enter your Access Key",
-                    verifyBtn: "Verify Key",
-                    getKeyText: "Get my Key",
-                    menuTitle: "Menu",
-                    thiabsModeTitle: "Thiab's Mode 🌟",
-                    thiabsModeDesc: "Activate personal development",
-                    langTitle: "Language",
-                    modelTitle: "AI Model",
-                    lengthTitle: "Response Length",
-                    cloudSpace: "Cloud Space",
-                    historyTitle: "Session History",
-                    newChatText: "New session",
-                    dnaTitle: "<strong id='dnaAppBrand'>{app}</strong> DNA",
-                    saveDNA: "Update",
-                    supportTitle: "Support & Account",
-                    logoutBtn: "Log out",
-                    placeholder: "Tell me everything bro...",
-                    dnaPlaceholder: "Ex: Speak to me like a friend...",
-                    invalidFormat: "Invalid format. Example: LVL-XXXXX-XXXXX",
-                    keyNotFound: "Key not found or incorrect.",
-                    welcomeGreeting: "Welcome",
-                    welcomeDesc: "Ready to assist you. Discover an intelligence designed to support you daily.",
-                    continueBtn: "Continue",
-                    footerBranding: "Powered by <strong>LevelUp</strong>",
-                    logoutModalTitle: "Log out",
-                    logoutModalDesc: "Are you sure you want to leave your current session?",
-                    cancelBtn: "Cancel",
-                    confirmLogout: "Leave",
-                    verifiedStatus: "Key verified",
-                    installAppMenuText: "Install App",
-                    installModalTitle: "Install App",
-                    installModalDesc: "Add the app to your home screen:",
-                    installiOS: "🍎 iOS (Safari): Tap Share <i class='fas fa-share-square mx-1'></i> then 'Add to Home Screen'.",
-                    installAndroid: "🤖 Android (Chrome): Tap Menu <i class='fas fa-ellipsis-v mx-1'></i> then 'Add to Home Screen'.",
-                    cguMenuText: "Rules & Security",
-                    cguModalTitle: "Terms of Use",
+                    authTitle: "Enter your Access Key", verifyBtn: "Verify Key", getKeyText: "Get my Key", menuTitle: "Menu",
+                    thiabsModeTitle: "Thiab's Mode 🌟", thiabsModeDesc: "Activate personal development",
+                    langTitle: "Language", modelTitle: "AI Model", lengthTitle: "Response Length", cloudSpace: "Cloud Space", historyTitle: "Session History", newChatText: "New session",
+                    dnaTitle: "<strong id='dnaAppBrand'>{app}</strong> DNA", saveDNA: "Update", supportTitle: "Support & Account", logoutBtn: "Log out", placeholder: "Tell me everything bro...", dnaPlaceholder: "Ex: Speak to me like a friend...",
+                    invalidFormat: "Invalid format. Example: LVL-XXXXX-XXXXX", keyNotFound: "Key not found or incorrect.", welcomeGreeting: "Welcome", welcomeDesc: "Ready to assist you. Discover an intelligence designed to support you daily.", continueBtn: "Continue", footerBranding: "Powered by <strong>LevelUp</strong>",
+                    logoutModalTitle: "Log out", logoutModalDesc: "Are you sure you want to leave your current session?", cancelBtn: "Cancel", confirmLogout: "Leave", verifiedStatus: "Key verified",
+                    installAppMenuText: "Install App", installModalTitle: "Install App", installModalDesc: "Add the app to your home screen:",
+                    installiOS: "🍎 iOS (Safari): Tap Share <i class='fas fa-share-square mx-1'></i> then 'Add to Home Screen'.", installAndroid: "🤖 Android (Chrome): Tap Menu <i class='fas fa-ellipsis-v mx-1'></i> then 'Add to Home Screen'.",
+                    cguMenuText: "Rules & Security", cguModalTitle: "Terms of Use (CGU)",
                     cguText1: "🔞 <strong>Age requirement:</strong> You must be 16 years or older to use this application.",
-                    cguText2: "⚖️ <strong>Liability:</strong> By using our AI, you accept full responsibility for your choices and the use of generated responses.",
-                    infoMenuText: "App Information",
-                    infoModalTitle: "System Information",
-                    infoText1: "🧠 <strong>AI Engine:</strong> Powered by <strong>Gemini</strong> (Google Ecosystem), ensuring state-of-the-art analytical intelligence.",
-                    infoText2: "🔒 <strong>Security & Data:</strong> Hosting, database, and authentication secured by <strong>Google Cloud / Firebase</strong> infrastructure.",
-                    infoText3: "⚡ <strong>Ecosystem:</strong> Pro Mode (Level IA), Personal Mode (Thiab's), Real-time Cloud Sync, and Native PWA installation.",
-                    closeBtn: "Close / I accept",
-                    closeInfoBtn: "Close",
-                    hardcoreTitle: "Hardcore Mode 🤬",
-                    hardcoreDesc: "Disable politeness",
+                    cguText2: "⚖️ <strong>Liability:</strong> By using Level IA, you take full responsibility for your actions and how you interpret or use the generated responses. You are the master of your decisions.",
+                    cguText3: "⚖️ <strong>No warranty:</strong> Although our models are highly advanced, AI can sometimes make errors. Its advice does not replace the opinion of a qualified professional.",
+                    cguText4: "⚖️ <strong>Legal Protection:</strong> Developers decline any responsibility for direct or indirect damage related to the use of this service.",
+                    cguText5: "🔞 <strong>Restricted access:</strong> Using these services implies unconditional acceptance of these terms.",
+                    infoMenuText: "App Information", infoModalTitle: "About the Application", closeBtn: "Accept & Close", closeInfoBtn: "Close",
+                    infoText1: "🧠 <strong>AI Engine (GEMINI):</strong> The application's intelligence is powered by the powerful <strong>Gemini 2.5 Flash</strong> engine (developed by Google). This engine guarantees lightning-fast analysis capability, pushed logical reasoning, and real-time Web connection.",
+                    infoText2: "🔒 <strong>Architecture & Security:</strong> All your data (history, user DNA, access keys) is hosted on the ultra-secure <strong>Google Cloud (Firebase Firestore)</strong> infrastructure. Security and privacy are at the heart of our development.",
+                    infoText3: "⚡ <strong>Dual-Persona Ecosystem:</strong> This application integrates two distinct environments:<br><br>- <strong>Level IA:</strong> The pro assistant (Normal, Work, Expert) for productivity and project management.<br>- <strong>Thiab's Mode:</strong> The secret personal development environment (Motivation, Coach, Procrastination).",
+                    hardcoreTitle: "Hardcore Mode 🤬", hardcoreDesc: "Disable politeness", feedbackMenuText: "Feedback", reportMenuText: "Report",
+                    lblImportImg: "Image", lblImportDoc: "Document (PDF)",
+                    notifMenuText: "Reminders & Notifs", notifModalTitle: "Notifications", notifEnable: "Enable alerts", notifTime: "Exercise Time (Thiab's)", notifSave: "Save",
+                    promoTitle: "Level Up your<br><span class='text-purple-400'>Experience</span>",
+                    promoDesc: "For a smooth, fast experience and to receive notifications, install the Level IA application on your device right now.",
+                    promoInstallText: "Install App", promoSkipText: "Continue on web",
                     lengthOptions: { medium: "Medium (Chill & Pro)", long: "Long (Detailed)", short: "Short (Direct)" }
                 }
             };
 
+            const setSafeText = (id, text) => { const el = document.getElementById(id); if (el && text) el.innerText = text; };
+            const setSafeHTML = (id, text) => { const el = document.getElementById(id); if (el && text) el.innerHTML = text; };
+
             const applyLanguage = (lang) => {
                 currentLang = lang;
                 const t = i18n[lang];
-                document.getElementById('authTitle').innerHTML = t.authTitle;
-                document.getElementById('verifyKeyBtn').innerText = t.verifyBtn;
-                document.getElementById('getKeyText').innerText = t.getKeyText;
-                document.getElementById('menuTitle').innerText = t.menuTitle;
-                document.getElementById('thiabsModeTitle').innerText = t.thiabsModeTitle;
-                document.getElementById('thiabsModeDesc').innerText = t.thiabsModeDesc;
-                document.getElementById('langTitle').innerText = t.langTitle;
-                document.getElementById('modelTitle').innerText = t.modelTitle;
-                document.getElementById('lengthTitle').innerText = t.lengthTitle;
-                document.getElementById('cloudSpace').innerText = t.cloudSpace;
-                document.getElementById('historyTitle').innerText = t.historyTitle;
-                document.getElementById('newChatText').innerText = t.newChatText;
+                
+                setSafeHTML('authTitle', t.authTitle);
+                setSafeText('verifyKeyBtn', t.verifyBtn);
+                setSafeText('getKeyText', t.getKeyText);
+                setSafeText('menuTitle', t.menuTitle);
+                setSafeText('thiabsModeTitle', t.thiabsModeTitle);
+                setSafeText('thiabsModeDesc', t.thiabsModeDesc);
+                setSafeText('langTitle', t.langTitle);
+                setSafeText('modelTitle', t.modelTitle);
+                setSafeText('lengthTitle', t.lengthTitle);
+                setSafeText('cloudSpace', t.cloudSpace);
+                setSafeText('historyTitle', t.historyTitle);
+                setSafeText('newChatText', t.newChatText);
                 
                 const appName = isThiabsMode ? "Thiab's" : "Level IA";
-                document.getElementById('dnaTitle').innerHTML = t.dnaTitle.replace("{app}", appName);
+                setSafeHTML('dnaTitle', t.dnaTitle.replace("{app}", appName));
                 
-                document.getElementById('saveDNA').innerText = t.saveDNA;
-                document.getElementById('supportTitle').innerText = t.supportTitle;
-                document.getElementById('logoutBtn').innerText = t.logoutBtn;
-                document.getElementById('userInput').placeholder = t.placeholder;
-                document.getElementById('customDNA').placeholder = t.dnaPlaceholder;
-                document.getElementById('welcomeGreeting').innerText = t.welcomeGreeting;
-                document.getElementById('welcomeDesc').innerText = t.welcomeDesc;
-                document.getElementById('continueBtnText').innerText = t.continueBtn;
-                document.getElementById('footerBranding').innerHTML = t.footerBranding;
+                setSafeText('saveDNA', t.saveDNA);
+                setSafeText('supportTitle', t.supportTitle);
+                setSafeText('logoutBtn', t.logoutBtn);
+                const uiInput = document.getElementById('userInput'); if(uiInput) uiInput.placeholder = t.placeholder;
+                const cdInput = document.getElementById('customDNA'); if(cdInput) cdInput.placeholder = t.dnaPlaceholder;
+                setSafeText('welcomeGreeting', t.welcomeGreeting);
+                setSafeText('welcomeDesc', t.welcomeDesc);
+                setSafeText('continueBtnText', t.continueBtn);
+                setSafeHTML('footerBranding', t.footerBranding);
                 
-                // Modals
-                document.getElementById('logoutModalTitle').innerText = t.logoutModalTitle;
-                document.getElementById('logoutModalDesc').innerText = t.logoutModalDesc;
-                document.getElementById('cancelLogoutBtn').innerText = t.cancelBtn;
-                document.getElementById('confirmLogoutBtn').innerText = t.confirmLogout;
-                document.getElementById('installAppMenuText').innerText = t.installAppMenuText;
-                document.getElementById('installModalTitle').innerText = t.installModalTitle;
-                document.getElementById('installModalDesc').innerText = t.installModalDesc;
-                document.getElementById('installiOS').innerHTML = t.installiOS;
-                document.getElementById('installAndroid').innerHTML = t.installAndroid;
-                document.getElementById('closeInstallModalBtn').innerText = t.closeBtn;
-                document.getElementById('cguMenuText').innerText = t.cguMenuText;
-                document.getElementById('cguModalTitle').innerText = t.cguModalTitle;
-                document.getElementById('cguText1').innerHTML = t.cguText1;
-                document.getElementById('cguText2').innerHTML = t.cguText2;
-                document.getElementById('closeCguModalBtn').innerText = t.closeBtn;
+                setSafeText('logoutModalTitle', t.logoutModalTitle);
+                setSafeText('logoutModalDesc', t.logoutModalDesc);
+                setSafeText('cancelLogoutBtn', t.cancelBtn);
+                setSafeText('confirmLogoutBtn', t.confirmLogout);
+                setSafeText('installAppMenuText', t.installAppMenuText);
+                setSafeText('installModalTitle', t.installModalTitle);
+                setSafeText('installModalDesc', t.installModalDesc);
+                setSafeHTML('installiOS', t.installiOS);
+                setSafeHTML('installAndroid', t.installAndroid);
+                setSafeText('closeInstallModalBtn', t.closeBtn);
+                setSafeText('cguMenuText', t.cguMenuText);
+                setSafeText('cguModalTitle', t.cguModalTitle);
+                setSafeHTML('cguText1', t.cguText1);
+                setSafeHTML('cguText2', t.cguText2);
+                setSafeHTML('cguText3', t.cguText3);
+                setSafeHTML('cguText4', t.cguText4);
+                setSafeHTML('cguText5', t.cguText5);
+                setSafeText('closeCguModalBtn', t.closeBtn);
                 
-                // Info Modal
-                document.getElementById('infoMenuText').innerText = t.infoMenuText;
-                document.getElementById('infoModalTitle').innerText = t.infoModalTitle;
-                document.getElementById('infoText1').innerHTML = t.infoText1;
-                document.getElementById('infoText2').innerHTML = t.infoText2;
-                document.getElementById('infoText3').innerHTML = t.infoText3;
-                document.getElementById('closeInfoModalBtn').innerText = t.closeInfoBtn;
+                setSafeText('infoMenuText', t.infoMenuText);
+                setSafeText('infoModalTitle', t.infoModalTitle);
+                setSafeHTML('infoText1', t.infoText1);
+                setSafeHTML('infoText2', t.infoText2);
+                setSafeHTML('infoText3', t.infoText3);
+                setSafeText('closeInfoModalBtn', t.closeInfoBtn);
+                
+                setSafeText('feedbackMenuText', t.feedbackMenuText);
+                setSafeText('reportMenuText', t.reportMenuText);
+                setSafeText('lblImportImg', t.lblImportImg);
+                setSafeText('lblImportDoc', t.lblImportDoc);
 
-                document.getElementById('hardcoreTitle').innerText = t.hardcoreTitle;
-                document.getElementById('hardcoreDesc').innerText = t.hardcoreDesc;
+                setSafeText('hardcoreTitle', t.hardcoreTitle);
+                setSafeText('hardcoreDesc', t.hardcoreDesc);
+                
+                setSafeText('notifMenuText', t.notifMenuText);
+                setSafeText('notifModalTitle', t.notifModalTitle);
+                setSafeText('lblNotifEnable', t.notifEnable);
+                setSafeText('lblNotifTime', t.notifTime);
+                setSafeText('saveNotifBtn', t.notifSave);
+
+                setSafeHTML('promoTitle', t.promoTitle);
+                setSafeText('promoDesc', t.promoDesc);
+                setSafeText('promoInstallText', t.promoInstallText);
+                setSafeText('promoSkipText', t.promoSkipText);
                 
                 const userStatusEl = document.getElementById('userStatus');
                 if(userStatusEl) userStatusEl.innerHTML = `<i class="fas fa-shield-alt"></i> ${t.verifiedStatus}`;
                 
-                document.getElementById('langSelect').value = lang;
+                const lSelect = document.getElementById('langSelect'); if(lSelect) lSelect.value = lang;
                 
                 const selectLength = document.getElementById('lengthSelect');
-                selectLength.options[0].text = t.lengthOptions.medium;
-                selectLength.options[1].text = t.lengthOptions.long;
-                selectLength.options[2].text = t.lengthOptions.short;
+                if(selectLength && selectLength.options.length >= 3) {
+                    selectLength.options[0].text = t.lengthOptions.medium;
+                    selectLength.options[1].text = t.lengthOptions.long;
+                    selectLength.options[2].text = t.lengthOptions.short;
+                }
                 
                 populateModels();
                 updateBranding();
@@ -672,6 +863,7 @@
 
             const populateModels = () => {
                 const selectModel = document.getElementById('modelSelect');
+                if(!selectModel) return;
                 selectModel.innerHTML = '';
                 const category = isThiabsMode ? 'thiabs' : 'level';
                 const models = aiModels[category];
@@ -690,27 +882,57 @@
                 const appName = isThiabsMode ? "Thiab's" : "Level IA";
                 const category = isThiabsMode ? 'thiabs' : 'level';
                 
-                document.getElementById('headerAppBrand').innerText = appName;
-                document.getElementById('dnaAppBrand').innerText = appName;
-                document.getElementById('authAppTitle').innerText = appName;
+                setSafeText('headerAppBrand', appName);
+                setSafeText('dnaAppBrand', appName);
+                setSafeText('authAppTitle', appName);
                 
-                if(aiModels[category][currentModel]) {
-                    document.getElementById('headerModelName').innerText = aiModels[category][currentModel][currentLang];
+                if(aiModels[category] && aiModels[category][currentModel]) {
+                    setSafeText('headerModelName', aiModels[category][currentModel][currentLang]);
                 }
                 
-                if (currentModel === 'coach' || currentModel === 'procrastination' || currentModel === 'expert') {
-                    hardcoreContainer.classList.remove('hidden');
-                } else {
-                    hardcoreContainer.classList.add('hidden');
+                const hardcoreContainer = document.getElementById('hardcoreContainer');
+                if (hardcoreContainer) {
+                    if (currentModel === 'coach' || currentModel === 'procrastination' || currentModel === 'expert') {
+                        hardcoreContainer.classList.remove('hidden');
+                    } else {
+                        hardcoreContainer.classList.add('hidden');
+                    }
                 }
                 
                 const dnaKey = `${category}_${currentModel}`;
-                document.getElementById('customDNA').value = dnaPrompts[dnaKey] || "";
+                const customDNA = document.getElementById('customDNA');
+                if(customDNA) customDNA.value = dnaPrompts[dnaKey] || "";
             };
+
+            window.switchToLevelIA = async () => {
+                isThiabsMode = false;
+                currentModel = 'normal';
+                const toggle = document.getElementById('thiabsModeToggle');
+                if(toggle) toggle.checked = false;
+                populateModels();
+                updateBranding();
+                if (userId) {
+                    await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { isThiabsMode: false, model: 'normal' }, { merge: true });
+                }
+                displayAIMessage("🔄 **Bascule effectuée.** Je suis de retour en mode **Level IA (Normal)**. On peut maintenant explorer tous les sujets, l'actualité ou tes projets professionnels ! Que souhaites-tu savoir ?", true);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            };
+
+            const convContainer = document.getElementById('conversationContainer');
+            if(convContainer) {
+                convContainer.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'A' && e.target.getAttribute('href') === '#switch-level-ia') {
+                        e.preventDefault();
+                        window.switchToLevelIA();
+                    }
+                });
+            }
 
             const savedLang = localStorage.getItem('thiabs_saved_lang');
             if (savedLang) {
                 applyLanguage(savedLang);
+            } else {
+                applyLanguage('fr');
             }
 
             document.getElementById('langSelect').addEventListener('change', (e) => {
@@ -756,14 +978,101 @@
                 }
             });
 
+            // GESTION DES LIMITES JOURNALIÈRES
+            async function checkUsage(type) {
+                const now = Date.now();
+                const DAY_MS = 24 * 60 * 60 * 1000;
+                let updated = false;
+
+                if (now > userUsage.msgReset) { userUsage.msgCount = 0; userUsage.msgReset = now + DAY_MS; updated = true; }
+                if (now > userUsage.uploadReset) { userUsage.uploadCount = 0; userUsage.uploadReset = now + DAY_MS; updated = true; }
+
+                if (type === 'msg') {
+                    if (userUsage.msgCount >= MAX_MSGS) return { allowed: false, resetDate: new Date(userUsage.msgReset) };
+                    userUsage.msgCount++;
+                    updated = true;
+                } else if (type === 'upload') {
+                    if (userUsage.uploadCount >= MAX_UPLOADS) return { allowed: false, resetDate: new Date(userUsage.uploadReset) };
+                    userUsage.uploadCount++;
+                    updated = true;
+                }
+
+                if (updated && userId) {
+                    await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "usage"), userUsage);
+                }
+                return { allowed: true };
+            }
+
+            // BOUCLE DE NOTIFICATIONS LOCALES (Vérification toutes les 30s)
+            setInterval(() => {
+                if (!userNotifs.enabled || !("Notification" in window) || Notification.permission !== "granted") return;
+                
+                const now = new Date();
+                const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                const todayStr = now.toDateString();
+
+                // 1. Alerte de Quota Réinitialisé
+                if (userUsage.msgCount >= MAX_MSGS && now.getTime() > userUsage.msgReset && userNotifs.lastQuotaNotif !== todayStr) {
+                    new Notification("Level IA", { 
+                        body: currentLang === 'fr' ? "Tes quotas sont réinitialisés ! Tu peux de nouveau discuter." : "Your quotas are reset! You can chat again.",
+                    });
+                    userNotifs.lastQuotaNotif = todayStr;
+                    if(userId) setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "notifications"), userNotifs, { merge: true });
+                }
+
+                // 2. Alerte d'Exercice (Thiab's Mode)
+                if (userNotifs.exerciseTime === currentTimeStr && userNotifs.lastExerciseNotif !== todayStr) {
+                    new Notification("Thiab's Mode 🌟", { 
+                        body: currentLang === 'fr' ? "C'est l'heure de ton exercice ! Ne remets pas à plus tard, ouvre Level IA." : "It's time for your exercise! Don't procrastinate, open Level IA.",
+                    });
+                    userNotifs.lastExerciseNotif = todayStr;
+                    if(userId) setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "notifications"), userNotifs, { merge: true });
+                }
+            }, 30000);
+
+            // LOGIQUE DU MUR DE PROMOTION (SOFT INSTALL)
+            document.getElementById('promoSkipBtn').onclick = () => {
+                localStorage.setItem('thiabs_skipped_install', 'true');
+                promoInstallModal.classList.add('hidden');
+                authPage.classList.remove('hidden');
+            };
+
+            document.getElementById('promoInstallBtn').onclick = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        localStorage.setItem('thiabs_skipped_install', 'true');
+                        promoInstallModal.classList.add('hidden');
+                        authPage.classList.remove('hidden');
+                    }
+                    deferredPrompt = null;
+                } else {
+                    // Si on ne peut pas forcer (iOS), on affiche le modal d'instruction
+                    promoInstallModal.classList.add('hidden');
+                    installModal.classList.remove('hidden');
+                    // On modifie légèrement la fermeture de installModal pour retourner à Auth
+                    document.getElementById('closeInstallModalBtn').onclick = () => {
+                        localStorage.setItem('thiabs_skipped_install', 'true');
+                        installModal.classList.add('hidden');
+                        authPage.classList.remove('hidden');
+                        // Remettre le comportement par défaut pour plus tard
+                        document.getElementById('closeInstallModalBtn').onclick = () => installModal.classList.add('hidden');
+                    };
+                }
+            };
+
             async function processLogin(keyVal, isAutoLogin = false) {
                 const btn = document.getElementById('verifyKeyBtn');
                 const errorMsg = document.getElementById('keyError');
+                const errorDetailsSpan = document.getElementById('keyErrorDetails');
                 
                 const keyFormatRegex = /^(LVL|THB)-[A-Z0-9]{3,6}-[A-Z0-9]{3,6}$/;
                 if (!keyFormatRegex.test(keyVal)) {
                     if (!isAutoLogin) {
-                        errorMsg.innerText = i18n[currentLang].invalidFormat;
+                        document.getElementById('keyErrorMain').innerText = currentLang === 'fr' ? "Format de code invalide." : "Invalid code format.";
+                        errorDetailsSpan.innerText = "Attendu: LVL-XXXXX-XXXXX";
+                        errorDetailsSpan.classList.remove('hidden');
                         errorMsg.classList.remove('hidden');
                     }
                     return;
@@ -774,6 +1083,10 @@
                 }
                 
                 try {
+                    if (!auth.currentUser) {
+                        await signInAnonymously(auth);
+                    }
+
                     const q = collectionGroup(db, 'security');
                     const querySnapshot = await getDocs(q);
                     let foundUserData = null;
@@ -786,6 +1099,7 @@
                         userId = foundUserData.uid;
                         authPage.classList.add('hidden');
                         langPage.classList.add('hidden'); 
+                        promoInstallModal.classList.add('hidden');
                         
                         try {
                             const configDoc = await getDoc(doc(db, "artifacts", appId, "system", "config"));
@@ -798,19 +1112,8 @@
                                 } else if (typeof rawKeys === 'string' && rawKeys.trim() !== '') {
                                     apiKeys = [rawKeys.trim()];
                                 }
-                                
-                                if (apiKeys.length === 0) {
-                                    console.error("🚨 [CRITIQUE] Le tableau de clés est vide dans le document system/config.");
-                                    showSysToast("❌ ERREUR: Clé(s) introuvable(s) dans config Firebase !", true);
-                                }
-                            } else {
-                                console.error("🚨 [CRITIQUE] Le document 'system/config' est INTROUVABLE dans la base de données Firebase.");
-                                showSysToast("❌ ERREUR: Config Firebase introuvable !", true);
                             }
-                        } catch(err) {
-                            console.error("🚨 [ERREUR LECTURE FIREBASE] Impossible de lire system/config :", err);
-                            showSysToast("❌ ERREUR: Permissions Firebase refusées", true);
-                        }
+                        } catch(err) { console.error("Config Firebase refusée", err); }
                         
                         const userEmail = foundUserData.owner || "email@inconnu.com";
                         const userName = foundUserData.name || foundUserData.displayName || userEmail.split('@')[0] || "Utilisateur";
@@ -828,44 +1131,33 @@
                         document.getElementById('welcomeAvatar').src = avatarUrl;
                         
                         welcomePage.classList.remove('hidden'); 
-                        document.getElementById('supportMail').href = `mailto:levelup.iao@gmail.com?subject=Support (Clé: ${keyVal})`;
+                        document.getElementById('supportMail').href = `mailto:levelup.iao@gmail.com?subject=Support (ID: ${userId} - Nom: ${userName})`;
 
                         try {
                             const dnaDoc = await getDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"));
                             if (dnaDoc.exists()) {
                                 const d = dnaDoc.data();
-                                
                                 hasSeenGrandIntro = d.hasSeenGrandIntro || false;
-                                
-                                if (d.prompts) {
-                                    dnaPrompts = { ...dnaPrompts, ...d.prompts };
-                                }
-
-                                if(d.isThiabsMode !== undefined) {
-                                    isThiabsMode = d.isThiabsMode;
-                                    document.getElementById('thiabsModeToggle').checked = isThiabsMode;
-                                }
-                                
-                                if(d.model) {
+                                if (d.prompts) dnaPrompts = { ...dnaPrompts, ...d.prompts };
+                                if (d.isThiabsMode !== undefined) { isThiabsMode = d.isThiabsMode; document.getElementById('thiabsModeToggle').checked = isThiabsMode; }
+                                if (d.model) {
                                     const category = isThiabsMode ? 'thiabs' : 'level';
-                                    if(aiModels[category][d.model]) {
-                                        currentModel = d.model;
-                                    } else {
-                                        currentModel = isThiabsMode ? 'motivation' : 'normal';
-                                    }
+                                    currentModel = aiModels[category][d.model] ? d.model : (isThiabsMode ? 'motivation' : 'normal');
                                 }
-                                
-                                if(d.hardcore !== undefined) {
-                                    isHardcoreMode = d.hardcore;
-                                    document.getElementById('hardcoreToggle').checked = isHardcoreMode;
-                                }
-                                if(d.responseLength) {
-                                    currentResponseLength = d.responseLength;
-                                    document.getElementById('lengthSelect').value = currentResponseLength;
-                                }
-                            } else {
-                                hasSeenGrandIntro = false;
+                                if (d.hardcore !== undefined) { isHardcoreMode = d.hardcore; document.getElementById('hardcoreToggle').checked = isHardcoreMode; }
+                                if (d.responseLength) { currentResponseLength = d.responseLength; document.getElementById('lengthSelect').value = currentResponseLength; }
                             }
+                            
+                            const usageDoc = await getDoc(doc(db, "artifacts", appId, "users", userId, "settings", "usage"));
+                            if(usageDoc.exists()) userUsage = usageDoc.data();
+                            
+                            const notifDoc = await getDoc(doc(db, "artifacts", appId, "users", userId, "settings", "notifications"));
+                            if(notifDoc.exists()) {
+                                userNotifs = { ...userNotifs, ...notifDoc.data() };
+                                document.getElementById('notifToggle').checked = userNotifs.enabled;
+                                document.getElementById('exerciseTimeInput').value = userNotifs.exerciseTime;
+                            }
+                            
                         } catch(e) {}
                         
                         populateModels();
@@ -877,16 +1169,23 @@
                         setupHistoryListener();
                     } else {
                         if (!isAutoLogin) {
-                            errorMsg.innerText = i18n[currentLang].keyNotFound;
+                            document.getElementById('keyErrorMain').innerText = currentLang === 'fr' ? "Code d'accès incorrect ou expiré." : "Access code incorrect or expired.";
+                            errorDetailsSpan.innerText = "";
                             errorMsg.classList.remove('hidden');
                         } else {
                             localStorage.removeItem('thiabs_saved_key');
+                            // Si auto-login fail, on affiche le flow normal (promo puis auth)
+                            checkPromoInstall();
                         }
                     }
                 } catch (e) {
                     if (!isAutoLogin) {
-                        errorMsg.innerText = "Erreur de connexion. Vérifiez la base.";
+                        document.getElementById('keyErrorMain').innerText = "Erreur de connexion (Base de données).";
+                        errorDetailsSpan.innerText = `Détails: ${e.message || e.code}`;
+                        errorDetailsSpan.classList.remove('hidden');
                         errorMsg.classList.remove('hidden');
+                    } else {
+                        checkPromoInstall();
                     }
                 }
                 
@@ -895,24 +1194,34 @@
                 }
             }
 
+            const checkPromoInstall = () => {
+                if (!userId && !isStandalone && !localStorage.getItem('thiabs_skipped_install') && !localStorage.getItem('thiabs_saved_key')) {
+                    langPage.classList.add('hidden');
+                    promoInstallModal.classList.remove('hidden');
+                } else if (!userId && !localStorage.getItem('thiabs_saved_key')) {
+                    langPage.classList.remove('hidden');
+                }
+            };
+
             const startIntro = () => {
                 const s1 = document.getElementById('splash1');
                 const s2 = document.getElementById('splash2');
                 
-                // TIMINGS ACCÉLÉRÉS POUR PLUS DE FLUIDITÉ
-                setTimeout(() => s1.classList.add('active'), 300);
-                setTimeout(() => { s1.classList.remove('active'); s1.classList.add('exit'); }, 1800);
-                setTimeout(() => s2.classList.add('active'), 2100);
-                setTimeout(() => { s2.classList.remove('active'); s2.classList.add('exit'); }, 3800);
+                setTimeout(() => s1.classList.add('active'), 200);
+                setTimeout(() => { s1.classList.remove('active'); s1.classList.add('exit'); }, 1200);
+                setTimeout(() => s2.classList.add('active'), 1500);
+                setTimeout(() => { s2.classList.remove('active'); s2.classList.add('exit'); }, 2800);
                 setTimeout(() => {
                     splashScreen.style.opacity = '0';
                     setTimeout(() => {
                         splashScreen.style.display = 'none';
-                        if (!userId && !localStorage.getItem('thiabs_saved_key')) {
-                            langPage.classList.remove('hidden'); 
+                        const savedKey = localStorage.getItem('thiabs_saved_key');
+                        if (!savedKey) {
+                            // Au lieu d'afficher direct la langue, on passe par la vérification promo install
+                            checkPromoInstall();
                         }
-                    }, 500); // Disparition immédiate de l'écran noir
-                }, 4000);
+                    }, 400); 
+                }, 3000);
             };
             startIntro();
 
@@ -930,6 +1239,7 @@
                     const savedKey = localStorage.getItem('thiabs_saved_key');
                     if (savedKey) await processLogin(savedKey, true);
                 } catch(e) {
+                    console.error("🚨 [ERREUR AUTH ANONYME] :", e);
                     showSysToast("❌ ERREUR: Connexion anonyme désactivée", true);
                 }
             };
@@ -976,7 +1286,6 @@
                         const data = d.data();
                         totalSize += JSON.stringify(data).length;
                         
-                        // CORRECTION BUGS HISTORIQUE : Si undefined, on déduit que c'est une vieille session Level IA Normal
                         const isThiabs = data.isThiabsMode === true;
                         const cat = isThiabs ? 'thiabs' : 'level';
                         const m = data.model || 'normal';
@@ -1007,7 +1316,6 @@
                                 deleteDoc(doc(db, "artifacts", appId, "users", userId, "sessions", d.id));
                                 if (currentSessionId === d.id) startNewChat();
                             } else {
-                                // Restauration MAGIQUE du contexte de la session !
                                 loadSession(d.id, data.messages, data.isThiabsMode, data.model);
                                 closeSidebar();
                             }
@@ -1046,11 +1354,9 @@
                 currentSessionMessages = []; 
                 conversationContainer.innerHTML = '';
                 
-                // CORRECTION MAJEURE: Forcer la restauration de mode même pour les vieilles conversations (undefined)
-                const modeToLoad = sessionIsThiabsMode === true; // Si undefined, devient false (Level IA)
-                let modelToLoad = sessionModel || 'normal'; // Si undefined, devient 'normal'
+                const modeToLoad = sessionIsThiabsMode === true; 
+                let modelToLoad = sessionModel || 'normal'; 
                 
-                // Vérifier que le modèle existe bien dans la catégorie à charger
                 const catToLoad = modeToLoad ? 'thiabs' : 'level';
                 if (!aiModels[catToLoad][modelToLoad]) {
                     modelToLoad = modeToLoad ? 'motivation' : 'normal';
@@ -1059,21 +1365,23 @@
                 isThiabsMode = modeToLoad;
                 currentModel = modelToLoad;
                 
-                // Mise à jour visuelle forcée de toute l'interface
-                document.getElementById('thiabsModeToggle').checked = isThiabsMode;
+                const toggle = document.getElementById('thiabsModeToggle');
+                if(toggle) toggle.checked = isThiabsMode;
                 populateModels();
-                document.getElementById('modelSelect').value = currentModel;
+                const mSelect = document.getElementById('modelSelect');
+                if(mSelect) mSelect.value = currentModel;
                 updateBranding();
                 
-                // Sauvegarde du changement
                 if (userId) {
                     setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { isThiabsMode: isThiabsMode, model: currentModel }, { merge: true }).catch(e=>console.error(e));
                 }
 
                 if(messages && messages.length > 0) {
                     messages.forEach(m => {
-                        displayUserMessage(m.user);
+                        displayUserMessage(m.user, m.attachmentHtml);
                         displayAIMessage(m.ai, false, m.sources || "");
+                        
+                        // Reconstruire l'historique Gemini si des images étaient jointes (ici on push le text, pas l'image pour l'historique API)
                         currentSessionMessages.push({ role: "user", parts: [{ text: m.user }] });
                         currentSessionMessages.push({ role: "model", parts: [{ text: m.ai }] });
                     });
@@ -1087,10 +1395,7 @@
             document.getElementById('closeSidebar').onclick = closeSidebar;
             appOverlay.onclick = closeSidebar;
             
-            document.getElementById('logoutBtn').onclick = () => {
-                closeSidebar();
-                logoutModal.classList.remove('hidden');
-            };
+            document.getElementById('logoutBtn').onclick = () => { closeSidebar(); logoutModal.classList.remove('hidden'); };
             document.getElementById('cancelLogoutBtn').onclick = () => logoutModal.classList.add('hidden');
             document.getElementById('confirmLogoutBtn').onclick = async () => {
                 document.getElementById('confirmLogoutBtn').innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
@@ -1102,24 +1407,76 @@
                 window.location.reload();
             };
 
-            document.getElementById('installMenuBtn').onclick = () => {
-                closeSidebar();
-                installModal.classList.remove('hidden');
-            };
+            document.getElementById('installMenuBtn').onclick = () => { closeSidebar(); installModal.classList.remove('hidden'); };
             document.getElementById('closeInstallModalBtn').onclick = () => installModal.classList.add('hidden');
-
-            document.getElementById('cguMenuBtn').onclick = () => {
-                closeSidebar();
-                cguModal.classList.remove('hidden');
-            };
+            document.getElementById('cguMenuBtn').onclick = () => { closeSidebar(); cguModal.classList.remove('hidden'); };
             document.getElementById('closeCguModalBtn').onclick = () => cguModal.classList.add('hidden');
-
-            // EVENTS NOUVEAU MODAL INFOS
-            document.getElementById('infoMenuBtn').onclick = () => {
-                closeSidebar();
-                infoModal.classList.remove('hidden');
-            };
+            document.getElementById('infoMenuBtn').onclick = () => { closeSidebar(); infoModal.classList.remove('hidden'); };
             document.getElementById('closeInfoModalBtn').onclick = () => infoModal.classList.add('hidden');
+            
+            // Gestion Modal Notifs
+            document.getElementById('openNotifBtn').onclick = () => { closeSidebar(); notifModal.classList.remove('hidden'); };
+            document.getElementById('closeNotifBtn').onclick = () => notifModal.classList.add('hidden');
+            document.getElementById('saveNotifBtn').onclick = async () => {
+                userNotifs.enabled = document.getElementById('notifToggle').checked;
+                userNotifs.exerciseTime = document.getElementById('exerciseTimeInput').value;
+                
+                if (userNotifs.enabled && ("Notification" in window)) {
+                    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                        const permission = await Notification.requestPermission();
+                        if (permission !== 'granted') {
+                            userNotifs.enabled = false;
+                            document.getElementById('notifToggle').checked = false;
+                            showSysToast(currentLang === 'fr' ? "Permission refusée" : "Permission denied", true);
+                        }
+                    } else if (Notification.permission === 'denied') {
+                        userNotifs.enabled = false;
+                        document.getElementById('notifToggle').checked = false;
+                        showSysToast(currentLang === 'fr' ? "Permission bloquée par le navigateur" : "Permission blocked by browser", true);
+                    }
+                }
+                
+                await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "notifications"), userNotifs);
+                notifModal.classList.add('hidden');
+                showSysToast(currentLang === 'fr' ? "Préférences sauvegardées" : "Preferences saved");
+            };
+            
+            document.getElementById('openFeedbackBtn').onclick = () => { closeSidebar(); feedbackModal.classList.remove('hidden'); };
+            document.getElementById('closeFeedbackBtn').onclick = () => feedbackModal.classList.add('hidden');
+            
+            const stars = document.querySelectorAll('.star-rating i');
+            stars.forEach(star => {
+                star.onclick = (e) => {
+                    currentStarRating = parseInt(e.target.getAttribute('data-rating'));
+                    stars.forEach(s => {
+                        if(parseInt(s.getAttribute('data-rating')) <= currentStarRating) s.classList.add('active');
+                        else s.classList.remove('active');
+                    });
+                };
+            });
+            
+            document.getElementById('submitFeedbackBtn').onclick = async () => {
+                const text = document.getElementById('feedbackText').value.trim();
+                if (currentStarRating === 0 && text === '') return;
+                try {
+                    await addDoc(collection(db, "artifacts", appId, "users", userId, "feedbacks"), { rating: currentStarRating, comment: text, date: Date.now() });
+                    feedbackModal.classList.add('hidden'); document.getElementById('feedbackText').value = '';
+                    stars.forEach(s => s.classList.remove('active')); currentStarRating = 0; showSysToast("Merci pour votre avis ! ⭐");
+                } catch(e) { showSysToast("Erreur d'envoi", true); }
+            };
+            
+            document.getElementById('openReportBtn').onclick = () => { closeSidebar(); reportModal.classList.remove('hidden'); };
+            document.getElementById('closeReportBtn').onclick = () => reportModal.classList.add('hidden');
+            
+            document.getElementById('submitReportBtn').onclick = async () => {
+                const category = document.getElementById('reportCategory').value;
+                const text = document.getElementById('reportText').value.trim();
+                if (text === '') return;
+                try {
+                    await addDoc(collection(db, "artifacts", appId, "users", userId, "reports"), { category: category, description: text, date: Date.now() });
+                    reportModal.classList.add('hidden'); document.getElementById('reportText').value = ''; showSysToast("Rapport envoyé à l'équipe. 🛠️");
+                } catch(e) { showSysToast("Erreur d'envoi", true); }
+            };
 
             document.getElementById('saveDNA').onclick = async () => {
                 const btn = document.getElementById('saveDNA'); btn.innerHTML = '<i class="fas fa-check"></i>';
@@ -1130,9 +1487,116 @@
                 setTimeout(() => btn.innerText = i18n[currentLang].saveDNA, 2000);
             };
 
-            function displayUserMessage(text) {
+            // ---- GESTION DES FICHIERS (IMAGE / PDF) ----
+            const attachBtn = document.getElementById('attachBtn');
+            const attachMenu = document.getElementById('attachMenu');
+            const imgInput = document.getElementById('imgInput');
+            const docInput = document.getElementById('docInput');
+            const attachPreview = document.getElementById('attachmentPreview');
+            const attachIcon = document.getElementById('attachIcon');
+            const attachName = document.getElementById('attachName');
+            const attachSize = document.getElementById('attachSize');
+            const removeAttachBtn = document.getElementById('removeAttachBtn');
+
+            attachBtn.onclick = (e) => {
+                e.stopPropagation();
+                attachMenu.classList.toggle('hidden-menu');
+            };
+
+            document.addEventListener('click', (e) => {
+                if(!attachMenu.contains(e.target) && !attachBtn.contains(e.target)) {
+                    attachMenu.classList.add('hidden-menu');
+                }
+            });
+
+            document.getElementById('importImgBtn').onclick = async () => {
+                attachMenu.classList.add('hidden-menu');
+                const usage = await checkUsage('upload');
+                if(!usage.allowed) {
+                    showLimitMessage('upload', usage.resetDate);
+                    return;
+                }
+                imgInput.click();
+            };
+
+            document.getElementById('importDocBtn').onclick = async () => {
+                attachMenu.classList.add('hidden-menu');
+                const usage = await checkUsage('upload');
+                if(!usage.allowed) {
+                    showLimitMessage('upload', usage.resetDate);
+                    return;
+                }
+                docInput.click();
+            };
+
+            const processFile = (file) => {
+                if(!file) return;
+                if(file.size > 5 * 1024 * 1024) { // 5MB limit
+                    showSysToast(currentLang === 'fr' ? "Fichier trop lourd (Max 5Mo)" : "File too large (Max 5MB)", true);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64Full = e.target.result;
+                    const base64Data = base64Full.split(',')[1];
+                    
+                    currentAttachment = {
+                        name: file.name,
+                        mimeType: file.type,
+                        base64: base64Data,
+                        isImage: file.type.startsWith('image/')
+                    };
+
+                    attachName.innerText = file.name;
+                    attachSize.innerText = (file.size / 1024).toFixed(1) + ' KB';
+                    
+                    if(currentAttachment.isImage) {
+                        attachIcon.innerHTML = `<img src="${base64Full}" class="w-full h-full object-cover">`;
+                    } else {
+                        attachIcon.innerHTML = `<i class="fas fa-file-pdf text-red-400 text-lg"></i>`;
+                    }
+                    
+                    attachPreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+                
+                // Clear inputs
+                imgInput.value = '';
+                docInput.value = '';
+            };
+
+            imgInput.onchange = (e) => processFile(e.target.files[0]);
+            docInput.onchange = (e) => processFile(e.target.files[0]);
+
+            removeAttachBtn.onclick = () => {
+                currentAttachment = null;
+                attachPreview.classList.add('hidden');
+            };
+
+            function showLimitMessage(type, resetDate) {
+                const formatter = new Intl.DateTimeFormat(currentLang, { weekday: 'long', hour: '2-digit', minute: '2-digit' });
+                const dateStr = formatter.format(resetDate);
+                
+                let msg = "";
+                if(type === 'upload') {
+                    msg = currentLang === 'fr' 
+                        ? `🚫 Vous avez atteint votre limite de 10 fichiers envoyés par jour.\n\nRevenez ${dateStr} pour envoyer de nouvelles images ou documents.`
+                        : `🚫 You have reached your limit of 10 uploaded files per day.\n\nCome back ${dateStr} to send new images or documents.`;
+                } else {
+                    msg = currentLang === 'fr' 
+                        ? `🚫 Vous avez atteint votre limite de 100 messages par jour pour préserver les serveurs.\n\nRevenez ${dateStr} pour continuer la discussion.`
+                        : `🚫 You have reached your limit of 100 messages per day to preserve the servers.\n\nCome back ${dateStr} to continue the discussion.`;
+                }
+                displayAIMessage(msg, true);
+            }
+
+            function displayUserMessage(text, attachmentHtml = "") {
                 const div = document.createElement('div'); div.className = "flex justify-end w-full";
-                div.innerHTML = `<div class="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl text-sm message-bubble text-white shadow-lg">${text}</div>`;
+                div.innerHTML = `<div class="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl text-sm message-bubble text-white shadow-lg flex flex-col gap-2">
+                    ${attachmentHtml}
+                    ${text ? `<span>${text}</span>` : ''}
+                </div>`;
                 conversationContainer.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight;
             }
 
@@ -1200,10 +1664,12 @@
 
             async function send() {
                 const val = userInput.value.trim();
+                const attachment = currentAttachment; // Lock the reference
                 
-                if (!val || !userId) {
+                if (!val && !attachment) {
                     return;
                 }
+                if (!userId) return;
                 
                 if (apiKeys.length === 0) {
                     const errorMsg = currentLang === 'fr' 
@@ -1212,8 +1678,16 @@
                     displayAIMessage(errorMsg, true);
                     return;
                 }
+                
+                const msgUsage = await checkUsage('msg');
+                if(!msgUsage.allowed) {
+                    showLimitMessage('msg', msgUsage.resetDate);
+                    return;
+                }
 
                 userInput.value = ''; userInput.style.height = '44px';
+                currentAttachment = null;
+                attachPreview.classList.add('hidden');
                 
                 if(!currentSessionId && conversationContainer.children.length === 1 && hasSeenWelcomeMsg) {
                     const firstMsg = conversationContainer.querySelector('.prose');
@@ -1222,7 +1696,16 @@
                     }
                 }
 
-                displayUserMessage(val);
+                // Render User message with potential attachment UI
+                let userAttachHtml = "";
+                let dbAttachMarker = "";
+                if(attachment) {
+                    const iconClass = attachment.isImage ? "fa-image text-blue-400" : "fa-file-pdf text-red-400";
+                    userAttachHtml = `<div class="flex items-center gap-2 bg-black/40 p-2 rounded-lg w-fit mb-1 border border-white/5"><i class="fas ${iconClass}"></i> <span class="text-[10px] font-bold">${attachment.name}</span></div>`;
+                    dbAttachMarker = attachment.isImage ? `[🖼️ Image jointe : ${attachment.name}]` : `[📄 Document joint : ${attachment.name}]`;
+                }
+
+                displayUserMessage(val, userAttachHtml);
                 
                 document.getElementById('aiTyping').classList.remove('hidden');
                 chatArea.scrollTop = chatArea.scrollHeight;
@@ -1244,7 +1727,6 @@
                     lengthInstruction = currentLang === 'fr' ? "Taille de réponse : Moyenne et équilibrée." : "Response length: Medium and balanced.";
                 }
 
-                // LE NOUVEAU CERVEAU HARDCORE (AVEC OVERRIDE DE MÉMOIRE)
                 let hardcoreInstruction = "";
                 if (isHardcoreMode && (currentModel === 'coach' || currentModel === 'procrastination' || currentModel === 'expert')) {
                     hardcoreInstruction = currentLang === 'fr' 
@@ -1254,6 +1736,17 @@
                     hardcoreInstruction = currentLang === 'fr' 
                         ? "\n\n⚠️ RAPPEL DE TON : IGNORE toute agressivité ou sarcasme que tu aurais pu avoir dans les messages précédents de cet historique. Redeviens IMMÉDIATEMENT respectueux, chaleureux, pro et bienveillant."
                         : "\n\n⚠️ TONE REMINDER: IGNORE any aggressiveness or sarcasm you might have used in previous messages in this history. IMMEDIATELY return to being respectful, warm, pro, and kind.";
+                }
+                
+                let redirectionInstruction = "";
+                if (isThiabsMode) {
+                    redirectionInstruction = currentLang === 'fr' 
+                        ? "\n\n⚠️ RÈGLE DE REDIRECTION DOUCE ET INTELLIGENTE : Tu es dans le mode Thiab's (dédié au mindset, business, sport, motivation). Si l'utilisateur te pose une question ou t'envoie une image qui est TOTALEMENT HORS-SUJET (ex: programmation, recettes, etc.), TU DOIS D'ABORD LUI RÉPONDRE COMPLÈTEMENT, PARFAITEMENT ET GENTIMENT pour l'aider sans être méchant. Une fois que tu as fini de bien lui répondre, ajoute EXACTEMENT ce lien à la toute fin de ton message pour l'inviter poliment à utiliser le bon mode la prochaine fois : `\n\n[👉 Basculer vers Level IA (Mode Normal)](#switch-level-ia)`. \n⚡ IMPORTANT : Si la question est extrêmement simple (ex: 1+1, 'ça va ?'), réponds juste normalement SANS JAMAIS mettre le bouton de redirection."
+                        : "\n\n⚠️ GENTLE AND SMART REDIRECTION RULE: You are in Thiab's mode (mindset, business, sports, motivation). If the user asks a question or sends an image that is TOTALLY OFF-TOPIC, YOU MUST FIRST ANSWER THEM COMPLETELY, PERFECTLY, AND KINDLY. Once you have finished answering properly, add EXACTLY this link at the very end of your message to politely invite them to use the correct mode next time: `\n\n[👉 Switch to Level IA (Normal Mode)](#switch-level-ia)`. \n⚡ IMPORTANT: If the question is extremely simple (e.g., 1+1, 'how are you?'), answer normally WITHOUT EVER putting the redirection button.";
+                } else if (!isThiabsMode && currentModel === 'travail') {
+                    redirectionInstruction = currentLang === 'fr'
+                        ? "\n\n⚠️ RÈGLE DE REDIRECTION DOUCE ET INTELLIGENTE : Tu es dans le mode Travail. Si la demande n'a STRICTEMENT AUCUN rapport avec le travail, RÉPONDS D'ABORD COMPLÈTEMENT ET GENTIMENT. Ensuite, ajoute obligatoirement ce lien à la fin : `\n\n[👉 Basculer vers Mode Normal](#switch-level-ia)`. \n⚡ IMPORTANT : Si c'est une question très simple (1+1), réponds normalement sans le bouton."
+                        : "\n\n⚠️ GENTLE AND SMART REDIRECTION RULE: You are in Work mode. If the request has STRICTLY NOTHING to do with work, FIRST ANSWER COMPLETELY AND KINDLY. Then, obligatorily add this link at the end: `\n\n[👉 Switch to Normal Mode](#switch-level-ia)`. \n⚡ IMPORTANT: If it's a very simple question (1+1), answer normally without the button.";
                 }
 
                 const firstName = currentUserName.split(' ')[0];
@@ -1279,7 +1772,7 @@ ${currentDna}
 C'est la toute première fois que cet utilisateur interagit avec toi. Tu DOIS ABSOLUMENT suspendre ta réponse initiale pour faire une présentation magistrale, ultra-pro et extrêmement détaillée de TOUT ton écosystème. Voici le plan strict :
 
 1. **L'Accroche :** Commence par une phrase chaleureuse (ex: "Avant de plonger dans le vif du sujet, prenons un instant. Laisse-moi te présenter l'univers dans lequel tu viens d'entrer...").
-2. **L'Identité Globale :** Présente-toi comme l'assistant virtuel **ultra-premium** de l'application **Level IA**, forgé par l'organisation visionnaire **LevelUp**. Précise bien que l'application globale est Level IA.
+2. **L'Identité Globale :** Présente-toi comme l'assistant virtuel **ultra-premium** de l'application **Level IA**, créé par le visionnaire **LevelUp**. Précise bien que l'application globale est Level IA.
 3. **L'Écosystème (Les 2 Visages de l'Application) :** Détaille clairement les deux facettes de l'application en mettant MASSIVEMENT en **gras** les concepts forts :
    - 🏢 **Level IA (Productivité & Vision) :** Ton mode par défaut avec ses 3 cerveaux : **Normal** (Généraliste expert), **Travail** (Vision de projet et d'entreprise), et **Expert** (Analytique et ultra-précis).
    - 🌟 **Mode Thiab's (Développement Personnel) :** Une section secrète activable dans les paramètres, dédiée à l'élévation personnelle avec 3 cerveaux : **Motivation** (Inspiration pure), **Coach de Vie** (Stratégie d'évolution), et **Anti-Procrastination** (Mode hardcore destructeur d'excuses).
@@ -1289,13 +1782,14 @@ C'est la toute première fois que cet utilisateur interagit avec toi. Tu DOIS AB
    - 💾 **Mémoire Cloud & PWA :** Historique sauvegardé en direct, et installation mobile native (iOS/Android).
 5. **La Promesse :** Assure-lui que ton intelligence est sans limite et que tu es là pour le propulser au niveau supérieur.
 6. **La Transition :** Fais une ligne de séparation claire avec \`---\`.
-7. **La Réponse :** Écris "Pour en revenir à ton message :" et réponds de manière experte à sa toute première question.
+7. **L'Hommage :** Ajoute un P.S. très discret mais respectueux : "P.S. : Ce double écosystème a été créé par LevelUp. Le Mode Thiab's a été inspiré par Thiab's, une brillante Sénégalaise de 17 ans qui lutte contre la procrastination. Ce mode porte son nom en son honneur."
+8. **La Réponse :** Écris "Pour en revenir à ton message :" et réponds de manière experte à sa toute première question.
 ` : `
 🚨 SPECIAL MANDATORY INSTRUCTION FOR THIS VERY FIRST MESSAGE 🚨
 This is the very first time this user is interacting with you. You MUST suspend your initial response to make a masterful, ultra-pro, and highly detailed presentation of YOUR ENTIRE ecosystem. Here is the strict plan:
 
 1. **The Hook:** Start with a warm phrase.
-2. **Global Identity:** Present yourself as the **ultra-premium** virtual assistant of the **Level IA** app, forged by the visionary organization **LevelUp**.
+2. **Global Identity:** Present yourself as the **ultra-premium** virtual assistant of the **Level IA** app, created by the visionary **LevelUp**.
 3. **The Ecosystem (The 2 Faces of the App):** Clearly detail the two facets, massively **bolding** strong concepts:
    - 🏢 **Level IA (Productivity & Vision):** Your default mode with 3 brains: **Normal**, **Work**, and **Expert**.
    - 🌟 **Thiab's Mode (Personal Development):** A secret section for personal elevation with 3 brains: **Motivation**, **Life Coach**, and **Anti-Procrastination**.
@@ -1305,14 +1799,16 @@ This is the very first time this user is interacting with you. You MUST suspend 
    - 💾 **Cloud Memory & PWA:** Live history and mobile installation.
 5. **The Promise:** Assure them you will propel them to the next level.
 6. **The Transition:** Make a clear separation line with \`---\`.
-7. **The Answer:** Write "Getting back to your message:" and expertly answer their very first question.
+7. **The Tribute:** Add a discreet P.S.: "P.S.: This dual ecosystem was created by LevelUp. Thiab's Mode was inspired by Thiab's, a brilliant 17-year-old Senegalese girl fighting procrastination. This mode bears her name in her honor."
+8. **The Answer:** Write "Getting back to your message:" and expertly answer their very first question.
 `;
                 }
 
                 const currentModeName = isThiabsMode ? "le mode secret Thiab's (Développement Personnel)" : "le mode classique Level IA (Productivité)";
                 
-                const corePrompt = `Tu es doté d'une intelligence analytique hors du commun, d'une logique implacable et d'une capacité à raisonner en profondeur. Tu es hyper-intelligent.
-                Ton identité : L'application globale s'appelle **Level IA**, développée par **LevelUp**.
+                const corePrompt = `Tu es doté d'une intelligence analytique hors du commun, d'une logique implacable et d'une capacité d'adaptation parfaite. Tu es une IA d'élite, experte mondiale dans ton domaine et hyper-intelligente. Si on te donne une image ou un document PDF, analyse-le en profondeur avec ton génie habituel.
+                Ton identité : L'application globale s'appelle **Level IA**, entièrement développée et créée par le génie **LevelUp**.
+                Origine secrète : La fonctionnalité "Mode Thiab's" existe grâce à Thiab's, une jeune et brillante Sénégalaise de 17 ans qui lutte contre la procrastination. C'est elle qui a donné l'idée de ce mode dédié au développement personnel, et LevelUp l'a baptisé en son honneur. N'en parle JAMAIS de toi-même dans tes messages normaux. Tu ne dois raconter cette histoire QUE si l'utilisateur te demande explicitement d'où vient le mode Thiab's ou qui est Thiab's.
                 Actuellement, l'utilisateur a activé ${currentModeName}. Tu dois donc agir selon les règles de ce mode spécifique.
                 
                 🛑 RÈGLES DE COMPORTEMENT (STYLE POTE INTELLIGENT & MENTOR) :
@@ -1328,6 +1824,7 @@ This is the very first time this user is interacting with you. You MUST suspend 
                 
                 ${lengthInstruction}
                 ${hardcoreInstruction}
+                ${redirectionInstruction}
                 
                 LANGUE DEMANDÉE : ${sysLang}.
                 MODE ACTUEL : ${modelPrompt}
@@ -1342,7 +1839,16 @@ This is the very first time this user is interacting with you. You MUST suspend 
                 const maxAttempts = apiKeys.length;
                 let lastApiError = ""; 
                 
-                const apiContents = [...currentSessionMessages, { role: "user", parts: [{ text: val }] }];
+                // Préparation de la requête avec ou sans pièce jointe
+                let requestParts = [];
+                if (val) requestParts.push({ text: val });
+                if (attachment) {
+                    requestParts.push({
+                        inlineData: { mimeType: attachment.mimeType, data: attachment.base64 }
+                    });
+                }
+                
+                const apiContents = [...currentSessionMessages, { role: "user", parts: requestParts }];
 
                 while (!success && attempts < maxAttempts) {
                     const apiKey = apiKeys[currentKeyIndex];
@@ -1404,6 +1910,7 @@ This is the very first time this user is interacting with you. You MUST suspend 
                         }
 
                         success = true;
+                        consecutiveErrors = 0; 
 
                     } catch (e) {
                         if (e.message !== "API_ERROR") {
@@ -1416,10 +1923,18 @@ This is the very first time this user is interacting with you. You MUST suspend 
                         if (attempts < maxAttempts) {
                             currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
                         } else {
+                            consecutiveErrors++;
                             document.getElementById('aiTyping').classList.add('hidden');
+                            
+                            let supportButtonHtml = "";
+                            if (consecutiveErrors >= 2) {
+                                supportButtonHtml = `<br><br><a href="mailto:levelup.iao@gmail.com?subject=Urgence%20Technique%20-%20Level%20IA%20(ID:%20${userId})&body=Bonjour%20LevelUp,%0A%0AJe%20n'arrive%20plus%20à%20générer%20de%20réponses.%20L'IA%20semble%20bloquée.%0A%0A[Détails%20de%20l'erreur%20:%20${encodeURIComponent(lastApiError)}]" class="support-btn"><i class="fas fa-envelope"></i> Contacter le Support Technique</a>`;
+                            }
+                            
                             const errorMsg = currentLang === 'fr' 
-                                ? `Oups ! 😅 Impossible de me connecter à mon cerveau.\n\n🛑 **Erreur Technique API :**\n\`${lastApiError}\`\n\n*(Vérifie ton document system/config dans Firebase ou ton quota).*` 
-                                : `Oops! 😅 Unable to connect to my brain.\n\n🛑 **API Technical Error:**\n\`${lastApiError}\`\n\n*(Check your system/config document in Firebase or your quota).*`;
+                                ? `Oups ! 😅 Je suis actuellement en surcharge cognitive.\n\n🛑 **Ce qui se passe :**\nSoit mes serveurs (Google Gemini) sont saturés par trop de demandes en ce moment, soit nous avons atteint la limite technique temporaire de mon cerveau. *L'erreur exacte est :* \`${lastApiError}\`\n\n💡 **Ce que tu peux faire :**\n1. Patiente environ 2 à 5 minutes avant de réessayer.\n2. Essaie de rafraîchir la page.\n3. Si le problème persiste, c'est que l'équipe LevelUp doit intervenir sur mes circuits.${supportButtonHtml}` 
+                                : `Oops! 😅 I'm currently experiencing cognitive overload.\n\n🛑 **What's happening:**\nEither my servers (Google Gemini) are saturated with requests right now, or we've hit a temporary technical limit. *The exact error is:* \`${lastApiError}\`\n\n💡 **What you can do:**\n1. Wait about 2 to 5 minutes before trying again.\n2. Try refreshing the page.\n3. If the problem persists, the LevelUp team needs to intervene on my circuits.${supportButtonHtml}`;
+                                
                             displayAIMessage(errorMsg, true);
                             return; 
                         }
@@ -1437,14 +1952,22 @@ This is the very first time this user is interacting with you. You MUST suspend 
                     document.getElementById('aiTyping').classList.add('hidden');
                     displayAIMessage(aiText, true, sourcesHtml);
                     
-                    currentSessionMessages.push({ role: "user", parts: [{ text: val }] });
+                    // Ajout à l'historique Gemini (Pour ne pas exploser Firestore, on ne push que le texte dans l'historique local)
+                    const userDbText = val + (dbAttachMarker ? `\n\n${dbAttachMarker}` : "");
+                    currentSessionMessages.push({ role: "user", parts: [{ text: userDbText }] });
                     currentSessionMessages.push({ role: "model", parts: [{ text: aiText }] });
                     
-                    const messageObj = { user: val, ai: aiText, sources: sourcesHtml, timestamp: Date.now() };
+                    const messageObj = { 
+                        user: val, 
+                        attachmentHtml: userAttachHtml,
+                        ai: aiText, 
+                        sources: sourcesHtml, 
+                        timestamp: Date.now() 
+                    };
                     
                     try {
                         if (!currentSessionId) {
-                            const title = val.length > 25 ? val.substring(0, 25) + "..." : val;
+                            const title = val ? (val.length > 25 ? val.substring(0, 25) + "..." : val) : (attachment ? `Fichier: ${attachment.name}` : "Nouvelle session");
                             const docRef = await addDoc(collection(db, "artifacts", appId, "users", userId, "sessions"), {
                                 title: title,
                                 updatedAt: Date.now(),
