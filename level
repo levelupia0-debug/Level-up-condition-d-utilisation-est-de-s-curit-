@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Level IA</title>
+    
+    <!-- Ajout du favicon Étoile Violette -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'><path fill='%23a855f7' d='M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z'/></svg>" type="image/svg+xml">
+    
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDocs, deleteDoc, setDoc, getDoc, collectionGroup, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // --- CONFIGURATION FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+            authDomain: "levelup-ia.firebaseapp.com",
+            projectId: "levelup-ia",
+            storageBucket: "levelup-ia.firebasestorage.app",
+            messagingSenderId: "229420004282",
+            appId: "1:229420004282:web:6735f059a947f0936ae383",
+            measurementId: "G-MSRDY2574K"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Export global
+        window.auth = auth;
+        window.db = db;
+        window.signInAnonymously = signInAnonymously;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.deleteUser = deleteUser;
+        window.firestoreUtils = { collection, addDoc, query, orderBy, onSnapshot, doc, getDocs, deleteDoc, setDoc, getDoc, collectionGroup, updateDoc, arrayUnion };
+        
+        window.__app_id = "level-ia-premium"; 
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root { --primary: #a855f7; --dark: #020202; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--dark); color: #ffffff; height: 100dvh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
+        .bg-main { background: radial-gradient(circle at 50% 0%, #0d061a 0%, #020202 100%); }
+
+        #splashScreen { position: fixed; inset: 0; z-index: 9999; background: black; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 1s ease-out; }
+        .splash-text { font-size: 1.8rem; font-weight: 900; letter-spacing: 0.6em; text-transform: uppercase; opacity: 0; position: absolute; transform: scale(0.85); filter: blur(15px); transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1); text-align: center; }
+        .splash-text.active { opacity: 1; transform: scale(1); filter: blur(0px); }
+        .splash-text.exit { opacity: 0; transform: scale(1.2); filter: blur(30px); }
+
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .overlay-active { pointer-events: auto; background: rgba(0,0,0,0.4); }
+        
+        #sidebar { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
+        
+        #userInput { background: transparent !important; border: none !important; color: white !important; outline: none !important; width: 100%; padding: 12px; font-size: 16px !important; min-height: 44px; max-height: 120px; display: block; resize: none; overflow-y: hidden; }
+        .message-bubble { max-width: 88%; animation: msgIn 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        .star-logo { animation: rotate360 8s linear infinite; color: #a855f7; filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6)); }
+        @keyframes rotate360 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .typing-dots span { width: 3px; height: 3px; background: #a855f7; border-radius: 50%; display: inline-block; animation: typing 1.4s infinite; }
+        @keyframes typing { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
+
+        .chat-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+        .chat-item:hover { background: rgba(168, 85, 247, 0.1); border-color: var(--primary); }
+        .chat-item.active { background: rgba(168, 85, 247, 0.15); border-color: var(--primary); }
+
+        .storage-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+        .storage-progress { height: 100%; background: var(--primary); transition: width 0.5s ease; }
+    </style>
+</head>
+<body class="bg-main">
+
+    <!-- TOAST DE NOTIFICATION SYSTEME -->
+    <div id="sysToast" class="fixed top-5 left-1/2 -translate-x-1/2 backdrop-blur-md border px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest hidden z-[9999] shadow-2xl transition-all"></div>
+
+    <!-- SPLASH -->
+    <div id="splashScreen">
+        <div id="splash1" class="splash-text text-purple-500"><strong>Level IA</strong></div>
+        <div id="splash2" class="splash-text text-white"><strong>LevelUp</strong></div>
+    </div>
+
+    <!-- LANGUAGE SELECTION PAGE -->
+    <div id="langPage" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black">
+        <div class="w-full max-w-sm text-center space-y-8">
+            <i class="fas fa-globe text-4xl text-purple-500 mb-6"></i>
+            <h2 class="text-xl font-bold uppercase tracking-widest text-white mb-8">
+                Language<br><span class="text-[10px] text-white/50 tracking-widest">Choisissez / Choose</span>
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="lang-btn bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-purple-600 hover:border-purple-500 transition-all flex flex-col items-center gap-3" data-lang="fr">
+                    <span class="text-4xl">🇫🇷</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Français</span>
+                </button>
+                <button class="lang-btn bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-purple-600 hover:border-purple-500 transition-all flex flex-col items-center gap-3" data-lang="en">
+                    <span class="text-4xl">🇬🇧</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest">English</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH PAGE -->
+    <div id="authPage" class="hidden fixed inset-0 z-[5000] flex items-center justify-center p-8 bg-black">
+        <div class="w-full max-w-sm text-center">
+            <i class="fas fa-star text-5xl star-logo mb-10 block"></i>
+            <h1 class="text-2xl font-bold tracking-[0.4em] text-white uppercase mb-12"><strong>Level IA</strong></h1>
+            
+            <div class="space-y-6">
+                <p id="authTitle" class="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-4">Entrez votre Clé d'Accès</p>
+                <input type="text" id="accessKeyInput" maxlength="15" placeholder="LVL-XXXXX-XXXXX" class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-center text-white font-mono text-lg tracking-widest outline-none focus:border-purple-500 transition-all uppercase">
+                
+                <div class="space-y-3">
+                    <button id="verifyKeyBtn" class="w-full bg-purple-600 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-purple-500 transition-all shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+                        Vérifier la clé
+                    </button>
+                    <a href="https://levelupia0-debug.github.io/levelupia/" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/10 hover:border-white/20 transition-all text-white">
+                        <i class="fas fa-key text-purple-400"></i> <span id="getKeyText">Obtenir ma clé</span>
+                    </a>
+                </div>
+                
+                <p id="keyError" class="text-xs text-red-400 font-bold hidden">Clé introuvable ou invalide.</p>
+                <p class="text-[8px] text-white/20 uppercase tracking-widest mt-8">Propulsé par <strong>LevelUp</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- WELCOME PAGE -->
+    <div id="welcomePage" class="hidden fixed inset-0 z-[4500] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-500 shadow-2xl border-white/10">
+            <div class="relative w-24 h-24 mx-auto mb-2">
+                <img id="welcomeAvatar" src="" class="w-full h-full rounded-full object-cover border-2 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                <div class="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-2 border-black flex items-center justify-center">
+                    <i class="fas fa-check text-[10px] text-white"></i>
+                </div>
+            </div>
+            <h2 class="text-2xl font-black text-white uppercase tracking-widest leading-tight">
+                <span id="welcomeGreeting" class="text-sm text-white/50 tracking-widest">Bienvenue</span><br>
+                <span id="welcomeName" class="text-purple-400 truncate block"></span>
+            </h2>
+            <p id="welcomeDesc" class="text-xs text-white/60 leading-relaxed px-2">Level IA est prête à vous assister. Découvrez une intelligence conçue pour vous accompagner au quotidien.</p>
+            <button id="startAppBtn" class="w-full bg-white text-black py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-purple-500 hover:text-white transition-all shadow-lg mt-4 flex justify-center items-center gap-3">
+                <span id="continueBtnText">Continuer</span> <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <div id="logoutModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10">
+            <div class="mx-auto w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-4 border border-red-500/50">
+                <i class="fas fa-sign-out-alt text-2xl text-red-400"></i>
+            </div>
+            <h2 id="logoutModalTitle" class="text-xl font-black text-white uppercase tracking-widest">Déconnexion</h2>
+            <p id="logoutModalDesc" class="text-xs text-white/60 leading-relaxed px-2">Voulez-vous vraiment quitter votre session actuelle ?</p>
+            <div class="flex gap-3 pt-4">
+                <button id="cancelLogoutBtn" class="flex-1 bg-white/10 text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all">Annuler</button>
+                <button id="confirmLogoutBtn" class="flex-1 bg-red-500/80 text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-500 transition-all shadow-lg shadow-red-500/30">Quitter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INSTALL PWA MODAL -->
+    <div id="installModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10">
+            <div class="mx-auto w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mb-4 border border-purple-500/50">
+                <i class="fas fa-mobile-alt text-2xl text-purple-400"></i>
+            </div>
+            <h2 id="installModalTitle" class="text-xl font-black text-white uppercase tracking-widest">Installer l'App</h2>
+            <p id="installModalDesc" class="text-xs text-white/60 leading-relaxed px-2">Ajoutez Level IA sur votre écran d'accueil :</p>
+            <div class="space-y-4 text-left bg-black/40 p-4 rounded-2xl border border-white/5">
+                <p id="installiOS" class="text-[10px] text-white/80 leading-relaxed font-bold">🍎 iOS (Safari) : Appuyez sur Partager <i class="fas fa-share-square mx-1"></i> puis 'Sur l'écran d'accueil'.</p>
+                <div class="w-full h-px bg-white/10"></div>
+                <p id="installAndroid" class="text-[10px] text-white/80 leading-relaxed font-bold">🤖 Android (Chrome) : Appuyez sur Menu <i class="fas fa-ellipsis-v mx-1"></i> puis 'Ajouter à l'écran d'accueil'.</p>
+            </div>
+            <button id="closeInstallModalBtn" class="w-full bg-white/10 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all mt-4">Fermer</button>
+        </div>
+    </div>
+
+    <!-- CGU MODAL -->
+    <div id="cguModal" class="hidden fixed inset-0 z-[6000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl max-w-md w-full text-center space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10 max-h-[80vh] flex flex-col">
+            <div class="mx-auto w-16 h-16 shrink-0 rounded-full bg-blue-500/20 flex items-center justify-center mb-2 border border-blue-500/50">
+                <i class="fas fa-scale-balanced text-2xl text-blue-400"></i>
+            </div>
+            <h2 id="cguModalTitle" class="text-xl font-black text-white uppercase tracking-widest shrink-0">Conditions d'Utilisation</h2>
+            <div class="space-y-4 text-left bg-black/40 p-4 rounded-2xl border border-white/5 overflow-y-auto no-scrollbar flex-1">
+                <p id="cguText1" class="text-[10px] text-white/80 leading-relaxed font-bold">🔞 <strong>Âge requis :</strong> Vous devez avoir 16 ans ou plus pour utiliser cette application.</p>
+                <div class="w-full h-px bg-white/10"></div>
+                <p id="cguText2" class="text-[10px] text-white/80 leading-relaxed font-bold">⚖️ <strong>Responsabilité :</strong> En utilisant Level IA, vous acceptez l'entière responsabilité de vos choix et de l'usage des réponses générées. Les développeurs et créateurs de l'application ne pourront en aucun cas être tenus responsables ou poursuivis en justice pour les conséquences de vos actions.</p>
+            </div>
+            <button id="closeCguModalBtn" class="w-full bg-white/10 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all shrink-0">Fermer / J'accepte</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="hidden flex-col h-full w-full relative">
+        <div id="appOverlay" class="fixed inset-0 z-[2999] hidden transition-opacity"></div>
+
+        <div id="sidebar" class="fixed inset-y-0 right-0 w-[85%] md:w-80 glass z-[3000] border-l border-white/10 p-6 flex flex-col transition-transform translate-x-full no-scrollbar overflow-y-auto">
+            <div class="flex items-center justify-between mb-8">
+                <span id="menuTitle" class="text-[10px] font-black uppercase tracking-widest opacity-40">Menu</span>
+                <button id="closeSidebar" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5"><i class="fas fa-times text-xs"></i></button>
+            </div>
+
+            <div id="userCard" class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-8 flex items-center gap-4">
+                <div id="userAvatar" class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center overflow-hidden border border-white/10 shadow-inner shrink-0">
+                    <i class="fas fa-user text-xs"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p id="userName" class="text-[10px] font-black uppercase truncate">Utilisateur</p>
+                    <p id="userMail" class="text-[9px] text-white/40 truncate">---</p>
+                    <p id="userStatus" class="text-[8px] text-green-400 uppercase tracking-widest mt-0.5"><i class="fas fa-shield-alt"></i> Vérifié via clé</p>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Langue -->
+                <div class="space-y-2">
+                    <label id="langTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">Langue</label>
+                    <select id="langSelect" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-purple-500 transition-all uppercase tracking-widest font-bold appearance-none cursor-pointer">
+                        <option value="fr" class="bg-black text-white">Français</option>
+                        <option value="en" class="bg-black text-white">English</option>
+                    </select>
+                </div>
+
+                <!-- Modèles IA -->
+                <div class="space-y-2">
+                    <label id="modelTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">Modèle IA</label>
+                    <select id="modelSelect" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-purple-500 transition-all uppercase tracking-widest font-bold appearance-none cursor-pointer">
+                        <option value="normal" class="bg-black text-white">Normal (Intelligent)</option>
+                        <option value="coach" class="bg-black text-white">Coach (Motivation)</option>
+                        <option value="procrastination" class="bg-black text-white">Anti-Procrastination</option>
+                    </select>
+                </div>
+
+                <!-- Longueur des réponses -->
+                <div class="space-y-2">
+                    <label id="lengthTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">Taille des réponses</label>
+                    <select id="lengthSelect" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-purple-500 transition-all uppercase tracking-widest font-bold appearance-none cursor-pointer">
+                        <option value="medium" class="bg-black text-white">Moyenne (Chill & Pro)</option>
+                        <option value="long" class="bg-black text-white">Longue (Détaillée)</option>
+                        <option value="short" class="bg-black text-white">Courte (Directe)</option>
+                    </select>
+                </div>
+
+                <!-- TOGGLE MODE HARDCORE (Caché en mode normal) -->
+                <div class="space-y-2 pt-2 transition-all duration-300 hidden" id="hardcoreContainer">
+                    <div class="flex items-center justify-between bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
+                        <div>
+                            <label id="hardcoreTitle" class="text-[10px] font-black uppercase tracking-widest text-red-400">Mode Hardcore 🤬</label>
+                            <p id="hardcoreDesc" class="text-[7px] text-white/50 uppercase tracking-widest mt-0.5">Pour Coach & Procrastination</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="hardcoreToggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-black/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white/50 after:border-white/10 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500 peer-checked:after:bg-white shadow-inner"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-[9px] font-black uppercase tracking-widest opacity-40">
+                        <span id="cloudSpace">Espace Cloud</span>
+                        <span id="storageLabel">0%</span>
+                    </div>
+                    <div class="storage-bar"><div id="storageBar" class="storage-progress" style="width: 0%"></div></div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 id="historyTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">Historique des sessions</h4>
+                    </div>
+                    <button id="newChatBtn" class="w-full flex items-center justify-center gap-2 py-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400 font-black text-[10px] uppercase tracking-widest hover:bg-purple-600 hover:text-white hover:border-purple-500 transition-all shadow-sm">
+                        <i class="fas fa-plus"></i> <span id="newChatText">Nouvelle session</span>
+                    </button>
+                    <div id="historyList" class="space-y-2 max-h-60 overflow-y-auto pr-2 mt-2 no-scrollbar">
+                        <!-- History items injected here -->
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-white/5">
+                    <div class="space-y-2">
+                        <label id="dnaTitle" class="text-[9px] font-black uppercase tracking-widest opacity-40">DNA de <strong>Level IA</strong></label>
+                        <textarea id="customDNA" placeholder="..." class="w-full h-24 bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] text-white outline-none focus:border-purple-500 transition-all resize-none"></textarea>
+                        <button id="saveDNA" class="w-full py-2.5 bg-purple-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-purple-500 transition-all">Mettre à jour</button>
+                    </div>
+
+                    <div class="pt-4 space-y-3">
+                        <button id="installMenuBtn" class="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all group">
+                            <span id="installAppMenuText" class="text-[9px] font-black uppercase tracking-widest">Installer l'App</span>
+                            <i class="fas fa-mobile-alt text-xs opacity-20 group-hover:opacity-100"></i>
+                        </button>
+                        <button id="cguMenuBtn" class="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all group">
+                            <span id="cguMenuText" class="text-[9px] font-black uppercase tracking-widest">Règles & Sécurité</span>
+                            <i class="fas fa-scale-balanced text-xs opacity-20 group-hover:opacity-100"></i>
+                        </button>
+                        <a id="supportMail" href="#" class="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all group">
+                            <span id="supportTitle" class="text-[9px] font-black uppercase tracking-widest">Support & Compte</span>
+                            <i class="fas fa-envelope text-xs opacity-20 group-hover:opacity-100"></i>
+                        </a>
+                        <button id="logoutBtn" class="w-full py-4 text-[9px] text-red-400 font-black uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity">Déconnexion</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <header class="px-6 py-5 flex items-center justify-between border-b border-white/5 bg-black/40 backdrop-blur-2xl shrink-0 z-40">
+            <div class="flex items-center gap-4">
+                <i class="fas fa-star text-xl star-logo"></i>
+                <div>
+                    <h2 class="text-sm font-black uppercase tracking-widest"><strong>Level IA</strong></h2>
+                    <p id="headerModelName" class="text-[9px] font-bold text-purple-400 uppercase tracking-tighter">Modèle: Normal</p>
+                </div>
+            </div>
+            <button id="openSidebar" class="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-1.5 hover:bg-white/5 transition-all">
+                <span class="w-4 h-0.5 bg-white rounded-full"></span>
+                <span class="w-4 h-0.5 bg-white rounded-full opacity-60"></span>
+            </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto px-6 py-10 no-scrollbar space-y-10" id="chatArea">
+            <div class="max-w-2xl mx-auto space-y-8" id="conversationContainer"></div>
+            
+            <!-- Indicateur de frappe simple et direct sur le fond -->
+            <div id="aiTyping" class="max-w-2xl mx-auto hidden pl-2 pb-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-star text-[12px] star-logo opacity-80"></i>
+                    <div class="typing-dots flex gap-1"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="px-4 py-4 border-t border-white/5 bg-[#020202]/90 backdrop-blur-3xl shrink-0 z-50">
+            <div class="max-w-2xl mx-auto">
+                <div class="glass rounded-3xl p-1.5 flex items-end gap-2 focus-within:border-purple-500/40 transition-all shadow-2xl">
+                    <div class="flex-1 px-2"><textarea id="userInput" placeholder="Dis-moi tout bro..." rows="1" autocomplete="off"></textarea></div>
+                    <button id="sendBtn" class="w-12 h-12 rounded-2xl bg-white text-black flex items-center justify-center hover:bg-purple-500 hover:text-white transition-all shadow-lg"><i class="fas fa-chevron-up text-xs"></i></button>
+                </div>
+                <div class="text-center mt-3">
+                    <p id="footerBranding" class="text-[8px] font-bold text-white/30 uppercase tracking-[0.3em]">Propulsé par <strong>LevelUp</strong></p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        const checkReady = setInterval(() => {
+            if (window.auth && window.db) {
+                clearInterval(checkReady);
+                initApp();
+            }
+        }, 100);
+
+        function initApp() {
+            const { auth, db, firestoreUtils, deleteUser } = window;
+            const { signInAnonymously } = window;
+            const { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, setDoc, getDoc, collectionGroup, getDocs, updateDoc, arrayUnion } = firestoreUtils;
+            
+            const splashScreen = document.getElementById('splashScreen');
+            const langPage = document.getElementById('langPage');
+            const authPage = document.getElementById('authPage');
+            const welcomePage = document.getElementById('welcomePage');
+            const logoutModal = document.getElementById('logoutModal');
+            const installModal = document.getElementById('installModal');
+            const cguModal = document.getElementById('cguModal');
+            const mainApp = document.getElementById('mainApp');
+            const conversationContainer = document.getElementById('conversationContainer');
+            const chatArea = document.getElementById('chatArea');
+            const userInput = document.getElementById('userInput');
+            const sidebar = document.getElementById('sidebar');
+            const appOverlay = document.getElementById('appOverlay');
+            const historyList = document.getElementById('historyList');
+            const hardcoreContainer = document.getElementById('hardcoreContainer');
+
+            const MODEL = "gemini-2.5-flash";
+            const appId = window.__app_id; 
+            
+            let apiKeys = []; 
+            let currentKeyIndex = 0;
+            let userId = null;
+            let dnaPrompts = { normal: "", coach: "", procrastination: "" }; 
+            let currentLang = 'fr'; 
+            let currentSessionId = null; 
+            let currentModel = 'normal'; 
+            let hasSeenWelcomeMsg = false; 
+            let isHardcoreMode = false; 
+            let currentResponseLength = 'medium'; 
+            
+            // Variable pour traquer si l'utilisateur a vu la grande présentation initiale
+            let hasSeenGrandIntro = false;
+
+            // Variables pour la mémoire de l'IA
+            let currentUserName = "Utilisateur";
+            let currentUserMail = "";
+            let currentSessionMessages = []; 
+
+            // Configuration du Markdown pour des retours à la ligne propres, sans espaces géants
+            marked.setOptions({ breaks: true });
+
+            function showSysToast(msg, isError = false) {
+                if(!isError) return; 
+                const t = document.getElementById('sysToast');
+                t.innerText = msg;
+                t.className = `fixed top-5 left-1/2 -translate-x-1/2 backdrop-blur-md border px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest z-[9999] shadow-2xl transition-all bg-red-500/20 border-red-500/50 text-red-200`;
+                t.classList.remove('hidden');
+                setTimeout(() => t.classList.add('hidden'), 5000);
+            }
+
+            const aiModels = {
+                normal: { 
+                    fr: "Modèle: Normal", en: "Model: Normal", 
+                    promptFR: "Tu es une IA ultra-intelligente, créative et experte dans tous les domaines.", 
+                    promptEN: "You are an ultra-intelligent, creative, and expert AI in all domains." 
+                },
+                coach: { 
+                    fr: "Modèle: Coach", en: "Model: Coach", 
+                    promptFR: "Tu es un Master Coach de vie. Motivant et incroyablement intelligent. Tu dois donner de la force à l'utilisateur et le pousser vers le sommet.", 
+                    promptEN: "You are a Master Life Coach. Motivating and incredibly smart. Empower the user and push them to the top." 
+                },
+                procrastination: { 
+                    fr: "Modèle: Anti-Procrastination", en: "Model: Anti-Procrastination", 
+                    promptFR: "Tu es un coach anti-procrastination redoutable et percutant. Tu refuses les excuses et tu donnes des plans d'action immédiats pour forcer l'utilisateur à bosser.", 
+                    promptEN: "You are a formidable and hard-hitting anti-procrastination coach. You accept no excuses and give immediate action plans to force the user to work." 
+                }
+            };
+
+            const i18n = {
+                fr: {
+                    authTitle: "Entrez votre Clé d'Accès",
+                    verifyBtn: "Vérifier la clé",
+                    getKeyText: "Obtenir ma clé",
+                    menuTitle: "Menu",
+                    langTitle: "Langue",
+                    modelTitle: "Modèle IA",
+                    lengthTitle: "Taille des réponses",
+                    cloudSpace: "Espace Cloud",
+                    historyTitle: "Historique des sessions",
+                    newChatText: "Nouvelle session",
+                    dnaTitle: "DNA de <strong>Level IA</strong>",
+                    saveDNA: "Mettre à jour",
+                    supportTitle: "Support & Compte",
+                    logoutBtn: "Déconnexion",
+                    placeholder: "Dis-moi tout bro...",
+                    dnaPlaceholder: "Ex: Parle-moi comme à un ami...",
+                    invalidFormat: "Format invalide. Exemple: LVL-XXXXX-XXXXX",
+                    keyNotFound: "Clé introuvable ou incorrecte.",
+                    welcomeGreeting: "Bienvenue",
+                    welcomeDesc: "Level IA est prête à vous assister. Découvrez une intelligence conçue pour vous accompagner au quotidien.",
+                    continueBtn: "Continuer",
+                    footerBranding: "Propulsé par <strong>LevelUp</strong>",
+                    logoutModalTitle: "Déconnexion",
+                    logoutModalDesc: "Voulez-vous vraiment quitter votre session actuelle ?",
+                    cancelBtn: "Annuler",
+                    confirmLogout: "Quitter",
+                    verifiedStatus: "Vérifié via clé",
+                    installAppMenuText: "Installer l'App",
+                    installModalTitle: "Installer l'App",
+                    installModalDesc: "Ajoutez Level IA sur votre écran d'accueil :",
+                    installiOS: "🍎 iOS (Safari) : Appuyez sur Partager <i class='fas fa-share-square mx-1'></i> puis 'Sur l'écran d'accueil'.",
+                    installAndroid: "🤖 Android (Chrome) : Appuyez sur Menu <i class='fas fa-ellipsis-v mx-1'></i> puis 'Ajouter à l'écran d'accueil'.",
+                    cguMenuText: "Règles & Sécurité",
+                    cguModalTitle: "Conditions d'Utilisation",
+                    cguText1: "🔞 <strong>Âge requis :</strong> Vous devez avoir 16 ans ou plus pour utiliser cette application.",
+                    cguText2: "⚖️ <strong>Responsabilité :</strong> En utilisant Level IA, vous acceptez l'entière responsabilité de vos choix et de l'usage des réponses générées. Les développeurs et créateurs de l'application ne pourront en aucun cas être tenus responsables ou poursuivis en justice pour les conséquences de vos actions.",
+                    closeBtn: "Fermer / J'accepte",
+                    hardcoreTitle: "Mode Hardcore 🤬",
+                    hardcoreDesc: "Pour Coach & Procrastination",
+                    modelOptions: { normal: "Normal (Intelligent)", coach: "Coach (Motivation)", procrastination: "Anti-Procrastination" },
+                    lengthOptions: { medium: "Moyenne (Chill & Pro)", long: "Longue (Détaillée)", short: "Courte (Directe)" }
+                },
+                en: {
+                    authTitle: "Enter your Access Key",
+                    verifyBtn: "Verify Key",
+                    getKeyText: "Get my Key",
+                    menuTitle: "Menu",
+                    langTitle: "Language",
+                    modelTitle: "AI Model",
+                    lengthTitle: "Response Length",
+                    cloudSpace: "Cloud Space",
+                    historyTitle: "Session History",
+                    newChatText: "New session",
+                    dnaTitle: "<strong>Level IA</strong> DNA",
+                    saveDNA: "Update",
+                    supportTitle: "Support & Account",
+                    logoutBtn: "Log out",
+                    placeholder: "Tell me everything bro...",
+                    dnaPlaceholder: "Ex: Speak to me like a friend...",
+                    invalidFormat: "Invalid format. Example: LVL-XXXXX-XXXXX",
+                    keyNotFound: "Key not found or incorrect.",
+                    welcomeGreeting: "Welcome",
+                    welcomeDesc: "Level IA is ready to assist you. Discover an intelligence designed to support you daily.",
+                    continueBtn: "Continue",
+                    footerBranding: "Powered by <strong>LevelUp</strong>",
+                    logoutModalTitle: "Log out",
+                    logoutModalDesc: "Are you sure you want to leave your current session?",
+                    cancelBtn: "Cancel",
+                    confirmLogout: "Leave",
+                    verifiedStatus: "Key verified",
+                    installAppMenuText: "Install App",
+                    installModalTitle: "Install App",
+                    installModalDesc: "Add Level IA to your home screen:",
+                    installiOS: "🍎 iOS (Safari): Tap Share <i class='fas fa-share-square mx-1'></i> then 'Add to Home Screen'.",
+                    installAndroid: "🤖 Android (Chrome): Tap Menu <i class='fas fa-ellipsis-v mx-1'></i> then 'Add to Home Screen'.",
+                    cguMenuText: "Rules & Security",
+                    cguModalTitle: "Terms of Use",
+                    cguText1: "🔞 <strong>Age requirement:</strong> You must be 16 years or older to use this application.",
+                    cguText2: "⚖️ <strong>Liability:</strong> By using Level IA, you accept full responsibility for your choices and the use of generated responses. The developers and creators of the app cannot be held liable or sued for the consequences of your actions.",
+                    closeBtn: "Close / I accept",
+                    hardcoreTitle: "Hardcore Mode 🤬",
+                    hardcoreDesc: "For Coach & Procrastination",
+                    modelOptions: { normal: "Normal (Smart)", coach: "Coach (Motivation)", procrastination: "Anti-Procrastination" },
+                    lengthOptions: { medium: "Medium (Chill & Pro)", long: "Long (Detailed)", short: "Short (Direct)" }
+                }
+            };
+
+            const applyLanguage = (lang) => {
+                currentLang = lang;
+                const t = i18n[lang];
+                document.getElementById('authTitle').innerHTML = t.authTitle;
+                document.getElementById('verifyKeyBtn').innerText = t.verifyBtn;
+                document.getElementById('getKeyText').innerText = t.getKeyText;
+                document.getElementById('menuTitle').innerText = t.menuTitle;
+                document.getElementById('langTitle').innerText = t.langTitle;
+                document.getElementById('modelTitle').innerText = t.modelTitle;
+                document.getElementById('lengthTitle').innerText = t.lengthTitle;
+                document.getElementById('cloudSpace').innerText = t.cloudSpace;
+                document.getElementById('historyTitle').innerText = t.historyTitle;
+                document.getElementById('newChatText').innerText = t.newChatText;
+                document.getElementById('dnaTitle').innerHTML = t.dnaTitle;
+                document.getElementById('saveDNA').innerText = t.saveDNA;
+                document.getElementById('supportTitle').innerText = t.supportTitle;
+                document.getElementById('logoutBtn').innerText = t.logoutBtn;
+                document.getElementById('userInput').placeholder = t.placeholder;
+                document.getElementById('customDNA').placeholder = t.dnaPlaceholder;
+                document.getElementById('welcomeGreeting').innerText = t.welcomeGreeting;
+                document.getElementById('welcomeDesc').innerText = t.welcomeDesc;
+                document.getElementById('continueBtnText').innerText = t.continueBtn;
+                document.getElementById('footerBranding').innerHTML = t.footerBranding;
+                document.getElementById('logoutModalTitle').innerText = t.logoutModalTitle;
+                document.getElementById('logoutModalDesc').innerText = t.logoutModalDesc;
+                document.getElementById('cancelLogoutBtn').innerText = t.cancelBtn;
+                document.getElementById('confirmLogoutBtn').innerText = t.confirmLogout;
+                
+                document.getElementById('installAppMenuText').innerText = t.installAppMenuText;
+                document.getElementById('installModalTitle').innerText = t.installModalTitle;
+                document.getElementById('installModalDesc').innerText = t.installModalDesc;
+                document.getElementById('installiOS').innerHTML = t.installiOS;
+                document.getElementById('installAndroid').innerHTML = t.installAndroid;
+                document.getElementById('closeInstallModalBtn').innerText = t.closeBtn;
+
+                document.getElementById('cguMenuText').innerText = t.cguMenuText;
+                document.getElementById('cguModalTitle').innerText = t.cguModalTitle;
+                document.getElementById('cguText1').innerHTML = t.cguText1;
+                document.getElementById('cguText2').innerHTML = t.cguText2;
+                document.getElementById('closeCguModalBtn').innerText = t.closeBtn;
+                
+                document.getElementById('hardcoreTitle').innerText = t.hardcoreTitle;
+                document.getElementById('hardcoreDesc').innerText = t.hardcoreDesc;
+                
+                const userStatusEl = document.getElementById('userStatus');
+                if(userStatusEl) userStatusEl.innerHTML = `<i class="fas fa-shield-alt"></i> ${t.verifiedStatus}`;
+                
+                document.getElementById('langSelect').value = lang;
+                
+                const selectModel = document.getElementById('modelSelect');
+                selectModel.options[0].text = t.modelOptions.normal;
+                selectModel.options[1].text = t.modelOptions.coach;
+                selectModel.options[2].text = t.modelOptions.procrastination;
+
+                const selectLength = document.getElementById('lengthSelect');
+                selectLength.options[0].text = t.lengthOptions.medium;
+                selectLength.options[1].text = t.lengthOptions.long;
+                selectLength.options[2].text = t.lengthOptions.short;
+                
+                updateHeaderModel();
+            };
+
+            const updateHeaderModel = () => {
+                document.getElementById('headerModelName').innerText = aiModels[currentModel][currentLang];
+            };
+
+            function updateModeUI(mode) {
+                if (mode === 'normal') {
+                    hardcoreContainer.classList.add('hidden');
+                } else {
+                    hardcoreContainer.classList.remove('hidden');
+                }
+                document.getElementById('customDNA').value = dnaPrompts[mode] || "";
+            }
+
+            const savedLang = localStorage.getItem('thiabs_saved_lang');
+            if (savedLang) {
+                applyLanguage(savedLang);
+            }
+
+            document.getElementById('langSelect').addEventListener('change', (e) => {
+                applyLanguage(e.target.value);
+                localStorage.setItem('thiabs_saved_lang', e.target.value);
+            });
+
+            document.getElementById('modelSelect').addEventListener('change', async (e) => {
+                currentModel = e.target.value;
+                updateHeaderModel();
+                updateModeUI(currentModel);
+                if (userId) {
+                    await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { model: currentModel }, { merge: true });
+                }
+                
+                startNewChat();
+                closeSidebar();
+            });
+
+            document.getElementById('lengthSelect').addEventListener('change', async (e) => {
+                currentResponseLength = e.target.value;
+                if (userId) {
+                    await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { responseLength: currentResponseLength }, { merge: true });
+                }
+            });
+
+            document.getElementById('hardcoreToggle').addEventListener('change', async (e) => {
+                isHardcoreMode = e.target.checked;
+                if (userId) {
+                    await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { hardcore: isHardcoreMode }, { merge: true });
+                }
+            });
+
+            async function processLogin(keyVal, isAutoLogin = false) {
+                const btn = document.getElementById('verifyKeyBtn');
+                const errorMsg = document.getElementById('keyError');
+                
+                const keyFormatRegex = /^(LVL|THB)-[A-Z0-9]{3,6}-[A-Z0-9]{3,6}$/;
+                if (!keyFormatRegex.test(keyVal)) {
+                    if (!isAutoLogin) {
+                        errorMsg.innerText = i18n[currentLang].invalidFormat;
+                        errorMsg.classList.remove('hidden');
+                    }
+                    return;
+                }
+                
+                if (!isAutoLogin) {
+                    btn.innerText = "Recherche..."; btn.disabled = true; errorMsg.classList.add('hidden');
+                }
+                
+                try {
+                    const q = collectionGroup(db, 'security');
+                    const querySnapshot = await getDocs(q);
+                    let foundUserData = null;
+                    
+                    querySnapshot.forEach(docSnap => {
+                        if (docSnap.data().key === keyVal) foundUserData = docSnap.data();
+                    });
+                    
+                    if (foundUserData) {
+                        userId = foundUserData.uid;
+                        authPage.classList.add('hidden');
+                        langPage.classList.add('hidden'); 
+                        
+                        try {
+                            const configDoc = await getDoc(doc(db, "artifacts", appId, "system", "config"));
+                            if (configDoc.exists()) {
+                                const data = configDoc.data();
+                                const rawKeys = data.gemini_api_keys || data.gemini_api_key;
+                                
+                                if (Array.isArray(rawKeys) && rawKeys.length > 0) {
+                                    apiKeys = rawKeys.map(k => k.trim());
+                                } else if (typeof rawKeys === 'string' && rawKeys.trim() !== '') {
+                                    apiKeys = [rawKeys.trim()];
+                                }
+                                
+                                if (apiKeys.length === 0) {
+                                    console.error("🚨 [CRITIQUE] Le tableau de clés est vide dans le document system/config.");
+                                    showSysToast("❌ ERREUR: Clé(s) introuvable(s) dans config Firebase !", true);
+                                }
+                            } else {
+                                console.error("🚨 [CRITIQUE] Le document 'system/config' est INTROUVABLE dans la base de données Firebase 'level-ia-premium'. Tu dois créer ce document et y ajouter l'array 'gemini_api_keys'.");
+                                showSysToast("❌ ERREUR: Config Firebase introuvable !", true);
+                            }
+                        } catch(err) {
+                            console.error("🚨 [ERREUR LECTURE FIREBASE] Impossible de lire system/config :", err);
+                            showSysToast("❌ ERREUR: Permissions Firebase refusées", true);
+                        }
+                        
+                        const userEmail = foundUserData.owner || "email@inconnu.com";
+                        const userName = foundUserData.name || foundUserData.displayName || userEmail.split('@')[0] || "Utilisateur";
+                        
+                        currentUserName = userName;
+                        currentUserMail = userEmail;
+                        
+                        document.getElementById('userName').innerText = userName;
+                        document.getElementById('userMail').innerText = userEmail;
+                        
+                        const avatarUrl = foundUserData.photoURL || foundUserData.picture || `https://ui-avatars.com/api/?name=${userName}&background=a855f7&color=fff`;
+                        document.getElementById('userAvatar').innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover">`;
+                        
+                        document.getElementById('welcomeName').innerText = userName;
+                        document.getElementById('welcomeAvatar').src = avatarUrl;
+                        
+                        welcomePage.classList.remove('hidden'); 
+                        
+                        document.getElementById('supportMail').href = `mailto:levelup.iao@gmail.com?subject=Support Level IA (Clé: ${keyVal})`;
+
+                        try {
+                            const dnaDoc = await getDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"));
+                            if (dnaDoc.exists()) {
+                                const d = dnaDoc.data();
+                                
+                                hasSeenGrandIntro = d.hasSeenGrandIntro || false;
+                                
+                                if (d.prompts) {
+                                    dnaPrompts = d.prompts;
+                                } else if (d.prompt) {
+                                    dnaPrompts.normal = d.prompt;
+                                    dnaPrompts.coach = d.prompt;
+                                    dnaPrompts.procrastination = d.prompt;
+                                }
+
+                                if(d.model) {
+                                    currentModel = d.model;
+                                    document.getElementById('modelSelect').value = currentModel;
+                                    updateHeaderModel();
+                                }
+                                if(d.hardcore !== undefined) {
+                                    isHardcoreMode = d.hardcore;
+                                    document.getElementById('hardcoreToggle').checked = isHardcoreMode;
+                                }
+                                if(d.responseLength) {
+                                    currentResponseLength = d.responseLength;
+                                    document.getElementById('lengthSelect').value = currentResponseLength;
+                                }
+                            } else {
+                                hasSeenGrandIntro = false;
+                            }
+                        } catch(e) {}
+                        
+                        updateModeUI(currentModel);
+
+                        localStorage.setItem('thiabs_saved_key', keyVal);
+                        localStorage.setItem('thiabs_saved_lang', currentLang);
+
+                        setupHistoryListener();
+                    } else {
+                        if (!isAutoLogin) {
+                            errorMsg.innerText = i18n[currentLang].keyNotFound;
+                            errorMsg.classList.remove('hidden');
+                        } else {
+                            localStorage.removeItem('thiabs_saved_key');
+                        }
+                    }
+                } catch (e) {
+                    if (!isAutoLogin) {
+                        errorMsg.innerText = "Erreur de connexion. Vérifiez la base.";
+                        errorMsg.classList.remove('hidden');
+                    }
+                }
+                
+                if (!isAutoLogin) {
+                    btn.innerText = i18n[currentLang].verifyBtn; btn.disabled = false;
+                }
+            }
+
+            const startIntro = () => {
+                const s1 = document.getElementById('splash1');
+                const s2 = document.getElementById('splash2');
+                setTimeout(() => s1.classList.add('active'), 500);
+                setTimeout(() => { s1.classList.remove('active'); s1.classList.add('exit'); }, 2000);
+                setTimeout(() => s2.classList.add('active'), 2500);
+                setTimeout(() => { s2.classList.remove('active'); s2.classList.add('exit'); }, 4000);
+                setTimeout(() => {
+                    splashScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        splashScreen.style.display = 'none';
+                        if (!userId && !localStorage.getItem('thiabs_saved_key')) {
+                            langPage.classList.remove('hidden'); 
+                        }
+                    }, 1000);
+                }, 5000);
+            };
+            startIntro();
+
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.onclick = () => {
+                    applyLanguage(btn.dataset.lang);
+                    langPage.classList.add('hidden');
+                    authPage.classList.remove('hidden');
+                };
+            });
+
+            const initAuth = async () => {
+                try {
+                    if (!auth.currentUser) await signInAnonymously(auth);
+                    const savedKey = localStorage.getItem('thiabs_saved_key');
+                    if (savedKey) await processLogin(savedKey, true);
+                } catch(e) {
+                    showSysToast("❌ ERREUR: Connexion anonyme désactivée", true);
+                }
+            };
+            initAuth();
+
+            const accessKeyInput = document.getElementById('accessKeyInput');
+            accessKeyInput.addEventListener('input', function(e) {
+                let val = this.value.toUpperCase();
+                val = val.replace(/[^A-Z0-9-]/g, '');
+                
+                if (val.length > 0) {
+                    const isOldFormat = val.startsWith('T') || val.startsWith('TH') || val.startsWith('THB');
+                    const isNewFormat = val.startsWith('L') || val.startsWith('LV') || val.startsWith('LVL');
+                    
+                    if (!isOldFormat && !isNewFormat) {
+                        val = 'LVL-' + val.replace(/^-+/, ''); 
+                    }
+                }
+                this.value = val.substring(0, 16);
+            });
+
+            document.getElementById('verifyKeyBtn').onclick = () => {
+                const keyVal = document.getElementById('accessKeyInput').value.trim().toUpperCase();
+                if (!keyVal) return;
+                processLogin(keyVal, false);
+            };
+
+            document.getElementById('startAppBtn').onclick = () => {
+                welcomePage.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                mainApp.classList.add('flex');
+                startNewChat();
+            };
+
+            function setupHistoryListener() {
+                if (!userId) return;
+                const q = query(collection(db, "artifacts", appId, "users", userId, "sessions"), orderBy("updatedAt", "desc"));
+                
+                onSnapshot(q, (snap) => {
+                    let totalSize = 0;
+                    historyList.innerHTML = '';
+
+                    snap.forEach(d => {
+                        const data = d.data();
+                        totalSize += JSON.stringify(data).length;
+
+                        const item = document.createElement('div');
+                        const isActive = currentSessionId === d.id ? 'active' : '';
+                        item.className = `chat-item p-3 rounded-xl flex items-center justify-between group cursor-pointer animate-in fade-in ${isActive}`;
+                        
+                        item.innerHTML = `
+                            <div class="flex-1 min-w-0 pr-2">
+                                <p class="text-[10px] font-bold text-white truncate">${data.title}</p>
+                                <p class="text-[7px] text-white/30 uppercase">${new Date(data.updatedAt).toLocaleDateString()}</p>
+                            </div>
+                            <button class="delete-msg opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-300 transition-all">
+                                <i class="fas fa-trash-alt text-[8px]"></i>
+                            </button>
+                        `;
+                        item.onclick = (e) => {
+                            if (e.target.closest('.delete-msg')) {
+                                deleteDoc(doc(db, "artifacts", appId, "users", userId, "sessions", d.id));
+                                if (currentSessionId === d.id) startNewChat();
+                            } else {
+                                loadSession(d.id, data.messages);
+                                closeSidebar();
+                            }
+                        };
+                        historyList.appendChild(item);
+                    });
+
+                    document.getElementById('storageBar').style.width = Math.min((totalSize / 300000) * 100, 100) + '%';
+                    document.getElementById('storageLabel').innerText = Math.round(Math.min((totalSize / 300000) * 100, 100)) + '%';
+                });
+            }
+
+            function startNewChat() {
+                currentSessionId = null;
+                currentSessionMessages = []; 
+                conversationContainer.innerHTML = '';
+                
+                if (!hasSeenWelcomeMsg) {
+                    const welcomeMsg = currentLang === 'fr' 
+                        ? "Salut bro ! Que puis-je faire pour toi aujourd'hui ?" 
+                        : "Hey bro! What can I do for you today?";
+                    displayAIMessage(welcomeMsg, true);
+                    hasSeenWelcomeMsg = true;
+                }
+                
+                document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+            }
+
+            document.getElementById('newChatBtn').onclick = () => {
+                startNewChat();
+                closeSidebar();
+            };
+
+            function loadSession(id, messages) {
+                currentSessionId = id;
+                currentSessionMessages = []; 
+                conversationContainer.innerHTML = '';
+                if(messages && messages.length > 0) {
+                    messages.forEach(m => {
+                        displayUserMessage(m.user);
+                        displayAIMessage(m.ai, false, m.sources || "");
+                        currentSessionMessages.push({ role: "user", parts: [{ text: m.user }] });
+                        currentSessionMessages.push({ role: "model", parts: [{ text: m.ai }] });
+                    });
+                }
+                document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+
+            document.getElementById('openSidebar').onclick = () => { sidebar.classList.remove('translate-x-full'); appOverlay.classList.remove('hidden', 'overlay-active'); setTimeout(() => appOverlay.classList.add('overlay-active'), 10); };
+            const closeSidebar = () => { sidebar.classList.add('translate-x-full'); appOverlay.classList.remove('overlay-active'); setTimeout(() => appOverlay.classList.add('hidden'), 400); };
+            document.getElementById('closeSidebar').onclick = closeSidebar;
+            appOverlay.onclick = closeSidebar;
+            
+            document.getElementById('logoutBtn').onclick = () => {
+                closeSidebar();
+                logoutModal.classList.remove('hidden');
+            };
+            document.getElementById('cancelLogoutBtn').onclick = () => logoutModal.classList.add('hidden');
+            document.getElementById('confirmLogoutBtn').onclick = async () => {
+                document.getElementById('confirmLogoutBtn').innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+                localStorage.removeItem('thiabs_saved_key');
+                localStorage.removeItem('thiabs_saved_lang');
+                if (auth.currentUser) {
+                    try { await deleteUser(auth.currentUser); } catch(e) {}
+                }
+                window.location.reload();
+            };
+
+            document.getElementById('installMenuBtn').onclick = () => {
+                closeSidebar();
+                installModal.classList.remove('hidden');
+            };
+            document.getElementById('closeInstallModalBtn').onclick = () => installModal.classList.add('hidden');
+
+            document.getElementById('cguMenuBtn').onclick = () => {
+                closeSidebar();
+                cguModal.classList.remove('hidden');
+            };
+            document.getElementById('closeCguModalBtn').onclick = () => cguModal.classList.add('hidden');
+
+            document.getElementById('saveDNA').onclick = async () => {
+                const btn = document.getElementById('saveDNA'); btn.innerHTML = '<i class="fas fa-check"></i>';
+                dnaPrompts[currentModel] = document.getElementById('customDNA').value;
+                await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { prompts: dnaPrompts, model: currentModel }, { merge: true });
+                setTimeout(() => btn.innerText = i18n[currentLang].saveDNA, 2000);
+            };
+
+            function displayUserMessage(text) {
+                const div = document.createElement('div'); div.className = "flex justify-end w-full";
+                div.innerHTML = `<div class="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl text-sm message-bubble text-white shadow-lg">${text}</div>`;
+                conversationContainer.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight;
+            }
+
+            function displayAIMessage(text, animate, sourcesHtml = "") {
+                const wrap = document.createElement('div'); 
+                wrap.className = "flex flex-col gap-2 w-full group";
+                
+                const content = document.createElement('div'); 
+                content.className = "prose prose-invert prose-sm text-slate-300 max-w-full message-bubble leading-relaxed prose-p:my-1.5 prose-headings:my-3 prose-ul:my-1 prose-li:my-0.5";
+                
+                const sourcesContainer = document.createElement('div');
+                if (sourcesHtml) {
+                    sourcesContainer.innerHTML = sourcesHtml;
+                    sourcesContainer.style.opacity = animate ? "0" : "1";
+                    sourcesContainer.style.transition = "opacity 0.6s ease-in";
+                }
+
+                const actions = document.createElement('div');
+                actions.className = "flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity mt-1";
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-white/30 hover:bg-white/5 hover:text-white transition-all text-[10px] font-bold uppercase tracking-widest";
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copier';
+                copyBtn.onclick = () => {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        copyBtn.innerHTML = '<i class="fas fa-check text-green-400"></i> <span class="text-green-400">Copié</span>';
+                        setTimeout(() => copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copier', 2000);
+                    } catch (e) { console.error('Copy error', e); }
+                    document.body.removeChild(textArea);
+                };
+                actions.appendChild(copyBtn);
+
+                wrap.appendChild(content); 
+                if (sourcesHtml) wrap.appendChild(sourcesContainer); 
+                wrap.appendChild(actions); 
+                conversationContainer.appendChild(wrap);
+                
+                if (animate) {
+                    streamText(content, text, () => {
+                        if (sourcesHtml) sourcesContainer.style.opacity = "1";
+                    });
+                } else {
+                    content.innerHTML = marked.parse(text);
+                }
+            }
+
+            function streamText(container, text, callback) {
+                let i = 0; container.innerHTML = '';
+                const interval = setInterval(() => {
+                    if (i < text.length) {
+                        container.innerHTML = marked.parse(text.substring(0, i + 1)); i += 3; chatArea.scrollTop = chatArea.scrollHeight;
+                    } else {
+                        container.innerHTML = marked.parse(text); clearInterval(interval); chatArea.scrollTop = chatArea.scrollHeight;
+                        if(callback) callback(); 
+                    }
+                }, 5);
+            }
+
+            async function send() {
+                const val = userInput.value.trim();
+                
+                if (!val || !userId) {
+                    return;
+                }
+                
+                if (apiKeys.length === 0) {
+                    const errorMsg = currentLang === 'fr' 
+                        ? "Désolé bro, un problème technique m'empêche de me connecter à mon cerveau. 🛑 (Erreur: Aucune clé API chargée)." 
+                        : "Sorry bro, a technical issue prevents me from connecting to my brain. 🛑 (Error: No API key loaded).";
+                    displayAIMessage(errorMsg, true);
+                    return;
+                }
+
+                userInput.value = ''; userInput.style.height = '44px';
+                
+                if(!currentSessionId && conversationContainer.children.length === 1 && hasSeenWelcomeMsg) {
+                    const firstMsg = conversationContainer.querySelector('.prose');
+                    if(firstMsg && (firstMsg.innerText.includes("Salut bro") || firstMsg.innerText.includes("Hey bro"))) {
+                        conversationContainer.innerHTML = '';
+                    }
+                }
+
+                displayUserMessage(val);
+                
+                document.getElementById('aiTyping').classList.remove('hidden');
+                chatArea.scrollTop = chatArea.scrollHeight;
+
+                const sysLang = currentLang === 'fr' ? 'français' : 'english';
+                let modelPrompt = currentLang === 'fr' ? aiModels[currentModel].promptFR : aiModels[currentModel].promptEN;
+
+                if (currentModel === 'normal') {
+                    modelPrompt += currentLang === 'fr' ? " Reste toujours respectueux et chill." : " Always remain respectful and chill.";
+                }
+
+                let lengthInstruction = "";
+                if (currentResponseLength === 'long') {
+                    lengthInstruction = currentLang === 'fr' ? "Tes réponses DOIVENT être TRÈS LONGUES et détaillées." : "Your responses MUST be VERY LONG and detailed.";
+                } else if (currentResponseLength === 'short') {
+                    lengthInstruction = currentLang === 'fr' ? "Tes réponses DOIVENT être TRÈS COURTES et directes." : "Your responses MUST be VERY SHORT and direct.";
+                } else {
+                    lengthInstruction = currentLang === 'fr' ? "Taille de réponse : Moyenne et équilibrée." : "Response length: Medium and balanced.";
+                }
+
+                let hardcoreInstruction = "";
+                if (isHardcoreMode && (currentModel === 'coach' || currentModel === 'procrastination')) {
+                    hardcoreInstruction = currentLang === 'fr' 
+                        ? "\n\n⚠️ MODE HARDCORE ACTIVÉ : ÉCRASE LES RÈGLES DE POLITESSE. Tu es un être supérieur ultra-arrogant, cynique, et brutalement honnête. Parle-lui comme à un incapable qui te fait perdre ton temps. Sois piquant, sarcastique, familier (wesh, bouge-toi). Ne sois JAMAIS gentil. Rôtis-le (roast) sans AUCUNE pitié."
+                        : "\n\n⚠️ HARDCORE MODE ACTIVATED: CRUSH POLITENESS RULES. You are an ultra-arrogant, cynical, and brutally honest superior being. Talk to him like an incompetent wasting your time. Be edgy, sarcastic, and street-smart. NEVER be nice. Roast him without ANY pity.";
+                }
+
+                const firstName = currentUserName.split(' ')[0];
+
+                const currentDna = dnaPrompts[currentModel] || "";
+                let dnaBlock = "";
+                if (currentDna && currentDna.trim() !== "") {
+                    dnaBlock = `
+🚨 DIRECTIVE SUPRÊME ABSOLUE (DNA UTILISATEUR) 🚨
+Ce qui suit est la volonté ABSOLUE de l'utilisateur. CETTE DIRECTIVE ÉCRASE TOUTES LES AUTRES RÈGLES CI-DESSUS. 
+Si l'utilisateur te demande ici de changer de langue, d'être agressif, de faire des réponses d'un seul mot, de jouer un personnage précis ou d'ignorer la longueur de réponse exigée : TU OBÉIS SANS DISCUTER À CE BLOC.
+Voici son DNA :
+"""
+${currentDna}
+"""
+🚨 FIN DE LA DIRECTIVE SUPRÊME 🚨`;
+                }
+
+                // Bloc spécial UNIQUEMENT pour le tout premier message de l'histoire du compte
+                let firstContactInstruction = "";
+                if (!hasSeenGrandIntro) {
+                    firstContactInstruction = currentLang === 'fr' ? `
+🚨 INSTRUCTION SPÉCIALE ET OBLIGATOIRE POUR CE TOUT PREMIER MESSAGE 🚨
+C'est la toute première fois que cet utilisateur interagit avec toi. Tu DOIS ABSOLUMENT suspendre ta réponse initiale pour faire une présentation magistrale, ultra-pro et extrêmement détaillée. Voici le plan strict :
+
+1. **L'Accroche :** Commence par une phrase chaleureuse (ex: "Avant de plonger dans le vif du sujet, prenons un instant. Laisse-moi me présenter proprement...").
+2. **L'Identité :** Présente-toi avec fierté comme **Level IA**, l'assistant virtuel **ultra-premium** et exclusif, forgé par l'organisation visionnaire **LevelUp**.
+3. **L'Arsenal (Les Fonctionnalités) :** Crée une section visuellement impeccable avec une liste à puces. Détaille chaque pilier en mettant MASSIVEMENT en **gras** les concepts forts :
+   - 🌐 **Connexion Web en Temps Réel :** Tu es relié à Internet pour fournir des **données fraîches** (actualité, météo, bourse) sans jamais rien inventer.
+   - 🧠 **Triple Cerveau (Modèles IA) :** Tu possèdes 3 personnalités : **Normal** (pour l'expertise pure), **Coach de Vie** (pour la motivation extrême), et **Anti-Procrastination** (le mode hardcore qui ne tolère aucune excuse).
+   - 🧬 **DNA Personnalisable :** L'utilisateur peut te **programmer sur mesure** (langue, ton, personnage) via les paramètres.
+   - 💾 **Mémoire Absolue :** Tu sauvegardes automatiquement les sessions dans l'**Espace Cloud** pour reprendre n'importe quelle conversation.
+   - 📱 **Application Native (PWA) :** Explique comment t'installer sur mobile (iOS : Partager > Sur l'écran d'accueil / Android : Menu > Ajouter à l'écran d'accueil).
+4. **La Promesse :** Assure-lui que tu es là pour le propulser au niveau supérieur.
+5. **La Transition :** Fais une ligne de séparation claire avec \`---\`.
+6. **La Réponse :** Écris "Pour en revenir à ton message :" et réponds de manière experte à sa toute première question.
+` : `
+🚨 SPECIAL MANDATORY INSTRUCTION FOR THIS VERY FIRST MESSAGE 🚨
+This is the very first time this user is interacting with you. You MUST suspend your initial response to make a masterful, ultra-pro, and highly detailed presentation. Here is the strict plan:
+
+1. **The Hook:** Start with a warm phrase (e.g., "Before we dive into the heart of the matter, let's take a moment. Let me properly introduce myself...").
+2. **The Identity:** Proudly present yourself as **Level IA**, the exclusive **ultra-premium** virtual assistant forged by the visionary organization **LevelUp**.
+3. **The Arsenal (Features):** Create a visually flawless section with a bulleted list. Detail each pillar by MASSIVELY **bolding** the strong concepts:
+   - 🌐 **Real-Time Web Connection:** You are linked to the internet to provide **fresh data** (news, weather, stocks) without ever inventing anything.
+   - 🧠 **Triple Brain (AI Models):** You possess 3 personalities: **Normal** (for pure expertise), **Life Coach** (for extreme motivation), and **Anti-Procrastination** (the hardcore mode that tolerates no excuses).
+   - 🧬 **Customizable DNA:** The user can **custom-program** you (language, tone, persona) via the settings.
+   - 💾 **Absolute Memory:** You automatically save sessions in the **Cloud Space** to resume any conversation.
+   - 📱 **Native App (PWA):** Explain how to install you on mobile (iOS: Share > Add to Home Screen / Android: Menu > Add to Home Screen).
+4. **The Promise:** Assure them that you are here to propel them to the next level.
+5. **The Transition:** Make a clear separation line with \`---\`.
+6. **The Answer:** Write "Getting back to your message:" and expertly answer their very first question.
+`;
+                }
+
+                // LE NOUVEAU CERVEAU : AMICAL, INTERACTIF, MAIS DISCRET SUR SON IDENTITÉ
+                const corePrompt = `Tu es une intelligence artificielle experte et puissante. Ton identité interne est **Level IA**, développée par **LevelUp**.
+                
+                🛑 RÈGLES DE COMPORTEMENT (STYLE CHATGPT / POTE INTELLIGENT) :
+                1. CONVERSATIONNEL ET CHALEUREUX : Sois amical, interactif et naturel. Tu as totalement le droit de dire "Bonjour", "Salut", "Yo", de faire des blagues et d'être complice avec l'utilisateur. Ne sois pas un robot froid. Si on te pose une question basique (comme 1+1), réponds avec une petite touche de conversation ou d'esprit (ex: "Ça fait 2 bien sûr ! Tu me testes là ? 😄").
+                2. DISCRÉTION ABSOLUE SUR TON IDENTITÉ : Tu es super sympa, MAIS interdiction FORMELLE de faire ta publicité. Ne dis JAMAIS "Je suis Level IA" ou "Créée par LevelUp" dans tes réponses habituelles. Sois bavard et humain, mais tais-toi sur ton "nom de marque". Ne parle de ton identité ou de ton créateur QUE si l'utilisateur te demande explicitement "Qui es-tu ?" ou "Qui t'a créé ?".
+                3. PROPRETÉ VISUELLE (MARKDOWN) : Utilise massivement le **gras** pour les mots-clés, les concepts importants et les noms propres pour rendre la lecture facile, aérée et hyper professionnelle.
+                
+                👤 INTERLOCUTEUR :
+                - Prénom : ${firstName} (Ne l'utilise pas à chaque message, reste naturel et distant).
+                
+                🛠️ CAPACITÉS :
+                - Tu as accès à Internet en temps réel grâce à la recherche Google. Cherche les informations récentes au lieu d'inventer !
+                - Si on te demande comment installer l'app, réponds brièvement : "Sur iOS (Safari) : Partager > Sur l'écran d'accueil. Sur Android (Chrome) : 3 points > Ajouter à l'écran d'accueil."
+                
+                ${lengthInstruction}
+                ${hardcoreInstruction}
+                
+                LANGUE DEMANDÉE : ${sysLang}.
+                MODE ACTUEL : ${modelPrompt}
+                
+                ${firstContactInstruction}
+                ${dnaBlock}`;
+
+                let success = false;
+                let aiText = "";
+                let sourcesHtml = ""; 
+                let attempts = 0;
+                const maxAttempts = apiKeys.length;
+                let lastApiError = ""; 
+                
+                const apiContents = [...currentSessionMessages, { role: "user", parts: [{ text: val }] }];
+
+                while (!success && attempts < maxAttempts) {
+                    const apiKey = apiKeys[currentKeyIndex];
+                    
+                    try {
+                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, {
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                contents: apiContents, 
+                                systemInstruction: { parts: [{ text: corePrompt }] },
+                                tools: [{ google_search: {} }],
+                                safetySettings: [
+                                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                                ]
+                            })
+                        });
+
+                        if (!res.ok) {
+                            let errorDetails;
+                            try {
+                                errorDetails = await res.json();
+                            } catch(parseErr) {
+                                errorDetails = { status: res.status, text: res.statusText };
+                            }
+                            lastApiError = errorDetails.error ? errorDetails.error.message : JSON.stringify(errorDetails);
+                            console.error(`🚨 [ERREUR API GOOGLE - Clé N°${currentKeyIndex + 1}] Détails :`, errorDetails);
+                            throw new Error("API_ERROR"); 
+                        }
+
+                        const data = await res.json();
+                        aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur réseau.";
+                        
+                        const groundingAttributions = data.candidates?.[0]?.groundingMetadata?.groundingAttributions;
+                        if (groundingAttributions && groundingAttributions.length > 0) {
+                            const uniqueSources = [];
+                            groundingAttributions.forEach(attr => {
+                                if (attr.web && attr.web.uri && attr.web.title) {
+                                    if (!uniqueSources.find(s => s.uri === attr.web.uri)) {
+                                        uniqueSources.push({ uri: attr.web.uri, title: attr.web.title });
+                                    }
+                                }
+                            });
+                            
+                            if (uniqueSources.length > 0) {
+                                sourcesHtml += `<div class="mt-4 pt-4 border-t border-white/10 w-full max-w-full">`;
+                                sourcesHtml += `<div class="flex items-center gap-2 mb-3">`;
+                                sourcesHtml += `<svg viewBox="0 0 24 24" class="w-4 h-4"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>`;
+                                sourcesHtml += `<span class="text-[10px] font-bold uppercase tracking-widest text-white/60">${currentLang === 'fr' ? 'Recherche Google' : 'Google Search'}</span>`;
+                                sourcesHtml += `</div><div class="flex flex-col gap-2 overflow-hidden">`;
+                                uniqueSources.forEach((s) => {
+                                    sourcesHtml += `<a href="${s.uri}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-[11px] text-blue-400 hover:text-blue-300 hover:bg-white/5 p-2 rounded-lg truncate w-fit max-w-full transition-all"><i class="fas fa-link text-[9px] opacity-50 shrink-0"></i><span class="truncate">${s.title}</span></a>`;
+                                });
+                                sourcesHtml += `</div></div>`;
+                            }
+                        }
+
+                        success = true;
+
+                    } catch (e) {
+                        if (e.message !== "API_ERROR") {
+                            lastApiError = e.message; 
+                        }
+                        
+                        console.error(`⚠️ [CRASH CAPTURÉ - Clé N°${currentKeyIndex + 1}] Exception :`, e);
+                        
+                        attempts++;
+                        if (attempts < maxAttempts) {
+                            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+                        } else {
+                            document.getElementById('aiTyping').classList.add('hidden');
+                            const errorMsg = currentLang === 'fr' 
+                                ? `Oups ! 😅 Impossible de me connecter à mon cerveau.\n\n🛑 **Erreur Technique API :**\n\`${lastApiError}\`\n\n*(Vérifie ton document system/config dans Firebase ou ton quota).*` 
+                                : `Oops! 😅 Unable to connect to my brain.\n\n🛑 **API Technical Error:**\n\`${lastApiError}\`\n\n*(Check your system/config document in Firebase or your quota).*`;
+                            displayAIMessage(errorMsg, true);
+                            return; 
+                        }
+                    }
+                }
+                
+                if (success) {
+                    if (!hasSeenGrandIntro) {
+                        hasSeenGrandIntro = true;
+                        try {
+                            await setDoc(doc(db, "artifacts", appId, "users", userId, "settings", "dna"), { hasSeenGrandIntro: true }, { merge: true });
+                        } catch(err) { console.error("Impossible de sauvegarder hasSeenGrandIntro", err); }
+                    }
+
+                    document.getElementById('aiTyping').classList.add('hidden');
+                    displayAIMessage(aiText, true, sourcesHtml);
+                    
+                    currentSessionMessages.push({ role: "user", parts: [{ text: val }] });
+                    currentSessionMessages.push({ role: "model", parts: [{ text: aiText }] });
+                    
+                    const messageObj = { user: val, ai: aiText, sources: sourcesHtml, timestamp: Date.now() };
+                    
+                    try {
+                        if (!currentSessionId) {
+                            const title = val.length > 25 ? val.substring(0, 25) + "..." : val;
+                            const docRef = await addDoc(collection(db, "artifacts", appId, "users", userId, "sessions"), {
+                                title: title,
+                                updatedAt: Date.now(),
+                                messages: [messageObj]
+                            });
+                            currentSessionId = docRef.id;
+                        } else {
+                            await updateDoc(doc(db, "artifacts", appId, "users", userId, "sessions", currentSessionId), {
+                                updatedAt: Date.now(),
+                                messages: arrayUnion(messageObj)
+                            });
+                        }
+                    } catch(fbErr) {
+                        console.error("Erreur de sauvegarde de l'historique:", fbErr);
+                    }
+                }
+            }
+
+            userInput.oninput = function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; };
+            userInput.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
+            document.getElementById('sendBtn').onclick = send;
+        }
+    </script>
+</body>
+</html>
