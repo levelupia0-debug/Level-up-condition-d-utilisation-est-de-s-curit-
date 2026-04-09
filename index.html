@@ -168,6 +168,40 @@ nav{position:fixed;top:0;width:100%;z-index:800;display:flex;align-items:center;
 .dd-visual{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r24);padding:36px;min-height:280px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden}
 .dd-visual::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 80% 20%,rgba(168,85,247,.06),transparent 60%)}
 
+/* NEW ECOSYSTEM SECTIONS */
+.roadmap{position:relative;padding-left:30px;border-left:2px solid var(--bdr-hi);margin-top:40px}
+.rm-item{position:relative;margin-bottom:30px}
+.rm-item:last-child{margin-bottom:0}
+.rm-dot{position:absolute;left:-37px;top:0;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--purple);box-shadow:0 0 10px var(--purple)}
+.rm-date{font-size:.75rem;color:var(--purple);font-weight:700;margin-bottom:4px;letter-spacing:.05em}
+.rm-title{font-size:1.1rem;font-weight:700;color:var(--txt);margin-bottom:6px}
+.rm-desc{font-size:.85rem;color:var(--muted);line-height:1.6}
+.rm-item.done .rm-dot{background:var(--purple)}
+.rm-item.wip .rm-dot{border-color:var(--blue);box-shadow:0 0 10px var(--blue)}
+.rm-item.wip .rm-date{color:var(--blue)}
+
+.sso-graph{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin:40px 0}
+.sso-node{width:80px;height:80px;border-radius:20px;background:var(--surf);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative;z-index:2;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.sso-node.center{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--purple-d),var(--purple));border:none;color:#fff;box-shadow:0 0 40px rgba(168,85,247,.4);font-size:2.5rem}
+.sso-line{flex:1;height:2px;background:linear-gradient(90deg,var(--purple),transparent);min-width:40px;opacity:.5}
+@media(max-width:768px){.sso-graph{flex-direction:column}.sso-line{width:2px;height:40px;min-width:auto;background:linear-gradient(180deg,var(--purple),transparent)}}
+
+.trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px}
+.trust-card{background:rgba(255,255,255,.02);border:1px solid rgba(34,197,94,.2);border-radius:var(--r16);padding:24px;text-align:center;transition:transform .3s}
+.trust-card:hover{transform:translateY(-5px);background:rgba(34,197,94,.05)}
+.trust-ico{font-size:2rem;color:var(--green);margin-bottom:12px}
+@media(max-width:768px){.trust-grid{grid-template-columns:1fr}}
+
+.device-sync{display:flex;align-items:flex-end;justify-content:center;gap:20px;margin-top:40px;height:200px}
+.dev-item{background:var(--surf);border:1px solid var(--bdr-hi);border-bottom:none;border-radius:16px 16px 0 0;display:flex;flex-direction:column;align-items:center;padding:10px;position:relative;box-shadow:0 -10px 30px rgba(0,0,0,.5)}
+.dev-screen{background:var(--bg);border-radius:8px;width:100%;flex:1;border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.dev-screen::after{content:'';position:absolute;width:150%;height:100%;background:linear-gradient(90deg,transparent,rgba(168,85,247,.1),transparent);animation:scan 3s infinite linear}
+@keyframes scan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.dev-mac{width:280px;height:180px}
+.dev-ipad{width:140px;height:140px}
+.dev-iphone{width:70px;height:100px}
+@media(max-width:768px){.dev-mac{display:none}}
+
 /* BENTO FEATURES */
 .bento{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .bc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r24);padding:32px;transition:all .3s;overflow:hidden;position:relative}
@@ -425,8 +459,8 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
     <a onclick="openTerms()">Conditions</a>
   </div>
   <div class="nav-right" id="navRight">
-    <button class="btn btn-g btn-sm" onclick="openAuth('login')">Connexion</button>
-    <button class="btn btn-p btn-sm hidden sm:inline-flex" onclick="openAuth('create')">
+    <button class="btn btn-g btn-sm" onclick="window.openAuth('login')">Connexion</button>
+    <button class="btn btn-p btn-sm hidden sm:inline-flex" onclick="window.openAuth('create')">
       Créer un compte
     </button>
   </div>
@@ -446,7 +480,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
   <h1>Un compte.<br>Une clé.<br><span class="grd">Tout l'univers LevelUp.</span></h1>
   <p class="hero-sub">Connectez-vous une seule fois avec Google et accédez instantanément à LevelMovie, LevelMusic et Level IA. Votre identité numérique centralisée, sécurisée par PIN, synchronisée sur tous vos appareils en temps réel.</p>
   <div class="hero-cta" id="heroCta">
-    <button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="openAuth('create')">
+    <button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">
       Créer un compte gratuit
     </button>
     <button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="sTo('apps-sec')">
@@ -467,7 +501,13 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
             <path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill="currentColor"/>
         </svg> LevelMovie
     </div>
-    <div class="mq-i"><i class="fa-solid fa-music" style="color:#3b82f6"></i> LevelMusic</div>
+    <div class="mq-i">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--blue)">
+            <path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="6" cy="18" r="3" fill="currentColor"/>
+            <circle cx="18" cy="16" r="3" fill="currentColor"/>
+        </svg> LevelMusic
+    </div>
     <div class="mq-i"><i class="fa-solid fa-star" style="color:#a855f7"></i> Level IA</div>
     <div class="mq-i"><i class="fa-solid fa-key" style="color:#a855f7"></i> Clé d'accès unique</div>
     <div class="mq-i"><i class="fa-solid fa-lock" style="color:#a855f7"></i> Protection PIN</div>
@@ -484,19 +524,13 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
             <path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill="currentColor"/>
         </svg> LevelMovie
     </div>
-    <div class="mq-i"><i class="fa-solid fa-music" style="color:#3b82f6"></i> LevelMusic</div>
-    <div class="mq-i"><i class="fa-solid fa-star" style="color:#a855f7"></i> Level IA</div>
-    <div class="mq-i"><i class="fa-solid fa-key" style="color:#a855f7"></i> Clé d'accès unique</div>
-    <div class="mq-i"><i class="fa-solid fa-lock" style="color:#a855f7"></i> Protection PIN</div>
-    <div class="mq-i"><i class="fa-solid fa-cloud" style="color:#3b82f6"></i> Firebase Sync</div>
-    <div class="mq-i"><i class="fa-solid fa-gift" style="color:#22c55e"></i> 100% Gratuit</div>
-    <div class="mq-i"><i class="fa-solid fa-shield-halved" style="color:#22c55e"></i> Sécurisé &amp; Privé</div>
-    <div class="mq-i"><i class="fa-solid fa-mobile-alt" style="color:#a855f7"></i> Mobile First</div>
-    <div class="mq-i"><i class="fa-solid fa-infinity" style="color:#f97316"></i> Accès illimité</div>
-    <!-- DUPE -->
-    <div class="mq-i"><svg width="14" height="14" viewBox="0 0 576 512" fill="#a855f7"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg> Google Auth uniquement</div>
-    <div class="mq-i"><i class="fa-solid fa-clapperboard" style="color:#3b82f6"></i> LevelMovie</div>
-    <div class="mq-i"><i class="fa-solid fa-music" style="color:#3b82f6"></i> LevelMusic</div>
+    <div class="mq-i">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--blue)">
+            <path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="6" cy="18" r="3" fill="currentColor"/>
+            <circle cx="18" cy="16" r="3" fill="currentColor"/>
+        </svg> LevelMusic
+    </div>
     <div class="mq-i"><i class="fa-solid fa-star" style="color:#a855f7"></i> Level IA</div>
     <div class="mq-i"><i class="fa-solid fa-key" style="color:#a855f7"></i> Clé d'accès unique</div>
     <div class="mq-i"><i class="fa-solid fa-lock" style="color:#a855f7"></i> Protection PIN</div>
@@ -534,7 +568,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
       <div class="app-card reveal">
         <div class="app-head">
           <div class="app-ico movie-ico" style="color:var(--blue)">
-            <!-- Vrai Logo LevelMovie -->
+            <!-- Logo LevelMovie : L + lecteur vidéo -->
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill="currentColor"/>
@@ -568,15 +602,15 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
             </svg>
           </div>
           <h3>LevelMusic</h3>
-          <p class="desc">La musique du monde entier, accessible en un clic. Streaming audio haute qualité, découverte intelligente et playlists personnalisées directement intégrées à votre compte LevelUp.</p>
+          <p class="desc">La musique du monde entier en format découverte. Écoutez des extraits exclusifs de 30 secondes en haute qualité, explorez de nouveaux genres et préparez vos playlists pour la version intégrale à venir.</p>
         </div>
         <div class="app-body">
           <div class="feat-list">
-            <div class="feat-item"><span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Streaming audio haute qualité</div>
+            <div class="feat-item"><span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Extraits audio Premium (30s)</div>
             <div class="feat-item"><span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Catalogue musical mondial</div>
-            <div class="feat-item"><span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Playlists collaboratives &amp; personnalisées</div>
-            <div class="feat-item"><span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Découverte intelligente par IA</div>
-            <div class="feat-item"><span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Interface immersive</div>
+            <div class="feat-item"><span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Découverte rapide &amp; fluide</div>
+            <div class="feat-item"><span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Playlists collaboratives</div>
+            <div class="feat-item"><span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Version intégrale en préparation</div>
           </div>
         </div>
         <div class="app-foot" id="musicFoot">
@@ -643,7 +677,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
       <div class="step reveal d3">
         <div class="step-n">04</div>
         <h4>Accéder aux apps</h4>
-        <p>Copiez votre clé, ouvrez LevelMovie ou Level IA, collez-la dans le champ d'activation. Votre accès est immédiatement débloqué. La clé fonctionne sur tous vos appareils simultanément.</p>
+        <p>Copiez votre clé, ouvrez LevelMovie ou Level IA. Le tableau de bord transmettra automatiquement et de manière sécurisée vos informations de profil à l'application. Votre accès est immédiatement débloqué.</p>
       </div>
     </div>
   </div>
@@ -686,6 +720,51 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
         </div>
         <div style="font-size:.8rem;color:var(--muted);background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:10px;padding:14px;line-height:1.7">
           <strong style="color:var(--txt)">Clé requise :</strong> Utilisez votre clé LevelUp pour activer l'accès complet à LevelMovie. Générez votre clé depuis votre tableau de bord en un seul clic.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DEEP DIVE LEVELMUSIC ── -->
+<section class="sec" style="padding-top:40px;padding-bottom:40px;background:rgba(59,130,246,.02);border-top:1px solid rgba(59,130,246,.08);border-bottom:1px solid rgba(59,130,246,.08)">
+  <div class="ctn">
+    <div class="deepdive rev reveal">
+      <div class="dd-info">
+        <div class="sec-label" style="margin-bottom:14px"><i class="fa-solid fa-music" style="color:var(--blue)"></i>&nbsp; LevelMusic en détail</div>
+        <h2>La découverte musicale,<br>sans limites</h2>
+        <p>LevelMusic réinvente la façon dont vous explorez la musique. Conçue comme une plateforme de <strong>découverte premium</strong>, elle vous permet d'écouter des extraits haute définition de 30 secondes de l'ensemble du catalogue mondial.</p>
+        <p>Pourquoi 30 secondes ? Pour vous permettre de zapper rapidement, de trouver la vibe parfaite, et de construire vos playlists sans perdre de temps. Que ce soit de l'Amapiano, de la Drill, ou de la K-Pop, l'interface est conçue pour une exploration fulgurante en attendant la version intégrale.</p>
+        <div class="dd-tags">
+          <span class="dd-tag"><i class="fa-solid fa-headphones" style="color:var(--blue)"></i> Audio HD</span>
+          <span class="dd-tag"><i class="fa-solid fa-bolt" style="color:var(--blue)"></i> Extraits 30s</span>
+          <span class="dd-tag"><i class="fa-solid fa-list-music" style="color:var(--blue)"></i> Playlists</span>
+          <span class="dd-tag"><i class="fa-solid fa-globe" style="color:var(--blue)"></i> 100+ Genres</span>
+        </div>
+        <button class="btn btn-p btn-sm" style="background:var(--blue);box-shadow:0 4px 14px rgba(59,130,246,.3)" onclick="window.openApp('music')"><i class="fa-solid fa-lock"></i> Débloquer LevelMusic</button>
+      </div>
+      <div class="dd-visual" style="background:radial-gradient(circle at 80% 20%,rgba(59,130,246,.08),rgba(59,130,246,.02))">
+        <!-- Mockup Mini Player -->
+        <div style="background:rgba(0,0,0,.6);border:1px solid var(--bdr-hi);border-radius:20px;padding:20px;box-shadow:0 20px 40px rgba(0,0,0,.5);margin:auto;width:100%;max-width:300px">
+           <div style="width:100%;aspect-ratio:1;border-radius:12px;background:linear-gradient(45deg,#1e3a8a,#3b82f6);margin-bottom:16px;display:flex;align-items:center;justify-content:center">
+              <i class="fa-solid fa-music" style="font-size:4rem;color:rgba(255,255,255,.5)"></i>
+           </div>
+           <div style="text-align:center;margin-bottom:16px">
+              <h4 style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:4px">Titre en cours</h4>
+              <p style="font-size:.8rem;color:var(--blue)">Artiste International</p>
+           </div>
+           <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+              <span style="font-size:.65rem;font-family:monospace;color:var(--muted)">0:12</span>
+              <div style="flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden">
+                 <div style="width:40%;height:100%;background:var(--blue)"></div>
+              </div>
+              <span style="font-size:.65rem;font-family:monospace;color:var(--muted)">0:30</span>
+           </div>
+           <div style="display:flex;align-items:center;justify-content:center;gap:20px">
+              <i class="fa-solid fa-backward-step" style="color:var(--muted);font-size:1.2rem"></i>
+              <div style="width:50px;height:50px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;box-shadow:0 0 15px rgba(59,130,246,.5)"><i class="fa-solid fa-pause"></i></div>
+              <i class="fa-solid fa-forward-step" style="color:var(--muted);font-size:1.2rem"></i>
+           </div>
         </div>
       </div>
     </div>
@@ -742,6 +821,111 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
   </div>
 </section>
 
+<!-- ── PONT D'ÉCOSYSTÈME (SSO) ── -->
+<section class="sec" style="border-bottom:1px solid var(--bdr)">
+  <div class="ctn">
+    <div class="sec-head reveal text-center mx-auto" style="max-width:800px">
+      <div class="sec-label"><i class="fa-solid fa-bridge"></i>&nbsp; Single Sign-On (SSO)</div>
+      <h2>Le Pont de l'Écosystème</h2>
+      <p>Oubliez les connexions répétitives. Une fois votre clé générée, le tableau de bord LevelUp agit comme un pont sécurisé. Il téléporte votre identité, votre avatar et vos accès vers chaque application instantanément.</p>
+    </div>
+    
+    <div class="sso-graph reveal d1">
+      <div class="sso-node"><i class="fa-solid fa-clapperboard" style="color:var(--blue)"></i></div>
+      <div class="sso-line"></div>
+      <div class="sso-node center"><i class="fa-solid fa-user"></i></div>
+      <div class="sso-line"></div>
+      <div class="sso-node"><i class="fa-solid fa-music" style="color:var(--blue)"></i></div>
+      <div class="sso-line"></div>
+      <div class="sso-node"><i class="fa-solid fa-brain" style="color:var(--purple)"></i></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MULTI-DEVICES ── -->
+<section class="sec" style="background:rgba(255,255,255,.01)">
+  <div class="ctn">
+    <div class="deepdive reveal">
+      <div class="dd-info">
+        <div class="sec-label"><i class="fa-solid fa-mobile-screen-button"></i>&nbsp; Omniprésence</div>
+        <h2>Partout, tout le temps</h2>
+        <p>Commencez un film sur votre ordinateur, ajoutez une musique en favori depuis votre tablette, et reprenez votre conversation avec Level IA sur votre smartphone. Grâce à l'infrastructure Cloud de Google Firebase, votre écosystème vit en temps réel sur tous vos écrans.</p>
+      </div>
+      <div class="device-sync">
+        <div class="dev-item dev-iphone">
+           <div class="dev-screen"><i class="fa-solid fa-music" style="color:var(--blue)"></i></div>
+        </div>
+        <div class="dev-item dev-ipad" style="z-index:3;transform:translateY(20px)">
+           <div class="dev-screen"><i class="fa-solid fa-brain" style="color:var(--purple);font-size:2rem"></i></div>
+        </div>
+        <div class="dev-item dev-mac">
+           <div class="dev-screen"><i class="fa-solid fa-clapperboard" style="color:var(--blue);font-size:3rem"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TRUST CENTER ── -->
+<section class="sec" style="border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)">
+  <div class="ctn">
+    <div class="sec-head reveal text-center mx-auto">
+      <div class="sec-label" style="color:var(--green);background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.2)"><i class="fa-solid fa-shield-halved"></i>&nbsp; Matrice de Sécurité</div>
+      <h2>Vos données sous haute protection</h2>
+    </div>
+    <div class="trust-grid reveal d1">
+      <div class="trust-card">
+        <i class="fa-brands fa-google trust-ico"></i>
+        <h4 style="font-size:1.1rem;margin-bottom:8px">Google OAuth 2.0</h4>
+        <p style="font-size:.85rem;color:var(--muted)">Aucun mot de passe stocké. L'authentification est déléguée aux serveurs ultra-sécurisés de Google.</p>
+      </div>
+      <div class="trust-card">
+        <i class="fa-solid fa-fingerprint trust-ico"></i>
+        <h4 style="font-size:1.1rem;margin-bottom:8px">Hashage Cryptographique</h4>
+        <p style="font-size:.85rem;color:var(--muted)">Votre code PIN est irréversiblement crypté (hashé). Même nos administrateurs ne peuvent pas le lire.</p>
+      </div>
+      <div class="trust-card">
+        <i class="fa-solid fa-server trust-ico"></i>
+        <h4 style="font-size:1.1rem;margin-bottom:8px">Règles Firestore</h4>
+        <p style="font-size:.85rem;color:var(--muted)">Des règles backend strictes garantissent qu'un utilisateur ne peut lire ou modifier que ses propres données.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ROADMAP ── -->
+<section class="sec" style="padding-bottom:100px">
+  <div class="ctn">
+    <div class="deepdive reveal">
+      <div class="dd-info">
+        <div class="sec-label"><i class="fa-solid fa-map-location-dot"></i>&nbsp; Vision 2026-2027</div>
+        <h2>La feuille de route<br>de l'Écosystème</h2>
+        <p>LevelUp n'est pas un projet figé. C'est une plateforme vivante en constante évolution. Découvrez ce que notre équipe technique prépare pour les prochains mois.</p>
+      </div>
+      <div class="roadmap">
+        <div class="rm-item done">
+          <div class="rm-dot"></div>
+          <div class="rm-date">Phase 1 (Actuelle)</div>
+          <div class="rm-title">Fondations de l'Écosystème</div>
+          <div class="rm-desc">Lancement de la plateforme centrale, intégration du pont SSO, sortie de LevelMovie et Level IA. Mise en place de LevelMusic en Preview.</div>
+        </div>
+        <div class="rm-item wip">
+          <div class="rm-dot"></div>
+          <div class="rm-date">Phase 2 (En développement)</div>
+          <div class="rm-title">Déploiement Intégral LevelMusic</div>
+          <div class="rm-desc">Ouverture du catalogue musical complet, écoute sans limite de temps, mode hors-ligne et playlists collaboratives mondiales.</div>
+        </div>
+        <div class="rm-item" style="opacity:0.5">
+          <div class="rm-dot" style="background:transparent;border-color:var(--dim);box-shadow:none"></div>
+          <div class="rm-date" style="color:var(--dim)">Phase 3 (Future)</div>
+          <div class="rm-title">Applications Mobiles Natives</div>
+          <div class="rm-desc">Développement d'applications iOS et Android pour une expérience encore plus rapide et une intégration parfaite au système du téléphone.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ── FEATURES BENTO ── -->
 <section class="sec" id="features-sec">
   <div class="ctn">
@@ -787,9 +971,9 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
         <div class="bc-ico">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
         </div>
-        <h3>Données sécurisées</h3>
-        <p>Vos données personnelles sont stockées dans Firebase (infrastructure Google). Votre PIN n'est jamais stocké en clair. Vos conversations Level IA restent privées.</p>
-        <p class="detail">LevelUp ne vend aucune donnée à des tiers. L'accès aux données de production est strictement limité à l'équipe technique LevelUp pour des raisons de maintenance uniquement.</p>
+        <h3>Pont d'Écosystème (SSO)</h3>
+        <p>Une fois connecté au tableau de bord, vous n'avez plus besoin de vous reconnecter. Le hub agit comme un pont sécurisé ("Single Sign-On") vers toutes les autres applications.</p>
+        <p class="detail">En cliquant sur une application, LevelUp transmet automatiquement votre clé, votre photo de profil et votre nom Google vers l'application cible. L'accès est instantané et fluide.</p>
       </div>
       <div class="bc full reveal">
         <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap">
@@ -797,7 +981,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
           <div style="flex:1;min-width:200px">
             <h3>Conditions d'utilisation centralisées</h3>
             <p>Acceptez une seule fois lors de la création de votre compte LevelUp — vos conditions s'appliquent automatiquement à LevelMovie, LevelMusic et Level IA. Lorsque les conditions évoluent, vous en serez notifié par email sur votre adresse Google.</p>
-            <p class="detail">Les conditions couvrent l'utilisation de vos données, les règles d'accès aux APIs, la politique de zéro-tolérance concernant le contenu illicite, et vos droits en tant utilisateur. Tout est transparent, lisible, et accessible à tout moment depuis votre dashboard. <button style="background:none;border:none;color:var(--purple);cursor:pointer;font-size:.8rem;font-weight:600;padding:0;margin-left:4px" onclick="openTerms()">Lire les conditions complètes →</button></p>
+            <p class="detail">Les conditions couvrent l'utilisation de vos données, les règles d'accès aux APIs, la politique de zéro-tolérance concernant le contenu illicite, et vos droits en tant qu'utilisateur. Tout est transparent, lisible, et accessible à tout moment depuis votre dashboard. <button style="background:none;border:none;color:var(--purple);cursor:pointer;font-size:.8rem;font-weight:600;padding:0;margin-left:4px" onclick="openTerms()">Lire les conditions complètes →</button></p>
           </div>
         </div>
       </div>
@@ -905,7 +1089,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
       <div class="faq-item" onclick="faqT(this)"><div class="faq-q"><h4>Que se passe-t-il si je perds accès à mon compte Google ?</h4><i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Votre compte LevelUp est lié à votre identifiant Google UID, qui reste stable même si vous changez d'email Google. En cas de perte d'accès, récupérez d'abord votre compte Google via la procédure habituelle de Google, puis reconnectez-vous à LevelUp. Contactez le support à levelup.ia0@gmail.com si vous avez besoin d'aide.</div></div>
       <div class="faq-item" onclick="faqT(this)"><div class="faq-q"><h4>J'ai oublié mon PIN. Que faire ?</h4><i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Rendez-vous dans votre tableau de bord LevelUp → Paramètres → Sécurité → Réinitialiser le PIN. Vous pouvez choisir un nouveau PIN à tout moment. Votre clé d'accès ne change pas lors d'un changement de PIN — seul le verrou de protection est remplacé.</div></div>
       <div class="faq-item" onclick="faqT(this)"><div class="faq-q"><h4>Puis-je partager ma clé avec quelqu'un d'autre ?</h4><i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Non. Votre clé est strictement personnelle et nominative. Le partage de clé est une violation des Conditions d'utilisation LevelUp et entraîne la révocation immédiate de la clé. Si plusieurs personnes de votre entourage souhaitent accéder à LevelUp, chacune doit créer son propre compte gratuit.</div></div>
-      <div class="faq-item" onclick="faqT(this)"><div class="faq-q"><h4>LevelMusic est-il accessible actuellement ?</h4><i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Oui, LevelMusic est désormais disponible et pleinement intégré à l'écosystème. Votre clé d'accès LevelUp vous permet d'y accéder instantanément.</div></div>
+      <div class="faq-item" onclick="faqT(this)"><div class="faq-q"><h4>🎵 LevelMusic est-il complet ?</h4><i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">LevelMusic est actuellement en version "Découverte". Vous pouvez écouter des extraits premium de 30 secondes pour explorer le catalogue mondial. La version complète est en développement.</div></div>
       <div class="faq-item" onclick="faqT(this)"><div class="faq-q"><h4>Est-ce vraiment gratuit ? Pourquoi ?</h4><i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Oui, totalement gratuit. LevelUp Ecosystem est un projet né de la passion pour la technologie accessible. Il n'y a pas d'abonnement caché, pas de freemium, pas de publicité. Le modèle économique repose sur la communauté et la vision long terme de l'équipe.</div></div>
       <div class="faq-item" onclick="faqT(this)"><div class="faq-q"><h4>Quelles données Google sont transmises à LevelUp ?</h4><i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">LevelUp reçoit uniquement : votre nom affiché Google, votre adresse email, et votre photo de profil. Ces données sont utilisées exclusivement pour personnaliser votre interface (afficher votre nom et photo). Elles ne sont jamais partagées ni revendues. Votre mot de passe Google n'est jamais transmis.</div></div>
       <div class="faq-item" onclick="faqT(this)"><div class="faq-q"><h4>Comment régénérer ma clé si je pense qu'elle a été compromise ?</h4><i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Depuis votre tableau de bord → "Clés d'accès" → bouton "Régénérer". Une nouvelle clé est créée instantanément et l'ancienne est immédiatement invalidée. Pensez à mettre à jour votre clé dans toutes vos applications LevelUp après la régénération.</div></div>
@@ -1023,12 +1207,15 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
           <div class="qa-inf"><h4>LevelMovie</h4><span>Cinéma &amp; Séries</span></div>
           <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
         </div>
-        <div class="qa-tile" onclick="window.openApp('music')" style="opacity:.6">
+        <div class="qa-tile" onclick="window.openApp('music')">
+          <div class="qa-ico" style="background:var(--blue-g);border:1px solid rgba(59,130,246,.2)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-500" style="color:var(--blue)">
+                <path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 <circle cx="6" cy="18" r="3" fill="currentColor"/>
                 <circle cx="18" cy="16" r="3" fill="currentColor"/>
             </svg>
           </div>
-          <div class="qa-inf"><h4>LevelMusic</h4><span>Streaming Audio</span></div>
+          <div class="qa-inf"><h4>LevelMusic</h4><span>Extraits & Découverte</span></div>
           <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
         </div>
         <div class="qa-tile" onclick="window.openApp('ia')">
@@ -1131,7 +1318,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
       <div class="help-card"><h4>🔑 Comment obtenir ma clé d'accès ?</h4><p>Allez dans "Clés d'accès" et cliquez "Générer ma clé". C'est instantané et gratuit. Configurez ensuite un PIN pour sécuriser l'affichage de votre clé.</p></div>
       <div class="help-card"><h4>🎬 Ma clé ne fonctionne pas dans LevelMovie</h4><p>Copiez la clé complète depuis "Clés d'accès" (utilisez le bouton "Copier"). Vérifiez qu'elle respecte le format "LVL-XXXXX-XXXXX". Si le problème persiste, régénérez-la.</p></div>
       <div class="help-card"><h4>🔒 J'ai oublié mon PIN</h4><p>Allez dans Paramètres → Sécurité → cliquez "Modifier". Vous pouvez définir un nouveau PIN sans connaître l'ancien. Votre clé ne change pas.</p></div>
-      <div class="help-card"><h4>🎵 LevelMusic est-il disponible ?</h4><p>LevelMusic est désormais accessible. Il vous suffit d'avoir une clé LevelUp active pour y accéder.</p></div>
+      <div class="help-card"><h4>🎵 LevelMusic est-il complet ?</h4><p>LevelMusic est actuellement en version "Découverte". Vous pouvez écouter des extraits premium de 30 secondes pour explorer le catalogue mondial. La version complète est en développement.</p></div>
       <div class="help-card"><h4>📧 Contacter le support</h4><p>Pour toute autre question : <a href="mailto:levelup.ia0@gmail.com?subject=Support%20LevelUp%20Ecosystem" style="color:var(--purple)">levelup.ia0@gmail.com</a> — L'équipe répond sous 24-48h.</p></div>
     </div>
 
@@ -1164,7 +1351,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
       </div>
       
       <div style="display:flex;gap:8px;">
-          <input type="text" id="devKeyInput" placeholder="LVL-XXXXX-XXXXX" style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 14px;color:#fff;font-size:0.85rem;font-family:monospace;outline:none;" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 15);">
+          <input type="text" id="devKeyInput" placeholder="LVL-XXXXX-XXXXX" style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 14px;color:#fff;font-size:0.85rem;font-family:monospace;outline:none;" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 30);">
           <button class="btn btn-p" onclick="window.loginWithKey()" style="padding:10px 16px;border-radius:var(--r8)"><i class="fa-solid fa-arrow-right"></i></button>
       </div>
     </div>
@@ -1532,10 +1719,25 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
         <p style="font-size:.88rem;line-height:1.8"><strong>LevelUp Ecosystem</strong><br>Fondé par LevelUp<br>Délai de réponse : 24 à 48 heures ouvrées<br>Disponible pour : questions, signalements, demandes RGPD, litiges</p>
         <a onclick="toast_('Ouverture de votre client mail...','info')" href="mailto:levelup.ia0@gmail.com?subject=Support%20LevelUp%20Ecosystem" class="btn btn-p btn-sm" style="margin-top:12px;display:inline-flex;text-decoration:none;"><i class="fa-solid fa-envelope"></i> Contacter le support</a>
       </div>
-      <p class="t-p" style="margin-top:20px;font-size:.8rem;text-align:center;color:var(--xdim)">Dernière mise à jour : Avril 2026 · Version 1.0 · © 2026 LevelUp Ecosystem — Tous droits réservés</p>
+
+      <!-- NOUVEAU: ARTICLE 15 & 16 -->
+      <h2 class="t-h2">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#blue-g)" stroke-width="1.5"/><text x="6" y="14.5" font-size="8" font-weight="700" fill="url(#blue-g)" font-family="Syne">15</text></svg>
+        Versions "Preview" et Bêta
+      </h2>
+      <p class="t-p">Certaines applications ou fonctionnalités de l'écosystème (notamment <strong style="color:var(--txt)">LevelMusic</strong>) peuvent être proposées en version "Preview" ou "Bêta". Cela signifie que l'application est en cours de développement actif. L'Utilisateur accepte que ces versions puissent comporter des limitations (comme des extraits limités à 30 secondes), des bugs ou des interruptions de service. LevelUp se réserve le droit exclusif de modifier, d'étendre ou de retirer ces fonctionnalités en développement à tout moment et sans préavis.</p>
+
+      <h2 class="t-h2">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#purple-g)" stroke-width="1.5"/><text x="6" y="14.5" font-size="8" font-weight="700" fill="url(#purple-g)" font-family="Syne">16</text></svg>
+        Charte DMCA et Droit d'auteur
+      </h2>
+      <p class="t-p">LevelUp respecte la propriété intellectuelle. Il est crucial de noter que l'application <strong style="color:var(--txt)">LevelMovie n'héberge, ne stocke et ne transmet aucun fichier vidéo sur ses propres serveurs</strong>. LevelMovie agit uniquement comme une interface d'agrégation (moteur de recherche) indexant des liens vers des contenus hébergés par des serveurs tiers totalement indépendants de LevelUp. Toute requête liée au retrait de contenu sous droits d'auteur (DMCA) doit être adressée directement aux hébergeurs tiers responsables du stockage desdits fichiers.</p>
+
+      <p class="t-p" style="margin-top:40px;font-size:.8rem;text-align:center;color:var(--xdim)">Dernière mise à jour : Avril 2026 · Version 1.1 · © 2026 LevelUp Ecosystem — Tous droits réservés</p>
 
     </div>
     <div class="terms-foot">
+      <button class="btn btn-g btn-sm" onclick="closeTerms()">Fermer</button>
       <button class="google-signin-btn" style="width:auto; padding:8px 16px; border-radius:var(--r8); font-size:.8rem;" onclick="closeTerms();openAuth('create')">
         <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         <span style="font-weight:600; color:#3c4043;">J'accepte et je crée mon compte</span>
@@ -1569,17 +1771,20 @@ gProv.setCustomParameters({ prompt: 'select_account' });
 window._auth = auth; window._db = db;
 window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collection, query, where };
 
-// Auth Anonyme pour permettre les requêtes Firebase (ex: lire les clés)
+// Auth Anonyme pour permettre les requêtes Firebase
 signInAnonymously(auth).catch(e => {
     console.error("🔥 INIT ANON AUTH FAILED:", e);
 });
 
-// Connexion Google
 window.googleSignIn = async function() {
   const btn = document.getElementById('gSignInBtn');
   btn.disabled = true;
   document.getElementById('gBtnTxt').textContent = 'Connexion en cours...';
   try {
+    localStorage.removeItem('lm_key');
+    localStorage.removeItem('lm_uid');
+    localStorage.removeItem('lm_name');
+    localStorage.removeItem('lm_photo');
     await signInWithPopup(auth, gProv);
   } catch(e) {
     btn.disabled = false;
@@ -1588,51 +1793,101 @@ window.googleSignIn = async function() {
   }
 };
 
-// Connexion avec Clé (Développeur)
 window.loginWithKey = async function() {
-  const val = document.getElementById('devKeyInput').value;
+  const val = document.getElementById('devKeyInput').value.trim();
   if(!val) return;
   const btn = document.querySelector('#devKeyInput + button');
   const orig = btn.innerHTML;
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
   try {
+      if (!auth.currentUser) {
+          await signInAnonymously(auth);
+      }
+
       console.log("🔍 Recherche de la clé Firebase...");
-      const snaps = await getDocs(collectionGroup(db, 'security'));
       let foundSec = null;
-      snaps.forEach(d => { 
-          if (d.data().apiKey === val) {
-              foundSec = d.data();
-          }
-      });
+      let foundUid = null;
+
+      try {
+          const snaps = await getDocs(collectionGroup(db, 'security'));
+          snaps.forEach(d => {
+              const data = d.data();
+              if (data.apiKey === val || data.key === val) {
+                  foundSec = data;
+                  foundUid = data.uid || d.ref?.parent?.parent?.id || val;
+              }
+          });
+      } catch(e) {}
+
+      if (!foundSec) {
+          try {
+              const oldSnaps = await getDocs(collection(db, 'ecosystem_users'));
+              oldSnaps.forEach(d => {
+                  const data = d.data();
+                  if (data.apiKey === val || data.key === val) {
+                      foundSec = data;
+                      foundUid = data.uid || d.id || val;
+                  }
+              });
+          } catch(e) {}
+      }
       
-      if(foundSec && foundSec.uid) {
+      if(foundSec && foundUid) {
           console.log("✅ Clé validée.");
-          const profRef = doc(db, 'artifacts', 'level-ia-premium', 'users', foundSec.uid, 'profile', 'data');
-          const profSnap = await getDoc(profRef);
           
-          window._ud = profSnap.exists() ? profSnap.data() : { displayName: 'Utilisateur', uid: foundSec.uid };
-          window._ud.apiKey = foundSec.apiKey;
-          window._ud.keyCreatedAt = foundSec.keyCreatedAt;
-          window._ud.pinHash = foundSec.pinHash;
+          let pData = { displayName: 'Utilisateur', photoURL: '', email: '' };
+          try {
+              const profRef = doc(db, 'artifacts', 'level-ia-premium', 'users', foundUid, 'profile', 'data');
+              const profSnap = await getDoc(profRef);
+              if (profSnap.exists()) {
+                  pData = profSnap.data();
+              } else {
+                  pData.displayName = foundSec.displayName || foundSec.name || 'Utilisateur';
+                  pData.photoURL = foundSec.photoURL || foundSec.photo || foundSec.avatar || '';
+                  pData.email = foundSec.email || foundSec.owner || '';
+              }
+          } catch (e) {}
           
-          window._user = { uid: foundSec.uid, displayName: window._ud.displayName, email: window._ud.email, photoURL: window._ud.photoURL };
+          localStorage.setItem('lm_key', foundSec.apiKey || foundSec.key || val);
+          localStorage.setItem('lm_uid', foundUid);
+          localStorage.setItem('lm_name', pData.displayName);
+          if(pData.photoURL) localStorage.setItem('lm_photo', pData.photoURL);
           
+          window._user = { uid: foundUid, isKeyAuth: true };
+          window._ud = { 
+              ...pData, 
+              uid: foundUid,
+              apiKey: foundSec.apiKey || foundSec.key || val,
+              pinHash: foundSec.pinHash,
+              keyCreatedAt: foundSec.keyCreatedAt
+          };
+          
+          await window.loadAppStatus();
           closeAuth();
           showDash(window._user);
           toast_('Connexion réussie via clé', 'ok');
       } else {
-          console.warn("❌ Clé introuvable.");
-          toast_('Clé introuvable', 'err');
+          toast_('Clé introuvable ou accès refusé', 'err');
       }
   } catch(e) {
-      console.error("🔥 ERREUR SYSTEME FIREBASE:", e.code, e.message);
-      toast_('Erreur Firebase: ' + (e.message.split(':')[0]), 'err');
+      toast_('Erreur système.', 'err');
+  } finally {
+      btn.innerHTML = orig;
   }
-  btn.innerHTML = orig;
 };
 
-// Fonction pour Ouvrir / Débloquer les applications
+window.execLogout = async function() {
+    document.getElementById('logoutOv').classList.add('hidden');
+    localStorage.removeItem('lm_key');
+    localStorage.removeItem('lm_uid');
+    localStorage.removeItem('lm_name');
+    localStorage.removeItem('lm_photo');
+    try { await window._fb.signOut(window._auth); } catch(e){}
+    window.location.reload();
+};
+
+// 🌟 LE PONT D'ÉCOSYSTÈME (SSO) 🌟
 window.openApp = function(appId) {
     if (!window._user) {
         toast_('Vous devez vous connecter pour débloquer cette application.', 'warn');
@@ -1646,13 +1901,33 @@ window.openApp = function(appId) {
         return;
     }
     
+    const d = window._ud;
+    
+    // Construction du paquet de données (Profile + Key) à transmettre
+    const payload = new URLSearchParams({
+        lvl_key: d.apiKey,
+        lvl_uid: d.uid,
+        lvl_name: d.displayName || localStorage.getItem('lm_name') || '',
+        lvl_photo: d.photoURL || localStorage.getItem('lm_photo') || '',
+        lvl_email: d.email || ''
+    }).toString();
+
+    let targetUrl = '';
+    
     if (appId === 'movie') {
-        window.open('https://levelmovie-mu.vercel.app/', '_blank');
+        targetUrl = 'https://levelmovie-mu.vercel.app/';
     } else if (appId === 'music') {
         const s = window._appsStatus || {};
-        window.open(s.levelmusic_url || 'https://level-music-ten.vercel.app/', '_blank');
+        targetUrl = s.levelmusic_url || 'https://level-music-ten.vercel.app/';
     } else if (appId === 'ia') {
         toast_('Level IA sera bientôt disponible via votre clé', 'info');
+        return;
+    }
+
+    if (targetUrl) {
+        // Ajout des données à l'URL de l'application
+        const finalUrl = targetUrl.includes('?') ? `${targetUrl}&${payload}` : `${targetUrl}?${payload}`;
+        window.open(finalUrl, '_blank');
     }
 };
 
@@ -1662,7 +1937,6 @@ window.updateAppCards = function() {
   const s = window._appsStatus || {};
   const hasKey = u && d && d.apiKey;
 
-  // LevelMovie
   const movieFoot = document.getElementById('movieFootCard');
   if (movieFoot) {
     if (hasKey) {
@@ -1674,7 +1948,6 @@ window.updateAppCards = function() {
     }
   }
 
-  // LevelMusic
   const musicFoot = document.getElementById('musicFoot');
   const musicCard = document.getElementById('musicCard');
   if (musicFoot && musicCard) {
@@ -1688,7 +1961,6 @@ window.updateAppCards = function() {
     }
   }
 
-  // Level IA
   const iaFoot = document.getElementById('iaFoot');
   if (iaFoot) {
     if (hasKey) {
@@ -1701,14 +1973,13 @@ window.updateAppCards = function() {
   }
 };
 
-async function loadAppStatus() {
+window.loadAppStatus = async function() {
   try {
-    const ref = doc(db, 'artifacts', 'level-ia-premium', 'public', 'data', 'apps_config');
+    const ref = doc(db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'apps');
     const snap = await getDoc(ref);
     window._appsStatus = snap.exists() ? snap.data() : {};
   } catch(e) { window._appsStatus = {}; }
   
-  // Announcements injection
   const s = window._appsStatus || {};
   const heroAnn = document.getElementById('heroAnnouncementContainer');
   if (heroAnn) {
@@ -1733,50 +2004,118 @@ async function loadAppStatus() {
   }
   
   window.updateAppCards();
-}
-loadAppStatus();
+};
 
 onAuthStateChanged(auth, async (u) => {
-  if (u && !u.isAnonymous) {
-    window._user = u;
-    try {
-        const ref = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          window._ud = snap.data();
-        } else {
-          window._ud = {
-            displayName: u.displayName || u.email?.split('@')[0] || 'Utilisateur',
-            email: u.email || '',
-            photoURL: u.photoURL || '',
-            createdAt: new Date().toISOString(),
-            uid: u.uid
+  const savedKey = localStorage.getItem('lm_key');
+  const savedUid = localStorage.getItem('lm_uid');
+
+  if (u) {
+    if (!u.isAnonymous) {
+      // 🟢 UTILISATEUR GOOGLE CONNECTÉ
+      window._user = u;
+      try {
+          const ref = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
+          const snap = await getDoc(ref);
+          if (snap.exists()) {
+            window._ud = snap.data();
+          } else {
+            window._ud = {
+              displayName: u.displayName || u.email?.split('@')[0] || 'Utilisateur',
+              email: u.email || '',
+              photoURL: u.photoURL || '',
+              createdAt: new Date().toISOString(),
+              uid: u.uid
+            };
+            await setDoc(ref, window._ud);
+          }
+          
+          const secRef = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
+          const secSnap = await getDoc(secRef);
+          if(secSnap.exists()) {
+              const sData = secSnap.data();
+              window._ud.apiKey = sData.apiKey || sData.key;
+              window._ud.keyCreatedAt = sData.keyCreatedAt;
+              window._ud.pinHash = sData.pinHash;
+          }
+          
+          // Mise en cache
+          localStorage.setItem('lm_name', window._ud.displayName);
+          if (window._ud.photoURL) localStorage.setItem('lm_photo', window._ud.photoURL);
+          
+          await window.loadAppStatus();
+          closeAuth();
+          showDash(u);
+          toast_('Bienvenue ' + (window._ud.displayName?.split(' ')[0] || '') + ' !', 'ok');
+      } catch(e) {
+          window._ud = window._ud || { displayName: u.displayName || 'Utilisateur' };
+          await window.loadAppStatus();
+          closeAuth();
+          showDash(u);
+      }
+    } else if (savedKey && savedUid) {
+      // 🟡 UTILISATEUR CONNECTÉ VIA CLÉ (Anonyme en arrière plan)
+      try {
+          window._user = { uid: savedUid, isKeyAuth: true };
+          
+          let pData = { 
+              displayName: localStorage.getItem('lm_name') || 'Utilisateur', 
+              photoURL: localStorage.getItem('lm_photo') || '',
+              uid: savedUid 
           };
-          await setDoc(ref, window._ud);
-        }
-        
-        const secRef = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
-        const secSnap = await getDoc(secRef);
-        if(secSnap.exists()) {
-            const sData = secSnap.data();
-            window._ud.apiKey = sData.apiKey;
-            window._ud.keyCreatedAt = sData.keyCreatedAt;
-            window._ud.pinHash = sData.pinHash;
-        }
-        
-        closeAuth();
-        showDash(u);
-        toast_('Bienvenue ' + (window._ud.displayName?.split(' ')[0] || '') + ' !', 'ok');
-    } catch(e) {
-        console.error("🔥 ERREUR DE LECTURE PROFIL FIREBASE:", e);
+          
+          const profRef = doc(db, 'artifacts', 'level-ia-premium', 'users', savedUid, 'profile', 'data');
+          const profSnap = await getDoc(profRef);
+          
+          if (profSnap.exists()) {
+              pData = { ...pData, ...profSnap.data() };
+          } else {
+              try {
+                  const oldSnap = await getDoc(doc(db, 'ecosystem_users', savedUid));
+                  if(oldSnap.exists()){
+                      const oD = oldSnap.data();
+                      pData.displayName = oD.displayName || oD.name || pData.displayName;
+                      pData.photoURL = oD.photoURL || oD.photo || oD.avatar || pData.photoURL;
+                      pData.email = oD.email || oD.owner || pData.email;
+                  }
+              } catch(e){}
+          }
+          
+          localStorage.setItem('lm_name', pData.displayName);
+          if(pData.photoURL) localStorage.setItem('lm_photo', pData.photoURL);
+          
+          window._ud = pData;
+          
+          const secRef = doc(db, 'artifacts', 'level-ia-premium', 'users', savedUid, 'security', 'key');
+          const secSnap = await getDoc(secRef);
+          if(secSnap.exists()) {
+             const sData = secSnap.data();
+             window._ud.apiKey = sData.apiKey || sData.key;
+             window._ud.pinHash = sData.pinHash;
+             window._ud.keyCreatedAt = sData.keyCreatedAt;
+          } else {
+             window._ud.apiKey = savedKey; // Fallback
+          }
+          
+          await window.loadAppStatus();
+          closeAuth();
+          showDash(window._user);
+      } catch(e) {
+          window._ud = window._ud || { displayName: localStorage.getItem('lm_name') || 'Utilisateur', photoURL: localStorage.getItem('lm_photo') || '', apiKey: savedKey };
+          await window.loadAppStatus();
+          closeAuth();
+          showDash(window._user);
+      }
+    } else {
+      // 🔴 UTILISATEUR ANONYME PUR (Pas de clé sauvegardée)
+      window._user = null;
+      window._ud = null;
+      await window.loadAppStatus();
+      showLand();
     }
   } else {
-    // Ne rien faire si c'est l'utilisateur anonyme d'initialisation
-    if (!u) {
-       signInAnonymously(auth).catch(e => console.error(e));
-    }
-    window._user = null; window._ud = null;
-    showLand();
+    // Aucune session : connexion silencieuse pour initialisation
+    signInAnonymously(auth).catch(e => console.error("Initialisation anonyme impossible:", e));
   }
 });
 
@@ -1796,7 +2135,6 @@ function showDash(u) {
   renderNavLogged(u);
   updateLoggedUI();
   window.refreshUI();
-  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 function showLand() {
@@ -1959,16 +2297,6 @@ window.openAuth = function(mode = 'create') {
 
 function closeAuth(){ document.getElementById('authOverlay').classList.add('hidden'); const b=document.getElementById('gSignInBtn'); if(b) b.disabled=false; const t=document.getElementById('gBtnTxt'); if(t) t.textContent='Continuer avec Google'; }
 
-// LOGOUT CONFIRMATION
-window.confirmLogout = function() {
-    document.getElementById('logoutOv').classList.remove('hidden');
-};
-window.execLogout = async function() {
-    document.getElementById('logoutOv').classList.add('hidden');
-    await window._fb.signOut(window._auth); 
-    toast_('À bientôt !','info');
-};
-
 // TERMS
 function openTerms(){ document.getElementById('termsOverlay').classList.remove('hidden'); }
 function closeTerms(){ document.getElementById('termsOverlay').classList.add('hidden'); }
@@ -2128,6 +2456,7 @@ window.addEventListener('scroll',()=>{
   if(s){ n.style.padding='10px 5%'; n.style.background='rgba(3,3,3,0.4)'; n.style.backdropFilter='blur(10px)'; }
   else{ n.style.padding='15px 5%'; n.style.background='transparent'; n.style.backdropFilter='none'; }
 },{passive:true});
+window.onload = function() { window.loadAppStatus(); };
 </script>
 </body>
 </html>
