@@ -1771,10 +1771,7 @@ gProv.setCustomParameters({ prompt: 'select_account' });
 window._auth = auth; window._db = db;
 window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collection, query, where };
 
-// Auth Anonyme pour permettre les requêtes Firebase
-signInAnonymously(auth).catch(e => {
-    console.error("🔥 INIT ANON AUTH FAILED:", e);
-});
+// SUPPRIMÉ : l'appel prématuré à signInAnonymously qui écrasait la session Google au rechargement.
 
 window.googleSignIn = async function() {
   const btn = document.getElementById('gSignInBtn');
@@ -1801,38 +1798,20 @@ window.loginWithKey = async function() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
   try {
-      if (!auth.currentUser) {
-          await signInAnonymously(auth);
-      }
-
-      console.log("🔍 Recherche de la clé Firebase...");
       let foundSec = null;
       let foundUid = null;
 
       try {
-          const snaps = await getDocs(collectionGroup(db, 'security'));
-          snaps.forEach(d => {
+          const oldSnaps = await getDocs(collection(db, 'ecosystem_users'));
+          oldSnaps.forEach(d => {
               const data = d.data();
               if (data.apiKey === val || data.key === val) {
                   foundSec = data;
-                  foundUid = data.uid || d.ref?.parent?.parent?.id || val;
+                  foundUid = data.uid || d.id || val;
               }
           });
       } catch(e) {}
 
-      if (!foundSec) {
-          try {
-              const oldSnaps = await getDocs(collection(db, 'ecosystem_users'));
-              oldSnaps.forEach(d => {
-                  const data = d.data();
-                  if (data.apiKey === val || data.key === val) {
-                      foundSec = data;
-                      foundUid = data.uid || d.id || val;
-                  }
-              });
-          } catch(e) {}
-      }
-      
       if(foundSec && foundUid) {
           console.log("✅ Clé validée.");
           
@@ -2456,7 +2435,13 @@ window.addEventListener('scroll',()=>{
   if(s){ n.style.padding='10px 5%'; n.style.background='rgba(3,3,3,0.4)'; n.style.backdropFilter='blur(10px)'; }
   else{ n.style.padding='15px 5%'; n.style.background='transparent'; n.style.backdropFilter='none'; }
 },{passive:true});
-window.onload = function() { window.loadAppStatus(); };
+window.onload = function() { if (window.loadAppStatus) window.loadAppStatus(); };
+
+// AJOUT DE LA FONCTION MANQUANTE POUR LE BOUTON DÉCONNEXION
+window.confirmLogout = function() {
+    document.getElementById('logoutOv').classList.remove('hidden');
+};
 </script>
-</body>
-</html>
+
+<script>
+// ═══ UI LOGIC ═══
