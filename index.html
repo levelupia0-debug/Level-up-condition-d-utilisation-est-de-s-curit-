@@ -2441,7 +2441,30 @@ window.refreshUI = function() {
 let _pMode = null, _pVal = '', _pFirst = '';
 window._kVis = false;
 
-function sTo(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth'}); }
+window.sTo = function(id) {
+  const landing = document.getElementById('landing');
+  const dashboard = document.getElementById('dashboard');
+  
+  // Si on est dans le tableau de bord, on retourne d'abord à l'accueil
+  if (dashboard && dashboard.style.display !== 'none' && !dashboard.classList.contains('hidden')) {
+    dashboard.classList.add('hidden');
+    dashboard.style.display = 'none';
+    if (landing) {
+        landing.classList.remove('hidden');
+        landing.style.display = 'block';
+    }
+    // Petit délai pour laisser le navigateur réafficher la page avant de défiler
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({behavior:'smooth'});
+    }, 50);
+  } else {
+    // Comportement normal si on est déjà sur l'accueil
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({behavior:'smooth'});
+  }
+};
+
 function bgClose(e,id){ if(e.target.id===id) document.getElementById(id).classList.add('hidden'); }
 function toast_(msg,type='info'){
   const c=document.getElementById('toasts');
