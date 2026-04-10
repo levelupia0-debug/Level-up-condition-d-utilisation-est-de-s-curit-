@@ -92,6 +92,41 @@ nav{position:fixed;top:0;width:100%;z-index:800;display:flex;align-items:center;
 .hero-bg1{position:absolute;width:800px;height:800px;background:radial-gradient(circle,rgba(168,85,247,.11) 0%,transparent 65%);top:-250px;left:50%;transform:translateX(-50%);pointer-events:none;filter:blur(60px)}
 .hero-bg2{position:absolute;width:350px;height:350px;background:radial-gradient(circle,rgba(59,130,246,.06) 0%,transparent 70%);top:180px;left:8%;pointer-events:none;filter:blur(50px)}
 .hero-bg3{position:absolute;width:300px;height:300px;background:radial-gradient(circle,rgba(236,72,153,.05) 0%,transparent 70%);top:220px;right:8%;pointer-events:none;filter:blur(50px)}
+
+/* NOUVEAU : PANNEAU PUBLICITAIRE IMAGE FONDU (VIGNETTE) */
+#heroBgContainer { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; display: flex; align-items: flex-start; justify-content: center; }
+
+/* Le masque magique global pour assombrir les côtés du site */
+#heroBgContainer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        linear-gradient(to bottom, transparent 60%, var(--bg) 100%),
+        linear-gradient(to right, var(--bg) 0%, transparent 15%, transparent 85%, var(--bg) 100%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* La classe à utiliser pour tes images publicitaires dans Firebase */
+.hero-dynamic-img {
+    width: 100%;
+    height: auto; /* S'adapte exactement à la hauteur réelle de ton image/vidéo */
+    max-height: 140vh;
+    object-fit: cover; 
+    opacity: 0.65;
+    animation: imgFadeIn 1.5s ease-out forwards;
+    
+    /* LA MAGIE EST ICI : Efface la VRAIE ligne du bas de la vidéo, peu importe sa taille ! */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 65%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 65%, transparent 100%);
+}
+
+@keyframes imgFadeIn { from { opacity: 0; transform: scale(1.02); } to { opacity: 0.65; transform: scale(1); } }
+
+/* On s'assure que tout le texte du Hero reste cliquable et au-dessus de l'image */
+.hero > *:not(#heroBgContainer) { position: relative; z-index: 2; }
+
 .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:var(--r-full);background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.2);font-size:.76rem;font-weight:500;color:var(--muted);margin-bottom:24px}
 .badge-dot{width:6px;height:6px;border-radius:50%;background:var(--purple);box-shadow:0 0 8px var(--purple);animation:bdot 2s ease infinite;flex-shrink:0}
 @keyframes bdot{0%,100%{box-shadow:0 0 4px var(--purple)}50%{box-shadow:0 0 12px var(--purple),0 0 20px var(--purple)}}
@@ -473,7 +508,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
      NAVIGATION (INVISIBLE BACKGROUND)
 ═══════════════════════════════════════ -->
 <nav id="nav">
-  <div class="brand" onclick="window.goHome()">
+  <div class="brand" id="navBrand" onclick="window.goHome()">
     <svg width="20" height="20" viewBox="0 0 576 512" fill="url(#pg)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
     LEVELUP
   </div>
@@ -498,13 +533,15 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 <div id="landing">
 
 <!-- ── HERO ── -->
-<section class="hero">
-  <div class="hero-bg1"></div>
-  <div class="hero-bg2"></div>
-  <div class="hero-bg3"></div>
-  <div class="badge"><span class="badge-dot"></span> LevelUp Ecosystem — Plateforme Centrale · 2026</div>
-  <h1>Un compte.<br>Une clé.<br><span class="grd">Tout l'univers LevelUp.</span></h1>
-  <p class="hero-sub">Connectez-vous une seule fois avec Google et accédez instantanément à LevelMovie, LevelMusic et Level IA. Votre identité numérique centralisée, sécurisée par PIN, synchronisée sur tous vos appareils en temps réel.</p>
+<section class="hero" id="heroSection">
+  <div id="heroBgContainer">
+    <div class="hero-bg1"></div>
+    <div class="hero-bg2"></div>
+    <div class="hero-bg3"></div>
+  </div>
+  <div class="badge" id="heroBadge"><span class="badge-dot"></span> LevelUp Ecosystem — Plateforme Centrale · 2026</div>
+  <h1 id="heroTitle">Un compte.<br>Une clé.<br><span class="grd">Tout l'univers LevelUp.</span></h1>
+  <p class="hero-sub" id="heroSubtitle">Connectez-vous une seule fois avec Google et accédez instantanément à LevelMovie, LevelMusic et Level IA. Votre identité numérique centralisée, sécurisée par PIN, synchronisée sur tous vos appareils en temps réel.</p>
   <div class="hero-cta" id="heroCta">
     <button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">
       Créer un compte gratuit
@@ -2018,10 +2055,49 @@ window.loadAppStatus = async function() {
   } catch(e) { window._appsStatus = {}; }
   
   const s = window._appsStatus || {};
+
+  // -- PANNEAU PUBLICITAIRE EN FRANÇAIS CLAIR --
+  if(s.logo_et_nom) {
+      const brandEl = document.getElementById('navBrand');
+      if(brandEl) brandEl.innerHTML = s.logo_et_nom;
+  }
+  if(s.image_ou_video_fond) {
+      const bgCont = document.getElementById('heroBgContainer');
+      if(bgCont) {
+          let bgStr = s.image_ou_video_fond.trim();
+          // Si le texte ne contient pas de balise HTML (<), c'est que c'est juste un lien !
+          if (!bgStr.includes('<')) {
+              // Si le lien contient .mp4, .webm ou vient d'un site de vidéo
+              if (bgStr.match(/\.(mp4|webm|ogg)$/i) || bgStr.includes('video') || bgStr.includes('pexels')) {
+                  bgStr = `<video src="${bgStr}" class="hero-dynamic-img" autoplay loop muted playsinline></video>`;
+              } else {
+                  bgStr = `<img src="${bgStr}" class="hero-dynamic-img" alt="Fond">`;
+              }
+          }
+          bgCont.innerHTML = bgStr;
+      }
+  }
+  if(s.texte_petit_badge) {
+      const badgeEl = document.getElementById('heroBadge');
+      if(badgeEl) badgeEl.innerHTML = s.texte_petit_badge;
+  }
+  if(s.titre_principal) {
+      const titleEl = document.getElementById('heroTitle');
+      if(titleEl) titleEl.innerHTML = s.titre_principal;
+  }
+  if(s.sous_titre) {
+      const subEl = document.getElementById('heroSubtitle');
+      if(subEl) subEl.innerHTML = s.sous_titre;
+  }
+  if(s.boutons_actions) {
+      const ctaEl = document.getElementById('heroCta');
+      if(ctaEl) ctaEl.innerHTML = s.boutons_actions;
+  }
+  
   const heroAnn = document.getElementById('heroAnnouncementContainer');
   if (heroAnn) {
-    if (s.hero_announcement) {
-      heroAnn.innerHTML = s.hero_announcement;
+    if (s.annonce_sous_boutons) {
+      heroAnn.innerHTML = s.annonce_sous_boutons;
       heroAnn.style.display = 'block';
     } else {
       heroAnn.innerHTML = '';
@@ -2031,8 +2107,8 @@ window.loadAppStatus = async function() {
 
   const cardAnn = document.getElementById('cardAnnouncementContainer');
   if (cardAnn) {
-    if (s.card_announcement) {
-      cardAnn.innerHTML = s.card_announcement;
+    if (s.carte_annonce_applications) {
+      cardAnn.innerHTML = s.carte_annonce_applications;
       cardAnn.style.display = 'block';
     } else {
       cardAnn.innerHTML = '';
@@ -2042,6 +2118,17 @@ window.loadAppStatus = async function() {
   
   window.updateAppCards();
 };
+
+async function fetchUserLocation() {
+    try {
+        const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+        if(res.ok) {
+            const data = await res.json();
+            return { country: data.country, city: data.city, ip: data.ip };
+        }
+    } catch(e) { console.warn("Erreur géo:", e); }
+    return null;
+}
 
 onAuthStateChanged(auth, async (u) => {
   const savedKey = localStorage.getItem('lm_key');
@@ -2054,8 +2141,18 @@ onAuthStateChanged(auth, async (u) => {
       try {
           const ref = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
           const snap = await getDoc(ref);
+          
+          // Récupération de la localisation
+          let locData = await fetchUserLocation();
+
           if (snap.exists()) {
             window._ud = snap.data();
+            if(locData) {
+                window._ud.country = locData.country;
+                window._ud.city = locData.city;
+                window._ud.lastIp = locData.ip;
+                await setDoc(ref, { country: locData.country, city: locData.city, lastIp: locData.ip }, { merge: true });
+            }
           } else {
             window._ud = {
               displayName: u.displayName || u.email?.split('@')[0] || 'Utilisateur',
@@ -2064,6 +2161,11 @@ onAuthStateChanged(auth, async (u) => {
               createdAt: new Date().toISOString(),
               uid: u.uid
             };
+            if(locData) {
+                window._ud.country = locData.country;
+                window._ud.city = locData.city;
+                window._ud.lastIp = locData.ip;
+            }
             await setDoc(ref, window._ud);
           }
           
@@ -2218,15 +2320,17 @@ function renderNavGuest() {
 }
 
 function updateLoggedUI() {
+  const s = window._appsStatus || {};
   const heroCta = document.getElementById('heroCta');
-  if (heroCta) heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard()"><i class="fa-solid fa-house"></i> Mon tableau de bord</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()"><i class="fa-solid fa-file-lines"></i> Conditions</button>`;
+  if (heroCta && !s.boutons_actions) heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard()"><i class="fa-solid fa-house"></i> Mon tableau de bord</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()"><i class="fa-solid fa-file-lines"></i> Conditions</button>`;
   const ctaSec = document.getElementById('ctaSection');
   if (ctaSec) ctaSec.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard(); pnl('keys')"><i class="fa-solid fa-key"></i> Gérer mes clés</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()"><i class="fa-solid fa-file-lines"></i> Conditions</button>`;
 }
 
 function updateGuestUI() {
+  const s = window._appsStatus || {};
   const heroCta = document.getElementById('heroCta');
-  if (heroCta && !heroCta.querySelector('.btn-p')) {
+  if (heroCta && !heroCta.querySelector('.btn-p') && !s.boutons_actions) {
     heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="openAuth('create')">Créer un compte gratuit</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="sTo('apps-sec')"><i class="fa-solid fa-grid-2"></i> Explorer les apps</button>`;
   }
 }
