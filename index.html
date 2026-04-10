@@ -1888,6 +1888,9 @@ window.googleSignIn = async function() {
   }
 };
 
+// ALIAS POUR RÉTROCOMPATIBILITÉ : Permet aux boutons Firebase qui utilisent handleGoogleLogin de fonctionner
+window.handleGoogleLogin = window.googleSignIn;
+
 window.loginWithKey = async function() {
   const val = document.getElementById('devKeyInput').value.trim();
   if(!val) return;
@@ -2100,10 +2103,6 @@ window.loadAppStatus = async function() {
       const subEl = document.getElementById('heroSubtitle');
       if(subEl) subEl.innerHTML = s.sous_titre;
   }
-  if(s.boutons_actions) {
-      const ctaEl = document.getElementById('heroCta');
-      if(ctaEl) ctaEl.innerHTML = s.boutons_actions;
-  }
   
   const heroAnn = document.getElementById('heroAnnouncementContainer');
   if (heroAnn) {
@@ -2173,6 +2172,11 @@ window.loadAppStatus = async function() {
   }
 
   window.updateAppCards();
+  
+  // Mise à jour de la barre de navigation si on modifie la base de données
+  if (!window._user && typeof renderNavGuest === 'function') {
+      renderNavGuest();
+  }
 };
 
 async function fetchUserLocation() {
@@ -2372,22 +2376,50 @@ function renderNavLogged(u) {
 }
 
 function renderNavGuest() {
-  document.getElementById('navRight').innerHTML = `<button class="btn btn-g btn-sm" onclick="openAuth('login')">Connexion</button><button class="btn btn-p btn-sm hidden sm:inline-flex" onclick="openAuth('create')">Créer un compte</button>`;
+  const s = window._appsStatus || {};
+  const navRight = document.getElementById('navRight');
+  if (s.boutons_nav) {
+      navRight.innerHTML = s.boutons_nav;
+      // DÉTECTION AUTO : Le 1er bouton ouvre la connexion, le 2ème ouvre l'inscription
+      const btns = navRight.children;
+      if (btns[0]) btns[0].onclick = () => window.openAuth('login');
+      if (btns[1]) btns[1].onclick = () => window.openAuth('create');
+  } else {
+      navRight.innerHTML = `<button class="btn btn-g btn-sm" onclick="window.openAuth('login')">Connexion</button><button class="btn btn-p btn-sm hidden sm:inline-flex" onclick="window.openAuth('create')">Créer un compte</button>`;
+  }
 }
 
 function updateLoggedUI() {
   const s = window._appsStatus || {};
   const heroCta = document.getElementById('heroCta');
-  if (heroCta && !s.boutons_actions) heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard()"><i class="fa-solid fa-house"></i> Mon tableau de bord</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()"><i class="fa-solid fa-file-lines"></i> Conditions</button>`;
+  if (heroCta) {
+      if (s.boutons_actions) {
+          heroCta.innerHTML = s.boutons_actions;
+          // DÉTECTION AUTO : Le 1er bouton ouvre le Dashboard, le 2ème ouvre les Conditions
+          const btns = heroCta.children;
+          if (btns[0]) btns[0].onclick = () => { window.openDashboard(); pnl('home'); };
+          if (btns[1]) btns[1].onclick = () => window.openTerms();
+      } else {
+          heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard()">Mon tableau de bord</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">Conditions</button>`;
+      }
+  }
   const ctaSec = document.getElementById('ctaSection');
-  if (ctaSec) ctaSec.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard(); pnl('keys')"><i class="fa-solid fa-key"></i> Gérer mes clés</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()"><i class="fa-solid fa-file-lines"></i> Conditions</button>`;
+  if (ctaSec) ctaSec.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard(); pnl('keys')">Gérer mes clés</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">Conditions</button>`;
 }
 
 function updateGuestUI() {
   const s = window._appsStatus || {};
   const heroCta = document.getElementById('heroCta');
-  if (heroCta && !heroCta.querySelector('.btn-p') && !s.boutons_actions) {
-    heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="openAuth('create')">Créer un compte gratuit</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="sTo('apps-sec')"><i class="fa-solid fa-grid-2"></i> Explorer les apps</button>`;
+  if (heroCta) {
+    if (s.boutons_actions) {
+        heroCta.innerHTML = s.boutons_actions;
+        // DÉTECTION AUTO : Le 1er bouton ouvre l'inscription, le 2ème scrolle vers les apps
+        const btns = heroCta.children;
+        if (btns[0]) btns[0].onclick = () => window.openAuth('create');
+        if (btns[1]) btns[1].onclick = () => window.sTo('apps-sec');
+    } else {
+        heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">Créer un compte gratuit</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="window.sTo('apps-sec')">Explorer les apps</button>`;
+    }
   }
 }
 
