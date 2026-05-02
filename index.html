@@ -1921,6 +1921,7 @@ localStorage.removeItem('lm_key');
 localStorage.removeItem('lm_uid');
 localStorage.removeItem('lm_name');
 localStorage.removeItem('lm_photo');
+localStorage.removeItem('lm_login_mode');
 await signInWithPopup(auth, gProv);
 } catch(e) {
 btn.disabled = false;
@@ -1991,6 +1992,7 @@ localStorage.setItem('lm_key', foundSec.apiKey || foundSec.key || val);
 localStorage.setItem('lm_uid', foundUid);
 localStorage.setItem('lm_name', pData.displayName);
 if(pData.photoURL) localStorage.setItem('lm_photo', pData.photoURL);
+localStorage.setItem('lm_login_mode', 'key');
 
 window._user = { uid: foundUid, isKeyAuth: true };
 window._ud = {
@@ -2028,6 +2030,7 @@ localStorage.removeItem('lm_key');
 localStorage.removeItem('lm_uid');
 localStorage.removeItem('lm_name');
 localStorage.removeItem('lm_photo');
+localStorage.removeItem('lm_login_mode');
 try { await window._fb.signOut(window._auth); } catch(e){}
 
 // Laisser l'animation tourner 1.5 seconde avant de recharger la page
@@ -2256,6 +2259,7 @@ return null;
 onAuthStateChanged(auth, async (u) => {
 const savedKey = localStorage.getItem('lm_key');
 const savedUid = localStorage.getItem('lm_uid');
+const loginMode = localStorage.getItem('lm_login_mode');
 
 if (u) {
 if (!u.isAnonymous) {
@@ -2308,6 +2312,7 @@ localStorage.setItem('lm_uid', u.uid);
 // Mise en cache
 localStorage.setItem('lm_name', window._ud.displayName);
 if (window._ud.photoURL) localStorage.setItem('lm_photo', window._ud.photoURL);
+localStorage.setItem('lm_login_mode', 'google');
 
 await window.loadAppStatus();
 closeAuth();
@@ -2315,11 +2320,12 @@ showDash(u);
 toast_('Bienvenue ' + (window._ud.displayName?.split(' ')[0] || '') + ' !', 'ok');
 } catch(e) {
 window._ud = window._ud || { displayName: u.displayName || 'Utilisateur' };
+localStorage.setItem('lm_login_mode', 'google');
 await window.loadAppStatus();
 closeAuth();
 showDash(u);
 }
-} else if (savedKey && savedUid) {
+} else if (savedKey && savedUid && loginMode === 'key') {
 // 🟡 UTILISATEUR CONNECTÉ VIA CLÉ (Anonyme en arrière plan)
 try {
 window._user = { uid: savedUid, isKeyAuth: true };
