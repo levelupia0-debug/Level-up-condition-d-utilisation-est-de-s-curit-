@@ -1474,11 +1474,15 @@ AUTH OVERLAY
 <div id="authDevSection" class="hidden">
 <div style="display:flex;align-items:center;gap:10px;margin:24px 0;">
 <div style="flex:1;height:1px;background:var(--bdr)"></div>
-<span style="font-size:0.75rem;color:var(--dim);font-weight:600">OU VIA CLÉ (DEV)</span>
+<span style="font-size:0.8rem;color:var(--dim);font-weight:700">OU</span>
 <div style="flex:1;height:1px;background:var(--bdr)"></div>
 </div>
 
-<div style="display:flex;gap:8px;">
+<button id="showKeyInputBtn" class="btn btn-g" style="width:100%; justify-content:center; padding:12px 20px; border-radius:var(--r12); font-size:0.92rem; font-weight:500;" onclick="document.getElementById('keyInputWrap').classList.remove('hidden'); this.classList.add('hidden');">
+<i class="fa-solid fa-key" style="color:var(--purple)"></i> Se connecter avec une clé LVL
+</button>
+
+<div id="keyInputWrap" class="hidden" style="display:flex;gap:8px; animation: tFade 0.3s ease;">
 <input type="text" id="devKeyInput" placeholder="LVL-XXXXX-XXXXX" style="flex:1;background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 14px;color:#fff;font-size:0.85rem;font-family:monospace;outline:none;" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 30);">
 <button class="btn btn-p" onclick="window.loginWithKey()" style="padding:10px 16px;border-radius:var(--r8)"><i class="fa-solid fa-arrow-right"></i></button>
 </div>
@@ -1492,12 +1496,18 @@ AUTH OVERLAY
 PIN MODAL (NATIF)
 ═══════════════════════════════════════ -->
 <div class="overlay hidden" id="pinOverlay">
-<div class="pin-card" style="max-width: 320px;">
+<div class="pin-card" style="max-width: 320px; position: relative;">
+<button class="auth-close" onclick="closePin()"><i class="fa-solid fa-xmark"></i></button>
 <div class="pin-ico"><i class="fa-solid fa-lock"></i></div>
 <h3 id="pinTitle" style="margin-bottom:5px;font-size:1.1rem">Code PIN requis</h3>
 <p id="pinSub" style="font-size:.82rem; margin-bottom: 15px;">Entrez votre PIN pour afficher votre clé</p>
 
+<!-- CORRECTION : Cet élément était manquant et faisait planter le Javascript -->
+<div id="pinErrorTxt" class="hidden" style="color:var(--red); font-size:0.85rem; margin-bottom:12px; font-weight:600;"></div>
+
 <input type="password" id="nativePinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" style="width:100%; text-align:center; font-size:1.8rem; letter-spacing:12px; padding:16px 12px; border-radius:14px; border:1px solid var(--bdr-hi); background:rgba(255,255,255,0.03); color:white; outline:none; margin-bottom:12px; transition:border-color 0.2s;" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length===4) window.handlePinNative();" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--bdr-hi)'">
+
+<button class="btn btn-g" style="width:100%; padding: 12px; border-radius: 12px; font-size: 0.9rem;" onclick="closePin()">Annuler</button>
 </div>
 </div>
 
@@ -1535,8 +1545,8 @@ CONFIRM REGENERATE
 LOGOUT LOADING ANIMATION
 ═══════════════════════════════════════ -->
 <div class="logout-loader hidden" id="logoutLoadingOv">
-<svg class="spinner-logo" viewBox="0 0 576 512" fill="url(#pg)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-<div class="logout-text">Déconnexion...</div>
+<i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--purple); margin-bottom: 16px;"></i>
+<div style="font-family: var(--sans); font-size: .95rem; font-weight: 500; color: var(--muted); letter-spacing: 0.05em;">Déconnexion en cours...</div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -1971,18 +1981,11 @@ foundUid = data.uid || docSnap.ref.parent.parent.id;
 if(foundSec && foundUid) {
 console.log("✅ Clé validée.");
 
-let pData = { displayName: 'Utilisateur', photoURL: '', email: '' };
-try {
-const profRef = doc(db, 'artifacts', 'level-ia-premium', 'users', foundUid, 'profile', 'data');
-const profSnap = await getDoc(profRef);
-if (profSnap.exists()) {
-pData = profSnap.data();
-} else {
-pData.displayName = foundSec.displayName || foundSec.name || 'Utilisateur';
-pData.photoURL = foundSec.photoURL || foundSec.photo || foundSec.avatar || '';
-pData.email = foundSec.email || foundSec.owner || '';
-}
-} catch (e) {}
+let pData = {
+displayName: foundSec.displayName || foundSec.name || 'Utilisateur',
+photoURL: foundSec.photoURL || foundSec.photo || foundSec.avatar || '',
+email: foundSec.email || foundSec.owner || ''
+};
 
 localStorage.setItem('lm_key', foundSec.apiKey || foundSec.key || val);
 localStorage.setItem('lm_uid', foundUid);
@@ -2062,11 +2065,11 @@ let targetUrl = '';
 const s = window._appsStatus || {};
 
 if (appId === 'movie') {
-targetUrl = s.levelmovie_url || 'https://levelmovie-mu.vercel.app/';
+targetUrl = 'movie.html';
 } else if (appId === 'music') {
-targetUrl = s.levelmusic_url || 'https://level-music-ten.vercel.app/';
+targetUrl = 'music.html';
 } else if (appId === 'ia') {
-targetUrl = s.levelia_url || 'https://levelupia.vercel.app/';
+targetUrl = 'ia.html';
 }
 
 if (targetUrl) {
@@ -2326,26 +2329,6 @@ displayName: localStorage.getItem('lm_name') || 'Utilisateur',
 photoURL: localStorage.getItem('lm_photo') || '',
 uid: savedUid
 };
-
-const profRef = doc(db, 'artifacts', 'level-ia-premium', 'users', savedUid, 'profile', 'data');
-const profSnap = await getDoc(profRef);
-
-if (profSnap.exists()) {
-pData = { ...pData, ...profSnap.data() };
-} else {
-try {
-const oldSnap = await getDoc(doc(db, 'ecosystem_users', savedUid));
-if(oldSnap.exists()){
-const oD = oldSnap.data();
-pData.displayName = oD.displayName || oD.name || pData.displayName;
-pData.photoURL = oD.photoURL || oD.photo || oD.avatar || pData.photoURL;
-pData.email = oD.email || oD.owner || pData.email;
-}
-} catch(e){}
-}
-
-localStorage.setItem('lm_name', pData.displayName);
-if(pData.photoURL) localStorage.setItem('lm_photo', pData.photoURL);
 
 window._ud = pData;
 
@@ -2622,7 +2605,15 @@ if (devSec) devSec.classList.add('hidden');
 document.getElementById('authOverlay').classList.remove('hidden');
 };
 
-function closeAuth(){ document.getElementById('authOverlay').classList.add('hidden'); const b=document.getElementById('gSignInBtn'); if(b) b.disabled=false; const t=document.getElementById('gBtnTxt'); if(t) t.textContent='Continuer avec Google'; }
+function closeAuth(){
+document.getElementById('authOverlay').classList.add('hidden');
+const b=document.getElementById('gSignInBtn'); if(b) b.disabled=false;
+const t=document.getElementById('gBtnTxt'); if(t) t.textContent='Continuer avec Google';
+const btnKey = document.getElementById('showKeyInputBtn');
+const wrapKey = document.getElementById('keyInputWrap');
+if(btnKey) btnKey.classList.remove('hidden');
+if(wrapKey) wrapKey.classList.add('hidden');
+}
 
 // TERMS
 function openTerms(){ document.getElementById('termsOverlay').classList.remove('hidden'); }
@@ -2651,6 +2642,7 @@ return k;
 }
 async function genKey(){
 const u = window._user; if(!u) return;
+if (u.isKeyAuth) { toast_('Connexion par clé : Génération bloquée. Utilisez Google.', 'err'); return; }
 const key = mkKey(), now = new Date().toISOString();
 const {doc,setDoc} = window._fb;
 const secRef = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
@@ -2674,7 +2666,10 @@ window._ud.apiKey = key; window._ud.keyCreatedAt = now;
 localStorage.setItem('lm_key', key); localStorage.setItem('lm_uid', u.uid);
 window.refreshUI(); toast_('Clé générée avec succès !','ok');
 }
-function confirmRegen(){ document.getElementById('regenOv').classList.remove('hidden'); }
+function confirmRegen(){
+if(window._user && window._user.isKeyAuth) { toast_('Connexion par clé : Régénération bloquée. Utilisez Google.', 'err'); return; }
+document.getElementById('regenOv').classList.remove('hidden');
+}
 async function regenOk(){
 document.getElementById('regenOv').classList.add('hidden');
 const u = window._user; if(!u) return;
@@ -2797,7 +2792,10 @@ function shakeEl(el){
 el.style.animation='shake .4s ease';
 setTimeout(()=>el.style.animation='',400);
 }
-function pinFlow(){ openPin('setup_new'); }
+function pinFlow(){
+if(window._user && window._user.isKeyAuth) { toast_('Connexion par clé : Modification du PIN bloquée. Utilisez Google.', 'err'); return; }
+openPin('setup_new');
+}
 
 // FAQ
 function faqT(el){ el.classList.toggle('open'); }
