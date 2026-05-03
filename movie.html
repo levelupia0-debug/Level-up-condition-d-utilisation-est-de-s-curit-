@@ -519,8 +519,8 @@ joinPartyAlert: "Host has joined the room.",
 pauseRequested: "PAUSE",
 hostPausedAt: "The host paused at approx.",
 resumeCountdown: "RESUMING IN",
-hostActionPause: "Pause",
-hostActionPlay: "Resume",
+hostActionPause: "Pause Room",
+hostActionPlay: "Resume Playback",
 chatPlaceholder: "Write a message...",
 hostBadge: "HOST",
 modBadge: "MOD",
@@ -664,22 +664,6 @@ const userAgent = navigator.userAgent || navigator.vendor || window.opera;
 const isOpera = /OPR|OPT|OPiOS|Opera|Opera Mini/i.test(userAgent) || (!!window.opera);
 setIsAllowedBrowser(isOpera);
 
-// OnAuthStateChanged pour gérer ceux qui n'ont pas de clé et les invités anonymes
-const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
-    if (u) {
-        const savedKey = localStorage.getItem('levelmovie_saved_key');
-        if (!savedKey) {
-            setUser({ uid: u.uid });
-            let gName = localStorage.getItem('levelmovie_user_name');
-            if (!gName) {
-                gName = "Guest_" + Math.floor(Math.random() * 1000);
-                localStorage.setItem('levelmovie_user_name', gName);
-            }
-            setUserName(gName);
-        }
-    }
-});
-
 signInAnonymously(auth).catch(console.error);
 
 const savedKey = localStorage.getItem('levelmovie_saved_key');
@@ -709,7 +693,6 @@ window.addEventListener('scroll', handleScroll);
 return () => {
 clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
 window.removeEventListener('scroll', handleScroll);
-unsubscribeAuth();
 }
 }, []);
 
@@ -757,18 +740,6 @@ const rejoinActiveParty = async (pData) => {
     const res = await fetch(`${BASE_URL}/${pData.mediaType}/${pData.movieId}?api_key=${API_KEY}&language=${langCode}`);
     const movieData = await res.json();
     openModal(movieData, 'play');
-};
-
-const triggerCreateParty = (movie) => {
-    const seen = localStorage.getItem('lm_party_tutorial_seen');
-    if (!seen) {
-        setPendingPartyAction({ type: 'create', movie });
-        setShowPartyTutorial(true);
-    } else {
-        setCreatePartyMovie(movie);
-        setCustomRoomName(`Salon de ${defaultUserName}`);
-        setShowCreatePartyPrompt(true);
-    }
 };
 
 const triggerJoinParty = (code) => {
@@ -857,6 +828,7 @@ if (selectedMovie) document.body.classList.add('party-mode');
 const unsubscribe = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), (docSnap) => {
 if (docSnap.exists() && docSnap.data().status !== 'ended') {
     const data = docSnap.data();
+    // Banned verification
     if (data.members && !data.members.some(m => m.uid === user?.uid)) {
         showToast(t.youAreBanned, "error");
         setPartyId(null);
@@ -1197,7 +1169,6 @@ await setDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "history", "recent"
 } catch(e) {}
 };
 
-// ACTIONS WATCH PARTY
 const handleCreateParty = async (movie, roomName) => {
 if (!user) return;
 const newPartyId = 'LVL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -1225,6 +1196,18 @@ showToast(t.partyCreated, 'success');
 } catch(e) {
 console.error(e);
 }
+};
+
+const triggerCreateParty = (movie) => {
+    const seen = localStorage.getItem('lm_party_tutorial_seen');
+    if (!seen) {
+        setPendingPartyAction({ type: 'create', movie });
+        setShowPartyTutorial(true);
+    } else {
+        setCreatePartyMovie(movie);
+        setCustomRoomName(`Salon de ${defaultUserName}`);
+        setShowCreatePartyPrompt(true);
+    }
 };
 
 const handleSendPartyMessage = async (text, replyTo = null) => {
@@ -2020,7 +2003,7 @@ defaultUserName={defaultUserName}
 watchlist={watchlist}
 toggleWatchlist={toggleWatchlist}
 showToast={showToast}
-handleCreateParty={triggerCreateParty}
+handleCreateParty={handleCreateParty}
 partyId={partyId}
 partyData={partyData}
 handleSendPartyMessage={handleSendPartyMessage}
@@ -2391,6 +2374,7 @@ const handleInviteUser = async (friend) => {
             to_email: friend.email,
             to_name: friend.name,
             from_name: defaultUserName,
+            message: `Rejoins ma Watch Party sur LevelMovie ! Le code d'accès de la room est : ${partyId}`,
             code: partyId
         });
         
@@ -2806,7 +2790,7 @@ if (partyId && partyData) {
                 {/* Liste Membres */}
                 <div className="px-3 py-2 border-b border-white/5 flex gap-2 overflow-x-auto no-scrollbar shrink-0 items-center bg-black/20">
                     {partyData.members?.map(m => (
-                        <div key={m.uid} onClick={() => openMemberMenu(m)} className={`relative group flex flex-col items-center shrink-0 ${(user?.uid === partyData.hostUid || user?.uid === partyData.modUid) && m.uid !== user?.uid ? 'cursor-pointer hover:opacity-80' : ''}`}>
+                        <div key={m.uid} onClick={(e) => { e.stopPropagation(); openMemberMenu(m); }} className={`relative group flex flex-col items-center shrink-0 ${(user?.uid === partyData.hostUid || user?.uid === partyData.modUid) && m.uid !== user?.uid ? 'cursor-pointer hover:opacity-80' : ''}`}>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-[10px] border-[2px] shadow-sm overflow-hidden ${m.uid === partyData.hostUid ? 'border-[#a855f7]' : (m.uid === partyData.modUid ? 'border-blue-500' : 'border-white/20')}`}>
                                 {m.photo ? <img src={m.photo} className="w-full h-full object-cover" alt="" /> : m.name?.charAt(0).toUpperCase()}
                             </div>
@@ -3055,7 +3039,7 @@ return (
         </button>
 
         {/* Watch Party */}
-        <button onClick={() => triggerCreateParty(movie)} className={`flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-white/5 border border-[#a855f7]/50 text-white rounded-xl text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-[#a855f7]/20 hover:border-[#a855f7] transition-all active:scale-95 outline-none shadow-md`}>
+        <button onClick={() => handleCreateParty(movie)} className={`flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-white/5 border border-[#a855f7]/50 text-white rounded-xl text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-[#a855f7]/20 hover:border-[#a855f7] transition-all active:scale-95 outline-none shadow-md`}>
             <WatchPartySVG className="w-5 h-5 text-[#a855f7]" /> <span>{t.createPartyBtn}</span>
         </button>
     </div>
