@@ -51,7 +51,7 @@ Star, Key, LogOut, Film, Globe, Shield, Network,
 AlertTriangle, CheckCircle, Server, Users, Tags, Building,
 MessageSquare, Check, Plus, Share2, Library, Bookmark, HardDrive, Filter,
 Home, Tv, Clapperboard, History, AlertOctagon, Download, Copy, Lock,
-ArrowDown, ArrowUp, Eye, EyeOff, Send, Mail, Search as SearchIcon, Reply, UserPlus, Power, Pause, ShieldCheck, VolumeX, UserMinus, ShieldAlert
+ArrowDown, ArrowUp, Eye, EyeOff, Send, Mail, Search as SearchIcon, Reply, UserPlus, Power, Pause, ShieldCheck, VolumeX, UserMinus, ShieldAlert, Minimize2
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
@@ -352,6 +352,11 @@ modLimitReached: "Limite de 4 modérateurs atteinte.",
 muteUser: "Mettre en sourdine",
 banUser: "Bannir de la room",
 youAreBanned: "Vous avez été banni du salon.",
+bannedModalTitle: "VOUS ÊTES BANNI",
+bannedModalDesc: "Vous avez été définitivement exclu de ce salon par la modération.",
+bannedOkBtn: "Quitter la salle",
+sysBanned: "a banni",
+minimizeRoom: "Réduire",
 leaveNoModWarning: "Vous êtes l'hôte ! Choisissez un modérateur avant de quitter, sinon le salon n'aura plus de chef.",
 closeAnyway: "Fermer quand même",
 assignModBtn: "Nommer un Mod",
@@ -583,6 +588,11 @@ modLimitReached: "Limit of 4 moderators reached.",
 muteUser: "Mute user",
 banUser: "Ban from room",
 youAreBanned: "You have been banned from this room.",
+bannedModalTitle: "YOU ARE BANNED",
+bannedModalDesc: "You have been permanently excluded from this room by moderation.",
+bannedOkBtn: "Leave Room",
+sysBanned: "banned",
+minimizeRoom: "Minimize",
 leaveNoModWarning: "You are the host! Assign a moderator before leaving, or the room will have no leader.",
 closeAnyway: "Close anyway",
 assignModBtn: "Assign a Mod",
@@ -703,6 +713,7 @@ const [showKey, setShowKey] = useState(false);
 const [partyId, setPartyId] = useState(null);
 const [partyData, setPartyData] = useState(null);
 const [roomEndedInfo, setRoomEndedInfo] = useState(null);
+const [bannedInfo, setBannedInfo] = useState(null);
 
 const [showPartyTutorial, setShowPartyTutorial] = useState(false);
 const [pendingPartyAction, setPendingPartyAction] = useState(null);
@@ -1005,11 +1016,22 @@ const unsubscribe = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'p
 if (docSnap.exists() && docSnap.data().status !== 'ended') {
     const data = docSnap.data();
     // Banned verification
-    if ((data.members && !data.members.some(m => m.uid === user?.uid)) || (data.banned && data.banned.includes(user?.uid))) {
-        showToast(t.youAreBanned, "error");
+    if (data.banned && data.banned.includes(user?.uid)) {
+        setBannedInfo({ roomName: data.roomName || data.title });
         setPartyId(null);
         setPartyData(null);
         setSelectedMovie(null);
+        syncPreferencesToDb({ activePartyId: null });
+        localStorage.removeItem('active_party_id');
+        document.body.classList.remove('party-mode');
+        setCurrentCategory('home');
+        return;
+    }
+    if (data.members && !data.members.some(m => m.uid === user?.uid)) {
+        setPartyId(null);
+        setPartyData(null);
+        setSelectedMovie(null);
+        syncPreferencesToDb({ activePartyId: null });
         localStorage.removeItem('active_party_id');
         document.body.classList.remove('party-mode');
         setCurrentCategory('home');
@@ -1804,6 +1826,21 @@ return (
                 <p className="text-[#a855f7] text-[10px] uppercase tracking-widest">{roomEndedInfo.title}</p>
             </div>
             <button onClick={() => setRoomEndedInfo(null)} className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors outline-none">{t.roomEndedOkBtn}</button>
+        </div>
+    </div>
+)}
+
+{/* MODAL BANNI */}
+{bannedInfo && (
+    <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="bg-[#0a0a0f] border border-red-500/30 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in duration-300">
+            <UserMinus className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]" />
+            <h3 className="text-xl font-black text-white mb-2 uppercase tracking-widest">{t.bannedModalTitle}</h3>
+            <p className="text-white/60 text-xs mb-5">{t.bannedModalDesc}</p>
+            <div className="bg-white/5 p-4 rounded-xl mb-6 shadow-inner border border-white/5">
+                <p className="text-white font-bold text-sm mb-1">{bannedInfo.roomName}</p>
+            </div>
+            <button onClick={() => setBannedInfo(null)} className="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors outline-none shadow-[0_0_15px_rgba(239,68,68,0.4)] active:scale-95">{t.bannedOkBtn}</button>
         </div>
     </div>
 )}
@@ -2676,14 +2713,15 @@ const handleDemoteMod = async (memberUid) => {
     } catch(e) {}
 }
 
-const handleBanUser = async (memberUid) => {
+const handleBanUser = async (member) => {
     if (user?.uid !== partyData.hostUid && !partyData.mods?.includes(user?.uid)) return;
     try {
-        const memberToRemove = partyData.members.find(m => m.uid === memberUid);
+        const memberToRemove = partyData.members.find(m => m.uid === member.uid);
         if (memberToRemove) {
             await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), {
                 members: arrayRemove(memberToRemove),
-                banned: arrayUnion(memberUid)
+                banned: arrayUnion(member.uid),
+                messages: arrayUnion({ isSystem: true, action: 'BAN', name: defaultUserName, targetName: member.name, photo: userPhoto, uid: user.uid, time: Date.now() })
             });
         }
         setMemberMenu(null);
@@ -2913,7 +2951,7 @@ return (
                                 )
                             )}
                             
-                            <button onClick={() => handleBanUser(memberMenu.uid)} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-xl text-[10px] font-bold uppercase transition-colors outline-none">{t.banUser}</button>
+                            <button onClick={() => handleBanUser(memberMenu)} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-xl text-[10px] font-bold uppercase transition-colors outline-none">{t.banUser}</button>
                             <button onClick={() => setMemberMenu(null)} className="w-full py-3 mt-2 text-white/50 hover:text-white text-[10px] font-bold uppercase transition-colors outline-none">{t.menuCancel}</button>
                         </div>
                     </div>
@@ -3121,6 +3159,10 @@ return (
                             <button onClick={() => setSelectedServer('superembed')} className={`px-2.5 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors outline-none ${selectedServer === 'superembed' ? 'bg-[#a855f7] text-white shadow-md' : 'bg-transparent text-white/50 hover:bg-white/10 hover:text-white'}`}>MULTI</button>
                         </div>
                         
+                        <button onClick={() => { document.body.classList.remove('party-mode'); onClose(); }} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap">
+                            <Minimize2 className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.minimizeRoom}</span>
+                        </button>
+                        
                         {/* Bouton Quitter (Power Rouge Pro) en bas */}
                         <button onClick={() => setShowLeavePartyConfirm(true)} className="bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 text-red-400 hover:text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap">
                             <Power className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.closeLive}</span>
@@ -3180,15 +3222,16 @@ return (
                             else if (msg.action === 'PAUSE') sysText = `${t.sysPaused}`;
                             else if (msg.action === 'PLAY') sysText = `${t.sysPlayed}`;
                             else if (msg.action === 'ADS') sysText = `${t.sysAds}`;
+                            else if (msg.action === 'BAN') sysText = `${t.sysBanned} ${msg.targetName} de la room.`;
 
                             return (
-                                <div key={i} className="flex items-start w-full group mb-2 p-1 -mx-1 rounded-lg">
-                                    <div className="w-6 h-6 rounded-full bg-[#a855f7]/20 border border-[#a855f7]/30 flex items-center justify-center mr-2.5 shrink-0 mt-0.5 shadow-sm">
-                                        <Bell className="w-3 h-3 text-[#a855f7]" />
+                                <div key={i} className={`flex items-start w-full group mb-2 p-1 -mx-1 rounded-lg ${msg.action === 'BAN' ? 'bg-red-500/10 border border-red-500/20' : ''}`}>
+                                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center mr-2.5 shrink-0 mt-0.5 shadow-sm ${msg.action === 'BAN' ? 'bg-red-500/20 border-red-500/30' : 'bg-[#a855f7]/20 border-[#a855f7]/30'}`}>
+                                        {msg.action === 'BAN' ? <UserMinus className="w-3 h-3 text-red-500" /> : <Bell className="w-3 h-3 text-[#a855f7]" />}
                                     </div>
                                     <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5 text-white/60 italic">
-                                        <span className="font-bold mr-1 text-[#a855f7]">Alerte</span>
-                                        <span className="text-white/60">{msg.name} {sysText}</span>
+                                        <span className={`font-bold mr-1 ${msg.action === 'BAN' ? 'text-red-500' : 'text-[#a855f7]'}`}>Alerte</span>
+                                        <span className={msg.action === 'BAN' ? 'text-red-200/80' : 'text-white/60'}>{msg.name} {sysText}</span>
                                     </div>
                                 </div>
                             );
