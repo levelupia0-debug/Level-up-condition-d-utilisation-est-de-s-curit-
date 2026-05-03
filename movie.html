@@ -54,7 +54,7 @@ Home, Tv, Clapperboard, History, AlertOctagon, Download, Copy, Lock,
 ArrowDown, ArrowUp, Eye, EyeOff, Send, Mail, Search as SearchIcon, Reply, UserPlus, Power, Pause, ShieldCheck, VolumeX, UserMinus, ShieldAlert
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collectionGroup, getDocs, doc, setDoc, getDoc, deleteDoc, collection, onSnapshot, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
 // --- LOGOS ---
@@ -303,7 +303,7 @@ pinCreated: "Filtre activé avec succès.",
 filterDisabled: "Filtre désactivé.",
 createPartyBtn: "Regarder en groupe",
 partyCreated: "Salon privé créé !",
-sendInviteMail: "Inviter",
+sendInviteMail: "Invitation",
 joinPartyAlert: "L'hôte a rejoint le salon.",
 pauseRequested: "PAUSE",
 hostPausedAt: "L'hôte s'est arrêté à environ",
@@ -664,6 +664,22 @@ const userAgent = navigator.userAgent || navigator.vendor || window.opera;
 const isOpera = /OPR|OPT|OPiOS|Opera|Opera Mini/i.test(userAgent) || (!!window.opera);
 setIsAllowedBrowser(isOpera);
 
+// OnAuthStateChanged pour gérer ceux qui n'ont pas de clé et les invités anonymes
+const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
+    if (u) {
+        const savedKey = localStorage.getItem('levelmovie_saved_key');
+        if (!savedKey) {
+            setUser({ uid: u.uid });
+            let gName = localStorage.getItem('levelmovie_user_name');
+            if (!gName) {
+                gName = "Guest_" + Math.floor(Math.random() * 1000);
+                localStorage.setItem('levelmovie_user_name', gName);
+            }
+            setUserName(gName);
+        }
+    }
+});
+
 signInAnonymously(auth).catch(console.error);
 
 const savedKey = localStorage.getItem('levelmovie_saved_key');
@@ -693,6 +709,7 @@ window.addEventListener('scroll', handleScroll);
 return () => {
 clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
 window.removeEventListener('scroll', handleScroll);
+unsubscribeAuth();
 }
 }, []);
 
@@ -971,6 +988,7 @@ setPinModal(prev => ({ ...prev, error: t.incorrectPin }));
 };
 
 const handleClearCache = async () => {
+    // Purge totale locale sans recharger
     setRecentlyViewed([]);
     setSearchQuery('');
     setSearchResults([]);
@@ -978,6 +996,7 @@ const handleClearCache = async () => {
     setPartySearchResults([]);
     setRecentSearches([]);
     localStorage.removeItem('lm_recent_searches');
+    localStorage.removeItem('levelmovie_watchlist_' + user?.uid);
     
     if (user) {
         try {
@@ -1241,10 +1260,18 @@ currentOffset: currentOffset
 };
 
 const handleLeaveParty = async () => {
-if (!partyId) return;
+if (!partyId || !partyData) return;
 try {
-    if (user.uid === partyData?.hostUid) {
-        await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), { status: 'ended' });
+    if (user.uid === partyData.hostUid) {
+        if (partyData.modUid) {
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), {
+                hostUid: partyData.modUid,
+                modUid: null,
+                messages: arrayUnion({ isSystem: true, action: 'LEAVE', name: defaultUserName, photo: userPhoto, uid: user.uid, time: Date.now() })
+            });
+        } else {
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), { status: 'ended' });
+        }
     } else {
         const memberToRemove = partyData.members.find(m => m.uid === user.uid);
         if (memberToRemove) {
@@ -1253,13 +1280,13 @@ try {
                 messages: arrayUnion({ isSystem: true, action: 'LEAVE', name: defaultUserName, photo: userPhoto, uid: user.uid, time: Date.now() })
             });
         }
-        setPartyId(null);
-        setPartyData(null);
-        setSelectedMovie(null);
-        localStorage.removeItem('active_party_id');
-        document.body.classList.remove('party-mode');
-        setCurrentCategory('home');
     }
+    setPartyId(null);
+    setPartyData(null);
+    setSelectedMovie(null);
+    localStorage.removeItem('active_party_id');
+    document.body.classList.remove('party-mode');
+    setCurrentCategory('home');
 } catch(e) {}
 };
 
@@ -1548,7 +1575,7 @@ return (
                     <p className="text-white/80 text-xs md:text-sm leading-relaxed">{t.tutorialRule3}</p>
                 </div>
                 <div className="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
-                    <span className="text-xl">💬</span>
+                    <span className="text-xl">⏳</span>
                     <p className="text-white/80 text-xs md:text-sm leading-relaxed">{t.tutorialRule4}</p>
                 </div>
             </div>
@@ -2732,7 +2759,7 @@ if (partyId && partyData) {
                 {/* Header Chat / Code Caché Pro */}
                 <div className="p-3 bg-black/60 border-b border-white/5 backdrop-blur-md relative z-20 shrink-0">
                     <div className="flex gap-2 w-full">
-                        <button onClick={() => { copyToClipboardFallback(partyId); showToast(t.linkCopied, 'success'); }} className="flex-[0.8] bg-white/5 hover:bg-white/10 text-white text-[9px] font-bold uppercase tracking-widest py-2 rounded-xl border border-white/10 transition-colors flex items-center justify-center gap-1.5 outline-none shadow-sm">
+                        <button onClick={() => { copyToClipboardFallback(partyId); showToast('Code copié !', 'success'); }} className="flex-[0.8] bg-white/5 hover:bg-white/10 text-white text-[9px] font-bold uppercase tracking-widest py-2 rounded-xl border border-white/10 transition-colors flex items-center justify-center gap-1.5 outline-none shadow-sm">
                             <Key className="w-3 h-3" /> Code
                         </button>
                         <button onClick={() => setShowUserSearch(!showUserSearch)} className="flex-[1.5] bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[9px] font-black uppercase tracking-widest py-2 rounded-xl transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-1.5 outline-none shadow-[0_0_15px_rgba(168,85,247,0.3)]">
@@ -2815,11 +2842,11 @@ if (partyId && partyData) {
                         }
 
                         return (
-                        <div key={i} className="flex items-start w-full group mb-2 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-lg transition-colors chat-msg" onClick={() => { if(msg.uid !== user.uid) { openMemberMenu(msg); setReplyingTo({ name: msg.name, text: msg.text }); } }}>
-                            {/* Avatar */}
-                            <img src={msg.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.name)}&background=151520&color=a855f7`} className="w-6 h-6 rounded-full object-cover mr-2.5 shrink-0 border border-white/10 shadow-sm mt-0.5" alt=""/>
+                        <div key={i} className="flex items-start w-full group mb-2 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-lg transition-colors chat-msg">
+                            {/* Avatar (Ouvre le menu modération) */}
+                            <img src={msg.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.name)}&background=151520&color=a855f7`} onClick={(e) => { e.stopPropagation(); if(msg.uid !== user.uid) openMemberMenu(msg); }} className="w-6 h-6 rounded-full object-cover mr-2.5 shrink-0 border border-white/10 shadow-sm mt-0.5 hover:opacity-80" alt=""/>
                             
-                            <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5">
+                            <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5" onClick={() => { if(msg.uid !== user.uid) setReplyingTo({ name: msg.name, text: msg.text }) }}>
                                 {/* Reply Indicator */}
                                 {msg.replyTo && (
                                     <div className="text-[9px] text-white/40 mb-0.5 flex items-center gap-1.5 border-l-2 border-[#a855f7] pl-1.5">
@@ -2855,12 +2882,6 @@ if (partyId && partyData) {
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { handleSendPartyMessage(chatInput, replyingTo); setChatInput(''); setReplyingTo(null); } }}
-                            onFocus={(e) => {
-                                setTimeout(() => {
-                                    e.target.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                                    chatEndRef.current?.scrollIntoView();
-                                }, 300);
-                            }}
                             placeholder={t.chatPlaceholder}
                             className="w-full bg-transparent pl-4 pr-2 py-2.5 text-[12px] md:text-[13px] text-white outline-none"
                         />
