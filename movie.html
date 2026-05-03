@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>LevelMovie - L'Écosystème Premium</title>
 
+<!-- Favicon SVG (Lueur Bleue) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='512' height='512' viewBox='0 0 512 512' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='512' height='512' rx='100' fill='%23030303'/%3E%3Cdefs%3E%3Cfilter id='blueGlow' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeGaussianBlur stdDeviation='18' result='blur' /%3E%3CfeComposite in='SourceGraphic' in2='blur' operator='over' /%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23blueGlow)'%3E%3Cpath d='M185 170V315C185 328.807 196.193 340 210 340H355' stroke='%233b82f6' stroke-width='32' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M235 210L325 255L235 300V210Z' fill='%233b82f6' stroke='%233b82f6' stroke-width='8' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E">
+
 <!-- Tailwind CSS pour le style -->
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -38,7 +41,8 @@ Play, Info, Search, Bell, X, ChevronLeft, ChevronRight,
 Star, Key, LogOut, Film, Globe, Shield, Network,
 AlertTriangle, CheckCircle, Server, Users, Tags, Building,
 MessageSquare, Check, Plus, Share2, Library, Bookmark, HardDrive, Filter,
-Home, Tv, Clapperboard, History, AlertOctagon, Download, Copy
+Home, Tv, Clapperboard, History, AlertOctagon, Download, Copy, Lock,
+ArrowDown, ArrowUp, Eye, EyeOff
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously } from 'firebase/auth';
@@ -141,7 +145,7 @@ const getBrowserData = () => {
     if (/Brave/i.test(ua) || (navigator.brave && navigator.brave.isBrave)) return { name: 'Brave', id: 'brave' };
     if (/Edg/i.test(ua)) return { name: 'Edge', id: 'edge' };
     if (/Firefox|FxiOS/i.test(ua)) return { name: 'Firefox', id: 'firefox' };
-    if (/GSA/i.test(ua)) return { name: 'Google', id: 'google' }; // Détection de l'App Google (iPhone/Android)
+    if (/GSA/i.test(ua)) return { name: 'Google', id: 'google' };
     if (/Chrome|CriOS/i.test(ua)) return { name: 'Chrome', id: 'chrome' };
     if (/Safari/i.test(ua)) return { name: 'Safari', id: 'safari' };
     return { name: null, id: null };
@@ -236,7 +240,7 @@ noDesc: "Aucune description disponible.",
 addedList: "Ajouté aux favoris !",
 removedList: "Retiré de la liste",
 publicDomain: "Classiques du Cinéma",
-searchPlaceholder: "Rechercher un film, une série...",
+searchPlaceholder: "Rechercher...",
 defaultUser: "Utilisateur",
 premiumActive: "Compte Premium Actif",
 ecosystem: "Écosystème LevelIA",
@@ -251,6 +255,7 @@ systemVideo: "Système & Vidéo",
 videoQuality: "Qualité Vidéo",
 auto4k: "Auto (4K HDR)",
 parentalFilter: "Filtre Parental",
+parentalFilterDesc: "Lorsqu'il est activé, ce filtre masque strictement les contenus explicites (18+) de l'application et des résultats de recherche. Le déverrouillage nécessitera votre code PIN à 4 chiffres.",
 systemCache: "Cache Système",
 clearCache: "Vider",
 ourPartners: "Nos Partenaires :",
@@ -322,7 +327,14 @@ continueWithDefault: "Continuer avec mon navigateur",
 skipWarningPart1: "En continuant avec ",
 skipWarningPart2: ", vous pourriez rencontrer des publicités externes. Vous gardez la possibilité d'installer Opera plus tard pour une expérience optimale.",
 defaultBrowserName: "votre navigateur",
-orDivider: "OU"
+orDivider: "OU",
+createPinTitle: "Créer un Code PIN",
+enterPinTitle: "Code PIN Requis",
+createPinDesc: "Créez un code de sécurité à 4 chiffres pour protéger les paramètres de contrôle parental.",
+enterPinDesc: "Veuillez saisir votre code PIN à 4 chiffres pour déverrouiller et désactiver le filtre parental.",
+incorrectPin: "Code PIN incorrect.",
+pinCreated: "Filtre parental activé avec succès.",
+filterDisabled: "Filtre parental désactivé."
 },
 en: {
 appTitle: "LevelMovie",
@@ -377,7 +389,7 @@ noDesc: "No description available.",
 addedList: "Added to favorites!",
 removedList: "Removed from list",
 publicDomain: "Classic Cinema",
-searchPlaceholder: "Search global database...",
+searchPlaceholder: "Search...",
 defaultUser: "User",
 premiumActive: "Premium Account Active",
 ecosystem: "LevelIA Ecosystem",
@@ -392,6 +404,7 @@ systemVideo: "System & Video",
 videoQuality: "Video Quality",
 auto4k: "Auto (4K HDR)",
 parentalFilter: "Parental Filter",
+parentalFilterDesc: "When enabled, strictly hides explicit (18+) and adult content from the app and search results. Unlocking requires your 4-digit PIN.",
 systemCache: "System Cache",
 clearCache: "Clear",
 ourPartners: "Our Partners:",
@@ -463,7 +476,14 @@ continueWithDefault: "Continue with current browser",
 skipWarningPart1: "By continuing with ",
 skipWarningPart2: ", you may encounter external ads. You can always install Opera later for an optimal experience.",
 defaultBrowserName: "your browser",
-orDivider: "OR"
+orDivider: "OR",
+createPinTitle: "Create PIN Code",
+enterPinTitle: "PIN Code Required",
+createPinDesc: "Create a 4-digit security code to protect the parental control settings.",
+enterPinDesc: "Please enter your 4-digit PIN code to unlock and disable the parental filter.",
+incorrectPin: "Incorrect PIN code.",
+pinCreated: "Parental filter activated successfully.",
+filterDisabled: "Parental filter disabled."
 }
 };
 
@@ -492,7 +512,11 @@ overflow-x: hidden;
 padding-bottom: env(safe-area-inset-bottom);
 padding-top: env(safe-area-inset-top);
 }
-::-webkit-scrollbar { display: none; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.4); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.8); }
+
 .bg-main { background: radial-gradient(circle at 50% 0%, #15092a 0%, #060608 80%); min-height: 100vh; }
 .holo-card { background: linear-gradient(135deg, rgba(30,20,45,0.6) 0%, rgba(10,10,15,0.8) 100%); border: 1px solid rgba(168,85,247,0.2); box-shadow: inset 0 0 30px rgba(168,85,247,0.05), 0 30px 60px rgba(0,0,0,0.8); backdrop-filter: blur(30px); }
 .markdown-pro { font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.75); text-align: justify; }
@@ -540,6 +564,15 @@ const [watchlist, setWatchlist] = useState([]);
 const [watchlistData, setWatchlistData] = useState([]);
 
 const [recentlyViewed, setRecentlyViewed] = useState([]);
+
+// NOUVEAU: Etats pour le Filtre Parental
+const [parentalFilter, setParentalFilter] = useState(false);
+const [parentalPin, setParentalPin] = useState(null);
+const [pinModal, setPinModal] = useState({ show: false, mode: 'create', tempPin: '', error: '' });
+
+const [isNearBottom, setIsNearBottom] = useState(false);
+const [scrollProgress, setScrollProgress] = useState(0);
+const [showKey, setShowKey] = useState(false);
 
 const t = i18n[lang] || i18n['fr'];
 const defaultUserName = userName || t.defaultUser;
@@ -610,6 +643,8 @@ if (prefSnap.exists()) {
 const pref = prefSnap.data();
 if (pref.lang) { setLang(pref.lang); localStorage.setItem('levelmovie_lang', pref.lang); }
 if (pref.contentLang) { setContentLang(pref.contentLang); localStorage.setItem('levelmovie_content_lang', pref.contentLang); }
+if (pref.parentalFilter !== undefined) setParentalFilter(pref.parentalFilter);
+if (pref.parentalPin !== undefined) setParentalPin(pref.parentalPin);
 }
 
 // Fetch Recent History
@@ -624,6 +659,68 @@ console.error("🔥 FIREBASE FETCH DATA ERROR:", e);
 };
 fetchUserData();
 }, [user]);
+
+// --- SYSTÈME DE DÉFILEMENT INTELLIGENT (SMART SCROLL) ---
+useEffect(() => {
+const checkScroll = (e) => {
+const target = e.target;
+let currentScroll = 0;
+let maxScroll = 1;
+
+// Gérer le scroll de la page globale
+if (target === document || target === window) {
+const scrollPos = window.scrollY + window.innerHeight;
+const scrollHeight = document.documentElement.scrollHeight;
+setIsNearBottom(scrollHeight - scrollPos < 150);
+
+currentScroll = window.scrollY;
+maxScroll = scrollHeight - window.innerHeight;
+} 
+// Gérer le scroll à l'intérieur des modals/popups
+else if (target && target.classList && target.classList.contains('overflow-y-auto')) {
+const isModalNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 150;
+setIsNearBottom(isModalNearBottom);
+
+currentScroll = target.scrollTop;
+maxScroll = target.scrollHeight - target.clientHeight;
+}
+
+// Calculer le pourcentage d'avancement pour l'anneau de progression
+if (maxScroll > 0) {
+setScrollProgress(Math.min(100, Math.max(0, (currentScroll / maxScroll) * 100)));
+} else {
+setScrollProgress(0);
+}
+};
+
+window.addEventListener('scroll', checkScroll, true); // true = capture sur tous les éléments
+window.addEventListener('resize', checkScroll);
+return () => {
+window.removeEventListener('scroll', checkScroll, true);
+window.removeEventListener('resize', checkScroll);
+};
+}, []);
+
+const executeSmartScroll = () => {
+// On cherche d'abord si on est dans un modal (fenêtre film ou paramètres)
+const modal = document.querySelector('.holo-card.overflow-y-auto, .overflow-y-auto');
+if (modal && getComputedStyle(modal).overflowY === 'auto' && modal.scrollHeight > modal.clientHeight) {
+const isModalNearBottom = modal.scrollHeight - modal.scrollTop - modal.clientHeight < 150;
+if (isModalNearBottom) {
+modal.scrollTo({ top: 0, behavior: 'smooth' });
+} else {
+modal.scrollBy({ top: modal.clientHeight * 0.7, behavior: 'smooth' });
+}
+return;
+}
+
+// Sinon, on fait défiler la page principale
+if (isNearBottom) {
+window.scrollTo({ top: 0, behavior: 'smooth' });
+} else {
+window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' });
+}
+};
 
 // --- TOASTS ---
 const showToast = useCallback((msg, type = 'info') => {
@@ -641,6 +738,55 @@ if (!user) return;
 try {
 await setDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "preferences", "settings"), newPrefs, { merge: true });
 } catch(e) {}
+};
+
+// --- GESTION DU FILTRE PARENTAL ---
+const handleParentalToggle = () => {
+if (!parentalFilter) {
+setPinModal({ show: true, mode: 'create', tempPin: '', error: '' });
+} else {
+setPinModal({ show: true, mode: 'verify', tempPin: '', error: '' });
+}
+};
+
+const handlePinInput = (val) => {
+setPinModal(prev => ({ ...prev, tempPin: val, error: '' }));
+if (val.length === 4) {
+if (pinModal.mode === 'create') {
+setParentalPin(val);
+setParentalFilter(true);
+syncPreferencesToDb({ parentalFilter: true, parentalPin: val });
+setPinModal({ show: false, mode: 'create', tempPin: '', error: '' });
+showToast(t.pinCreated, 'success');
+} else if (pinModal.mode === 'verify') {
+if (val === parentalPin) {
+setParentalFilter(false);
+setParentalPin(null);
+syncPreferencesToDb({ parentalFilter: false, parentalPin: null });
+setPinModal({ show: false, mode: 'verify', tempPin: '', error: '' });
+showToast(t.filterDisabled, 'success');
+} else {
+setPinModal(prev => ({ ...prev, error: t.incorrectPin }));
+}
+}
+}
+};
+
+// --- GESTION DU CACHE SYSTÈME ---
+const handleClearCache = async () => {
+    // Vide l'état local
+    setRecentlyViewed([]);
+    setSearchQuery('');
+    setSearchResults([]);
+    
+    // Vide l'historique dans la base de données Firebase
+    if (user) {
+        try {
+            await setDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "history", "recent"), { items: [] });
+        } catch(e) {}
+    }
+    
+    showToast(t.cacheCleared, 'success');
 };
 
 // --- ACTIONS LANGUE / FILTRES ---
@@ -729,14 +875,20 @@ return;
 }
 const delayDebounceFn = setTimeout(async () => {
 const langCode = lang === 'fr' ? 'fr-FR' : 'en-US';
+const includeAdult = parentalFilter ? 'false' : 'true'; // Force le filtre adulte TMDB
 try {
-const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&language=${langCode}&query=${encodeURIComponent(searchQuery)}`);
+const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&language=${langCode}&query=${encodeURIComponent(searchQuery)}&include_adult=${includeAdult}`);
 const data = await res.json();
-setSearchResults(data.results?.filter(m => m.media_type === 'movie' || m.media_type === 'tv') || []);
+let results = data.results?.filter(m => m.media_type === 'movie' || m.media_type === 'tv') || [];
+// Double vérification locale pour filtrer l'adulte si le filtre parental est ON
+if (parentalFilter) {
+results = results.filter(m => !m.adult);
+}
+setSearchResults(results);
 } catch (e) {}
 }, 500);
 return () => clearTimeout(delayDebounceFn);
-}, [searchQuery, lang]);
+}, [searchQuery, lang, parentalFilter]);
 
 // --- ACTIONS GLOBALES ---
 const toggleWatchlist = async (movie) => {
@@ -793,7 +945,6 @@ addToHistory(movie);
 
 // --- NAVIGATION & RAFRAÎCHISSEMENT INTELLIGENT ---
 const handleNavCategory = (cat) => {
-// Si on clique sur la catégorie active, on génère un nouveau seed pour rafraîchir les films affichés
 if (currentCategory === cat && (cat === 'home' || cat === 'movie' || cat === 'tv')) {
     setPageSeed(Math.floor(Math.random() * 5) + 1);
 } else {
@@ -809,22 +960,23 @@ const langCode = lang === 'fr' ? 'fr-FR' : 'en-US';
 const langFilter = contentLang !== 'all' ? `&with_original_language=${contentLang}` : '';
 const rowsConfig = [];
 
-const buildUrl = (base) => `${base}?api_key=${API_KEY}&language=${langCode}${langFilter}`;
-const buildUrlNoFilter = (base) => `${base}?api_key=${API_KEY}&language=${langCode}`;
+// Applique le filtre TMDB sur les requêtes globales si nécessaire
+const adultFilterParams = parentalFilter ? '&include_adult=false' : '&include_adult=true';
+const buildUrl = (base) => `${base}?api_key=${API_KEY}&language=${langCode}${langFilter}${adultFilterParams}`;
+const buildUrlNoFilter = (base) => `${base}?api_key=${API_KEY}&language=${langCode}${adultFilterParams}`;
 
-// On ajoute 'shuffle: true' aux catégories génériques pour diversifier l'affichage !
 if (currentCategory === 'home' || currentCategory === 'movie') {
 rowsConfig.push(
 { title: t.trending, url: buildUrlNoFilter('/trending/movie/week'), large: true, shuffle: false },
-{ title: t.frenchCinema, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc`, large: false, shuffle: true },
+{ title: t.frenchCinema, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc${adultFilterParams}`, large: false, shuffle: true },
 { title: t.upcoming, url: buildUrl('/movie/upcoming'), large: false, shuffle: false },
 { title: t.nowPlaying, url: buildUrl('/movie/now_playing'), large: false, shuffle: false },
 { title: t.topRated, url: buildUrl('/movie/top_rated'), large: false, shuffle: false },
-{ title: t.freeVOD, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_watch_monetization_types=free&watch_region=FR&sort_by=popularity.desc${langFilter}`, large: false, shuffle: true },
-{ title: t.publicDomain, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&primary_release_date.lte=1970-01-01&sort_by=vote_average.desc&vote_count.gte=200${langFilter}`, large: true, shuffle: true },
-{ title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko`, large: false, shuffle: true },
-{ title: t.animeManga, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja`, large: false, shuffle: true },
-{ title: t.bollywood, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_original_language=hi`, large: false, shuffle: true },
+{ title: t.freeVOD, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_watch_monetization_types=free&watch_region=FR&sort_by=popularity.desc${langFilter}${adultFilterParams}`, large: false, shuffle: true },
+{ title: t.publicDomain, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&primary_release_date.lte=1970-01-01&sort_by=vote_average.desc&vote_count.gte=200${langFilter}${adultFilterParams}`, large: true, shuffle: true },
+{ title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko${adultFilterParams}`, large: false, shuffle: true },
+{ title: t.animeManga, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja${adultFilterParams}`, large: false, shuffle: true },
+{ title: t.bollywood, url: `/discover/movie?api_key=${API_KEY}&language=${langCode}&with_original_language=hi${adultFilterParams}`, large: false, shuffle: true },
 { title: t.action, url: buildUrl('/discover/movie') + '&with_genres=28', large: false, shuffle: true },
 { title: t.martialArts, url: buildUrl('/discover/movie') + '&with_genres=28&with_keywords=779', large: false, shuffle: true },
 { title: t.scifi, url: buildUrl('/discover/movie') + '&with_genres=878', large: false, shuffle: true },
@@ -836,9 +988,9 @@ rowsConfig.push(
 } else if (currentCategory === 'tv') {
 rowsConfig.push(
 { title: t.trending, url: buildUrlNoFilter('/trending/tv/week'), large: true, shuffle: false },
-{ title: t.frenchSeries, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc`, large: false, shuffle: true },
-{ title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko`, large: false, shuffle: true },
-{ title: t.animeJp, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja`, large: false, shuffle: true },
+{ title: t.frenchSeries, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_spoken_languages=fr&sort_by=popularity.desc${adultFilterParams}`, large: false, shuffle: true },
+{ title: t.asianDrama, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_original_language=ko${adultFilterParams}`, large: false, shuffle: true },
+{ title: t.animeJp, url: `/discover/tv?api_key=${API_KEY}&language=${langCode}&with_genres=16&with_original_language=ja${adultFilterParams}`, large: false, shuffle: true },
 { title: t.topRated, url: buildUrl('/tv/top_rated'), large: false, shuffle: false },
 { title: t.action, url: buildUrl('/discover/tv') + '&with_genres=10759', large: false, shuffle: true },
 { title: t.comedy, url: buildUrl('/discover/tv') + '&with_genres=35', large: false, shuffle: true },
@@ -874,7 +1026,7 @@ if (!isAllowedBrowser && !showSplash && !hasSkippedBrowserWall) {
     const browserData = getBrowserData();
 
     return (
-    <div className="bg-[#060608] flex items-center justify-center min-h-[100dvh] p-3 sm:p-8 fixed inset-0 z-[6000] overflow-hidden">
+    <div className="bg-[#060608] flex items-center justify-center min-h-[100dvh] p-3 sm:p-8 fixed inset-0 z-[6000] overflow-y-auto">
     <style>{globalStyles}</style>
 
     {/* Bouton de traduction */}
@@ -898,7 +1050,7 @@ if (!isAllowedBrowser && !showSplash && !hasSkippedBrowserWall) {
     ))}
     </div>
 
-    <div className="w-full max-w-lg z-10 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-700 py-4 h-full max-h-[100dvh] justify-center">
+    <div className="w-full max-w-lg z-10 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-700 py-10 min-h-min justify-center my-auto">
 
     <div className="flex justify-center mb-3 md:mb-6 relative shrink-0">
     <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full scale-125"></div>
@@ -957,7 +1109,7 @@ if (!isAllowedBrowser && !showSplash && !hasSkippedBrowserWall) {
     <LevelMovieLogo className="w-3.5 h-3.5 md:w-5 md:h-5 text-[#a855f7]" />
     <span className="text-white font-black tracking-widest text-[9px] md:text-[11px] uppercase">LevelMovie</span>
     </div>
-    <button onClick={() => { copyToClipboardFallback('https://levelmovie-mu.vercel.app'); showToast(t.linkCopied, 'success'); }} className="bg-[#a855f7] hover:bg-purple-500 text-white px-3 py-2 md:px-5 md:py-3 rounded-lg md:rounded-xl transition-colors flex items-center justify-center text-[9px] md:text-[10px] font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(168,85,247,0.4)] active:scale-95 outline-none shrink-0">
+    <button onClick={() => { copyToClipboardFallback('https://ecosystem-of-levelup.vercel.app/movie.html'); showToast(t.linkCopied, 'success'); }} className="bg-[#a855f7] hover:bg-purple-500 text-white px-3 py-2 md:px-5 md:py-3 rounded-lg md:rounded-xl transition-colors flex items-center justify-center text-[9px] md:text-[10px] font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(168,85,247,0.4)] active:scale-95 outline-none shrink-0">
     <Copy className="w-3 h-3 md:w-4 md:h-4 md:mr-1.5"/> <span className="hidden sm:inline">{t.copyLinkBtn}</span>
     </button>
     </div>
@@ -1024,13 +1176,21 @@ className="absolute top-6 right-6 flex items-center justify-center min-w-[60px] 
 <p className="text-[11px] font-bold text-[#a855f7] uppercase tracking-[0.1em] mb-2 flex items-center justify-center gap-2">
 <Shield className="w-4 h-4" /> {t.enterKey}
 </p>
+<div className="relative w-full">
 <input
-type="text"
+type={showKey ? "text" : "password"}
 value={accessKey}
 onChange={(e) => formatAccessKey(e.target.value)}
 placeholder="LVL-XXXXX-XXXXX"
-className="w-full bg-[#030305] border border-[#a855f7]/40 rounded-xl py-4 px-5 text-center text-white font-mono text-base tracking-widest outline-none focus:border-[#a855f7] transition-all uppercase shadow-inner"
+className="w-full bg-[#030305] border border-[#a855f7]/40 rounded-xl py-4 pl-5 pr-12 text-center text-white font-mono text-base tracking-widest outline-none focus:border-[#a855f7] transition-all uppercase shadow-inner"
 />
+<button 
+onClick={() => setShowKey(!showKey)} 
+className="absolute right-4 top-1/2 -translate-y-1/2 text-[#a855f7]/60 hover:text-[#a855f7] transition-colors outline-none"
+>
+{showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+</button>
+</div>
 <button
 onClick={handleLogin}
 disabled={isLoadingAuth}
@@ -1053,6 +1213,49 @@ className="w-full bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white py-4 r
 return (
 <div className="bg-main text-white min-h-screen">
 <style>{globalStyles}</style>
+
+{/* MODAL CODE PIN PRO (Nouveau Design à 4 Cases) */}
+{pinModal.show && (
+    <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="bg-[#0a0a0f] border border-[#a855f7]/30 rounded-3xl p-6 md:p-10 max-w-sm w-full text-center shadow-[0_0_80px_rgba(168,85,247,0.2)] animate-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-[#a855f7]/10 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-[#a855f7]/20">
+                <Lock className="w-8 h-8 text-[#a855f7]" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-widest">
+                {pinModal.mode === 'create' ? t.createPinTitle : t.enterPinTitle}
+            </h3>
+            <p className="text-white/60 text-[11px] md:text-xs mb-8 px-2 leading-relaxed">
+                {pinModal.mode === 'create' ? t.createPinDesc : t.enterPinDesc}
+            </p>
+            
+            {/* INTERFACE DE SAISIE PROFESSIONNELLE (4 CASES) */}
+            <div className="relative flex justify-center gap-3 md:gap-4 mb-8">
+                {[0, 1, 2, 3].map(i => (
+                    <div key={i} className={`w-14 h-16 md:w-16 md:h-20 rounded-2xl flex items-center justify-center text-2xl md:text-4xl font-black transition-all duration-300 ${pinModal.tempPin.length === i ? 'border-2 border-[#a855f7] shadow-[0_0_20px_rgba(168,85,247,0.5)] bg-[#a855f7]/10 text-white' : pinModal.tempPin.length > i ? 'border border-[#a855f7]/50 bg-[#a855f7]/20 text-[#a855f7]' : 'border border-white/10 bg-black/50 text-white/30'}`}>
+                        {pinModal.tempPin.length > i ? '●' : ''}
+                    </div>
+                ))}
+                {/* Champ input invisible superposé pour le clavier mobile et la saisie */}
+                <input
+                    type="text"
+                    maxLength="4"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={pinModal.tempPin}
+                    onChange={(e) => handlePinInput(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-text z-10"
+                    autoFocus
+                />
+            </div>
+            
+            {pinModal.error && <p className="text-red-400 text-xs font-bold bg-red-500/10 py-3 rounded-xl border border-red-500/20 mb-6">{pinModal.error}</p>}
+            
+            <button onClick={() => setPinModal({ ...pinModal, show: false, tempPin: '', error: '' })} className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-colors w-full border border-white/5 outline-none shadow-sm active:scale-95">
+                {t.cancel}
+            </button>
+        </div>
+    </div>
+)}
 
 {/* TOASTS */}
 <div className="fixed top-4 right-4 md:top-6 md:right-6 z-[9999] flex flex-col gap-3 pointer-events-none items-end">
@@ -1096,7 +1299,7 @@ type="text"
 value={searchQuery}
 onChange={(e) => setSearchQuery(e.target.value)}
 placeholder={t.searchPlaceholder}
-className="bg-[#151520] border border-white/10 text-white text-xs px-4 py-2 rounded-full outline-none w-36 md:w-64 focus:border-[#a855f7] transition-colors shadow-inner"
+className="bg-[#151520] border border-white/10 text-white text-xs px-4 py-2 rounded-full outline-none w-48 md:w-80 focus:border-[#a855f7] transition-colors shadow-inner"
 />
 </div>
 
@@ -1163,7 +1366,7 @@ return (
 ) : (
 <>
 {/* BANNER */}
-<Banner url={buildUrlNoFilter('/trending/all/week')} onPlay={() => openModal(heroMovie, 'play')} onInfo={() => openModal(heroMovie, 'info')} setHero={setHeroMovie} heroMovie={heroMovie} t={t} pageSeed={pageSeed} />
+<Banner url={buildUrlNoFilter('/trending/all/week')} onPlay={() => openModal(heroMovie, 'play')} onInfo={() => openModal(heroMovie, 'info')} setHero={setHeroMovie} heroMovie={heroMovie} t={t} pageSeed={pageSeed} parentalFilter={parentalFilter} />
 
 {/* ROWS */}
 <main className="pb-24 relative z-20 space-y-8 md:space-y-10 mt-6 md:-mt-10">
@@ -1186,7 +1389,7 @@ return (
 
 {/* AUTRES LIGNES (Catalog complet mondial) */}
 {rowsConfig.map((row, i) => (
-<Row key={i} title={row.title} fetchUrl={row.url} isLarge={row.large} shuffle={row.shuffle} onMovieClick={(m) => openModal(m, 'info')} pageSeed={pageSeed} />
+<Row key={i} title={row.title} fetchUrl={row.url} isLarge={row.large} shuffle={row.shuffle} onMovieClick={(m) => openModal(m, 'info')} pageSeed={pageSeed} parentalFilter={parentalFilter} />
 ))}
 </main>
 </>
@@ -1245,17 +1448,24 @@ return (
 <span className="px-3 py-1 bg-white/10 text-white/70 rounded-lg text-[10px] font-black tracking-widest border border-white/10 uppercase">{t.auto4k}</span>
 </div>
 
-<div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
-<span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Shield className="w-4 h-4 text-[#a855f7]" /> {t.parentalFilter}</span>
-<label className="relative inline-flex items-center cursor-pointer outline-none">
-<input type="checkbox" className="sr-only peer" />
-<div className="w-9 h-5 bg-black/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white/70 after:border-white/20 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#a855f7] peer-checked:after:bg-white shadow-inner"></div>
-</label>
+{/* SECTION: FILTRE PARENTAL (Avec explication) */}
+<div className="flex flex-col bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
+    <div className="flex justify-between items-center mb-2">
+        <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Shield className="w-4 h-4 text-[#a855f7]" /> {t.parentalFilter}</span>
+        <div onClick={handleParentalToggle} className="relative inline-flex items-center cursor-pointer outline-none">
+            <div className={`w-9 h-5 rounded-full shadow-inner transition-colors ${parentalFilter ? 'bg-[#a855f7]' : 'bg-black/50'}`}>
+                <div className={`absolute top-[2px] left-[2px] bg-white/70 border border-white/20 rounded-full h-4 w-4 transition-transform ${parentalFilter ? 'translate-x-full bg-white border-white' : ''}`}></div>
+            </div>
+        </div>
+    </div>
+    <p className="text-[9.5px] text-white/50 leading-relaxed text-justify mt-1">
+    {t.parentalFilterDesc}
+</p>
 </div>
 
 <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
 <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><HardDrive className="w-4 h-4 text-[#a855f7]" /> {t.systemCache}</span>
-<button onClick={() => showToast(t.cacheCleared, 'success')} className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-[10px] font-bold uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/30 outline-none">{t.clearCache}</button>
+<button onClick={handleClearCache} className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-[10px] font-bold uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/30 outline-none">{t.clearCache}</button>
 </div>
 </div>
 </div>
@@ -1308,12 +1518,37 @@ toggleWatchlist={toggleWatchlist}
 showToast={showToast}
 />
 )}
+
+{/* BOUTON DE DÉFILEMENT INTELLIGENT (SMART SCROLL) AVEC PROGRESSION */}
+<div className="fixed bottom-20 md:bottom-10 right-4 md:right-8 z-[8500] flex items-center justify-center w-14 h-14">
+<svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
+<circle cx="28" cy="28" r="26" stroke="rgba(255,255,255,0.05)" strokeWidth="2" fill="none" />
+<circle
+cx="28" cy="28" r="26"
+stroke="#a855f7"
+strokeWidth="2.5"
+fill="none"
+strokeDasharray="163.36"
+strokeDashoffset={163.36 - (scrollProgress / 100) * 163.36}
+strokeLinecap="round"
+className="transition-all duration-200 ease-out"
+/>
+</svg>
+<button
+onClick={executeSmartScroll}
+className="w-11 h-11 bg-[#060608]/80 backdrop-blur-md hover:bg-[#a855f7] text-[#a855f7] hover:text-white rounded-full flex items-center justify-center transition-all active:scale-95 outline-none group"
+title="Défilement intelligent"
+>
+{isNearBottom ? <ArrowUp className="w-5 h-5 group-hover:animate-bounce" /> : <ArrowDown className="w-5 h-5 group-hover:animate-bounce" />}
+</button>
+</div>
+
 </div>
 );
 }
 
 // --- BANNER COMPONENT ---
-function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed }) {
+function Banner({ url, onPlay, onInfo, setHero, heroMovie, t, pageSeed, parentalFilter }) {
 useEffect(() => {
 const fetchMovie = async () => {
 try {
@@ -1324,12 +1559,17 @@ const data1 = await res1.json();
 const data2 = await res2.json();
 const combined = [...(data1.results||[]), ...(data2.results||[])];
 
-const valids = combined.filter(m => m.backdrop_path);
+let valids = combined.filter(m => m.backdrop_path);
+// Application du filtre parental au Banner
+if (parentalFilter) {
+    valids = valids.filter(m => !m.adult);
+}
+
 setHero(valids[Math.floor(Math.random() * valids.length)]);
 } catch(e) {}
 };
 fetchMovie();
-}, [url, pageSeed]);
+}, [url, pageSeed, parentalFilter]);
 
 if (!heroMovie) return <div className="h-[80vh] w-full bg-[#060608] animate-pulse"></div>;
 
@@ -1371,7 +1611,7 @@ return (
 }
 
 // --- ROW COMPONENT ---
-function Row({ title, fetchUrl, isLarge, shuffle, onMovieClick, pageSeed }) {
+function Row({ title, fetchUrl, isLarge, shuffle, onMovieClick, pageSeed, parentalFilter }) {
 const [movies, setMovies] = useState([]);
 const rowRef = useRef(null);
 
@@ -1379,7 +1619,6 @@ useEffect(() => {
 const fetchM = async () => {
 try {
 const reqs = [];
-// Limité à 2 pages par ligne pour alléger la charge et éviter les répétitions lointaines
 for (let i = 0; i < 2; i++) {
 reqs.push(fetch(`${BASE_URL}${fetchUrl}&page=${pageSeed + i}`));
 }
@@ -1397,16 +1636,20 @@ let uniqueMovies = Array.from(new Set(combined.map(a => a.id)))
 .map(id => combined.find(a => a.id === id))
 .filter(m => m && m.poster_path);
 
-// Mélange intelligent (Shuffle) pour éviter les clones d'une catégorie à l'autre
+// Application stricte du filtre parental
+if (parentalFilter) {
+    uniqueMovies = uniqueMovies.filter(m => !m.adult);
+}
+
 if (shuffle) {
     uniqueMovies = uniqueMovies.sort(() => Math.random() - 0.5);
 }
 
-setMovies(uniqueMovies.slice(0, 30)); // Limité à 30 films par catégorie pour l'esthétique
+setMovies(uniqueMovies.slice(0, 30));
 } catch(e) {}
 };
 fetchM();
-}, [fetchUrl, pageSeed, shuffle]);
+}, [fetchUrl, pageSeed, shuffle, parentalFilter]);
 
 let isDown = false;
 let startX;
