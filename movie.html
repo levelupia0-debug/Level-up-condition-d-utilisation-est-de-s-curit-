@@ -335,7 +335,6 @@ sysLeft: "a quitté le salon.",
 sysPaused: "signale une pause.",
 sysPlayed: "relance la lecture.",
 sysAds: "signale une publicité.",
-sysServerChange: "est passé sur le serveur",
 roomFull: "Le salon est plein (25 max).",
 promoteMod: "Nommer Modérateur",
 demoteMod: "Retirer Modérateur",
@@ -562,7 +561,6 @@ sysLeft: "left the room.",
 sysPaused: "signaled a pause.",
 sysPlayed: "resumed playback.",
 sysAds: "reported an ad.",
-sysServerChange: "switched to server",
 roomFull: "Room is full (25 max).",
 promoteMod: "Promote to Mod",
 demoteMod: "Demote Moderator",
@@ -1411,11 +1409,11 @@ messages: arrayUnion(msg)
 } catch(e) {}
 };
 
-const sendSystemAction = async (actionType, extraData = {}) => {
+const sendSystemAction = async (actionType) => {
 if (!partyId || !user || !fbUser) return;
 try {
 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), {
-messages: arrayUnion({ isSystem: true, action: actionType, name: defaultUserName, photo: userPhoto || "", uid: user.uid, time: Date.now(), ...extraData })
+messages: arrayUnion({ isSystem: true, action: actionType, name: defaultUserName, photo: userPhoto || "", uid: user.uid, time: Date.now() })
 });
 } catch(e) {}
 };
@@ -1720,7 +1718,7 @@ className="absolute top-6 right-6 flex items-center justify-center min-w-[60px] 
 type={showKey ? "text" : "password"}
 value={accessKey}
 onChange={(e) => formatAccessKey(e.target.value)}
-placeholder="LVL-XXXXX-XXXXX"
+placeholder="Format: LVL-XXXXX-XXXXX"
 className="w-full bg-[#030305] border border-[#a855f7]/40 rounded-xl py-4 pl-5 pr-12 text-center text-white font-mono text-[13px] tracking-widest outline-none focus:border-[#a855f7] transition-all shadow-inner"
 />
 <button 
@@ -2859,13 +2857,7 @@ if (!disclaimerAccepted && !partyId) {
 setPendingServer(serverId);
 setShowDisclaimer(true);
 } else {
-if (selectedServer !== serverId) {
-    setIframeLoading(true);
-    if (partyId && partyData) {
-        const sName = AVAILABLE_SERVERS.find(s => s.id === serverId)?.name || serverId;
-        sendSystemAction('SERVER_CHANGE', { serverName: sName });
-    }
-}
+if (selectedServer !== serverId) setIframeLoading(true);
 setSelectedServer(serverId);
 setModalMode('play');
 }
@@ -2987,7 +2979,7 @@ if (partyId && partyData) {
     const iAmMod = partyData.mods?.includes(user?.uid);
 
     return (
-        <div className="fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full overflow-hidden">
+        <div className="fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden">
             
             {/* Modal de Modération */}
             {memberMenu && (
@@ -3138,11 +3130,11 @@ if (partyId && partyData) {
                 </div>
             )}
 
-            {/* Colonne Gauche: Vidéo + Contrôles (Épinglée en haut sur mobile grâce à shrink-0 et aspect-video) */}
-            <div className="w-full lg:flex-1 flex flex-col shrink-0 lg:shrink relative z-[60] bg-black shadow-2xl h-auto lg:max-h-full">
+            {/* Colonne Gauche: Vidéo + Contrôles (Épinglée en haut sur mobile grâce à shrink-0) */}
+            <div className="w-full lg:flex-1 flex flex-col shrink-0 lg:shrink relative z-[60] bg-black shadow-2xl h-auto max-h-[60vh] lg:max-h-full">
                 
-                {/* Lecteur Vidéo Exclusif (Format 16:9 parfait sur mobile) */}
-                <div className="w-full aspect-video lg:aspect-auto lg:flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center shrink-0">
+                {/* Lecteur Vidéo Exclusif (Format 16:9 parfait sur mobile, prend tout l'espace restant sur PC) */}
+                <div className="w-full aspect-video lg:aspect-auto lg:flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center">
                     <iframe key={iframeSrc} className={`absolute inset-0 w-full h-full bg-transparent z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={iframeSrc} onLoad={() => setIframeLoading(false)} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
                     
                     {iframeLoading && (
@@ -3297,13 +3289,12 @@ if (partyId && partyData) {
                             else if (msg.action === 'PAUSE') sysText = `${t.sysPaused}`;
                             else if (msg.action === 'PLAY') sysText = `${t.sysPlayed}`;
                             else if (msg.action === 'ADS') sysText = `${t.sysAds}`;
-                            else if (msg.action === 'SERVER_CHANGE') sysText = `${t.sysServerChange} ${msg.serverName}.`;
                             else if (msg.action === 'BAN') sysText = `${t.sysBanned} ${msg.targetName} de la room.`;
 
                             return (
                                 <div key={i} className={`flex items-start w-full group mb-2 p-1 -mx-1 rounded-lg ${msg.action === 'BAN' ? 'bg-red-500/10 border border-red-500/20' : ''}`}>
                                     <div className={`w-6 h-6 rounded-full border flex items-center justify-center mr-2.5 shrink-0 mt-0.5 shadow-sm ${msg.action === 'BAN' ? 'bg-red-500/20 border-red-500/30' : 'bg-[#a855f7]/20 border-[#a855f7]/30'}`}>
-                                        {msg.action === 'BAN' ? <UserMinus className="w-3 h-3 text-red-500" /> : msg.action === 'SERVER_CHANGE' ? <Server className="w-3 h-3 text-[#a855f7]" /> : <Bell className="w-3 h-3 text-[#a855f7]" />}
+                                        {msg.action === 'BAN' ? <UserMinus className="w-3 h-3 text-red-500" /> : <Bell className="w-3 h-3 text-[#a855f7]" />}
                                     </div>
                                     <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5 text-white/60 italic">
                                         <span className={`font-bold mr-1 ${msg.action === 'BAN' ? 'text-red-500' : 'text-[#a855f7]'}`}>Alerte</span>
@@ -3362,7 +3353,8 @@ if (partyId && partyData) {
                             onKeyDown={(e) => { if (e.key === 'Enter') { handleSendPartyMessage(chatInput, replyingTo); setChatInput(''); setReplyingTo(null); } }}
                             onFocus={(e) => {
                                 setTimeout(() => {
-                                    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                                    e.target.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                                    chatEndRef.current?.scrollIntoView();
                                 }, 300);
                             }}
                             placeholder={t.chatPlaceholder}
@@ -3507,104 +3499,102 @@ return (
         <button onClick={() => handlePlayRequest(selectedServer)} className="flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl text-xs md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-[0_0_30px_rgba(168,85,247,0.4)] active:scale-95 outline-none">
             <Play className="w-5 h-5 fill-white" /> <span>{t.playMovie}</span>
         </button>
-        
-        {/* Watchlist */}
-        <button onClick={() => toggleWatchlist(movie)} className="flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-white/10 text-white rounded-xl text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-white/20 transition-all border border-white/20 active:scale-95 outline-none">
-            <Bookmark className={`w-5 h-5 ${isAddedToWatchlist ? 'fill-[#a855f7] text-[#a855f7]' : ''}`} /> <span>{isAddedToWatchlist ? t.alreadyInList : t.addToList}</span>
+
+        {/* Bande-Annonce */}
+        <button
+            onClick={() => {
+                if (modalMode !== 'trailer') {
+                    setIframeLoading(true);
+                    setModalMode('trailer');
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                }
+            }}
+            disabled={modalMode === 'trailer'}
+            className={`flex-1 items-center justify-center flex gap-3 px-6 py-4 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest transition-all active:scale-95 outline-none ${
+                modalMode === 'trailer'
+                ? 'bg-[#a855f7]/10 border border-[#a855f7]/50 text-[#a855f7] cursor-default shadow-inner'
+                : 'bg-white/5 border border-white/20 text-white hover:bg-white/10 backdrop-blur-md shadow-md'
+            }`}>
+            {modalMode === 'trailer' ? (
+                <>
+                    <div className="flex gap-1.5 items-center justify-center">
+                        <div className="w-2 h-2 bg-[#a855f7] rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-[#a855f7] rounded-full animate-bounce" style={{animationDelay: "0.1s"}}></div>
+                        <div className="w-2 h-2 bg-[#a855f7] rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></div>
+                    </div>
+                    <span>{t.trailerPlaying}</span>
+                </>
+            ) : (
+                <><Clapperboard className="w-5 h-5" /> <span>{t.trailer}</span></>
+            )}
         </button>
 
-        {/* Share */}
-        <button onClick={handleShare} className="flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-white/5 text-white/70 hover:text-white rounded-xl text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-white/10 transition-all border border-white/10 active:scale-95 outline-none">
-            <Share2 className="w-5 h-5" /> <span>{t.share}</span>
+        {/* Watch Party */}
+        <button onClick={() => handleCreateParty(movie)} className={`flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-white/5 border border-[#a855f7]/50 text-white rounded-xl text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-[#a855f7]/20 hover:border-[#a855f7] transition-all active:scale-95 outline-none shadow-md`}>
+            <WatchPartySVG className="w-5 h-5 text-[#a855f7]" /> <span>{t.createPartyBtn}</span>
         </button>
     </div>
 
-    {!isPartyCategory && !partyId && (
-        <button onClick={() => handleCreateParty(movie, null)} className="w-full mb-8 items-center justify-center flex gap-3 px-6 py-4 bg-[#a855f7]/20 text-[#a855f7] hover:bg-[#a855f7]/30 border border-[#a855f7]/30 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest transition-all active:scale-95 outline-none">
-            <Users className="w-5 h-5" /> <span>{t.createPartyBtn}</span>
-        </button>
+    <div className="markdown-pro pr-2 text-justify text-base md:text-lg leading-relaxed text-white/80">
+    {movie.overview ? movie.overview.split('\n').filter(p=>p.trim()).map((p,i) => <p key={i} className="mb-4">{p}</p>) : <p>{t.noDesc}</p>}
+    </div>
+
+    <div className="mt-10 flex gap-4 pt-8 border-t border-white/10">
+    <button onClick={() => toggleWatchlist(movie)} className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all active:scale-95 outline-none ${isAddedToWatchlist ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10'}`}>
+    {isAddedToWatchlist ? <><CheckCircle className="w-6 h-6" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">{t.alreadyInList}</span></> : <><Plus className="w-6 h-6 text-[#a855f7]" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">{t.addToList}</span></>}
+    </button>
+    <button onClick={handleShare} className="flex items-center justify-center gap-3 px-8 py-4 rounded-xl border border-white/20 bg-white/5 text-white/80 hover:text-white hover:bg-white/10 transition-all active:scale-95 outline-none">
+    <Share2 className="w-6 h-6 text-blue-400" />
+    </button>
+    </div>
+    </div>
+
+    <div className="w-full lg:w-[40%] space-y-8 bg-black/40 p-6 md:p-8 rounded-3xl border border-white/5 shadow-inner h-fit">
+    <div>
+    <span className="text-white/40 font-bold block mb-4 uppercase tracking-widest text-xs flex items-center gap-2"><Users className="w-5 h-5 text-[#a855f7]" /> <span>{t.cast}</span></span>
+    <div className="flex gap-5 overflow-x-auto no-scrollbar pb-3 row-container cursor-grab active:cursor-grabbing">
+    {details.credits?.cast?.slice(0, 15).map(c => (
+    <div key={c.id} className="flex flex-col items-center min-w-[80px] gap-2 shrink-0 select-none">
+    <img src={c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=151520&color=a855f7`} className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border border-white/10 shadow-md bg-black/50" draggable="false" alt=""/>
+    <span className="text-[10px] md:text-xs text-white/90 text-center font-bold w-[90px] truncate px-1">{c.name}</span>
+    {c.character && <span className="text-[9px] md:text-[10px] text-[#a855f7] truncate w-[90px] text-center">{c.character}</span>}
+    </div>
+    )) || <span className="text-white/50 text-sm">{t.noCasting}</span>}
+    </div>
+    </div>
+    <div className="w-full h-px bg-white/10"></div>
+    <div>
+    <span className="text-white/40 font-bold block mb-2 uppercase tracking-widest text-xs flex items-center gap-2"><Film className="w-5 h-5 text-[#a855f7]" /> {t.director}</span>
+    <span className="text-white/90 font-medium text-sm block mt-2">{getDirector()}</span>
+    </div>
+    </div>
+    </div>
     )}
 
-    <div className="space-y-6 text-sm md:text-base text-white/80 leading-relaxed text-justify mb-8">
-        <p>{movie.overview || t.noDesc}</p>
+    {details && details.similar?.results?.length > 0 && (
+    <div className="mt-16 pt-10 border-t border-white/10 max-w-7xl mx-auto">
+    <h3 className="text-white/90 text-lg md:text-xl font-black mb-6 uppercase tracking-[0.2em] border-l-4 border-[#a855f7] pl-4">{t.similar}</h3>
+    <div className="flex overflow-x-auto gap-5 no-scrollbar pb-6 row-container cursor-grab active:cursor-grabbing">
+    {details.similar.results.slice(0, 10).map(sm => {
+    if(!sm.poster_path) return null;
+    return (
+    <div key={sm.id} className="relative flex-none cursor-pointer rounded-2xl overflow-hidden shadow-xl border border-white/5 bg-[#151520] hover:scale-105 transition-transform w-[140px] md:w-[180px] h-[210px] md:h-[270px]" onClick={() => onSelectSimilar(sm)}>
+    <img className="object-cover w-full h-full" src={`${IMAGE_BASE_URL}${sm.poster_path}`} loading="lazy" draggable="false" alt=""/>
     </div>
-
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white/5 p-6 rounded-2xl border border-white/10">
-        <div>
-            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest block mb-1">{t.director}</span>
-            <span className="text-white font-medium">{getDirector()}</span>
-        </div>
-        {details.genres && (
-            <div>
-                <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest block mb-1">{t.genresOrigin}</span>
-                <span className="text-white font-medium">{details.genres.map(g => g.name).join(', ')}</span>
-            </div>
-        )}
-    </div>
-
-    </div>
-    
-    {/* COLONNE DROITE : CASTING & SIMILAIRES */}
-    <div className="lg:w-80 shrink-0">
-        {getProviders() && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-8">
-                <h3 className="text-white font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
-                    <Tv className="w-4 h-4 text-[#a855f7]"/> {t.legalWatch}
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                    {getProviders().unique.map(p => (
-                        <img key={p.provider_id} src={`https://image.tmdb.org/t/p/original${p.logo_path}`} alt={p.provider_name} className="w-10 h-10 rounded-lg shadow-md" title={p.provider_name} />
-                    ))}
-                </div>
-            </div>
-        )}
-        
-        {details.credits?.cast?.length > 0 && (
-            <div className="mb-8">
-                <h3 className="text-white font-black uppercase tracking-widest text-xs mb-4 border-l-2 border-[#a855f7] pl-2">{t.cast}</h3>
-                <div className="flex flex-col gap-3">
-                    {details.credits.cast.slice(0, 5).map(actor => (
-                        <div key={actor.id} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
-                            {actor.profile_path ? (
-                                <img src={`${IMAGE_BASE_URL}${actor.profile_path}`} className="w-10 h-10 rounded-lg object-cover" alt={actor.name} />
-                            ) : (
-                                <div className="w-10 h-10 rounded-lg bg-[#151520] flex items-center justify-center text-white/30"><Users className="w-5 h-5"/></div>
-                            )}
-                            <div className="flex flex-col min-w-0">
-                                <span className="text-xs font-bold text-white truncate">{actor.name}</span>
-                                <span className="text-[10px] text-white/50 truncate">{actor.character}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        )}
-
-        {details.similar?.results?.length > 0 && (
-            <div>
-                <h3 className="text-white font-black uppercase tracking-widest text-xs mb-4 border-l-2 border-[#a855f7] pl-2">{t.similar}</h3>
-                <div className="grid grid-cols-2 gap-3">
-                    {details.similar.results.slice(0, 4).map(sim => {
-                        if (!sim.poster_path) return null;
-                        return (
-                            <div key={sim.id} className="cursor-pointer rounded-xl overflow-hidden shadow-md border border-white/5 hover:scale-105 transition-transform" onClick={() => onSelectSimilar(sim)}>
-                                <img src={`${IMAGE_BASE_URL}${sim.poster_path}`} className="w-full aspect-[2/3] object-cover" alt="" loading="lazy" />
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        )}
+    )
+    })}
     </div>
     </div>
     )}
     </div>
 </div>
+
 </div>
 );
 }
 
-const root = createRoot(document.getElementById('root'));
+const rootElement = document.getElementById('root');
+const root = createRoot(rootElement);
 root.render(<App />);
 </script>
 </body>
