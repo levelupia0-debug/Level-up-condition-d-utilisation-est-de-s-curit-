@@ -750,20 +750,20 @@ useEffect(() => {
     const savedEmail = localStorage.getItem('levelmovie_user_email');
     const savedPhoto = localStorage.getItem('lm_photo');
 
+    // Toujours afficher l'animation, connecté ou pas
+    const t1 = setTimeout(() => setSplashStep(1), 100);
+    const t2 = setTimeout(() => setSplashStep(2), 800);
+    const t3 = setTimeout(() => setSplashStep(3), 1600);
+    const t4 = setTimeout(() => {
+        setSplashStep(4);
+        setShowSplash(false);
+    }, 2000);
+
     if (savedKey && savedUid) {
         setUser({ uid: savedUid });
         if (savedName) setUserName(savedName);
         if (savedEmail) setUserEmail(savedEmail);
         if (savedPhoto) setUserPhoto(savedPhoto);
-        
-        // Utilisateur connecté : on montre l'animation (accélérée à 2s)
-        const t1 = setTimeout(() => setSplashStep(1), 100);
-        const t2 = setTimeout(() => setSplashStep(2), 800);
-        const t3 = setTimeout(() => setSplashStep(3), 1600);
-        const t4 = setTimeout(() => {
-            setSplashStep(4);
-            setShowSplash(false);
-        }, 2000);
         
         const handleScroll = () => setIsScrolled(window.scrollY > 30);
         window.addEventListener('scroll', handleScroll);
@@ -773,8 +773,10 @@ useEffect(() => {
             window.removeEventListener('scroll', handleScroll);
         }
     } else {
-        // Utilisateur NON connecté : pas d'écran noir, on va DIRECT au login
-        setShowSplash(false);
+        // Utilisateur NON connecté : On nettoie juste les timers
+        return () => {
+            clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
+        }
     }
 }, []);
 
@@ -3279,7 +3281,7 @@ if (partyId && partyData) {
                         </p>
                     </div>
                     
-                    {partyData.messages?.filter(msg => !mutedUsers.includes(msg.uid)).map((msg, i) => {
+                    {partyData.messages?.filter(msg => !partyData.muted?.some(m => m.uid === msg.uid)).map((msg, i) => {
                         if (msg.isSystem) {
                             let sysText = msg.text || "";
                             if (msg.action === 'JOIN') sysText = `${t.sysJoined}`;
