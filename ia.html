@@ -1436,6 +1436,15 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <button class="btn btn-g btn-xs" onclick="pinFlow()"><span id="setPinBtn">Configurer</span></button>
 </div>
 </div>
+<!-- NOUVELLE SECTION POUR LES NOTIFICATIONS -->
+<div class="set-sec">
+<div class="set-title">Notifications Push</div>
+<div class="set-row">
+<div class="set-info"><h5>Alertes et Nouveautés</h5><p id="notifStatus">Recevoir les alertes importantes en arrière-plan</p></div>
+<button class="btn btn-p btn-xs" id="btnEnableNotifs" onclick="demanderPermissionNotif()"><i class="fa-solid fa-bell"></i> Activer</button>
+</div>
+</div>
+<!-- FIN DE LA NOUVELLE SECTION -->
 <div class="set-sec">
 <div class="set-title">Conditions &amp; Légal</div>
 <div class="set-row" style="cursor:pointer" onclick="openTerms()">
@@ -1954,6 +1963,7 @@ FIREBASE & APP LOGIC
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js";
 
 // --- NETTOYAGE URL (Sécurité SSO) ---
 // Si l'utilisateur fait "Retour" et que la clé est dans l'URL, on l'efface pour la protéger
@@ -1980,13 +1990,139 @@ appId: "1:229420004282:web:6735f059a947f0936ae383"
 const fbApp = initializeApp(cfg);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
+const messaging = getMessaging(fbApp);
 const gProv = new GoogleAuthProvider();
 gProv.setCustomParameters({ prompt: 'select_account' });
 
-window._auth = auth; window._db = db;
+window._auth = auth; window._db = db; window._messaging = messaging;
 window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collection, query, where };
+// 🌟 GESTION DES NOTIFICATIONS (NOUVEAU) 🌟
 
-// SUPPRIMÉ : l'appel prématuré à signInAnonymously qui écrasait la session Google au rechargement.
+window.demanderPermissionNotif = async function() {
+    console.log("Demande de permission pour les notifications...");
+    const btn = document.getElementById('btnEnableNotifs');
+    if(btn) btn.disabled = true;
+
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            console.log('Permission de notification accordée.');
+            toast_('Permission accordée. Configuration en cours...', 'info');
+            await configurerNotifications();
+        } else {
+            console.log('Permission de notification refusée.');
+            toast_('Les notifications ont été refusées.', 'warn');
+            if(btn) btn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Erreur lors de la demande de permission', error);
+        toast_('Erreur lors de la demande. Veuillez réessayer.', 'err');
+        if(btn) btn.disabled = false;
+    }
+};
+
+async function configurerNotifications() {
+    try {
+        // Enregistrement du Service Worker
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            console.log('Service Worker enregistré avec succès:', registration);
+            
+            // Récupération du Token
+            // REMPLACE LA VAPID KEY PAR LA TIENNE DEPUIS FIREBASE CONSOLE (Paramètres du projet > Cloud Messaging > Certificats d'envoi Web)
+            const vapidKey = "BGw-iZk9vQh1hTfX30nF9N6W-0sYQ9x1cQ7bV0M_Fj1hC7E-Z1z6A9t7-3wO9Yg0j7-W6Yx9N6W-0sYQ9x1cQ7b"; 
+            
+            const currentToken = await getToken(window._messaging, { 
+                vapidKey: vapidKey,
+                serviceWorkerRegistration: registration 
+            });
+
+            if (currentToken) {
+                console.log('Token FCM récupéré:', currentToken);
+                await sauvegarderTokenFCM(currentToken);
+                mettreAJourUINotifs(true);
+                toast_('Notifications activées avec succès !', 'ok');
+            } else {
+                console.log('Aucun token de registre disponible. Demandez la permission pour générer un token.');
+                toast_('Impossible de générer le token pour les alertes.', 'err');
+                mettreAJourUINotifs(false);
+            }
+        } else {
+            console.warn("Les Service Workers ne sont pas supportés par ce navigateur.");
+            toast_("Votre navigateur ne supporte pas les notifications en arrière-plan.", "warn");
+        }
+    } catch (err) {
+        console.error('Une erreur s\'est produite lors de la récupération du token. ', err);
+        toast_('Erreur lors de l\'activation des alertes.', 'err');
+        mettreAJourUINotifs(false);
+    }
+}
+
+async function sauvegarderTokenFCM(token) {
+    const u = window._user;
+    if (!u) return;
+
+    try {
+        // On sauvegarde le token dans le profil de l'utilisateur
+        const userRef = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
+        await setDoc(userRef, { fcmToken: token }, { merge: true });
+        console.log("Token FCM sauvegardé dans Firestore.");
+    } catch (e) {
+        console.error("Erreur lors de la sauvegarde du token FCM", e);
+    }
+}
+
+function mettreAJourUINotifs(estActive) {
+    const btn = document.getElementById('btnEnableNotifs');
+    const statusTxt = document.getElementById('notifStatus');
+    
+    if(btn) {
+        if(estActive) {
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Activé';
+            btn.classList.remove('btn-p');
+            btn.classList.add('btn-g');
+            btn.disabled = true;
+            if(statusTxt) statusTxt.textContent = "Vous recevrez les alertes importantes.";
+            if(statusTxt) statusTxt.style.color = "var(--green)";
+        } else {
+            btn.innerHTML = '<i class="fa-solid fa-bell"></i> Activer';
+            btn.classList.add('btn-p');
+            btn.classList.remove('btn-g');
+            btn.disabled = false;
+            if(statusTxt) statusTxt.textContent = "Recevoir les alertes importantes en arrière-plan";
+            if(statusTxt) statusTxt.style.color = "var(--muted)";
+        }
+    }
+}
+
+// Écouter les messages quand l'application est AU PREMIER PLAN
+onMessage(window._messaging, (payload) => {
+    console.log('Message reçu au premier plan : ', payload);
+    const title = payload.notification?.title || payload.data?.title || "Nouvelle Alerte LevelUp";
+    const body = payload.notification?.body || payload.data?.body || "";
+    toast_(`${title} : ${body}`, 'info');
+});
+
+// Vérifier l'état des notifications au chargement du tableau de bord
+function verifierEtatNotifs() {
+    if (Notification.permission === 'granted') {
+        mettreAJourUINotifs(true);
+        // Si on a déjà la permission, on essaie de récupérer le token discrètement pour s'assurer qu'il est à jour dans la BDD
+        if(window._user) {
+            configurerNotifications();
+        }
+    } else if (Notification.permission === 'denied') {
+        const statusTxt = document.getElementById('notifStatus');
+        if(statusTxt) statusTxt.textContent = "Notifications bloquées par votre navigateur.";
+        if(statusTxt) statusTxt.style.color = "var(--red)";
+        const btn = document.getElementById('btnEnableNotifs');
+        if(btn) btn.disabled = true;
+    } else {
+        mettreAJourUINotifs(false);
+    }
+}
+
+// --------------------------------------------------
 
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
@@ -2479,6 +2615,7 @@ mobileNav.classList.add('vis');
 renderNavLogged(u);
 updateLoggedUI();
 window.refreshUI();
+verifierEtatNotifs(); // NOUVEAU : Vérifie l'état des notifs quand le dash s'ouvre
 }
 
 function showLand() {
