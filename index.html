@@ -453,11 +453,11 @@ LOGOUT ANIMATION OVERLAY
 .reveal.d1{transition-delay:.1s}.reveal.d2{transition-delay:.2s}.reveal.d3{transition-delay:.3s}.reveal.d4{transition-delay:.4s}
 
 /* SMART FAB & IA OVERLAY */
-.fab-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 850; display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: none; }
-.fab-hint { position: absolute; bottom: 75px; left: 50%; transform: translateX(-50%); background: var(--purple); color: #fff; font-size: 0.8rem; font-weight: 700; padding: 6px 14px; border-radius: 20px; white-space: nowrap; pointer-events: none; opacity: 1; transition: opacity 0.3s; animation: fabBounceUp 2s infinite ease-in-out; box-shadow: 0 4px 15px rgba(168,85,247,0.4); }
-.fab-hint::after { content: ''; position: absolute; left: 50%; transform: translateX(-50%); top: 100%; border-top: 6px solid var(--purple); border-left: 6px solid transparent; border-right: 6px solid transparent; }
+.fab-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 960; display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: none; }
+.fab-hint { position: absolute; bottom: 75px; right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(168,85,247,0.4); color: #fff; font-size: 0.82rem; font-weight: 600; font-family: var(--sans); padding: 8px 16px; border-radius: 14px; white-space: nowrap; pointer-events: none; opacity: 1; transition: opacity 0.3s; animation: fabBounceUp 2s infinite ease-in-out; box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 15px rgba(168,85,247,0.15); display: flex; align-items: center; gap: 8px; letter-spacing: 0.02em; }
+.fab-hint::after { content: ''; position: absolute; right: 22px; top: 100%; border-top: 7px solid rgba(168,85,247,0.4); border-left: 7px solid transparent; border-right: 7px solid transparent; }
 .fab-wrap.open .fab-hint { opacity: 0 !important; }
-@keyframes fabBounceUp { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -8px); } }
+@keyframes fabBounceUp { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 .fab-menu { display: flex; flex-direction: column; gap: 12px; opacity: 0; transform: translateY(20px) scale(0.8); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; transform-origin: bottom center; }
 .fab-wrap.open .fab-menu { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 .fab-item { width: 44px; height: 44px; border-radius: 50%; background: var(--surf); border: 1px solid var(--bdr); display: flex; align-items: center; justify-content: center; color: var(--txt); cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 1rem; position: relative; }
@@ -473,12 +473,16 @@ LOGOUT ANIMATION OVERLAY
 .scroll-svg circle { fill: none; stroke-width: 2.5px; stroke-linecap: round; }
 .scroll-svg-bg { stroke: rgba(255,255,255,0.08); }
 .scroll-svg-bar { stroke: var(--purple); stroke-dasharray: 163; stroke-dashoffset: 163; transition: stroke-dashoffset 0.15s ease-out; }
-.ia-overlay { position: fixed; bottom: 95px; right: 24px; width: 380px; height: 600px; max-width: calc(100vw - 32px); max-height: calc(100vh - 120px); z-index: 840; background: transparent; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 50px rgba(0,0,0,0.8); opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.95); transform-origin: bottom right; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); border: 1px solid var(--bdr-hi); }
+.ia-overlay { position: fixed; bottom: 95px; right: 24px; width: 380px; height: 600px; max-width: calc(100vw - 32px); max-height: calc(100vh - 120px); z-index: 950; background: transparent; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 50px rgba(0,0,0,0.8); opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.95); transform-origin: bottom right; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); border: 1px solid var(--bdr-hi); }
 .ia-overlay.open { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+.ia-overlay.minimized { height: 75px !important; min-height: 75px !important; border-radius: 24px; }
 .ia-overlay iframe { width: 100%; height: 100%; border: none; background: #06020a; }
 @media(max-width: 820px) { 
     .fab-wrap { bottom: 85px; right: 16px; } 
-    .ia-overlay { bottom: 145px; right: 16px; max-height: calc(100vh - 160px); }
+    /* L'iframe prend tout l'écran sur mobile */
+    .ia-overlay { bottom: 0; right: 0; width: 100vw !important; height: 100vh !important; max-height: 100vh !important; max-width: 100vw !important; border-radius: 0; z-index: 950; }
+    /* Mode "Barre Flottante" (réduit) sur mobile */
+    .ia-overlay.minimized { bottom: 160px; right: 16px; width: calc(100vw - 32px) !important; height: 75px !important; min-height: 75px !important; border-radius: 20px; z-index: 840; }
 }
 
 /* MOBILE NAV (DASHBOARD) */
@@ -1582,10 +1586,10 @@ LOGOUT LOADING ANIMATION
 SMART FAB & IA ASSISTANT
 ═══════════════════════════════════════ -->
 <div class="fab-wrap" id="fabWrap">
-    <div class="fab-hint" id="fabHint">✨ Assistant LevelUp</div>
+    <div class="fab-hint" id="fabHint"><i class="fa-solid fa-sparkles" style="color: var(--purple);"></i> Assistant LevelUp</div>
     <div class="fab-menu" id="fabMenu">
         <button class="fab-item" onclick="toggleIA(event)">
-            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star" style="color: var(--purple);"></i>
             <span class="tooltip">Ouvrir l'Assistant IA</span>
         </button>
         <button class="fab-item" onclick="openAuth('login'); document.getElementById('fabWrap').classList.remove('open');">
@@ -2914,8 +2918,24 @@ if(sBar) {
 // INTELLIGENCE ARTIFICIELLE & FAB LOGIC
 window.toggleFab = function(e) {
     if(e) e.stopPropagation();
-    document.getElementById('fabWrap').classList.toggle('open');
+    const fabWrap = document.getElementById('fabWrap');
+    const iaOverlay = document.getElementById('iaOverlay');
     const hint = document.getElementById('fabHint');
+    
+    // FERMETURE INTELLIGENTE : Si l'IA est ouverte, le bouton étoile la ferme
+    if (iaOverlay && iaOverlay.classList.contains('open')) {
+        iaOverlay.classList.remove('open');
+        iaOverlay.classList.remove('minimized');
+        fabWrap.classList.remove('open'); 
+        
+        // Réinitialise l'iframe à sa taille normale en arrière-plan
+        const frame = document.getElementById('iaFrame');
+        if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
+        return; // On arrête l'exécution ici
+    }
+    
+    // Comportement normal d'ouverture du menu
+    fabWrap.classList.toggle('open');
     if(hint) hint.style.opacity = '0'; // Masquer définitivement au clic
 };
 
@@ -2950,6 +2970,9 @@ document.addEventListener('click', (e) => {
     // Fermer l'iframe IA si on clique ailleurs sur le site (hors menu FAB)
     if (iaOverlay && iaOverlay.classList.contains('open') && !iaOverlay.contains(e.target) && !fabWrap.contains(e.target)) {
         iaOverlay.classList.remove('open');
+        iaOverlay.classList.remove('minimized');
+        const frame = document.getElementById('iaFrame');
+        if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
     }
 });
 
@@ -2971,8 +2994,34 @@ window.addEventListener('message', (e) => {
     if (!data || !data.action) return;
     
     if(data.action === 'request_auth') window.sendAuthToIA();
-    if(data.action === 'close_ia' || data.action === 'minimize_ia') {
-        document.getElementById('iaOverlay').classList.remove('open');
+    
+    // ── LOGIQUE DE DIMENSIONNEMENT DE L'IFRAME ──
+    if(data.action === 'minimize_ia') {
+        const ov = document.getElementById('iaOverlay');
+        const frame = document.getElementById('iaFrame');
+        if (ov.classList.contains('minimized')) {
+            ov.classList.remove('minimized');
+            if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
+        } else {
+            ov.classList.add('minimized');
+            if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'mini'}, '*');
+        }
+    }
+    if(data.action === 'expand_ia') {
+        const ov = document.getElementById('iaOverlay');
+        if(ov.classList.contains('minimized')) {
+            ov.classList.remove('minimized');
+            const frame = document.getElementById('iaFrame');
+            if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
+        }
+    }
+    
+    if(data.action === 'close_ia') {
+        const ov = document.getElementById('iaOverlay');
+        ov.classList.remove('open');
+        ov.classList.remove('minimized');
+        const frame = document.getElementById('iaFrame');
+        if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
     }
     if(data.action === 'trigger_login' || data.action === 'force_login_limit') {
         openAuth('login');
