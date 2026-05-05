@@ -31,12 +31,45 @@
 
 <!-- Script de l'Application -->
 <script type="text/babel" data-type="module">
-// --- CAPTURE DU LIEN D'INVITATION (MÉMOIRE PERSISTANTE) ---
+// --- CAPTURE DU LIEN D'INVITATION ET SSO (MÉMOIRE PERSISTANTE) ---
 const urlParams = new URLSearchParams(window.location.search);
+let shouldUpdateUrl = false;
+
+// 1. Capture du SSO depuis l'Écosystème
+const ssoKey = urlParams.get('lvl_key');
+if (ssoKey) {
+    localStorage.setItem('levelmovie_saved_key', ssoKey);
+    const ssoUid = urlParams.get('lvl_uid');
+    if (ssoUid) localStorage.setItem('levelmovie_user_uid', ssoUid);
+    const ssoName = urlParams.get('lvl_name');
+    if (ssoName) localStorage.setItem('levelmovie_user_name', ssoName);
+    const ssoEmail = urlParams.get('lvl_email');
+    if (ssoEmail) localStorage.setItem('levelmovie_user_email', ssoEmail);
+    const ssoPhoto = urlParams.get('lvl_photo');
+    if (ssoPhoto) localStorage.setItem('lm_photo', ssoPhoto);
+    
+    // Nettoyage des paramètres d'URL pour sécuriser la clé
+    urlParams.delete('lvl_key');
+    urlParams.delete('lvl_uid');
+    urlParams.delete('lvl_name');
+    urlParams.delete('lvl_photo');
+    urlParams.delete('lvl_email');
+    shouldUpdateUrl = true;
+}
+
+// 2. Capture de l'invitation Watch Party
 const partyParam = urlParams.get('party');
 if (partyParam) {
     localStorage.setItem('pending_party_join', partyParam);
-    window.history.replaceState({}, document.title, window.location.pathname);
+    urlParams.delete('party');
+    shouldUpdateUrl = true;
+}
+
+// 3. Appliquer la nouvelle URL propre (si modifiée)
+if (shouldUpdateUrl) {
+    let newUrl = window.location.pathname;
+    if (urlParams.toString()) newUrl += '?' + urlParams.toString();
+    window.history.replaceState({}, document.title, newUrl);
 }
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -124,7 +157,7 @@ measurementId: "G-MSRDY2574K"
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const APP_ID = typeof __app_id !== 'undefined' ? __app_id : "level-ia-premium";
+const APP_ID = (typeof __app_id !== 'undefined' ? __app_id : "level-ia-premium").replace(/\//g, '_');
 
 const API_KEY = '027cc951d888c64e5f15dcb853c7347a';
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -728,7 +761,7 @@ useEffect(() => {
 // 2. Écouter la maintenance SEULEMENT après l'authentification
 useEffect(() => {
     if (!fbUser) return;
-    const unsubMaintenance = onSnapshot(doc(db, "artifacts", APP_ID, "system", "config"), (docSnap) => {
+    const unsubMaintenance = onSnapshot(doc(db, "artifacts", APP_ID, "public", "data", "system", "config"), (docSnap) => {
             if (docSnap.exists() && docSnap.data().levelmovie_maintenance === true) {
                 setIsMaintenance(true);
             } else {
