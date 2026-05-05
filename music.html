@@ -220,6 +220,29 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, collectionGroup, getDocs } from 'firebase/firestore';
 
+// --- CAPTURE DU SSO DEPUIS L'ÉCOSYSTÈME ---
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('lvl_key')) {
+    // On enregistre les données de l'écosystème
+    localStorage.setItem('lm_key', urlParams.get('lvl_key'));
+    if (urlParams.has('lvl_uid')) localStorage.setItem('lm_uid', urlParams.get('lvl_uid'));
+    if (urlParams.has('lvl_name')) localStorage.setItem('lm_name', urlParams.get('lvl_name'));
+    if (urlParams.has('lvl_email')) localStorage.setItem('lm_email', urlParams.get('lvl_email'));
+    if (urlParams.has('lvl_photo')) localStorage.setItem('lm_photo', urlParams.get('lvl_photo'));
+    
+    // Nettoyage de l'URL pour la sécurité et l'esthétique
+    urlParams.delete('lvl_key');
+    urlParams.delete('lvl_uid');
+    urlParams.delete('lvl_name');
+    urlParams.delete('lvl_email');
+    urlParams.delete('lvl_photo');
+    urlParams.delete('auto');
+    
+    let newUrl = window.location.pathname;
+    if (urlParams.toString()) newUrl += '?' + urlParams.toString();
+    window.history.replaceState({}, document.title, newUrl);
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
   authDomain: "levelup-ia.firebaseapp.com",
