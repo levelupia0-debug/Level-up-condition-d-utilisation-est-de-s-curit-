@@ -8,8 +8,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; height: 100vh; background-color: transparent; overflow: hidden; color: white; }
-        .widget-container { width: 100%; height: 100%; background-color: #06020a; display: flex; flex-direction: column; position: relative; }
+        /* CORRECTION MOBILE NATIVE : dvh et overscroll-behavior */
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; height: 100dvh; width: 100vw; background-color: transparent; overflow: hidden; color: white; overscroll-behavior: none; }
+        .widget-container { width: 100%; height: 100%; background-color: #06020a; display: flex; flex-direction: column; position: relative; overflow: hidden; }
         .space-bg { position: absolute; inset: 0; z-index: 0; background-image: radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.4), transparent), radial-gradient(1px 1px at 85% 30%, rgba(255,255,255,0.3), transparent), radial-gradient(1.5px 1.5px at 45% 60%, rgba(255,255,255,0.5), transparent), radial-gradient(1px 1px at 70% 80%, rgba(168,85,247,0.5), transparent), radial-gradient(1px 1px at 25% 85%, rgba(255,255,255,0.4), transparent), radial-gradient(1.5px 1.5px at 90% 10%, rgba(168,85,247,0.5), transparent); background-size: 150px 150px; pointer-events: none; animation: spaceDrift 100s linear infinite; }
         @keyframes spaceDrift { 0% { background-position: 0 0; } 100% { background-position: -300px 300px; } }
         .content-z { position: relative; z-index: 10; }
@@ -28,7 +29,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.4); }
         
         /* Style des boutons générés par l'IA */
-        .ai-action-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; padding: 10px 16px; border-radius: 12px; margin-top: 12px; font-size: 0.85rem; transition: transform 0.2s, filter 0.2s; cursor: pointer; border: none; outline: none; }
+        .ai-action-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; padding: 10px 16px; border-radius: 12px; margin-top: 12px; font-size: 0.85rem; transition: transform 0.2s, filter 0.2s; cursor: pointer; border: none; outline: none; text-align: center; }
         .ai-action-btn:active { transform: scale(0.96); }
         .btn-google { background: white; color: #3c4043; border: 1px solid #dadce0; }
         .btn-google:hover { filter: brightness(0.95); }
@@ -36,6 +37,17 @@
         .btn-key:hover { filter: brightness(1.1); }
         .btn-app { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; }
         .btn-app:hover { background: rgba(255,255,255,0.15); }
+        
+        /* Boutons de navigation (Dashboard, Accueil, etc.) */
+        .btn-nav { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.4); color: #d8b4fe; }
+        .btn-nav:hover { background: rgba(168, 85, 247, 0.2); border-color: rgba(168, 85, 247, 0.6); }
+
+        /* ── MINI-MODE (RÉDUIT) ── */
+        body.mini-mode #appHeader { display: none !important; }
+        body.mini-mode #chatArea { display: none !important; }
+        body.mini-mode .space-bg { display: none !important; }
+        body.mini-mode .widget-container { justify-content: center; background-color: rgba(6, 2, 10, 0.98) !important; backdrop-filter: blur(12px); border-radius: 20px; }
+        body.mini-mode #appInputBar { border-top: none; background: transparent !important; height: 100dvh; display: flex; align-items: center; padding: 0 16px; margin: 0; }
     </style>
 </head>
 <body>
@@ -55,16 +67,17 @@
             </div>
         </div>
 
-        <div class="content-z flex justify-between items-center px-4 py-3 border-b border-white/10 shrink-0 bg-[#06020a]/80 backdrop-blur-md">
+        <div class="content-z flex justify-between items-center px-4 py-3 border-b border-white/10 shrink-0 bg-[#06020a]/80 backdrop-blur-md" id="appHeader">
             <div class="flex items-center gap-2.5 text-white font-bold text-[14px]">
                 <i class="fas fa-star text-[#a855f7] text-[16px]" id="headerIcon"></i> Votre Assistant
             </div>
             <div class="flex items-center gap-3">
+                <!-- Le badge de limite ne s'affiche QUE pour les pros -->
                 <div id="limitBadge" class="hidden px-2 py-1 rounded border border-[#a855f7]/30 bg-[#a855f7]/10 text-[10px] text-[#d8b4fe] font-mono">--/120</div>
-                <button onclick="window.parent.postMessage({action: 'minimize_ia'}, '*')" class="w-8 h-8 rounded-full bg-transparent border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+                <button onclick="minimizeIA()" class="w-8 h-8 rounded-full bg-transparent border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 transition-colors">
                     <i class="fas fa-minus text-[12px]"></i>
                 </button>
-                <button onclick="window.parent.postMessage({action: 'close_ia'}, '*')" class="px-3 py-1.5 rounded-full bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#fca5a5] text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-[#ef4444]/20 transition-colors shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+                <button onclick="closeIA()" class="px-3 py-1.5 rounded-full bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#fca5a5] text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-[#ef4444]/20 transition-colors shadow-[0_0_10px_rgba(239,68,68,0.2)]">
                     <i class="fas fa-power-off text-[10px]"></i> OFF
                 </button>
             </div>
@@ -87,14 +100,13 @@
             <div id="chatHistory" class="flex flex-col gap-4 justify-end w-full"></div>
         </div>
 
-        <div class="content-z p-4 shrink-0 bg-[#06020a]/90 backdrop-blur-md border-t border-white/5">
-            <div class="flex items-center gap-2 bg-[#1a1a1a]/50 border border-[#a855f7]/30 rounded-2xl p-1.5 pl-4 focus-within:border-[#a855f7] focus-within:bg-[#1a1a1a] transition-all shadow-inner">
-                <input type="text" id="chatInput" placeholder="Posez une question à l'Assistant..." class="flex-1 bg-transparent outline-none text-white text-[13px] placeholder-white/40" onkeydown="if(event.key === 'Enter') sendMsg()">
-                <button id="sendBtn" onclick="sendMsg()" class="w-9 h-9 rounded-xl bg-[#a855f7] hover:bg-purple-500 flex items-center justify-center text-white transition-transform active:scale-95 shrink-0 shadow-md">
+        <div class="content-z p-4 shrink-0 bg-[#06020a]/90 backdrop-blur-md border-t border-white/5" id="appInputBar">
+            <div class="flex items-center gap-2 bg-[#1a1a1a]/50 border border-[#a855f7]/30 rounded-2xl p-1.5 pl-4 focus-within:border-[#a855f7] focus-within:bg-[#1a1a1a] transition-all shadow-inner w-full">
+                <input type="text" id="chatInput" placeholder="Posez une question à l'Assistant..." class="flex-1 bg-transparent outline-none text-white text-[13px] placeholder-white/40 disabled:opacity-50" onkeydown="if(event.key === 'Enter') sendMsg()">
+                <button id="sendBtn" onclick="sendMsg()" class="w-9 h-9 rounded-xl bg-[#a855f7] hover:bg-purple-500 disabled:bg-gray-600 disabled:opacity-50 flex items-center justify-center text-white transition-transform active:scale-95 shrink-0 shadow-md">
                     <i class="fas fa-arrow-up text-sm"></i>
                 </button>
             </div>
-            <div class="text-center mt-2" id="limitWarning" style="display:none;"><p class="text-[10px] text-red-400 font-medium">Limite atteinte. Connectez-vous sur l'écosystème.</p></div>
         </div>
     </div>
 
@@ -102,17 +114,42 @@
         const ALL_PROMPTS = [
             "Quelles sont tes capacités en IA ?", "Génère ma clé LevelUp.", "Je veux me connecter à LevelUp.",
             "Ouvre LevelMovie.", "Je veux écouter de la musique.", "Comment protéger mon compte ?",
-            "Analysez un PDF pour moi.", "Lis cette URL internet."
+            "Analysez un PDF pour moi.", "Lis cette URL internet.", "Est-ce qu'il y a le film Inception sur LevelMovie ?", 
+            "Y a-t-il la série Breaking Bad ?", "Mets une playlist pour réviser", "Je veux voir mes statistiques", 
+            "Comment devenir membre Pro ?", "Donne-moi une recommandation de film d'action", "Joue de la musique relaxante", 
+            "Quels sont les films d'horreur disponibles ?", "Lance le dernier Marvel", "Montre-moi les paramètres de mon compte", 
+            "Comment changer mon mot de passe ?", "Peux-tu écrire un mail pour moi ?", "Traduis ce texte en anglais", 
+            "Résume cette page web", "Qu'est-ce que l'écosystème LevelUp ?", "Comment gagner des récompenses ?", 
+            "Y a-t-il des animés sur LevelMovie ?", "Mets du rap sur LevelMusic", "Crée une image pour moi", 
+            "Je veux supprimer mon compte", "Comment contacter le support ?", "Montre-moi les nouveautés du site", 
+            "Quels sont les avantages du mode Pro ?", "Lance l'application Level IA complète", "Cherche des musiques de sport", 
+            "Fais-moi un programme d'entraînement", "Quelles sont les dernières séries sorties ?", "Trouve-moi un film de comédie", 
+            "Affiche mon historique de visionnage", "Comment utiliser l'Assistant IA à 100% ?", "Je veux parler à un humain", 
+            "Peux-tu corriger mes fautes d'orthographe ?", "Explique-moi la physique quantique", "Mets une musique d'ambiance Lo-Fi", 
+            "Cherche le film Avatar", "Y a-t-il des documentaires intéressants ?", "Ouvre mon tableau de bord", 
+            "Comment activer le mode sombre ?", "Quels sont les artistes les plus écoutés ?", "Fais-moi une blague tech", 
+            "Raconte-moi une histoire", "Je veux annuler mon abonnement"
         ];
 
         let sessionUser = null; 
-        let sessionToken = null;
         let isGuest = true;
         let messagesCount = 0;
         const GUEST_LIMIT = 20;
         const PRO_LIMIT = 120;
         let firstMessageSent = false;
-        let apiKey = "";
+        let currentTypingId = null; 
+        let isWaitingForAI = false; // FLAG POUR EMPÊCHER LE SPAM
+
+        // Fonctions pour communiquer proprement avec le parent
+        function minimizeIA() {
+            window.parent.postMessage({action: 'minimize_ia'}, '*');
+            window.parent.postMessage({action: 'enable_parent_scroll'}, '*'); 
+        }
+
+        function closeIA() {
+            window.parent.postMessage({action: 'close_ia'}, '*');
+            window.parent.postMessage({action: 'enable_parent_scroll'}, '*'); 
+        }
 
         function shuffleAndDisplayPrompts() {
             const shuffled = [...ALL_PROMPTS].sort(() => 0.5 - Math.random());
@@ -137,19 +174,58 @@
         window.addEventListener('message', (event) => {
             const data = event.data;
             if (data.type === 'AUTH_PAYLOAD') {
-                if (data.geminiKey) apiKey = data.geminiKey;
                 if (data.uid && data.token) {
-                    isGuest = false; sessionUser = { uid: data.uid, name: data.name }; sessionToken = data.token;
+                    isGuest = false; sessionUser = { uid: data.uid, name: data.name };
                     document.getElementById('userGreeting').textContent = `Mode Pro : ${data.name}`;
                     messagesCount = parseInt(localStorage.getItem(`ia_pro_reqs_${new Date().toDateString()}`) || '0');
                     updateBadge(PRO_LIMIT);
                 } else {
                     isGuest = true; messagesCount = parseInt(localStorage.getItem('ia_guest_reqs') || '0');
                     document.getElementById('userGreeting').textContent = `Mode Invité (Gratuit)`;
+                    updateBadge(0); 
                 }
             }
+            
             if (data.action === 'shuffle_prompts') if (!firstMessageSent) shuffleAndDisplayPrompts();
             if (data.type === 'QUICK_MSG') sendMsg(data.text);
+            
+            /* GESTION DU MODE RÉDUIT */
+            if (data.type === 'SET_VIEW') {
+                if (data.view === 'mini') {
+                    document.body.classList.add('mini-mode');
+                    window.parent.postMessage({action: 'enable_parent_scroll'}, '*');
+                } else {
+                    document.body.classList.remove('mini-mode');
+                    window.parent.postMessage({action: 'disable_parent_scroll'}, '*'); 
+                    setTimeout(scrollToBottom, 150);
+                }
+            }
+
+            /* RÉCEPTION DE LA RÉPONSE DE L'ÉCOSYSTÈME (L'API GEMINI VIA PARENT) */
+            if (data.action === 'ia_api_response') {
+                // Déblocage du chat
+                isWaitingForAI = false;
+                const inputEl = document.getElementById('chatInput');
+                inputEl.disabled = false;
+                inputEl.placeholder = "Posez une question à l'Assistant...";
+                document.getElementById('sendBtn').disabled = false;
+                
+                // Supprime la bulle d'attente
+                if (currentTypingId) {
+                    const el = document.getElementById(currentTypingId);
+                    if (el) el.remove();
+                    currentTypingId = null;
+                }
+                document.getElementById('headerIcon').classList.remove('fa-spin');
+                inputEl.focus();
+
+                if (data.error) {
+                    appendBubble('error', data.text);
+                } else {
+                    const finalHtml = parseActionTags(data.text);
+                    appendBubble('ai', finalHtml);
+                }
+            }
         });
 
         window.onload = () => {
@@ -167,25 +243,40 @@
         function parseActionTags(text) {
             let html = text.replace(/\n/g, '<br>');
             
-            // Si l'IA veut faire connecter l'utilisateur
             html = html.replace(/\[ACTION:LOGIN\]/g, `
-                <button onclick="window.parent.postMessage({action: 'trigger_login'}, '*')" class="ai-action-btn btn-google">
+                <button onclick="window.parent.postMessage({action: 'trigger_login'}, '*')" class="ai-action-btn btn-google mt-3">
                     <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> 
-                    Se connecter avec Google
+                    Se connecter pour continuer
                 </button>`);
             
-            // Si l'IA veut générer une clé
             html = html.replace(/\[ACTION:GENERATE_KEY\]/g, `
-                <button onclick="window.parent.postMessage({action: 'trigger_generate_key'}, '*')" class="ai-action-btn btn-key">
+                <button onclick="window.parent.postMessage({action: 'trigger_generate_key'}, '*')" class="ai-action-btn btn-key mt-3">
                     <i class="fas fa-key"></i> Générer ma clé LVL
                 </button>`);
 
-            // Si l'IA veut rediriger vers les apps complètes
+            html = html.replace(/\[ACTION:OPEN_DASHBOARD\]/g, `
+                <button onclick="window.parent.postMessage({action: 'trigger_open_dashboard'}, '*')" class="ai-action-btn btn-nav mt-3">
+                    <i class="fas fa-chart-line"></i> Ouvrir mon Tableau de Bord
+                </button>`);
+
+            html = html.replace(/\[ACTION:OPEN_TERMS\]/g, `
+                <button onclick="window.parent.postMessage({action: 'trigger_open_terms'}, '*')" class="ai-action-btn btn-nav mt-3">
+                    <i class="fas fa-file-contract"></i> Lire les Conditions
+                </button>`);
+
+            // 🌟 NOUVEAU POUVOIR : AJOUTER AUX FAVORIS 🌟
+            html = html.replace(/\[ACTION:FAVORITE:(.*?)\]/g, (match, itemName) => {
+                return `
+                <button onclick="window.parent.postMessage({action: 'trigger_favorite', item: '${itemName.replace(/'/g, "\\'")}'}, '*')" class="ai-action-btn btn-nav mt-3">
+                    <i class="fas fa-heart text-red-500"></i> Ajouter ${itemName} aux favoris
+                </button>`;
+            });
+
             html = html.replace(/\[ACTION:OPEN_APP:(.*?)\]/g, (match, appId) => {
-                let name = appId === 'ia' ? 'l\'application complète Level IA' : (appId === 'movie' ? 'LevelMovie' : 'LevelMusic');
+                let name = appId === 'ia' ? 'Level IA Premium' : (appId === 'movie' ? 'LevelMovie' : 'LevelMusic');
                 let icon = appId === 'ia' ? 'fa-brain' : (appId === 'movie' ? 'fa-clapperboard' : 'fa-music');
                 return `
-                <button onclick="window.parent.postMessage({action: 'trigger_open_app', appId: '${appId}'}, '*')" class="ai-action-btn btn-app">
+                <button onclick="window.parent.postMessage({action: 'trigger_open_app', appId: '${appId}'}, '*')" class="ai-action-btn btn-app mt-3">
                     <i class="fas ${icon}"></i> Ouvrir ${name}
                 </button>`;
             });
@@ -194,19 +285,46 @@
         }
 
         async function sendMsg(overrideText = null) {
+            // Empêche le spam si l'IA réfléchit déjà
+            if (isWaitingForAI) return;
+
             const input = document.getElementById('chatInput');
             const btn = document.getElementById('sendBtn');
             const text = overrideText || input.value.trim();
             if (!text) return;
 
+            /* Auto-agrandissement immédiat */
+            if (document.body.classList.contains('mini-mode')) {
+                document.body.classList.remove('mini-mode');
+                window.parent.postMessage({action: 'expand_ia'}, '*');
+                window.parent.postMessage({action: 'disable_parent_scroll'}, '*');
+            }
+
             const limit = isGuest ? GUEST_LIMIT : PRO_LIMIT;
+            
+            // GESTION DE LA LIMITE
             if (messagesCount >= limit) {
-                document.getElementById('limitWarning').style.display = 'block';
-                if(isGuest) window.parent.postMessage({ action: 'force_login_limit' }, '*');
+                appendBubble('user', text);
+                if (isGuest) {
+                    setTimeout(() => {
+                        appendBubble('ai', `Vous avez atteint votre limite de ${GUEST_LIMIT} messages gratuits. Pour continuer, connectez-vous gratuitement !<br>[ACTION:LOGIN]`);
+                    }, 500);
+                } else {
+                    setTimeout(() => {
+                        appendBubble('ai', `Vous avez atteint la limite de ${PRO_LIMIT} requêtes pour aujourd'hui. Revenez demain ou gérez votre forfait.<br>[ACTION:OPEN_DASHBOARD]`);
+                    }, 500);
+                }
+                input.value = '';
                 return;
             }
 
-            input.value = ''; btn.disabled = true;
+            // BLOCAGE DU CHAMP PENDANT LA REQUÊTE
+            isWaitingForAI = true;
+            input.value = ''; 
+            input.disabled = true;
+            input.placeholder = "L'IA réfléchit...";
+            btn.disabled = true;
+
             document.getElementById('allPromptsOverlay').classList.remove('open');
 
             if (!firstMessageSent) {
@@ -219,53 +337,17 @@
             else { localStorage.setItem(`ia_pro_reqs_${new Date().toDateString()}`, messagesCount); updateBadge(PRO_LIMIT); }
 
             appendBubble('user', text);
-            const typingId = 'typing-' + Date.now();
-            appendTyping(typingId);
+            currentTypingId = 'typing-' + Date.now();
+            appendTyping(currentTypingId);
             document.getElementById('headerIcon').classList.add('fa-spin');
 
-            try {
-                let responseText = "";
-                if (apiKey) {
-                    const sysPrompt = `Tu es l'Assistant IA exclusif de l'écosystème LevelUp. Tu es le BOSS de la plateforme. Tu parles à ${isGuest ? 'un invité (non-connecté)' : sessionUser?.name + ' (connecté)'}.
-RÈGLES ABSOLUES :
-1. Parle UNIQUEMENT de LevelUp, LevelMovie, LevelMusic, ou Level IA. Refuse tout autre sujet (calculs, recettes, devoirs, etc.).
-2. POUVOIRS MAGIQUES : Tu peux exécuter des actions à la place de l'utilisateur grâce à des balises secrètes que tu dois inclure dans ta réponse si besoin.
-- Si l'utilisateur veut se connecter, explique-lui et ajoute EXACTEMENT : [ACTION:LOGIN]
-- S'il veut générer une clé d'accès, explique-lui et ajoute EXACTEMENT : [ACTION:GENERATE_KEY]
-- S'il veut analyser un document/PDF ou demande où trouver l'IA avancée, dis-lui d'ouvrir l'app complète et ajoute : [ACTION:OPEN_APP:ia]
-- S'il veut voir un film ou écouter de la musique, ajoute : [ACTION:OPEN_APP:movie] ou [ACTION:OPEN_APP:music]
-3. Reste toujours "chill", très pro, et direct. Ne révèle jamais tes balises secrètes.`;
-                    
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: text }] }],
-                            systemInstruction: { parts: [{ text: sysPrompt }] }
-                        })
-                    });
-                    const data = await res.json();
-                    responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Désolé, une erreur s'est produite lors de la réflexion.";
-                } else {
-                    await new Promise(r => setTimeout(r, 1500));
-                    responseText = "L'Assistant LevelUp est momentanément en cours de maintenance. Notre équipe technique est sur le coup, veuillez réessayer un peu plus tard ! 🛠️";
-                }
-
-                document.getElementById(typingId).remove();
-                
-                // On passe le texte dans le formatteur magique avant de l'afficher !
-                const finalHtml = parseActionTags(responseText);
-                appendBubble('ai', finalHtml);
-                
-                window.parent.postMessage({ action: 'ia_response', text: responseText, originalMsg: text }, '*');
-
-            } catch (e) {
-                document.getElementById(typingId).remove();
-                appendBubble('error', "Une petite perturbation du réseau m'empêche de vous répondre. Vérifiez votre connexion internet et réessayez.");
-            }
-
-            document.getElementById('headerIcon').classList.remove('fa-spin');
-            btn.disabled = false; input.focus();
+            // 👉 ENVOI DE LA REQUÊTE À L'ÉCOSYSTÈME
+            window.parent.postMessage({
+                action: 'process_ia_prompt',
+                text: text,
+                isGuest: isGuest,
+                userName: sessionUser ? sessionUser.name : 'invité'
+            }, '*');
         }
 
         function appendBubble(type, htmlContent) {
