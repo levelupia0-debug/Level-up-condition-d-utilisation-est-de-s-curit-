@@ -2989,21 +2989,36 @@ window.sendAuthToIA = function() {
     }
 };
 
-window.addEventListener('message', (e) => {
+// Variable globale pour le cache du prompt IA
+let cachedSystemPrompt = "";
+// Clé API Gemini (Injectée automatiquement par l'environnement)
+const geminiApiKey = "";
+
+window.addEventListener('message', async (e) => {
     const data = e.data;
     if (!data || !data.action) return;
     
     if(data.action === 'request_auth') window.sendAuthToIA();
     
+    // --- GESTION DU SCROLL PARENT POUR LE MOBILE ---
+    if(data.action === 'disable_parent_scroll') {
+        document.body.style.overflow = 'hidden'; // Empêche de défiler derrière l'IA
+    }
+    if(data.action === 'enable_parent_scroll') {
+        document.body.style.overflow = ''; // Réactive le défilement
+    }
+
     // ── LOGIQUE DE DIMENSIONNEMENT DE L'IFRAME ──
     if(data.action === 'minimize_ia') {
         const ov = document.getElementById('iaOverlay');
         const frame = document.getElementById('iaFrame');
         if (ov.classList.contains('minimized')) {
             ov.classList.remove('minimized');
+            document.body.style.overflow = 'hidden'; // On coupe le scroll parent
             if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
         } else {
             ov.classList.add('minimized');
+            document.body.style.overflow = ''; // On remet le scroll parent
             if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'mini'}, '*');
         }
     }
@@ -3011,6 +3026,7 @@ window.addEventListener('message', (e) => {
         const ov = document.getElementById('iaOverlay');
         if(ov.classList.contains('minimized')) {
             ov.classList.remove('minimized');
+            document.body.style.overflow = 'hidden'; // On coupe le scroll
             const frame = document.getElementById('iaFrame');
             if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
         }
@@ -3020,25 +3036,151 @@ window.addEventListener('message', (e) => {
         const ov = document.getElementById('iaOverlay');
         ov.classList.remove('open');
         ov.classList.remove('minimized');
+        document.body.style.overflow = ''; // On remet le scroll
         const frame = document.getElementById('iaFrame');
         if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
     }
+
+    // 🌟 TRAITEMENT DES MESSAGES DE L'IA (MOTEUR GEMINI CENTRALISÉ) 🌟
+    if(data.action === 'process_ia_prompt') {
+        const iframe = document.getElementById('iaFrame');
+        
+        try {
+            // 1. Récupération du Super Prompt depuis Firestore (seulement la première fois pour optimiser)
+            if (!cachedSystemPrompt && window._user) {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'level-ia-premium';
+                // Utilisation de la syntaxe modulaire Firebase (SDK v11) intégrée à ton projet
+                const docRef = window._fb.doc(window._db, 'artifacts', appId, 'system', 'ia_prompt');
+                const docSnap = await window._fb.getDoc(docRef);
+                if (docSnap.exists()) cachedSystemPrompt = docSnap.data().prompt || "";
+            }
+
+            // 2. Construction du prompt final
+            const defaultRules = `Tu es l'Assistant IA exclusif de l'écosystème LevelUp. Tu parles à ${data.isGuest ? 'un invité' : data.userName + ' (connecté)'}.
+RÈGLES ABSOLUES :
+1. Parle UNIQUEMENT de LevelUp.
+2. POUVOIRS MAGIQUES (Utilise ces balises EXACTEMENT comme écrites si besoin) :
+- Se connecter : [ACTION:LOGIN]
+- Générer une clé : [ACTION:GENERATE_KEY]
+- Ouvrir le tableau de bord : [ACTION:OPEN_DASHBOARD]
+- Lire les conditions d'utilisation : [ACTION:OPEN_TERMS]
+- Ouvrir l'IA complète : [ACTION:OPEN_APP:ia]
+- Ouvrir Films/Séries : [ACTION:OPEN_APP:movie]
+- Ouvrir Musique : [ACTION:OPEN_APP:music]
+- Ajouter un favori : [ACTION:FAVORITE:Nom_Du_Film_Ou_Musique]`;
+
+            const sysPrompt = cachedSystemPrompt ? (cachedSystemPrompt + "\n\n" + defaultRules) : defaultRules;
+            
+            // 3. Appel à l'API Gemini
+            let responseText = "";
+            if (geminiApiKey) {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiApiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: data.text }] }],
+                        systemInstruction: { parts: [{ text: sysPrompt }] }
+                    })
+                });
+                
+                const resultData = await res.json();
+                responseText = resultData.candidates?.[0]?.content?.parts?.[0]?.text || "Désolé, je n'ai pas compris.";
+            } else {
+                await new Promise(r => setTimeout(r, 1200));
+                responseText = "L'Assistant est actuellement en cours de maintenance. Nos serveurs Gemini sont redémarrés ! 🛠️";
+            }
+
+            // 4. Renvoi du résultat à l'Iframe pour affichage !
+            if(iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    action: 'ia_api_response',
+                    text: responseText
+                }, '*');
+            }
+
+        } catch (err) {
+            console.error("Erreur IA Parent:", err);
+            if(iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    action: 'ia_api_response',
+                    error: true,
+                    text: "Je suis désolé, je n'arrive pas à joindre le serveur principal. Veuillez vérifier votre connexion."
+                }, '*');
+            }
+        }
+    }
+    
+    // --- ACTIONS MAGIQUES (Boutons cliqués dans l'IA) ---
     if(data.action === 'trigger_login' || data.action === 'force_login_limit') {
         openAuth('login');
-        document.getElementById('iaOverlay').classList.remove('open');
     }
     if(data.action === 'trigger_generate_key') {
         window.openDashboard();
         pnl('keys');
-        document.getElementById('iaOverlay').classList.remove('open');
         if(window._user) genKey();
+    }
+    if(data.action === 'trigger_open_dashboard') {
+        window.openDashboard();
+    }
+    if(data.action === 'trigger_open_terms') {
+        document.getElementById('termsOverlay').classList.remove('hidden');
     }
     if(data.action === 'trigger_open_app') {
         openApp(data.appId);
     }
+    
+    // 🌟 GESTION DE L'AJOUT AUX FAVORIS DEPUIS L'IA 🌟
+    if(data.action === 'trigger_favorite') {
+        const itemName = data.item;
+        
+        // Sécurité : On vérifie que l'utilisateur est connecté !
+        if (!window._user) {
+            toast_("Veuillez vous connecter pour ajouter des favoris !", "warn");
+            openAuth('login');
+            return;
+        }
+
+        try {
+            // L'ajout dans Firestore basé sur tes règles de sécurité
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'level-ia-premium';
+            
+            // Création d'un ID unique basé sur le nom du film pour éviter les doublons
+            const docId = sHash(itemName).toString(); 
+            
+            const favRef = window._fb.doc(window._db, 'artifacts', appId, 'users', window._user.uid, 'favorites', docId);
+            
+            // On sauvegarde l'élément avec un timestamp
+            await window._fb.setDoc(favRef, {
+                title: itemName,
+                addedAt: new Date().toISOString()
+            }, { merge: true });
+
+            toast_(`✨ ${itemName} a été ajouté à vos favoris !`, "ok");
+            
+        } catch (err) {
+            console.error("Erreur lors de l'ajout en favoris", err);
+            toast_("Erreur lors de l'ajout aux favoris.", "err");
+        }
+    }
 });
 
-window.onload = function() { if (window.loadAppStatus) window.loadAppStatus(); };
+// INTELLIGENCE ARTIFICIELLE & FAB LOGIC
+window.toggleIA = function(e) {
+    if(e) e.stopPropagation();
+    const ov = document.getElementById('iaOverlay');
+    ov.classList.toggle('open');
+    document.getElementById('fabWrap').classList.remove('open');
+    
+    if (ov.classList.contains('open')) {
+        window.sendAuthToIA();
+        document.body.style.overflow = 'hidden'; // Bloque le scroll
+    } else {
+        document.body.style.overflow = ''; // Rétablit le scroll
+        ov.classList.remove('minimized');
+        const frame = document.getElementById('iaFrame');
+        if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
+    }
+};
 
 // AJOUT DE LA FONCTION MANQUANTE POUR LE BOUTON DÉCONNEXION
 window.confirmLogout = function() {
