@@ -1592,9 +1592,9 @@ SMART FAB & IA ASSISTANT
             <i class="fa-solid fa-star" style="color: var(--purple);"></i>
             <span class="tooltip">Ouvrir l'Assistant IA</span>
         </button>
-        <button class="fab-item" onclick="openAuth('login'); document.getElementById('fabWrap').classList.remove('open');">
-            <i class="fa-solid fa-user"></i>
-            <span class="tooltip">Se connecter</span>
+        <button class="fab-item" id="fabNavBtn" onclick="fabNavAction(); document.getElementById('fabWrap').classList.remove('open');">
+            <i class="fa-solid fa-user" id="fabNavIco"></i>
+            <span class="tooltip" id="fabNavTip">Se connecter</span>
         </button>
         <button class="fab-item" onclick="smartScroll()">
             <i class="fa-solid fa-arrow-down" id="smartScrollIco"></i>
@@ -2457,6 +2457,7 @@ mobileNav.classList.add('vis');
 renderNavLogged(u);
 updateLoggedUI();
 window.refreshUI();
+if(window.updateFabNavBtn) window.updateFabNavBtn();
 }
 
 function showLand() {
@@ -2479,6 +2480,7 @@ landing.style.display = 'block';
 renderNavGuest();
 updateGuestUI();
 window.updateAppCards();
+if(window.updateFabNavBtn) window.updateFabNavBtn();
 }
 
 function renderNavLogged(u) {
@@ -2651,6 +2653,22 @@ dashboard.style.display = 'flex';
 }
 pnl('home');
 window.scrollTo({top:0, behavior:'smooth'});
+if(window.updateFabNavBtn) window.updateFabNavBtn();
+};
+
+window.closeDashboard = function() {
+const landing = document.getElementById('landing');
+const dashboard = document.getElementById('dashboard');
+if (dashboard) {
+dashboard.classList.add('hidden');
+dashboard.style.display = 'none';
+}
+if (landing) {
+landing.classList.remove('hidden');
+landing.style.display = '';
+}
+window.scrollTo({top:0, behavior:'smooth'});
+if(window.updateFabNavBtn) window.updateFabNavBtn();
 };
 
 // AUTH
@@ -2899,10 +2917,10 @@ if(sBar) {
     if(maxScroll > 0) {
         const progress = window.scrollY / maxScroll;
         sBar.style.strokeDashoffset = 163 - (163 * progress);
-        
+
         // Cache l'indice "✨ Assistant" dès le premier mouvement de défilement
         if(window.scrollY > 10 && fabHint) fabHint.style.opacity = '0';
-        
+
         if(scrollIco) {
             // Change l'icône selon la position (vers le bas ou vers le haut)
             if(window.scrollY < maxScroll / 2) {
@@ -2921,19 +2939,19 @@ window.toggleFab = function(e) {
     const fabWrap = document.getElementById('fabWrap');
     const iaOverlay = document.getElementById('iaOverlay');
     const hint = document.getElementById('fabHint');
-    
+
     // FERMETURE INTELLIGENTE : Si l'IA est ouverte, le bouton étoile la ferme
     if (iaOverlay && iaOverlay.classList.contains('open')) {
         iaOverlay.classList.remove('open');
         iaOverlay.classList.remove('minimized');
         fabWrap.classList.remove('open'); 
-        
+
         // Réinitialise l'iframe à sa taille normale en arrière-plan
         const frame = document.getElementById('iaFrame');
         if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
         return; // On arrête l'exécution ici
     }
-    
+
     // Comportement normal d'ouverture du menu
     fabWrap.classList.toggle('open');
     if(hint) hint.style.opacity = '0'; // Masquer définitivement au clic
@@ -2949,24 +2967,16 @@ window.smartScroll = function() {
     document.getElementById('fabWrap').classList.remove('open');
 };
 
-window.toggleIA = function(e) {
-    if(e) e.stopPropagation();
-    const ov = document.getElementById('iaOverlay');
-    ov.classList.toggle('open');
-    document.getElementById('fabWrap').classList.remove('open');
-    if (ov.classList.contains('open')) window.sendAuthToIA();
-};
-
 // FERMETURE AU CLIC À L'EXTÉRIEUR (Outside Click Logic)
 document.addEventListener('click', (e) => {
     const fabWrap = document.getElementById('fabWrap');
     const iaOverlay = document.getElementById('iaOverlay');
-    
+
     // Fermer le menu FAB si on clique ailleurs
     if (fabWrap && fabWrap.classList.contains('open') && !fabWrap.contains(e.target)) {
         fabWrap.classList.remove('open');
     }
-    
+
     // Fermer l'iframe IA si on clique ailleurs sur le site (hors menu FAB)
     if (iaOverlay && iaOverlay.classList.contains('open') && !iaOverlay.contains(e.target) && !fabWrap.contains(e.target)) {
         iaOverlay.classList.remove('open');
@@ -2976,16 +2986,22 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// GÉNÉRATION & ENVOI DU JETON ÉPHÉMÈRE À L'IFRAME
+window._activeSessionToken = null;
 window.sendAuthToIA = function() {
     const frame = document.getElementById('iaFrame');
-    if(frame && frame.contentWindow) {
+    if (!frame || !frame.contentWindow) return;
+    if (window._user) {
+        const token = Math.random().toString(36).substr(2) + Date.now().toString(36);
+        window._activeSessionToken = token;
         frame.contentWindow.postMessage({
-            type: 'AUTH_PAYLOAD',
-            uid: window._user?.uid || null,
-            token: window._ud?.apiKey || null,
-            name: window._ud?.displayName || window._user?.email?.split('@')[0] || 'Utilisateur',
-            geminiKey: '' // Laisse l'espace pour une clé locale si nécessaire
+            action: 'START_SESSION',
+            token: token,
+            name: window._ud?.displayName || window._user?.email?.split('@')[0] || 'Utilisateur'
         }, '*');
+    } else {
+        window._activeSessionToken = null;
+        frame.contentWindow.postMessage({ action: 'START_SESSION', token: null }, '*');
     }
 };
 
@@ -2997,54 +3013,72 @@ const geminiApiKey = "";
 window.addEventListener('message', async (e) => {
     const data = e.data;
     if (!data || !data.action) return;
-    
+
+    // Répondre à la demande de session de l'iframe (nouvelle approche jeton éphémère)
+    if(data.action === 'request_session') window.sendAuthToIA();
+    // Compatibilité ancienne : request_auth
     if(data.action === 'request_auth') window.sendAuthToIA();
-    
-    // --- GESTION DU SCROLL PARENT POUR LE MOBILE ---
+
+    // --- GESTION DU SCROLL PARENT (MOBILE UNIQUEMENT) ---
     if(data.action === 'disable_parent_scroll') {
-        document.body.style.overflow = 'hidden'; // Empêche de défiler derrière l'IA
+        if(window.innerWidth < 820) document.body.style.overflow = 'hidden';
     }
     if(data.action === 'enable_parent_scroll') {
-        document.body.style.overflow = ''; // Réactive le défilement
+        document.body.style.overflow = '';
     }
 
     // ── LOGIQUE DE DIMENSIONNEMENT DE L'IFRAME ──
     if(data.action === 'minimize_ia') {
         const ov = document.getElementById('iaOverlay');
         const frame = document.getElementById('iaFrame');
+        const fab = document.getElementById('fabWrap');
         if (ov.classList.contains('minimized')) {
             ov.classList.remove('minimized');
-            document.body.style.overflow = 'hidden'; // On coupe le scroll parent
+            if(window.innerWidth < 820) document.body.style.overflow = 'hidden';
+            if(fab && window.innerWidth < 820) fab.style.display = 'none';
             if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
         } else {
             ov.classList.add('minimized');
-            document.body.style.overflow = ''; // On remet le scroll parent
+            document.body.style.overflow = '';
+            if(fab) fab.style.display = '';
             if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'mini'}, '*');
         }
     }
     if(data.action === 'expand_ia') {
         const ov = document.getElementById('iaOverlay');
+        const fab = document.getElementById('fabWrap');
         if(ov.classList.contains('minimized')) {
             ov.classList.remove('minimized');
-            document.body.style.overflow = 'hidden'; // On coupe le scroll
+            if(window.innerWidth < 820) {
+                document.body.style.overflow = 'hidden';
+                if(fab) fab.style.display = 'none';
+            }
             const frame = document.getElementById('iaFrame');
             if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
         }
     }
-    
+
     if(data.action === 'close_ia') {
         const ov = document.getElementById('iaOverlay');
+        const fab = document.getElementById('fabWrap');
         ov.classList.remove('open');
         ov.classList.remove('minimized');
-        document.body.style.overflow = ''; // On remet le scroll
+        document.body.style.overflow = '';
+        if(fab) fab.style.display = '';
         const frame = document.getElementById('iaFrame');
         if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
     }
 
-    // 🌟 TRAITEMENT DES MESSAGES DE L'IA (MOTEUR GEMINI CENTRALISÉ) 🌟
+    // 🌟 TRAITEMENT DES MESSAGES DE L'IA (MOTEUR GEMINI CENTRALISÉ) — VALIDATION DU JETON 🌟
     if(data.action === 'process_ia_prompt') {
+        // Vérification de sécurité : Le jeton doit correspondre à celui généré par l'écosystème
+        if (!data.sessionToken || data.sessionToken !== window._activeSessionToken) {
+            const iframe = document.getElementById('iaFrame');
+            if(iframe && iframe.contentWindow) iframe.contentWindow.postMessage({action: 'ia_api_response', error: true, text: "Session invalide. Veuillez vous reconnecter."}, '*');
+            return;
+        }
         const iframe = document.getElementById('iaFrame');
-        
+
         try {
             // 1. Récupération du Super Prompt depuis Firestore (seulement la première fois pour optimiser)
             if (!cachedSystemPrompt && window._user) {
@@ -3070,7 +3104,7 @@ RÈGLES ABSOLUES :
 - Ajouter un favori : [ACTION:FAVORITE:Nom_Du_Film_Ou_Musique]`;
 
             const sysPrompt = cachedSystemPrompt ? (cachedSystemPrompt + "\n\n" + defaultRules) : defaultRules;
-            
+
             // 3. Appel à l'API Gemini
             let responseText = "";
             if (geminiApiKey) {
@@ -3082,7 +3116,7 @@ RÈGLES ABSOLUES :
                         systemInstruction: { parts: [{ text: sysPrompt }] }
                     })
                 });
-                
+
                 const resultData = await res.json();
                 responseText = resultData.candidates?.[0]?.content?.parts?.[0]?.text || "Désolé, je n'ai pas compris.";
             } else {
@@ -3109,7 +3143,7 @@ RÈGLES ABSOLUES :
             }
         }
     }
-    
+
     // --- ACTIONS MAGIQUES (Boutons cliqués dans l'IA) ---
     if(data.action === 'trigger_login' || data.action === 'force_login_limit') {
         openAuth('login');
@@ -3128,11 +3162,11 @@ RÈGLES ABSOLUES :
     if(data.action === 'trigger_open_app') {
         openApp(data.appId);
     }
-    
+
     // 🌟 GESTION DE L'AJOUT AUX FAVORIS DEPUIS L'IA 🌟
     if(data.action === 'trigger_favorite') {
         const itemName = data.item;
-        
+
         // Sécurité : On vérifie que l'utilisateur est connecté !
         if (!window._user) {
             toast_("Veuillez vous connecter pour ajouter des favoris !", "warn");
@@ -3143,12 +3177,12 @@ RÈGLES ABSOLUES :
         try {
             // L'ajout dans Firestore basé sur tes règles de sécurité
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'level-ia-premium';
-            
+
             // Création d'un ID unique basé sur le nom du film pour éviter les doublons
             const docId = sHash(itemName).toString(); 
-            
+
             const favRef = window._fb.doc(window._db, 'artifacts', appId, 'users', window._user.uid, 'favorites', docId);
-            
+
             // On sauvegarde l'élément avec un timestamp
             await window._fb.setDoc(favRef, {
                 title: itemName,
@@ -3156,7 +3190,7 @@ RÈGLES ABSOLUES :
             }, { merge: true });
 
             toast_(`✨ ${itemName} a été ajouté à vos favoris !`, "ok");
-            
+
         } catch (err) {
             console.error("Erreur lors de l'ajout en favoris", err);
             toast_("Erreur lors de l'ajout aux favoris.", "err");
@@ -3164,18 +3198,58 @@ RÈGLES ABSOLUES :
     }
 });
 
-// INTELLIGENCE ARTIFICIELLE & FAB LOGIC
+// BOUTON ÉTOILE FAB INTELLIGENT (CONTEXTE ADAPTATIF)
+window.fabNavAction = function() {
+    if (!window._user) {
+        openAuth('login');
+        return;
+    }
+    const dash = document.getElementById('dashOverlay');
+    if (dash && !dash.classList.contains('hidden')) {
+        // On est dans le tableau de bord → aller à l'accueil
+        window.closeDashboard ? window.closeDashboard() : (dash.classList.add('hidden'));
+    } else {
+        // On est sur l'accueil → ouvrir le tableau de bord
+        window.openDashboard ? window.openDashboard() : null;
+    }
+};
+
+window.updateFabNavBtn = function() {
+    const ico = document.getElementById('fabNavIco');
+    const tip = document.getElementById('fabNavTip');
+    if (!ico || !tip) return;
+    if (!window._user) {
+        ico.className = 'fa-solid fa-user';
+        tip.textContent = 'Se connecter';
+        return;
+    }
+    const dash = document.getElementById('dashOverlay');
+    if (dash && !dash.classList.contains('hidden')) {
+        ico.className = 'fa-solid fa-house';
+        tip.textContent = 'Accueil';
+    } else {
+        ico.className = 'fa-solid fa-chart-line';
+        tip.textContent = 'Tableau de Bord';
+    }
+};
+
+// OUVERTURE / FERMETURE DE L'IA (SCROLL MOBILE UNIQUEMENT, FAB MASQUÉ)
 window.toggleIA = function(e) {
     if(e) e.stopPropagation();
     const ov = document.getElementById('iaOverlay');
+    const fab = document.getElementById('fabWrap');
     ov.classList.toggle('open');
-    document.getElementById('fabWrap').classList.remove('open');
-    
+    fab.classList.remove('open');
+
     if (ov.classList.contains('open')) {
         window.sendAuthToIA();
-        document.body.style.overflow = 'hidden'; // Bloque le scroll
+        if(window.innerWidth < 820) {
+            document.body.style.overflow = 'hidden';
+            if(fab) fab.style.display = 'none';
+        }
     } else {
-        document.body.style.overflow = ''; // Rétablit le scroll
+        document.body.style.overflow = '';
+        if(fab) fab.style.display = '';
         ov.classList.remove('minimized');
         const frame = document.getElementById('iaFrame');
         if(frame && frame.contentWindow) frame.contentWindow.postMessage({type: 'SET_VIEW', view: 'full'}, '*');
