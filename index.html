@@ -122,14 +122,16 @@ z-index: 1;
 pointer-events: none;
 }
 
-/* La classe à utiliser pour tes images publicitaires dans Firebase */
+/* La classe à utiliser pour tes images/vidéos publicitaires dans Firebase */
 .hero-dynamic-img {
+position: absolute;
+inset: 0;
 width: 100%;
-height: auto; /* S'adapte exactement à la hauteur réelle de ton image/vidéo */
-max-height: 140vh;
+height: 100%;
 object-fit: cover;
 opacity: 0.65;
 animation: imgFadeIn 1.5s ease-out forwards;
+border: none;
 
 /* LA MAGIE EST ICI : Efface la VRAIE ligne du bas de la vidéo, peu importe sa taille ! */
 -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 65%, transparent 100%);
@@ -487,9 +489,7 @@ LOGOUT ANIMATION OVERLAY
 
 /* ── BADGES COINS DES CARTES APPS ── */
 .app-card-badge { position:absolute; top:-1px; right:16px; padding:3px 10px; border-radius:0 0 8px 8px; font-size:.6rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; z-index:10; pointer-events:none; }
-.badge-new,.badge-nouveau { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; box-shadow:0 2px 8px rgba(34,197,94,.4); }
-.badge-hot { background:linear-gradient(135deg,#ef4444,#f97316); color:#fff; box-shadow:0 2px 8px rgba(239,68,68,.4); }
-.badge-beta { background:linear-gradient(135deg,#3b82f6,#6366f1); color:#fff; box-shadow:0 2px 8px rgba(59,130,246,.4); }
+.badge-new,.badge-nouveau,.badge-hot,.badge-beta,.badge-live,.badge-soon,.badge-pro,.app-card-badge { background:linear-gradient(135deg,#22c55e,#16a34a) !important; color:#fff !important; box-shadow:0 2px 8px rgba(34,197,94,.4) !important; }
 .badge-promo,.badge-top { background:linear-gradient(135deg,#a855f7,#7c3aed); color:#fff; box-shadow:0 2px 8px rgba(168,85,247,.4); }
 
 /* ── OVERLAY MAINTENANCE SUR LES CARTES ── */
@@ -520,13 +520,24 @@ LOGOUT ANIMATION OVERLAY
 .tools-overlay.hidden { display:none !important; }
 .tools-head { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.06); background:rgba(10,10,10,.8); flex-shrink:0; gap:12px; }
 .tools-grid-wrap { flex:1; overflow-y:auto; padding:16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; align-content:start; }
-.tool-card { background:var(--surf); border:1px solid var(--bdr); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:10px; cursor:pointer; transition:all .25s; position:relative; overflow:hidden; }
-.tool-card:hover { border-color:rgba(168,85,247,.4); background:var(--elev); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.5); }
-.tool-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--purple),transparent); opacity:0; transition:opacity .3s; }
+/* TOOL CARDS — PRO DESIGN */
+.tool-card { background:linear-gradient(145deg,rgba(22,10,40,.97),rgba(14,6,26,.97)); border:1px solid rgba(168,85,247,.14); border-radius:18px; display:flex; flex-direction:column; cursor:pointer; transition:all .3s cubic-bezier(.25,.8,.25,1); position:relative; overflow:hidden; }
+.tool-card:hover { border-color:rgba(168,85,247,.45); transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,.7),0 0 0 1px rgba(168,85,247,.08); }
+.tool-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(168,85,247,.7),transparent); opacity:0; transition:opacity .3s; z-index:2; }
 .tool-card:hover::before { opacity:1; }
-.tool-card-ico { width:42px; height:42px; border-radius:12px; background:rgba(168,85,247,.1); border:1px solid rgba(168,85,247,.2); display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:var(--purple); flex-shrink:0; }
-.tool-card-name { font-size:.85rem; font-weight:700; color:var(--txt); line-height:1.3; }
-.tool-card-desc { font-size:.73rem; color:var(--muted); line-height:1.5; flex:1; }
+/* Preview iframe zone */
+.tool-preview-zone { width:100%; height:90px; overflow:hidden; position:relative; background:rgba(8,3,18,.8); border-bottom:1px solid rgba(255,255,255,.04); flex-shrink:0; }
+.tool-preview-iframe { width:400%; height:400%; transform:scale(0.25); transform-origin:top left; pointer-events:none; border:none; opacity:.85; }
+.tool-preview-fallback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:radial-gradient(ellipse at 50% 100%,rgba(168,85,247,.14),transparent 70%); }
+/* Card body */
+.tool-card-body { padding:13px 14px 14px; display:flex; flex-direction:column; gap:8px; flex:1; }
+.tool-card-header { display:flex; align-items:center; gap:10px; }
+.tool-card-ico { width:36px; height:36px; border-radius:10px; background:rgba(168,85,247,.12); border:1px solid rgba(168,85,247,.22); display:flex; align-items:center; justify-content:center; font-size:.95rem; color:var(--purple); flex-shrink:0; overflow:hidden; }
+.tool-card-ico svg,.tool-card-ico img { max-width:22px; max-height:22px; width:22px; height:22px; object-fit:contain; }
+.tool-card-name { font-size:.84rem; font-weight:700; color:var(--txt); line-height:1.3; flex:1; }
+.tool-card-desc { font-size:.72rem; color:rgba(255,255,255,.42); line-height:1.6; }
+.tool-card-see-more { font-size:.69rem; color:#a855f7; cursor:pointer; font-weight:700; background:none; border:none; padding:0; outline:none; text-align:left; font-family:var(--sans); opacity:.85; transition:opacity .15s; }
+.tool-card-see-more:hover { opacity:1; text-decoration:underline; }
 .tool-card-open { width:100%; padding:7px; border-radius:10px; background:rgba(168,85,247,.1); border:1px solid rgba(168,85,247,.25); color:#d8b4fe; font-size:.75rem; font-weight:600; cursor:pointer; transition:all .2s; font-family:var(--sans); display:flex; align-items:center; justify-content:center; gap:5px; outline:none; }
 .tool-card-open:hover { background:rgba(168,85,247,.22); border-color:rgba(168,85,247,.5); }
 .tools-empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; grid-column:1/-1; min-height:300px; gap:12px; color:rgba(255,255,255,.3); text-align:center; }
@@ -539,10 +550,8 @@ LOGOUT ANIMATION OVERLAY
 .tool-fs-btn-close { background:rgba(239,68,68,.08); border-color:rgba(239,68,68,.2); color:#fca5a5; }
 .tool-fs-iframe { flex:1; border:none; width:100%; height:100%; }
 @media(max-width:600px) { .tools-grid-wrap { grid-template-columns:repeat(2,1fr); padding:12px; } .tools-head { padding:12px 14px; } }
-/* Tool card revised */
-.tool-card-header { display:flex; align-items:center; gap:10px; }
-.tool-card-try { width:100%; padding:8px; border-radius:10px; background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(34,197,94,.06)); border:1px solid rgba(34,197,94,.25); color:#4ade80; font-size:.78rem; font-weight:700; cursor:pointer; transition:all .2s; font-family:var(--sans); display:flex; align-items:center; justify-content:center; gap:6px; outline:none; margin-top:auto; }
-.tool-card-try:hover { background:linear-gradient(135deg,rgba(34,197,94,.22),rgba(34,197,94,.12)); border-color:rgba(34,197,94,.5); transform:scale(1.02); }
+.tool-card-try { width:100%; padding:8px 10px; border-radius:10px; background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(168,85,247,.08)); border:1px solid rgba(168,85,247,.3); color:#d8b4fe; font-size:.78rem; font-weight:700; cursor:pointer; transition:all .2s; font-family:var(--sans); display:flex; align-items:center; justify-content:center; gap:6px; outline:none; margin-top:auto; }
+.tool-card-try:hover { background:linear-gradient(135deg,rgba(168,85,247,.32),rgba(168,85,247,.16)); border-color:rgba(168,85,247,.6); transform:scale(1.02); box-shadow:0 4px 14px rgba(168,85,247,.25); }
 /* Coming soon state */
 .tools-coming-soon { display:flex; flex-direction:column; align-items:center; justify-content:center; grid-column:1/-1; min-height:360px; gap:0; text-align:center; padding:40px 24px; }
 .tcs-glow { position:relative; width:80px; height:80px; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; }
@@ -1547,7 +1556,16 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <p class="ps">Gérez votre compte et vos préférences de sécurité.</p>
 <div class="set-sec">
 <div class="set-title">Informations Compte</div>
-<div class="set-row"><div class="set-info"><h5>Nom d'affichage</h5><p id="setName">—</p></div></div>
+<div class="set-row" id="nameDisplayRow"><div class="set-info"><h5>Nom d'affichage</h5><p id="setName">—</p></div><button class="btn btn-g btn-xs" onclick="openNameChange()"><i class="fa-solid fa-pen-to-square"></i> Modifier</button></div>
+<div id="nameChangeBox" class="hidden" style="background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:12px;padding:14px 16px;margin-bottom:4px;display:flex;flex-direction:column;gap:10px">
+  <label style="font-size:.78rem;color:var(--muted)">Nouveau nom <span style="color:rgba(255,255,255,.3)">(lettres seulement, max 10 lettres + 4 chiffres)</span></label>
+  <input type="text" id="nameChangeInput" maxlength="14" placeholder="ex: Alex2024" style="background:rgba(255,255,255,.05);border:1px solid rgba(168,85,247,.25);border-radius:9px;padding:9px 13px;color:white;font-size:.85rem;font-family:var(--sans);outline:none;width:100%;box-sizing:border-box" oninput="validateNameInput(this)">
+  <div style="font-size:.7rem;color:rgba(255,255,255,.3)" id="nameHint">Lettres + chiffres uniquement. Max 10 lettres, max 4 chiffres.</div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-g btn-xs" onclick="cancelNameChange()" style="flex:1">Annuler</button>
+    <button class="btn btn-p btn-xs" onclick="saveNameChange()" style="flex:1"><i class="fa-solid fa-check"></i> Sauvegarder</button>
+  </div>
+</div>
 <div class="set-row"><div class="set-info"><h5>Adresse email</h5><p id="setEmail">—</p></div></div>
 <div class="set-row"><div class="set-info"><h5>Membre depuis</h5><p id="setJoined">—</p></div></div>
 <div class="set-row"><div class="set-info"><h5>Fournisseur d'identité</h5><p>Google OAuth 2.0</p></div><div style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--green);font-weight:600;white-space:nowrap"><i class="fa-solid fa-check-circle"></i> Vérifié</div></div>
@@ -1982,7 +2000,7 @@ Protection des Données Personnelles et Vie Privée
 <li><strong style="color:var(--txt)">UID Firebase</strong> → Identification technique unique et association des données</li>
 <li><strong style="color:var(--txt)">Clé d'accès LVL</strong> → Gestion des droits d'accès aux applications</li>
 <li><strong style="color:var(--txt)">Hash du PIN</strong> → Sécurisation de l'affichage de la clé</li>
-<li><strong style="color:var(--txt)">Données de localisation (approximative)</strong> → Les informations de localisation fournies par votre navigateur sont utilisées <i>uniquement</i> à l'instant T pour permettre à Level IA de contextualiser ses réponses (ex: météo, actualités locales). Elles ne sont ni stockées, ni vendues.</li>
+<li><strong style="color:var(--txt)">Données de localisation (approximative)</strong> → Les informations de localisation (pays, ville, adresse IP) sont collectées automatiquement lors de votre connexion à l'écosystème LevelUp. Ces données sont stockées de manière sécurisée dans votre Clé d'accès LevelUp et peuvent être partagées entre les applications de l'écosystème (LevelMovie, LevelMusic, Level IA) dans le but unique de personnaliser votre expérience. Elles ne sont <strong>jamais</strong> vendues à des tiers commerciaux. En utilisant l'application, vous acceptez ce traitement conformément à l'Article 5.</li>
 <li><strong style="color:var(--txt)">Conversations Level IA</strong> (si activées) → Fournir le service d'assistance IA et la mémoire persistante</li>
 </ul>
 
@@ -2487,11 +2505,31 @@ if(bgCont) {
 let bgStr = s.image_ou_video_fond.trim();
 // Si le texte ne contient pas de balise HTML (<), c'est que c'est juste un lien !
 if (!bgStr.includes('<')) {
-// Si le lien contient .mp4, .webm ou vient d'un site de vidéo
-if (bgStr.match(/\.(mp4|webm|ogg)$/i) || bgStr.includes('video') || bgStr.includes('pexels')) {
-bgStr = `<video src="${bgStr}" class="hero-dynamic-img" autoplay loop muted playsinline></video>`;
-} else {
-bgStr = `<img src="${bgStr}" class="hero-dynamic-img" alt="Fond">`;
+// Détection étendue : extensions vidéo, hébergeurs, etc.
+function _isVideoUrl(u) {
+    if (!u) return false;
+    if (/\.(mp4|webm|ogg|mov|avi|m4v|mkv|ts)(\?|#|$)/i.test(u)) return true;
+    if (/youtube\.com|youtu\.be|vimeo\.com|streamable\.com|dailymotion\.com|twitch\.tv|wistia\.com|loom\.com/i.test(u)) return true;
+    if (/cloudinary\.com\/.+\/video\//i.test(u)) return true;
+    if (u.includes('video') || u.includes('pexels') || u.includes('pixabay') || u.includes('coverr')) return true;
+    return false;
+}
+function _getEmbedUrl(u) {
+    const yt = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1&loop=1&mute=1&controls=0&rel=0&playlist=${yt[1]}`;
+    const vm = u.match(/vimeo\.com\/(\d+)/);
+    if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1&loop=1&muted=1&controls=0&background=1`;
+    return null;
+}
+if (_isVideoUrl(bgStr)) {
+    const embedUrl = _getEmbedUrl(bgStr);
+    if (embedUrl) {
+        bgStr = `<iframe src="${embedUrl}" class="hero-dynamic-img" style="border:none;pointer-events:none" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
+    } else {
+        bgStr = `<video src="${bgStr}" class="hero-dynamic-img" autoplay loop muted playsinline></video>`;
+    }
+} else if (bgStr) {
+bgStr = `<img src="${bgStr}" class="hero-dynamic-img" alt="">`;
 }
 }
 bgCont.innerHTML = bgStr;
@@ -2706,31 +2744,85 @@ window._loadToolsHub = async function(db, doc, getDoc) {
         const isConnected = !!window._user;
         const visibleTools = isConnected ? allTools : allTools.slice(0, MAX_FREE);
         const hasMore = !isConnected && allTools.length > MAX_FREE;
+        const DESC_LIMIT = 80;
         visibleTools.forEach(tool => {
             const card = document.createElement('div');
             card.className = 'tool-card';
             const icon = tool.icon || 'fa-globe';
-            const iconHtml = tool.icon_html || null; // SVG ou HTML custom depuis Firebase
+            const iconHtml = tool.icon_html || null;
             const name = tool.title || 'Outil';
             const desc = tool.description || '';
             const url = tool.url || tool.code || '';
-            const icoContent = iconHtml
-                ? `<div class="tool-card-ico" style="display:flex;align-items:center;justify-content:center;overflow:hidden">${iconHtml}</div>`
-                : `<div class="tool-card-ico"><i class="fa-solid ${icon}"></i></div>`;
+
+            // Icône : logo custom (SVG/HTML/img) ou Font Awesome
+            const icoInner = iconHtml
+                ? iconHtml
+                : `<i class="fa-solid ${icon}"></i>`;
+
+            // Description tronquée avec "voir plus"
+            let descHtml = '';
+            if (desc) {
+                if (desc.length > DESC_LIMIT) {
+                    const short = desc.substring(0, DESC_LIMIT);
+                    const full = desc.replace(/"/g,'&quot;');
+                    descHtml = `<div class="tool-card-desc">${short}… <button class="tool-card-see-more" data-full="${full}" data-name="${name.replace(/"/g,'&quot;')}">Voir plus</button></div>`;
+                } else {
+                    descHtml = `<div class="tool-card-desc">${desc}</div>`;
+                }
+            }
+
+            // Preview iframe (scaled down) avec fallback
+            const previewHtml = url ? `
+                <div class="tool-preview-zone">
+                    <iframe class="tool-preview-iframe" src="${url.replace(/"/g,'&quot;')}" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" tabindex="-1" aria-hidden="true" id="tprev-${Date.now()}-${Math.random().toString(36).slice(2)}"></iframe>
+                    <div class="tool-preview-fallback tool-pf-hidden" style="display:none"><div class="tool-card-ico" style="width:44px;height:44px;font-size:1.2rem">${icoInner}</div></div>
+                </div>` : '';
+
             card.innerHTML = `
-                <div class="tool-card-header">
-                    ${icoContent}
-                    <div class="tool-card-name">${name}</div>
+                ${previewHtml}
+                <div class="tool-card-body">
+                    <div class="tool-card-header">
+                        <div class="tool-card-ico">${icoInner}</div>
+                        <div class="tool-card-name">${name}</div>
+                    </div>
+                    ${descHtml}
+                    <button class="tool-card-try" data-url="${url.replace(/"/g,'&quot;')}" data-name="${name.replace(/"/g,'&quot;')}">
+                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.62rem"></i> Ouvrir
+                    </button>
                 </div>
-                ${desc ? `<div class="tool-card-desc" style="font-size:.75rem;color:rgba(255,255,255,.45);line-height:1.6;flex:1;margin-top:8px">${desc}</div>` : ''}
-                <button class="tool-card-try" data-url="${url.replace(/"/g,'&quot;')}" data-name="${name.replace(/"/g,'&quot;')}">
-                    <i class="fa-solid fa-play" style="font-size:.65rem"></i> Essayer
-                </button>
             `;
+
+            // Erreur iframe → montrer fallback icon
+            const iframeEl = card.querySelector('.tool-preview-iframe');
+            const fallbackEl = card.querySelector('.tool-preview-fallback');
+            if (iframeEl && fallbackEl) {
+                iframeEl.addEventListener('error', () => {
+                    iframeEl.style.display = 'none';
+                    fallbackEl.style.display = 'flex';
+                });
+                // Timeout pour les iframes qui ne triggent pas error mais restent blanches
+                setTimeout(() => {
+                    try {
+                        const blocked = iframeEl.contentDocument === null;
+                        if (blocked) { iframeEl.style.display='none'; fallbackEl.style.display='flex'; }
+                    } catch(e) { /* cross-origin : c'est normal */ }
+                }, 3000);
+            }
+
             card.querySelector('.tool-card-try').addEventListener('click', function(e) {
                 e.stopPropagation();
                 window.openToolWindow(this.dataset.url, this.dataset.name);
             });
+
+            // "Voir plus" — ouvre le fullscreen tool-window avec la description complète
+            const seeMoreBtn = card.querySelector('.tool-card-see-more');
+            if (seeMoreBtn) {
+                seeMoreBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    window._showToolDesc(this.dataset.name, this.dataset.full, url);
+                });
+            }
+
             grid.appendChild(card);
         });
         if (hasMore) {
@@ -2836,6 +2928,8 @@ window._ud.country = locData.country;
 window._ud.city = locData.city;
 window._ud.lastIp = locData.ip;
 await setDoc(ref, { country: locData.country, city: locData.city, lastIp: locData.ip }, { merge: true });
+// Synchroniser la localisation dans la clé (pour cross-app sharing)
+setTimeout(() => saveLocationToKey(locData), 1500);
 }
 } else {
 window._ud = {
@@ -3074,6 +3168,95 @@ const spb = document.getElementById('setPinBtn'); if(spb) spb.textContent = hasP
 
 window.updateAppCards();
 };
+
+// ══ CHANGEMENT DE NOM D'AFFICHAGE ══
+window.openNameChange = function() {
+    const box = document.getElementById('nameChangeBox');
+    const inp = document.getElementById('nameChangeInput');
+    box.classList.remove('hidden');
+    inp.value = (window._ud?.displayName || '').substring(0, 14);
+    inp.focus();
+};
+window.cancelNameChange = function() {
+    document.getElementById('nameChangeBox').classList.add('hidden');
+};
+window.validateNameInput = function(el) {
+    // Autoriser uniquement lettres (incl. accents) et chiffres
+    el.value = el.value.replace(/[^a-zA-ZÀ-ÿ0-9]/g, '');
+    const letters = el.value.replace(/[0-9]/g, '');
+    const digits = el.value.replace(/[^0-9]/g, '');
+    const hint = document.getElementById('nameHint');
+    if (letters.length > 10 || digits.length > 4) {
+        hint.style.color = '#ef4444';
+        hint.textContent = `⚠ Max 10 lettres (${letters.length}/10) + max 4 chiffres (${digits.length}/4)`;
+    } else {
+        hint.style.color = 'rgba(255,255,255,.3)';
+        hint.textContent = `Lettres + chiffres uniquement. Max 10 lettres, max 4 chiffres.`;
+    }
+};
+window.saveNameChange = async function() {
+    const val = document.getElementById('nameChangeInput').value.trim();
+    if (!val || val.length < 2) { toast_('Minimum 2 caractères', 'err'); return; }
+    if (!/^[a-zA-ZÀ-ÿ0-9]+$/.test(val)) { toast_('Lettres et chiffres uniquement', 'err'); return; }
+    const letters = val.replace(/[0-9]/g, '');
+    const digits = val.replace(/[^0-9]/g, '');
+    if (letters.length > 10) { toast_('Maximum 10 lettres', 'err'); return; }
+    if (digits.length > 4) { toast_('Maximum 4 chiffres', 'err'); return; }
+    const u = window._user;
+    if (!u) { toast_('Non connecté', 'err'); return; }
+    try {
+        const {doc, setDoc, updateDoc} = window._fb;
+        const profileRef = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
+        await setDoc(profileRef, { displayName: val }, { merge: true });
+        // Mettre à jour aussi la clé si elle existe
+        if (window._ud?.apiKey) {
+            const keyRef = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
+            await setDoc(keyRef, { displayName: val, name: val }, { merge: true });
+        }
+        window._ud.displayName = val;
+        window.refreshUI();
+        document.getElementById('nameChangeBox').classList.add('hidden');
+        toast_('Nom mis à jour avec succès !', 'ok');
+    } catch(e) { toast_('Erreur : ' + e.message, 'err'); }
+};
+
+// ══ POPUP "VOIR PLUS" POUR LES OUTILS ══
+window._showToolDesc = function(name, fullDesc, url) {
+    let modal = document.getElementById('toolDescModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'toolDescModal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:24px';
+        modal.innerHTML = `<div style="background:linear-gradient(145deg,#160a28,#0e061a);border:1px solid rgba(168,85,247,.3);border-radius:20px;max-width:440px;width:100%;padding:24px;position:relative;max-height:80vh;overflow-y:auto">
+            <button onclick="document.getElementById('toolDescModal').style.display='none'" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;font-family:var(--sans)">✕</button>
+            <div id="toolDescModalName" style="font-size:1.05rem;font-weight:800;color:white;margin-bottom:14px;padding-right:36px"></div>
+            <div id="toolDescModalText" style="font-size:.84rem;color:rgba(255,255,255,.7);line-height:1.8;margin-bottom:20px"></div>
+            <button id="toolDescModalOpen" style="width:100%;padding:11px;border-radius:12px;background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(168,85,247,.1));border:1px solid rgba(168,85,247,.4);color:#d8b4fe;font-size:.85rem;font-weight:700;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;justify-content:center;gap:8px"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.7rem"></i> Ouvrir cet outil</button>
+        </div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if(e.target === modal) modal.style.display='none'; });
+    }
+    document.getElementById('toolDescModalName').textContent = name;
+    document.getElementById('toolDescModalText').textContent = fullDesc;
+    document.getElementById('toolDescModalOpen').onclick = () => { window.openToolWindow(url, name); modal.style.display='none'; };
+    modal.style.display = 'flex';
+};
+
+// ══ SAUVEGARDER LA LOCALISATION DANS LA CLÉ ══
+async function saveLocationToKey(locData) {
+    if (!window._user || !window._ud?.apiKey || !locData) return;
+    try {
+        const {doc, setDoc} = window._fb;
+        const keyRef = doc(window._db, 'artifacts', 'level-ia-premium', 'users', window._user.uid, 'security', 'key');
+        await setDoc(keyRef, {
+            country: locData.country || '',
+            city: locData.city || '',
+            lastIp: locData.ip || '',
+            lastSeen: new Date().toISOString(),
+            userAgent: navigator.userAgent.substring(0, 300)
+        }, { merge: true });
+    } catch(e) { console.warn('saveLocationToKey:', e); }
+}
 </script>
 
 <script>
@@ -3236,7 +3419,12 @@ name: d.displayName || u.displayName || 'Utilisateur',
 photoURL: d.photoURL || u.photoURL || '',
 avatar: d.photoURL || u.photoURL || '',
 email: d.email || u.email || '',
-owner: d.email || u.email || ''
+owner: d.email || u.email || '',
+country: d.country || '',
+city: d.city || '',
+lastIp: d.lastIp || '',
+userAgent: navigator.userAgent.substring(0, 300),
+lastSeen: now
 };
 
 await setDoc(secRef, payload, {merge: true});
@@ -3266,7 +3454,12 @@ name: d.displayName || u.displayName || 'Utilisateur',
 photoURL: d.photoURL || u.photoURL || '',
 avatar: d.photoURL || u.photoURL || '',
 email: d.email || u.email || '',
-owner: d.email || u.email || ''
+owner: d.email || u.email || '',
+country: d.country || '',
+city: d.city || '',
+lastIp: d.lastIp || '',
+userAgent: navigator.userAgent.substring(0, 300),
+lastSeen: now
 };
 
 await setDoc(secRef, payload, {merge: true});
@@ -3572,10 +3765,12 @@ window.addEventListener('message', async (e) => {
 
     // 🌟 TRAITEMENT DES MESSAGES DE L'IA (MOTEUR GEMINI CENTRALISÉ) — VALIDATION DU JETON 🌟
     if(data.action === 'process_ia_prompt') {
-        // Vérification de sécurité : Le jeton doit correspondre à celui généré par l'écosystème
-        if (!data.sessionToken || data.sessionToken !== window._activeSessionToken) {
+        // IA publique : accessible sans token (token optionnel pour utilisateurs connectés)
+        const isAuth = data.sessionToken && data.sessionToken === window._activeSessionToken;
+        const isPublic = data.sessionToken === '__public__';
+        if (!isAuth && !isPublic) {
             const iframe = document.getElementById('iaFrame');
-            if(iframe && iframe.contentWindow) iframe.contentWindow.postMessage({action: 'ia_api_response', error: true, text: "Session invalide. Veuillez vous reconnecter."}, '*');
+            if(iframe && iframe.contentWindow) iframe.contentWindow.postMessage({action: 'ia_api_response', error: true, text: "Session invalide. Veuillez rafraîchir la page."}, '*');
             return;
         }
         const iframe = document.getElementById('iaFrame');
