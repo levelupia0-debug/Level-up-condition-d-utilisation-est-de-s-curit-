@@ -137,6 +137,27 @@ border: none;
 -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 65%, transparent 100%);
 mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 65%, transparent 100%);
 }
+/* Les iframes (YouTube/Vimeo) ne supportent pas mask-image — on les scale pour couvrir comme object-fit:cover */
+#heroBgContainer iframe.hero-dynamic-img {
+-webkit-mask-image: none !important;
+mask-image: none !important;
+opacity: 0.5;
+position: absolute !important;
+inset: auto !important;
+width: 177.78vh !important;
+min-width: 100% !important;
+min-height: 56.25vw !important;
+height: 100vh !important;
+top: 50% !important;
+left: 50% !important;
+transform: translate(-50%, -50%) !important;
+border: none;
+pointer-events: none;
+animation: imgFadeIn 1.5s ease-out forwards;
+}
+@keyframes maintGlitch{0%,85%,100%{filter:none;transform:none}86%{filter:drop-shadow(-3px 0 #a855f7) drop-shadow(3px 0 #fbbf24);transform:translate(-2px,0)}87%{filter:none;transform:none}88%{filter:drop-shadow(2px 0 #fbbf24) drop-shadow(-2px 0 #a855f7);transform:translate(2px,0)}89%{filter:none;transform:none}}
+@keyframes particleUp{0%{transform:translateY(110vh);opacity:0}10%{opacity:1}90%{opacity:.5}100%{transform:translateY(-10vh) translateX(20px);opacity:0}}
+@keyframes maintOrb{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-20px) scale(1.08)}}
 
 @keyframes imgFadeIn { from { opacity: 0; transform: scale(1.02); } to { opacity: 0.65; transform: scale(1); } }
 
@@ -550,8 +571,9 @@ LOGOUT ANIMATION OVERLAY
 .tool-fs-btn-close { background:rgba(239,68,68,.08); border-color:rgba(239,68,68,.2); color:#fca5a5; }
 .tool-fs-iframe { flex:1; border:none; width:100%; height:100%; }
 @media(max-width:600px) { .tools-grid-wrap { grid-template-columns:repeat(2,1fr); padding:12px; } .tools-head { padding:12px 14px; } }
-.tool-card-try { width:100%; padding:8px 10px; border-radius:10px; background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(168,85,247,.08)); border:1px solid rgba(168,85,247,.3); color:#d8b4fe; font-size:.78rem; font-weight:700; cursor:pointer; transition:all .2s; font-family:var(--sans); display:flex; align-items:center; justify-content:center; gap:6px; outline:none; margin-top:auto; }
-.tool-card-try:hover { background:linear-gradient(135deg,rgba(168,85,247,.32),rgba(168,85,247,.16)); border-color:rgba(168,85,247,.6); transform:scale(1.02); box-shadow:0 4px 14px rgba(168,85,247,.25); }
+.tool-card-try { width:100%; padding:9px 12px; border-radius:10px; background:linear-gradient(135deg,rgba(168,85,247,.22),rgba(124,58,237,.12)); border:1px solid rgba(168,85,247,.38); color:#e9d5ff; font-size:.8rem; font-weight:700; cursor:pointer; transition:all .25s cubic-bezier(.25,.8,.25,1); font-family:var(--sans); display:flex; align-items:center; justify-content:center; gap:7px; outline:none; margin-top:auto; letter-spacing:.02em; box-shadow:0 2px 8px rgba(168,85,247,.12),inset 0 1px 0 rgba(255,255,255,.08); }
+.tool-card-try:hover { background:linear-gradient(135deg,rgba(168,85,247,.38),rgba(124,58,237,.25)); border-color:rgba(168,85,247,.7); transform:translateY(-1px) scale(1.01); box-shadow:0 6px 18px rgba(168,85,247,.32),inset 0 1px 0 rgba(255,255,255,.12); color:#fff; }
+.tool-card-try:active { transform:scale(.98); }
 /* Coming soon state */
 .tools-coming-soon { display:flex; flex-direction:column; align-items:center; justify-content:center; grid-column:1/-1; min-height:360px; gap:0; text-align:center; padding:40px 24px; }
 .tcs-glow { position:relative; width:80px; height:80px; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; }
@@ -1671,6 +1693,7 @@ AUTH OVERLAY
 </div>
 
 <p class="auth-note" style="line-height:1.6">En continuant, vous acceptez nos <span onclick="openTerms();closeAuth()" style="color:var(--purple);cursor:pointer;text-decoration:underline">conditions intégrées</span>, ainsi que nos <a href="/terms.html" target="_blank" style="color:var(--purple);text-decoration:underline">Conditions complètes</a> et <a href="/privacy.html" target="_blank" style="color:var(--purple);text-decoration:underline">Règles de confidentialité</a>. Vos données ne sont jamais partagées ni revendues.</p>
+<div style="text-align:center;margin-top:16px;font-size:.6rem;color:rgba(255,255,255,.1);letter-spacing:.08em;font-family:monospace;user-select:none">v2.6 &nbsp;·&nbsp; Gael &amp; Karlk</div>
 </div>
 </div>
 
@@ -1836,7 +1859,6 @@ TOOLS HUB OVERLAY
 SMART FAB & IA ASSISTANT
 ═══════════════════════════════════════ -->
 <div class="fab-wrap" id="fabWrap">
-    <div class="fab-hint" id="fabHint"><i class="fa-solid fa-sparkles" style="color: var(--purple);"></i> Assistant LevelUp</div>
     <div class="fab-menu" id="fabMenu">
         <button class="fab-item" onclick="toggleIA(event)">
             <i class="fa-solid fa-star" style="color: var(--purple);"></i>
@@ -2508,10 +2530,14 @@ if (!bgStr.includes('<')) {
 // Détection étendue : extensions vidéo, hébergeurs, etc.
 function _isVideoUrl(u) {
     if (!u) return false;
+    // Extension vidéo directe dans l'URL
     if (/\.(mp4|webm|ogg|mov|avi|m4v|mkv|ts)(\?|#|$)/i.test(u)) return true;
-    if (/youtube\.com|youtu\.be|vimeo\.com|streamable\.com|dailymotion\.com|twitch\.tv|wistia\.com|loom\.com/i.test(u)) return true;
+    // Plateformes vidéo connues
+    if (/youtube\.com|youtu\.be|vimeo\.com|streamable\.com|dailymotion\.com|twitch\.tv|wistia\.com/i.test(u)) return true;
+    // Cloudinary segment vidéo
     if (/cloudinary\.com\/.+\/video\//i.test(u)) return true;
-    if (u.includes('video') || u.includes('pexels') || u.includes('pixabay') || u.includes('coverr')) return true;
+    // Pexels/Pixabay : seulement les URLs vidéo (pas les images)
+    if (/pexels\.com\/video|pixabay\.com\/videos|coverr\.co/i.test(u)) return true;
     return false;
 }
 function _getEmbedUrl(u) {
@@ -2660,17 +2686,37 @@ if (gKey) window._geminiKey = gKey;
 // ── MAINTENANCE GLOBALE & VERROUS PAR FONCTIONNALITÉ ──
 const maintBanner = document.getElementById('globalMaintBanner');
 const maintMsg = document.getElementById('globalMaintMsg');
+const maintOverlayPro = document.getElementById('maintOverlayPro');
 const gm = s.global_maintenance;
-if (gm && gm !== false && gm !== 'off' && gm !== '') {
+if (gm && gm !== false && gm !== 'off' && gm !== '' && gm !== 0) {
     window._globalMaintenance = true;
-    if (maintBanner) {
-        if (typeof gm === 'string' && gm.length > 4 && gm !== 'true' && gm !== 'on') {
-            if (maintMsg) maintMsg.textContent = gm;
+    const customMsg = (typeof gm === 'string' && gm.length > 4 && gm !== 'true' && gm !== 'on')
+        ? gm : 'La plateforme est temporairement indisponible. Nous revenons très bientôt.';
+    // Overlay PRO plein écran
+    if (maintOverlayPro) {
+        const msgEl = document.getElementById('maintOverlayMsg');
+        if (msgEl) msgEl.textContent = customMsg;
+        maintOverlayPro.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        // Génère les particules flottantes une seule fois
+        const pc = document.getElementById('maintParticles');
+        if (pc && !pc.children.length) {
+            for (let i = 0; i < 24; i++) {
+                const p = document.createElement('div');
+                const sz = Math.random() * 3 + 1;
+                p.style.cssText = `position:absolute;border-radius:50%;width:${sz}px;height:${sz}px;left:${Math.random()*100}%;background:${Math.random()>.5?'rgba(168,85,247,.55)':'rgba(251,191,36,.4)'};animation:particleUp ${Math.random()*12+8}s linear ${Math.random()*-15}s infinite`;
+                pc.appendChild(p);
+            }
         }
+    }
+    // Bannière legacy
+    if (maintBanner) {
+        if (maintMsg) maintMsg.textContent = customMsg;
         maintBanner.classList.add('visible');
     }
 } else {
     window._globalMaintenance = false;
+    if (maintOverlayPro) { maintOverlayPro.style.display = 'none'; document.body.style.overflow = ''; }
     if (maintBanner) maintBanner.classList.remove('visible');
 }
 
@@ -3141,7 +3187,7 @@ else { avaEl.className = 'sb-ava-t'; avaEl.textContent = init; }
 const snEl = document.getElementById('sbName'); if(snEl) snEl.textContent = name;
 const wEl = document.getElementById('dbWelcome'); if(wEl) wEl.textContent = `Bonjour, ${name.split(' ')[0]} 👋`;
 const snEl2 = document.getElementById('setName'); if(snEl2) snEl2.textContent = name;
-const seEl = document.getElementById('setEmail'); if(seEl) seEl.textContent = u.email || '—';
+const seEl = document.getElementById('setEmail'); if(seEl) seEl.textContent = d?.email || u?.email || '—';
 const sjEl = document.getElementById('setJoined'); if(sjEl && d?.createdAt) sjEl.textContent = new Date(d.createdAt).toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
 
 // Clés
@@ -3695,8 +3741,8 @@ window.sendAuthToIA = function() {
             context: ctx
         }, '*');
     } else {
-        window._activeSessionToken = null;
-        frame.contentWindow.postMessage({ action: 'START_SESSION', token: null }, '*');
+        window._activeSessionToken = '__public__';
+        frame.contentWindow.postMessage({ action: 'START_SESSION', token: '__public__', isGuest: true }, '*');
     }
 };
 
@@ -4206,5 +4252,42 @@ document.getElementById('logoutOv').classList.remove('hidden');
     }, 30000);
 })();
 </script>
+
+<!-- ═══════════════════════════════════════
+OVERLAY MAINTENANCE PRO (contrôlé via Firebase : global_maintenance)
+═══════════════════════════════════════ -->
+<div id="maintOverlayPro" style="display:none;position:fixed;inset:0;z-index:999999;background:#07070d;overflow:hidden;flex-direction:column;align-items:center;justify-content:center">
+  <!-- Particules générées par JS -->
+  <div id="maintParticles" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
+  <!-- Grille -->
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(168,85,247,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(168,85,247,.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none"></div>
+  <!-- Orbes animées -->
+  <div style="position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(168,85,247,.1),transparent);top:-150px;left:-120px;filter:blur(90px);border-radius:50%;pointer-events:none;animation:maintOrb 9s ease-in-out infinite"></div>
+  <div style="position:absolute;width:450px;height:450px;background:radial-gradient(circle,rgba(251,191,36,.07),transparent);bottom:-100px;right:-80px;filter:blur(80px);border-radius:50%;pointer-events:none;animation:maintOrb 11s ease-in-out infinite reverse"></div>
+  <div style="position:absolute;width:300px;height:300px;background:radial-gradient(circle,rgba(59,130,246,.06),transparent);top:45%;left:50%;transform:translate(-50%,-50%);filter:blur(70px);border-radius:50%;pointer-events:none;animation:maintOrb 7s ease-in-out infinite"></div>
+  <!-- Contenu principal -->
+  <div style="position:relative;z-index:10;text-align:center;padding:0 24px;max-width:580px;width:100%">
+    <!-- Badge statut -->
+    <div style="display:inline-flex;align-items:center;gap:8px;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fbbf24;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.22);padding:5px 16px;border-radius:100px;margin-bottom:24px">
+      <span style="width:7px;height:7px;border-radius:50%;background:#fbbf24;display:block;animation:bdot 1.4s ease infinite"></span>
+      Maintenance
+    </div>
+    <!-- Icône animée glitch -->
+    <div style="font-size:clamp(6rem,16vw,11rem);line-height:1;margin-bottom:4px;filter:drop-shadow(0 0 30px rgba(168,85,247,.3));animation:maintGlitch 5s ease-in-out infinite;user-select:none">⚙️</div>
+    <!-- Titre -->
+    <h1 style="font-family:'Syne',sans-serif;font-size:clamp(1.5rem,4vw,2.2rem);font-weight:800;color:#fff;margin:12px 0 14px;letter-spacing:-.03em">Plateforme en maintenance</h1>
+    <!-- Message dynamique depuis Firebase -->
+    <p id="maintOverlayMsg" style="font-size:.95rem;color:rgba(255,255,255,.48);line-height:1.75;margin-bottom:36px;max-width:440px;margin-left:auto;margin-right:auto">La plateforme est temporairement indisponible. Nous revenons très bientôt.</p>
+    <!-- Barre de progression animée -->
+    <div style="width:160px;height:2px;background:rgba(255,255,255,.06);border-radius:2px;margin:0 auto 32px;overflow:hidden">
+      <div style="height:100%;background:linear-gradient(90deg,#a855f7,#fbbf24,#a855f7);background-size:200% 100%;border-radius:2px;animation:shimmer 2s linear infinite"></div>
+    </div>
+    <!-- Watermark -->
+    <div style="font-size:.65rem;color:rgba(255,255,255,.12);letter-spacing:.1em;font-family:monospace">LEVELUP · ECOSYSTEM · v2.6</div>
+  </div>
+</div>
+<style>
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
 </body>
 </html>
