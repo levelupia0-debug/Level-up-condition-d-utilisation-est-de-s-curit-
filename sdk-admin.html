@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LevelUp — Admin SDK</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+  --bg:#030303;--surf:#0a0a0a;--elev:#111;--elev2:#181818;
+  --bdr:rgba(255,255,255,.07);--bdr-hi:rgba(255,255,255,.13);
+  --txt:#fff;--muted:#a1a1aa;--dim:#52525b;
+  --purple:#a855f7;--purple-d:#7c3aed;
+  --green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--orange:#f97316;
+  --sans:'Inter',system-ui,sans-serif;--display:'Syne',sans-serif;
+  --r8:8px;--r12:12px;--r16:16px;--r20:20px
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--txt);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(168,85,247,.2);border-radius:10px}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.03em}
+p{color:var(--muted)}
+button{font-family:var(--sans);cursor:pointer}
+input,select,textarea{font-family:var(--sans)}
+
+/* ─ LOGIN ─ */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.login-box{background:var(--elev);border:1px solid var(--bdr-hi);border-radius:24px;padding:40px 36px;max-width:380px;width:100%;text-align:center}
+.login-logo{width:56px;height:56px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px}
+.login-box h2{font-size:1.4rem;margin-bottom:6px}
+.login-box p{font-size:.85rem;margin-bottom:28px}
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 20px;border-radius:12px;background:#fff;border:1px solid #dadce0;color:#3c4043;font-size:.9rem;font-weight:600;transition:all .2s}
+.btn-google:hover{background:#f8f9fa;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.btn-google:active{transform:scale(.98)}
+
+/* ─ DENIED ─ */
+#deniedScreen{display:none;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg)}
+.denied-box{background:var(--elev);border:1px solid rgba(239,68,68,.2);border-radius:24px;padding:40px 36px;max-width:420px;width:100%;text-align:center}
+.denied-icon{width:64px;height:64px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 20px}
+.denied-box h2{font-size:1.3rem;margin-bottom:8px}
+.denied-box .sub{font-size:.85rem;line-height:1.6;margin-bottom:8px}
+.denied-email{display:inline-block;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);color:var(--purple);border-radius:100px;padding:3px 14px;font-size:.78rem;font-weight:600;margin:8px 0 20px}
+.denied-contact{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 22px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--bdr-hi);color:var(--txt);font-size:.85rem;font-weight:600;text-decoration:none;transition:all .2s;margin-bottom:10px;width:100%}
+.denied-contact:hover{background:rgba(255,255,255,.08);border-color:rgba(168,85,247,.3)}
+.denied-logout{background:none;border:none;color:var(--dim);font-size:.78rem;cursor:pointer;padding:8px;font-family:var(--sans)}
+.denied-logout:hover{color:var(--muted)}
+
+/* ─ ADMIN SCREEN ─ */
+#adminScreen{display:none;min-height:100vh}
+header{position:sticky;top:0;z-index:100;background:rgba(3,3,3,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr);padding:14px 5%;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.header-brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:1.1rem;font-weight:800;letter-spacing:-.04em}
+.header-user{display:flex;align-items:center;gap:10px}
+.avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid rgba(168,85,247,.4)}
+.avatar-txt{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple-d),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800}
+.btn-logout{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#fca5a5;border-radius:var(--r8);padding:6px 14px;font-size:.78rem;font-weight:700;transition:all .2s}
+.btn-logout:hover{background:rgba(239,68,68,.15)}
+
+/* ─ TABS ─ */
+.tabs{display:flex;gap:4px;margin-bottom:28px;background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r12);padding:4px;width:fit-content}
+.tab-btn{padding:8px 18px;border-radius:var(--r8);border:none;background:none;color:var(--muted);font-size:.82rem;font-weight:600;transition:all .2s;display:flex;align-items:center;gap:6px}
+.tab-btn.active{background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.25)}
+.tab-btn:hover:not(.active){color:var(--txt);background:rgba(255,255,255,.04)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+main{max-width:960px;margin:0 auto;padding:36px 5%}
+.page-title{margin-bottom:28px}
+.page-title h1{font-size:1.8rem;margin-bottom:6px}
+
+/* ─ STATS ─ */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:28px}
+.stat-card{background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r16);padding:18px 20px}
+.stat-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:1.7rem;font-weight:800;font-family:var(--display)}
+.stat-value.purple{color:var(--purple)}.stat-value.green{color:var(--green)}
+.stat-value.red{color:var(--red)}.stat-value.blue{color:var(--blue)}
+.stat-value.yellow{color:var(--yellow)}
+
+/* ─ SECTION HEADER ─ */
+.section-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.section-header h2{font-size:1.1rem}
+.btn-create{background:linear-gradient(135deg,var(--purple-d),var(--purple));color:#fff;border:none;border-radius:var(--r12);padding:10px 20px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:7px;transition:all .2s;box-shadow:0 4px 14px rgba(168,85,247,.25)}
+.btn-create:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(168,85,247,.4)}
+
+/* ─ KEY CARDS ─ */
+.keys-list{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
+.key-card{background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r16);padding:20px;transition:border-color .2s}
+.key-card:hover{border-color:var(--bdr-hi)}
+.key-card.inactive{opacity:.55}
+.key-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.key-name{font-size:1rem;font-weight:700;margin-bottom:4px}
+.key-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.badge-active{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--green)}
+.badge-inactive{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#fca5a5}
+.key-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:.75rem;color:var(--muted);margin-bottom:12px}
+.key-meta span{display:flex;align-items:center;gap:5px}
+.key-code{background:var(--elev2);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 14px;font-family:monospace;font-size:.78rem;color:var(--purple);display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;overflow:hidden}
+.key-code-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.key-actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn-sm{padding:7px 13px;border-radius:var(--r8);font-size:.75rem;font-weight:700;border:1px solid transparent;transition:all .2s;display:flex;align-items:center;gap:5px}
+.btn-toggle{background:rgba(234,179,8,.06);border-color:rgba(234,179,8,.2);color:var(--yellow)}
+.btn-toggle:hover{background:rgba(234,179,8,.12)}
+.btn-toggle.on{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.2);color:var(--green)}
+.btn-regen{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.2);color:var(--blue)}
+.btn-regen:hover{background:rgba(59,130,246,.14)}
+.btn-delete{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.15);color:#fca5a5}
+.btn-delete:hover{background:rgba(239,68,68,.12)}
+.btn-copy{background:rgba(255,255,255,.05);border-color:var(--bdr);color:var(--muted)}
+.btn-copy:hover{background:rgba(255,255,255,.09);color:var(--txt)}
+.domain-tag{display:inline-block;background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.15);color:#d8b4fe;padding:2px 8px;border-radius:100px;font-size:.68rem;margin:2px 2px 0 0}
+
+/* ─ SCOPES ─ */
+.scopes-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.scope-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:100px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border:1px solid}
+.sc-auth{background:rgba(168,85,247,.08);border-color:rgba(168,85,247,.25);color:#d8b4fe}
+.sc-email{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.25);color:#93c5fd}
+.sc-user{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25);color:#86efac}
+.sc-watch{background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.25);color:#fdba74}
+.sc-keygen{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:#fca5a5}
+.sc-notif{background:rgba(234,179,8,.08);border-color:rgba(234,179,8,.25);color:#fde047}
+
+/* ─ SCOPE CHECKBOXES in modal ─ */
+.scope-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.scope-check{display:flex;align-items:flex-start;gap:10px;background:var(--elev2);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 12px;cursor:pointer;transition:all .2s;user-select:none}
+.scope-check:hover{border-color:var(--bdr-hi)}
+.scope-check input{display:none}
+.scope-check-box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--dim);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:.6rem}
+.scope-check input:checked ~ .scope-check-info .scope-check-box,
+.scope-check.checked .scope-check-box{background:var(--purple);border-color:var(--purple);color:#fff}
+.scope-check-info{flex:1;min-width:0}
+.scope-check-label{font-size:.78rem;font-weight:700;color:var(--txt)}
+.scope-check-desc{font-size:.68rem;color:var(--dim);margin-top:1px}
+.scope-always{background:rgba(168,85,247,.06);border-color:rgba(168,85,247,.2);opacity:.8;cursor:default}
+
+/* ─ SETTINGS (Email API) ─ */
+.settings-card{background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r16);overflow:hidden;margin-bottom:24px}
+.settings-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;cursor:pointer;user-select:none}
+.settings-header:hover{background:rgba(255,255,255,.02)}
+.settings-header h3{font-size:.95rem;display:flex;align-items:center;gap:8px}
+.settings-body{padding:0 20px 20px;display:none}
+.settings-body.open{display:block}
+.settings-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.input-group{margin-bottom:14px}
+.input-group label{display:block;font-size:.74rem;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.input-group input{width:100%;background:var(--elev2);border:1px solid var(--bdr-hi);border-radius:var(--r8);padding:9px 13px;color:var(--txt);font-size:.85rem;outline:none;transition:border-color .2s}
+.input-group input:focus{border-color:var(--purple)}
+.input-group small{display:block;margin-top:4px;font-size:.7rem;color:var(--dim)}
+.btn-save{background:linear-gradient(135deg,var(--purple-d),var(--purple));color:#fff;border:none;border-radius:var(--r8);padding:9px 20px;font-size:.83rem;font-weight:700;transition:all .2s}
+.btn-save:hover{filter:brightness(1.1)}
+.template-hint{background:var(--elev2);border:1px solid var(--bdr);border-radius:var(--r8);padding:12px 14px;margin-bottom:12px;font-size:.75rem;line-height:1.7;color:var(--muted)}
+.template-hint strong{color:var(--txt);display:block;margin-bottom:4px}
+.template-hint code{color:var(--purple);font-family:monospace;background:rgba(168,85,247,.08);padding:1px 5px;border-radius:4px}
+
+/* ─ EMPTY ─ */
+.empty-state{text-align:center;padding:60px 20px;color:var(--dim)}
+.empty-state i{font-size:2.5rem;margin-bottom:14px;display:block;color:#3f3f46}
+.empty-state p{font-size:.9rem}
+
+/* ─ MODAL ─ */
+.modal-bg{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:24px}
+.modal-bg.open{display:flex}
+.modal{background:var(--elev);border:1px solid var(--bdr-hi);border-radius:20px;padding:28px 24px;max-width:480px;width:100%;animation:_min .25s cubic-bezier(.34,1.56,.64,1)}
+@keyframes _min{from{transform:scale(.92) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.modal h3{font-size:1.1rem;margin-bottom:4px}
+.modal > p{font-size:.82rem;margin-bottom:20px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.form-group input,.form-group select{width:100%;background:var(--elev2);border:1px solid var(--bdr-hi);border-radius:var(--r8);padding:10px 13px;color:var(--txt);font-size:.88rem;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--purple)}
+.form-group small{display:block;margin-top:4px;font-size:.7rem;color:var(--dim)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.btn-cancel{background:rgba(255,255,255,.04);border:1px solid var(--bdr);color:var(--muted);border-radius:var(--r8);padding:9px 18px;font-size:.84rem;font-weight:600;transition:all .2s}
+.btn-cancel:hover{background:rgba(255,255,255,.08)}
+.btn-confirm{background:linear-gradient(135deg,var(--purple-d),var(--purple));color:#fff;border:none;border-radius:var(--r8);padding:9px 18px;font-size:.84rem;font-weight:700;transition:all .2s}
+.btn-confirm:hover{filter:brightness(1.1)}
+
+/* ─ REVEAL KEY MODAL ─ */
+#revealModal .modal{max-width:500px;border-color:rgba(168,85,247,.35)}
+.reveal-key{background:var(--elev2);border:1px solid rgba(168,85,247,.3);border-radius:var(--r12);padding:14px 16px;font-family:monospace;font-size:.82rem;color:var(--purple);word-break:break-all;line-height:1.6;margin:14px 0}
+.reveal-warning{background:rgba(234,179,8,.06);border:1px solid rgba(234,179,8,.2);border-radius:var(--r8);padding:11px 14px;font-size:.78rem;color:var(--yellow);line-height:1.5;margin-bottom:14px;display:flex;align-items:flex-start;gap:8px}
+.reveal-warning i{flex-shrink:0;margin-top:1px}
+
+/* ─ TOAST ─ */
+.toast-wrap{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--elev);border:1px solid var(--bdr-hi);border-radius:var(--r12);padding:11px 16px;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:8px;animation:_tin .22s ease;box-shadow:0 8px 32px rgba(0,0,0,.7);pointer-events:auto}
+.toast.ok{border-color:rgba(34,197,94,.3);color:var(--green)}
+.toast.err{border-color:rgba(239,68,68,.3);color:#fca5a5}
+.toast.info{border-color:rgba(168,85,247,.3);color:var(--purple)}
+@keyframes _tin{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+
+/* ─ CODE SNIPPET ─ */
+.snippet-box{background:var(--elev2);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px;font-family:monospace;font-size:.74rem;color:#93c5fd;overflow-x:auto;white-space:pre;line-height:1.7;margin-top:10px}
+.snippet-section{background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r16);padding:22px;margin-bottom:24px}
+.snippet-section h3{font-size:.95rem;margin-bottom:4px;color:var(--txt)}
+.snippet-section > p{font-size:.82rem;margin-bottom:10px}
+
+@media(max-width:640px){
+  main{padding:24px 4%}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .key-top{flex-direction:column}
+  .key-actions{justify-content:flex-start}
+  .modal{padding:22px 18px}
+  .scope-grid{grid-template-columns:1fr}
+  .settings-row{grid-template-columns:1fr}
+  .tabs{width:100%;overflow-x:auto}
+}
+</style>
+</head>
+<body>
+<div id="toastWrap" class="toast-wrap"></div>
+
+<!-- ═══════════════════════════════════════ DENIED ═══ -->
+<div id="deniedScreen">
+  <div class="denied-box">
+    <div class="denied-icon">🔒</div>
+    <h2>Accès réservé aux administrateurs</h2>
+    <p class="sub">Ce panel est réservé à l'équipe LevelUp.<br>Votre compte n'est pas autorisé.</p>
+    <div class="denied-email" id="deniedUserEmail"></div>
+    <p class="sub" style="margin-bottom:16px">Une erreur ? Contactez-nous :</p>
+    <a href="mailto:support@levelup-ecosystem.com?subject=Demande accès Admin SDK" class="denied-contact">
+      <i class="fa-solid fa-envelope"></i> support@levelup-ecosystem.com
+    </a>
+    <a href="mailto:contact@levelup-ecosystem.com?subject=Demande accès Admin SDK" class="denied-contact"
+       style="background:rgba(168,85,247,.06);border-color:rgba(168,85,247,.2);color:#d8b4fe">
+      <i class="fa-solid fa-paper-plane"></i> contact@levelup-ecosystem.com
+    </a>
+    <br>
+    <button class="denied-logout" onclick="logout()">
+      <i class="fa-solid fa-right-from-bracket"></i> Se déconnecter
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ LOGIN ═══ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">⭐</div>
+    <h2>Admin SDK LevelUp</h2>
+    <p>Connectez-vous avec votre compte administrateur pour gérer les clés d'intégration.</p>
+    <button class="btn-google" onclick="googleLogin()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continuer avec Google
+    </button>
+    <p id="loginErr" style="color:#fca5a5;font-size:.78rem;margin-top:12px;display:none"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ ADMIN ═══ -->
+<div id="adminScreen">
+  <header>
+    <div class="header-brand">
+      <span>⭐</span> LevelUp <span style="color:var(--purple)">SDK</span>
+    </div>
+    <div class="header-user">
+      <img id="adminAvatar" class="avatar" src="" alt="" style="display:none">
+      <div id="adminAvatarTxt" class="avatar-txt" style="display:none"></div>
+      <span id="adminName" style="font-size:.84rem;font-weight:600;display:none"></span>
+      <button class="btn-logout" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">
+      <h1>Panel Admin SDK</h1>
+      <p>Gérez les clés d'intégration, les permissions et le système d'emails.</p>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('keys')">
+        <i class="fa-solid fa-key"></i> Clés SDK
+      </button>
+      <button class="tab-btn" onclick="switchTab('email')">
+        <i class="fa-solid fa-envelope"></i> Email
+      </button>
+      <button class="tab-btn" onclick="switchTab('assistant')">
+        <i class="fa-solid fa-robot"></i> Assistant IA
+      </button>
+      <button class="tab-btn" onclick="switchTab('docs')">
+        <i class="fa-solid fa-book"></i> Documentation
+      </button>
+    </div>
+
+    <!-- ══ TAB: KEYS ══ -->
+    <div id="tab-keys" class="tab-panel active">
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-label">Total clés</div><div class="stat-value purple" id="statTotal">—</div></div>
+        <div class="stat-card"><div class="stat-label">Actives</div><div class="stat-value green" id="statActive">—</div></div>
+        <div class="stat-card"><div class="stat-label">Bloquées</div><div class="stat-value red" id="statInactive">—</div></div>
+        <div class="stat-card"><div class="stat-label">Usages totaux</div><div class="stat-value blue" id="statUsage">—</div></div>
+        <div class="stat-card"><div class="stat-label">Aujourd'hui</div><div class="stat-value yellow" id="statToday">—</div></div>
+      </div>
+
+      <div class="section-header">
+        <h2>Clés d'intégration</h2>
+        <button class="btn-create" onclick="openCreateModal()">
+          <i class="fa-solid fa-plus"></i> Nouvelle clé
+        </button>
+      </div>
+      <div class="keys-list" id="keysList">
+        <div class="empty-state"><i class="fa-solid fa-key"></i><p>Chargement des clés...</p></div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: EMAIL ══ -->
+    <div id="tab-email" class="tab-panel">
+      <div class="section-header" style="margin-bottom:20px">
+        <div>
+          <h2>Resend — Configuration email</h2>
+          <p style="font-size:.82rem;margin-top:4px">Le SDK utilise ton compte Resend pour envoyer tous les emails : invitations Watch Party, clés utilisateur, notifications.</p>
+        </div>
+      </div>
+
+      <!-- Info banner -->
+      <div style="background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:var(--r12);padding:14px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">
+        <i class="fa-solid fa-circle-info" style="color:var(--purple);margin-top:2px;flex-shrink:0"></i>
+        <div style="font-size:.82rem;line-height:1.6">
+          <strong style="color:var(--txt)">Ta clé Resend reste sur Vercel — aucune clé à saisir ici.</strong><br>
+          Le SDK appelle ton <strong>endpoint API Vercel</strong> qui envoie les emails de son côté.
+          Colle simplement l'URL complète de ta fonction <code style="color:var(--purple)">/api/send</code> ci-dessous.
+          Les templates HTML (Watch Party, Clé, Notification…) sont déjà intégrés dans le handler.
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-body open">
+          <div style="padding-top:20px">
+            <div class="input-group">
+              <label>URL de l'endpoint email Vercel <span style="color:var(--red)">*</span></label>
+              <input type="url" id="emailApiEndpoint" placeholder="https://levelup-ecosystem.com/api/send" autocomplete="off">
+              <small>URL complète de ta fonction Vercel qui gère l'envoi Resend. Exemple : <code style="color:var(--purple)">https://levelup-ecosystem.com/api/send</code></small>
+            </div>
+
+            <div style="background:var(--elev2);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px 16px;margin:16px 0">
+              <p style="font-size:.84rem;font-weight:700;color:var(--txt);margin-bottom:10px">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--purple)"></i>
+                Types email pris en charge par le handler
+              </p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">
+                <div style="background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 12px;font-size:.78rem">
+                  <i class="fa-solid fa-film" style="color:var(--orange)"></i> <strong>WATCH_PARTY</strong><br>
+                  <span style="color:var(--dim)">Scope : <code>watchparty</code></span>
+                </div>
+                <div style="background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 12px;font-size:.78rem">
+                  <i class="fa-solid fa-key" style="color:var(--red)"></i> <strong>USER_KEY</strong><br>
+                  <span style="color:var(--dim)">Scope : <code>keygen</code></span>
+                </div>
+                <div style="background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 12px;font-size:.78rem">
+                  <i class="fa-solid fa-envelope" style="color:var(--blue)"></i> <strong>CUSTOM_HTML</strong><br>
+                  <span style="color:var(--dim)">Scope : <code>email.send</code></span>
+                </div>
+                <div style="background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 12px;font-size:.78rem">
+                  <i class="fa-solid fa-bell" style="color:var(--yellow)"></i> <strong>SDK_NOTIFICATION</strong><br>
+                  <span style="color:var(--dim)">Scope : <code>notifications</code></span>
+                </div>
+                <div style="background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 12px;font-size:.78rem">
+                  <i class="fa-solid fa-star" style="color:var(--purple)"></i> <strong>WELCOME / NEW_LOGIN</strong><br>
+                  <span style="color:var(--dim)">Types existants de l'écosystème</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn-save" onclick="saveEmailConfig()">
+                <i class="fa-solid fa-floppy-disk"></i> Sauvegarder
+              </button>
+              <button class="btn-sm btn-regen" onclick="testEmail()" style="font-size:.82rem;padding:9px 16px">
+                <i class="fa-solid fa-paper-plane"></i> Envoyer un email de test
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="emailTestResult" style="display:none;background:var(--elev);border:1px solid var(--bdr);border-radius:var(--r12);padding:16px;margin-top:16px;font-size:.82rem;line-height:1.6"></div>
+    </div>
+
+    <!-- ══ TAB: ASSISTANT ══ -->
+    <div id="tab-assistant" class="tab-panel">
+      <div class="section-header" style="margin-bottom:20px">
+        <div>
+          <h2>Assistant LevelUp IA</h2>
+          <p style="font-size:.82rem;margin-top:4px">Intégrez l'assistant IA dans n'importe quelle app avec une seule ligne de code. Il apparaît comme un widget flottant.</p>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div style="background:var(--elev);border:1px solid rgba(168,85,247,.25);border-radius:var(--r16);overflow:hidden;margin-bottom:24px">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px;font-size:.84rem;font-weight:700">
+            <i class="fa-solid fa-eye" style="color:var(--purple)"></i> Aperçu en direct
+          </div>
+          <a href="https://levelupia0-debug.github.io/levelup-assistant/" target="_blank"
+             style="font-size:.75rem;color:var(--purple);text-decoration:none;display:flex;align-items:center;gap:5px">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir en plein écran
+          </a>
+        </div>
+        <div style="position:relative;height:520px;background:#030303">
+          <iframe src="https://levelupia0-debug.github.io/levelup-assistant/"
+                  style="width:100%;height:100%;border:none"
+                  allow="microphone; camera"
+                  loading="lazy"
+                  title="LevelUp Assistant IA"></iframe>
+        </div>
+      </div>
+
+      <!-- Integration code -->
+      <div class="snippet-section">
+        <h3><i class="fa-solid fa-code" style="color:var(--purple)"></i> Intégrer le widget dans une app</h3>
+        <p>Le bouton flottant 🤖 apparaît automatiquement sur toutes les pages où le SDK est chargé, dès que tu appelles <code style="color:var(--purple)">openAssistant()</code>. Ou intègre un bouton custom :</p>
+        <div class="snippet-box">&lt;!-- 1. Le SDK LevelUp avec une clé qui a le scope "auth" --&gt;
+&lt;script src="https://levelup-ecosystem.com/sdk.js"
+  data-levelup-key="VOTRE_CLE_SDK"&gt;&lt;/script&gt;
+
+&lt;!-- 2. Ouvrir l'assistant depuis un bouton custom --&gt;
+&lt;button onclick="LevelUp.openAssistant()"&gt;
+  🤖 Assistant LevelUp
+&lt;/button&gt;
+
+&lt;script&gt;
+// Ou l'ouvrir automatiquement au chargement
+LevelUp.openAssistant();
+
+// Fermer le widget
+LevelUp.closeAssistant();
+&lt;/script&gt;</div>
+      </div>
+
+      <div class="snippet-section">
+        <h3><i class="fa-solid fa-window-maximize" style="color:var(--blue)"></i> Intégrer en iframe fixe dans une page</h3>
+        <p>Si tu veux l'assistant intégré directement dans une zone de ta page (sans widget flottant) :</p>
+        <div class="snippet-box">&lt;!-- Iframe fixe, taille libre --&gt;
+&lt;iframe
+  src="https://levelupia0-debug.github.io/levelup-assistant/"
+  width="400"
+  height="620"
+  style="border:none;border-radius:16px"
+  allow="microphone; camera"
+  loading="lazy"
+&gt;&lt;/iframe&gt;</div>
+      </div>
+
+      <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:var(--r12);padding:14px 18px;font-size:.82rem;line-height:1.6">
+        <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
+        <strong style="color:var(--green)"> Aucun scope spécial requis</strong> — l'assistant est disponible sur toutes les clés SDK actives.
+        L'utilisateur n'a pas besoin d'être connecté pour utiliser l'assistant.
+      </div>
+    </div>
+
+    <!-- ══ TAB: DOCS ══ -->
+    <div id="tab-docs" class="tab-panel">
+      <div class="snippet-section">
+        <h3><i class="fa-solid fa-plug" style="color:var(--purple)"></i> Installation</h3>
+        <p>Ajoutez ce script dans le <code style="color:var(--purple)">&lt;head&gt;</code> de votre app :</p>
+        <div class="snippet-box">&lt;script src="https://levelup-ecosystem.com/sdk.js"
+  data-levelup-key="VOTRE_CLE_SDK"&gt;&lt;/script&gt;</div>
+      </div>
+
+      <div class="snippet-section">
+        <h3><i class="fa-solid fa-user" style="color:var(--green)"></i> Auth — Scope : <code>auth</code></h3>
+        <p>Connexion / déconnexion / état utilisateur. Inclus sur toutes les clés.</p>
+        <div class="snippet-box">// Vérifier si connecté
+LevelUp.isLoggedIn();   // → true / false
+LevelUp.getUser();      // → { uid, name, email, photo, ... }
+
+// Ouvrir le popup de connexion (avec Turnstile)
+LevelUp.openLogin();
+
+// Écouter les événements
+LevelUp.onLogin((user) => console.log('Connecté :', user.name));
+LevelUp.onLogout(()    => console.log('Déconnecté'));
+
+// Déconnexion + tableau de bord
+LevelUp.logout();
+LevelUp.openDashboard();</div>
+      </div>
+
+      <div class="snippet-section">
+        <h3><i class="fa-solid fa-film" style="color:var(--orange)"></i> Watch Party — Scope : <code>watchparty</code></h3>
+        <p>Invitations par email pour les Watch Party LevelMovie.</p>
+        <div class="snippet-box">// Envoyer une invitation Watch Party par email
+await LevelUp.sendWatchPartyInvite({
+  to          : 'ami@email.com',
+  partyCode   : 'PARTY-ABC123',
+  movieTitle  : 'Inception',
+  inviterName : LevelUp.getUser().name   // optionnel
+});
+// → Envoie le type WATCH_PARTY via ton endpoint Vercel (template intégré dans le handler)</div>
+      </div>
+
+      <div class="snippet-section">
+        <h3><i class="fa-solid fa-key" style="color:var(--red)"></i> Clés utilisateur — Scope : <code>keygen</code></h3>
+        <p>Générer ou régénérer une clé personnelle pour l'utilisateur connecté. La clé est envoyée par email et n'est JAMAIS affichée en clair dans l'interface.</p>
+        <div class="snippet-box">// Générer une clé pour l'utilisateur (envoyée à son email)
+const msg = await LevelUp.generateUserKey();
+console.log(msg); // → "✅ Clé générée et envoyée par email à user@email.com"
+
+// Régénérer la clé (invalide l'ancienne)
+const msg2 = await LevelUp.regenerateUserKey();
+
+// Voir la clé masquée (6 derniers caractères seulement)
+LevelUp.getKey();  // → "••••••••••••abc123"</div>
+      </div>
+
+      <div class="snippet-section">
+        <h3><i class="fa-solid fa-envelope" style="color:var(--blue)"></i> Email custom — Scope : <code>email.send</code></h3>
+        <p>Envoyer un email HTML personnalisé via ton compte Resend. Tu construis le HTML toi-même.</p>
+        <div class="snippet-box">// Envoyer un email HTML custom via Resend
+await LevelUp.sendEmail(
+  'destinataire@email.com',
+  'Bienvenue sur LevelUp !',     // Sujet
+  `&lt;h1&gt;Bonjour ${user.name}&lt;/h1&gt;
+   &lt;p&gt;Bienvenue sur la plateforme LevelUp !&lt;/p&gt;`  // HTML complet
+);
+
+// Exemple avec une variable utilisateur
+const user = LevelUp.getUser();
+await LevelUp.sendEmail(
+  user.email,
+  '🎉 Ton compte est prêt',
+  `&lt;p&gt;Salut &lt;strong&gt;${user.name}&lt;/strong&gt;, bienvenue !&lt;/p&gt;`
+);</div>
+      </div>
+
+      <div class="snippet-section">
+        <h3><i class="fa-solid fa-shield" style="color:var(--yellow)"></i> Vérifier les scopes</h3>
+        <div class="snippet-box">// Vérifier si la clé a un scope avant d'appeler une feature
+if (LevelUp.hasScope('watchparty')) {
+  await LevelUp.sendWatchPartyInvite({ ... });
+}
+
+// Voir tous les scopes de la clé active
+LevelUp.getScopes(); // → ['auth', 'watchparty', 'keygen', ...]
+
+// Infos générales sur la clé
+LevelUp.getSdkInfo(); // → { name, scopes, active }</div>
+      </div>
+
+      <div class="snippet-section">
+        <h3><i class="fa-solid fa-table-list"></i> Tableau des scopes disponibles</h3>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+            <thead>
+              <tr style="border-bottom:1px solid var(--bdr)">
+                <th style="text-align:left;padding:8px 12px;color:var(--muted);font-weight:600">Scope</th>
+                <th style="text-align:left;padding:8px 12px;color:var(--muted);font-weight:600">Méthodes débloquées</th>
+                <th style="text-align:left;padding:8px 12px;color:var(--muted);font-weight:600">Description</th>
+              </tr>
+            </thead>
+            <tbody id="scopeTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════ MODAL CRÉATION ═══ -->
+<div id="createModal" class="modal-bg">
+  <div class="modal">
+    <h3>Nouvelle clé SDK</h3>
+    <p>Configurez les accès et permissions pour cette intégration.</p>
+    <div class="form-group">
+      <label>Nom de l'application</label>
+      <input type="text" id="newKeyName" placeholder="ex: LevelMovie, Assistant LevelUp...">
+    </div>
+    <div class="form-group">
+      <label>Domaines autorisés</label>
+      <input type="text" id="newKeyDomains" placeholder="ex: levelmovie.com, localhost">
+      <small>Séparez par des virgules. * = tout autoriser.</small>
+    </div>
+    <div class="form-group">
+      <label>Limite journalière d'appels</label>
+      <input type="number" id="newKeyLimit" placeholder="0 = illimité" min="0" value="0">
+    </div>
+    <div class="form-group">
+      <label>Permissions (scopes)</label>
+      <div class="scope-grid" id="scopeCheckboxes"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCreateModal()">Annuler</button>
+      <button class="btn-confirm" onclick="createKey()">
+        <i class="fa-solid fa-key"></i> Créer la clé
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MODAL REVEAL KEY ═══ -->
+<div id="revealModal" class="modal-bg">
+  <div class="modal">
+    <h3>🔑 Clé créée avec succès</h3>
+    <div class="reveal-warning">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>Copiez cette clé <strong>maintenant</strong> — elle ne sera plus jamais affichée en entier dans l'interface. Gardez-la dans un endroit sécurisé.</span>
+    </div>
+    <div class="reveal-key" id="revealKeyValue"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn-sm btn-copy" onclick="copyRevealKey()" style="font-size:.8rem;padding:9px 16px">
+        <i class="fa-solid fa-copy"></i> Copier la clé
+      </button>
+      <button class="btn-sm btn-regen" onclick="emailRevealKey()" style="font-size:.8rem;padding:9px 16px" id="emailRevealBtn">
+        <i class="fa-solid fa-envelope"></i> Me l'envoyer par email
+      </button>
+    </div>
+    <div id="revealEmailStatus" style="font-size:.78rem;min-height:18px;margin-bottom:12px"></div>
+    <div class="modal-actions" style="margin-top:0">
+      <button class="btn-confirm" onclick="closeRevealModal()">J'ai copié ma clé</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MODAL SUPPRESSION ═══ -->
+<div id="deleteModal" class="modal-bg">
+  <div class="modal">
+    <h3>Supprimer cette clé ?</h3>
+    <p>Irréversible. Toutes les apps utilisant cette clé perdront l'accès immédiatement.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Annuler</button>
+      <button class="btn-confirm" style="background:linear-gradient(135deg,#b91c1c,#ef4444)" onclick="confirmDelete()">
+        <i class="fa-solid fa-trash"></i> Supprimer définitivement
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut }
+  from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+import { getFirestore, collection, doc, getDocs, setDoc, getDoc, updateDoc, deleteDoc, query, where, increment }
+  from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
+/* ── Config ── */
+const FIREBASE_CONFIG = {
+  apiKey            : "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+  authDomain        : "levelup-ia.firebaseapp.com",
+  projectId         : "levelup-ia",
+  storageBucket     : "levelup-ia.firebasestorage.app",
+  messagingSenderId : "229420004282",
+  appId             : "1:229420004282:web:6735f059a947f0936ae383"
+};
+
+const SDK_KEYS_COL  = 'artifacts/level-ia-premium/sdk_keys';
+const CONFIG_PATH   = 'artifacts/level-ia-premium/config';
+
+// ⚙️ ADMINS — Remplace avec tes vrais emails Google
+const ADMIN_EMAILS = [
+  'ton-email@gmail.com',
+  'autre-admin@gmail.com'
+];
+
+/* ── Scope definitions ── */
+const SCOPE_DEFS = [
+  { id: 'auth',          label: 'Auth',             icon: 'fa-user',       desc: 'Login / logout utilisateurs',            cls: 'sc-auth',   always: true },
+  { id: 'user.read',     label: 'Profil (lecture)',  icon: 'fa-eye',        desc: 'Lire les profils utilisateurs',          cls: 'sc-user' },
+  { id: 'user.write',    label: 'Profil (écriture)', icon: 'fa-pen',        desc: 'Modifier les profils utilisateurs',      cls: 'sc-user' },
+  { id: 'email.send',    label: 'Email custom',      icon: 'fa-envelope',   desc: 'Envoyer des emails transactionnels',     cls: 'sc-email' },
+  { id: 'email.invite',  label: 'Invitations mail',  icon: 'fa-paper-plane',desc: 'Envoyer des invitations par email',      cls: 'sc-email' },
+  { id: 'watchparty',    label: 'Watch Party',       icon: 'fa-film',       desc: 'Codes et invitations Watch Party',       cls: 'sc-watch' },
+  { id: 'keygen',        label: 'Clés utilisateur',  icon: 'fa-key',        desc: 'Générer/régénérer des clés perso',       cls: 'sc-keygen' },
+  { id: 'notifications', label: 'Notifications',     icon: 'fa-bell',       desc: 'Envoyer des notifications',              cls: 'sc-notif' }
+];
+
+/* ── Firebase init ── */
+const app  = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+let currentUser = null;
+let allKeys     = [];
+let keyToDelete = null;
+let newRevealKey = null;
+let resendCfg   = null;
+
+/* ─────────────────────────── HELPERS ─── */
+
+function toast(msg, type = 'info') {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const ico = { ok: 'fa-circle-check', err: 'fa-circle-xmark', info: 'fa-circle-info' };
+  t.innerHTML = `<i class="fa-solid ${ico[type] || 'fa-circle-info'}"></i> ${msg}`;
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3500);
+}
+
+function genKey(prefix = 'lvlsdk_') {
+  const c = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let k = prefix;
+  for (let i = 0; i < 32; i++) k += c[Math.floor(Math.random() * c.length)];
+  return k;
+}
+
+function copyText(text, label = 'Copié !') {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => toast(label, 'ok'));
+  } else {
+    const ta = Object.assign(document.createElement('textarea'), { value: text, style: 'position:fixed;opacity:0' });
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    toast(label, 'ok');
+  }
+}
+
+function scopeClass(id) {
+  const def = SCOPE_DEFS.find(s => s.id === id);
+  return def?.cls || 'sc-auth';
+}
+
+function scopeChips(scopes = []) {
+  return (scopes.length ? scopes : ['auth'])
+    .map(s => {
+      const def = SCOPE_DEFS.find(d => d.id === s);
+      const label = def ? def.label : s;
+      const cls = def ? def.cls : 'sc-auth';
+      return `<span class="scope-chip ${cls}"><i class="fa-solid ${def?.icon || 'fa-circle'}" style="font-size:.55rem"></i>${label}</span>`;
+    }).join('');
+}
+
+/* ─────────────────────────── TABS ─── */
+window.switchTab = function(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name)?.classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.getAttribute('onclick')?.includes(name)) b.classList.add('active');
+  });
+};
+
+/* ─────────────────────────── SCOPE CHECKBOXES ─── */
+function buildScopeCheckboxes() {
+  const grid = document.getElementById('scopeCheckboxes');
+  if (!grid) return;
+  grid.innerHTML = SCOPE_DEFS.map(s => `
+    <label class="scope-check ${s.always ? 'scope-always' : ''}" id="sc_wrap_${s.id}">
+      <input type="checkbox" id="sc_${s.id}" value="${s.id}" ${s.always ? 'checked disabled' : ''} onchange="updateScopeCheck('${s.id}')">
+      <div class="scope-check-info">
+        <div style="display:flex;align-items:center;gap:7px">
+          <div class="scope-check-box" id="scb_${s.id}">
+            ${s.always ? '<i class="fa-solid fa-check"></i>' : ''}
+          </div>
+          <span class="scope-check-label"><i class="fa-solid ${s.icon}" style="font-size:.7rem;margin-right:3px"></i> ${s.label}</span>
+        </div>
+        <div class="scope-check-desc">${s.desc}</div>
+      </div>
+    </label>
+  `).join('');
+}
+
+window.updateScopeCheck = function(id) {
+  const cb  = document.getElementById('sc_' + id);
+  const box = document.getElementById('scb_' + id);
+  if (!cb || !box) return;
+  if (cb.checked) {
+    box.style.background    = 'var(--purple)';
+    box.style.borderColor   = 'var(--purple)';
+    box.style.color         = '#fff';
+    box.innerHTML = '<i class="fa-solid fa-check"></i>';
+  } else {
+    box.style.background    = '';
+    box.style.borderColor   = '';
+    box.style.color         = '';
+    box.innerHTML = '';
+  }
+};
+
+function getSelectedScopes() {
+  return SCOPE_DEFS
+    .filter(s => document.getElementById('sc_' + s.id)?.checked)
+    .map(s => s.id);
+}
+
+/* ─────────────────────────── DOCS SCOPE TABLE ─── */
+function buildScopeTable() {
+  const rows = {
+    'auth'          : { methods: 'isLoggedIn, getUser, openLogin, logout, onLogin, onLogout',          desc: 'Authentification Firebase via Google. Inclus sur toutes les clés.' },
+    'user.read'     : { methods: 'getUser (données complètes)',                                          desc: 'Lecture des données de profil utilisateur.' },
+    'user.write'    : { methods: 'updateUser (à venir)',                                                 desc: 'Mise à jour du profil utilisateur.' },
+    'email.send'    : { methods: 'sendEmail(to, subject, html)',                                         desc: 'Envoi d\'emails HTML custom via Resend.' },
+    'email.invite'  : { methods: 'sendEmail (emails d\'invitation)',                                     desc: 'Envoi d\'invitations par email via Resend.' },
+    'watchparty'    : { methods: 'sendWatchPartyInvite({ to, partyCode, movieTitle, inviterName })',     desc: 'Invitations Watch Party LevelMovie par email.' },
+    'keygen'        : { methods: 'generateUserKey(), regenerateUserKey(), getKey()',                     desc: 'Génération de clés personnelles utilisateur. Jamais affichées en clair.' },
+    'notifications' : { methods: 'sendNotification({ to, title, message })',                             desc: 'Notifications in-app ou par email.' }
+  };
+  const tbody = document.getElementById('scopeTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = SCOPE_DEFS.map(s => {
+    const r = rows[s.id] || { methods: '—', desc: '—' };
+    return `<tr style="border-bottom:1px solid var(--bdr)">
+      <td style="padding:8px 12px"><span class="scope-chip ${s.cls}"><i class="fa-solid ${s.icon}" style="font-size:.55rem"></i>${s.id}</span></td>
+      <td style="padding:8px 12px;font-family:monospace;font-size:.72rem;color:#93c5fd">${r.methods}</td>
+      <td style="padding:8px 12px;font-size:.78rem;color:var(--muted)">${r.desc}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─────────────────────────── LOAD & RENDER KEYS ─── */
+async function loadKeys() {
+  if (!currentUser) return;
+  try {
+    const q    = query(collection(db, SDK_KEYS_COL), where('ownerUid', '==', currentUser.uid));
+    const snap = await getDocs(q);
+    allKeys = [];
+    snap.forEach(d => allKeys.push({ id: d.id, ...d.data() }));
+    allKeys.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    renderKeys();
+    updateStats();
+  } catch (e) { toast('Erreur chargement des clés.', 'err'); }
+}
+
+function updateStats() {
+  const active = allKeys.filter(k => k.active).length;
+  const today  = allKeys.reduce((a, k) => a + (k.usageToday || 0), 0);
+  const total  = allKeys.reduce((a, k) => a + (k.totalUsage || 0), 0);
+  document.getElementById('statTotal').textContent    = allKeys.length;
+  document.getElementById('statActive').textContent   = active;
+  document.getElementById('statInactive').textContent = allKeys.length - active;
+  document.getElementById('statUsage').textContent    = total.toLocaleString('fr-FR');
+  document.getElementById('statToday').textContent    = today.toLocaleString('fr-FR');
+}
+
+const visKeys = {};
+
+function renderKeys() {
+  const list = document.getElementById('keysList');
+  if (!allKeys.length) {
+    list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-key"></i><p>Aucune clé SDK. Créez-en une !</p></div>';
+    return;
+  }
+  list.innerHTML = allKeys.map(k => {
+    const scopes    = k.scopes || ['auth'];
+    const domains   = (k.allowedDomains || []).map(d => `<span class="domain-tag">${d}</span>`).join('') || '<span style="color:var(--dim)">Aucun</span>';
+    const masked    = k.id.slice(0, 12) + '••••••••••••••' + k.id.slice(-4);
+    const limitTxt  = k.dailyLimit > 0 ? `${(k.usageToday||0)}/${k.dailyLimit} auj.` : 'Illimité';
+    const dateC     = k.createdAt ? new Date(k.createdAt).toLocaleDateString('fr-FR') : '—';
+    const dateU     = k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString('fr-FR') : 'Jamais';
+    return `
+    <div class="key-card ${k.active?'':'inactive'}" id="card-${k.id}">
+      <div class="key-top">
+        <div>
+          <div class="key-name">${k.name || 'Sans nom'}</div>
+          <span class="key-badge ${k.active?'badge-active':'badge-inactive'}">
+            <span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block"></span>
+            ${k.active ? 'Active' : 'Bloquée'}
+          </span>
+        </div>
+        <div style="text-align:right;font-size:.72rem;color:var(--dim)">
+          Créée le ${dateC}<br>
+          ${k.lastUsedAt ? 'Utilisée le ' + dateU : 'Jamais utilisée'}
+        </div>
+      </div>
+
+      <div class="scopes-row">${scopeChips(scopes)}</div>
+
+      <div class="key-meta">
+        <span><i class="fa-solid fa-chart-bar" style="color:var(--blue)"></i> ${(k.totalUsage||0).toLocaleString('fr-FR')} usages</span>
+        <span><i class="fa-solid fa-calendar" style="color:var(--yellow)"></i> ${limitTxt}</span>
+      </div>
+
+      <div class="key-code">
+        <span class="key-code-val" id="kv-${k.id}">${masked}</span>
+        <button class="btn-sm btn-copy" onclick="toggleVis('${k.id}')" title="Afficher/Masquer">
+          <i class="fa-solid fa-eye" id="eye-${k.id}"></i>
+        </button>
+        <button class="btn-sm btn-copy" onclick="copyText('${k.id}','Clé copiée !')" title="Copier">
+          <i class="fa-solid fa-copy"></i>
+        </button>
+      </div>
+
+      <div style="margin-bottom:12px;font-size:.72rem;color:var(--muted)">
+        <i class="fa-solid fa-globe"></i> Domaines : ${domains}
+      </div>
+
+      <div class="key-actions">
+        <button class="btn-sm ${k.active?'btn-toggle on':'btn-toggle'}" onclick="toggleKey('${k.id}')">
+          <i class="fa-solid ${k.active?'fa-lock':'fa-lock-open'}"></i>
+          ${k.active ? 'Bloquer' : 'Activer'}
+        </button>
+        <button class="btn-sm btn-regen" onclick="regenKey('${k.id}')">
+          <i class="fa-solid fa-rotate"></i> Régénérer
+        </button>
+        <button class="btn-sm btn-delete" onclick="openDeleteModal('${k.id}')">
+          <i class="fa-solid fa-trash"></i> Supprimer
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleVis = function(id) {
+  const el  = document.getElementById('kv-' + id);
+  const ico = document.getElementById('eye-' + id);
+  if (!el) return;
+  if (visKeys[id]) {
+    el.textContent   = id.slice(0, 12) + '••••••••••••••' + id.slice(-4);
+    ico.className    = 'fa-solid fa-eye';
+    visKeys[id]      = false;
+  } else {
+    el.textContent   = id;
+    ico.className    = 'fa-solid fa-eye-slash';
+    visKeys[id]      = true;
+  }
+};
+window.copyText = copyText;
+
+/* ─────────────────────────── ACTIONS ─── */
+
+window.toggleKey = async function(keyId) {
+  const key = allKeys.find(k => k.id === keyId);
+  if (!key) return;
+  try {
+    await updateDoc(doc(db, SDK_KEYS_COL, keyId), { active: !key.active });
+    toast(key.active ? 'Clé bloquée.' : 'Clé activée.', 'ok');
+    await loadKeys();
+  } catch (_) { toast('Erreur lors du changement de statut.', 'err'); }
+};
+
+window.regenKey = async function(keyId) {
+  const key = allKeys.find(k => k.id === keyId);
+  if (!key) return;
+  if (!confirm(`Régénérer la clé "${key.name}" ?\nLes apps utilisant l'ancienne clé perdront l'accès immédiatement.`)) return;
+  try {
+    const newId  = genKey();
+    const newData = { ...key, regeneratedFrom: keyId, createdAt: new Date().toISOString(), totalUsage: 0, usageToday: 0, lastUsedDate: null, lastUsedAt: null };
+    delete newData.id;
+    await setDoc(doc(db, SDK_KEYS_COL, newId), newData);
+    await deleteDoc(doc(db, SDK_KEYS_COL, keyId));
+    toast('Clé régénérée.', 'ok');
+    newRevealKey = newId;
+    openRevealModal(newId);
+    await loadKeys();
+  } catch (_) { toast('Erreur lors de la régénération.', 'err'); }
+};
+
+window.openDeleteModal = function(keyId) {
+  keyToDelete = keyId;
+  document.getElementById('deleteModal').classList.add('open');
+};
+window.closeDeleteModal = function() {
+  keyToDelete = null;
+  document.getElementById('deleteModal').classList.remove('open');
+};
+window.confirmDelete = async function() {
+  if (!keyToDelete) return;
+  try {
+    await deleteDoc(doc(db, SDK_KEYS_COL, keyToDelete));
+    toast('Clé supprimée.', 'ok');
+    closeDeleteModal();
+    await loadKeys();
+  } catch (_) { toast('Erreur lors de la suppression.', 'err'); }
+};
+
+/* ─────────────────────────── CREATE MODAL ─── */
+window.openCreateModal = function() {
+  document.getElementById('newKeyName').value   = '';
+  document.getElementById('newKeyDomains').value = '';
+  document.getElementById('newKeyLimit').value  = '0';
+  buildScopeCheckboxes();
+  document.getElementById('createModal').classList.add('open');
+  setTimeout(() => document.getElementById('newKeyName').focus(), 120);
+};
+window.closeCreateModal = function() {
+  document.getElementById('createModal').classList.remove('open');
+};
+
+window.createKey = async function() {
+  const name    = document.getElementById('newKeyName').value.trim();
+  const domsRaw = document.getElementById('newKeyDomains').value.trim();
+  const limit   = parseInt(document.getElementById('newKeyLimit').value) || 0;
+  const scopes  = getSelectedScopes();
+
+  if (!name)          { toast('Donnez un nom à cette clé.', 'err'); return; }
+  if (!scopes.length) { toast('Sélectionnez au moins un scope.', 'err'); return; }
+
+  const domains = domsRaw ? domsRaw.split(',').map(d => d.trim()).filter(Boolean) : ['*'];
+  const keyId   = genKey();
+
+  try {
+    await setDoc(doc(db, SDK_KEYS_COL, keyId), {
+      name,
+      ownerUid      : currentUser.uid,
+      ownerEmail    : currentUser.email,
+      allowedDomains: domains,
+      dailyLimit    : limit,
+      scopes,
+      active        : true,
+      totalUsage    : 0,
+      usageToday    : 0,
+      lastUsedDate  : null,
+      lastUsedAt    : null,
+      createdAt     : new Date().toISOString()
+    });
+    closeCreateModal();
+    toast(`Clé "${name}" créée !`, 'ok');
+    newRevealKey = keyId;
+    openRevealModal(keyId);
+    await loadKeys();
+  } catch (_) { toast('Erreur lors de la création.', 'err'); }
+};
+
+/* ─────────────────────────── REVEAL MODAL ─── */
+function openRevealModal(keyId) {
+  document.getElementById('revealKeyValue').textContent = keyId;
+  document.getElementById('revealEmailStatus').textContent = '';
+  document.getElementById('revealModal').classList.add('open');
+}
+
+window.closeRevealModal = function() {
+  if (!confirm('Avez-vous bien copié ou reçu votre clé par email ? Elle ne sera plus affichée en entier.')) return;
+  document.getElementById('revealModal').classList.remove('open');
+  newRevealKey = null;
+};
+
+window.copyRevealKey = function() {
+  if (newRevealKey) copyText(newRevealKey, 'Clé copiée dans le presse-papier !');
+};
+
+window.emailRevealKey = async function() {
+  if (!newRevealKey || !currentUser?.email) return;
+  if (!resendCfg?.endpointUrl) {
+    document.getElementById('revealEmailStatus').textContent = '⚠️ Endpoint email non configuré. Allez dans l\'onglet Email.';
+    return;
+  }
+  const btn = document.getElementById('emailRevealBtn');
+  btn.disabled = true;
+  document.getElementById('revealEmailStatus').textContent = 'Envoi en cours...';
+  try {
+    const masked = newRevealKey.slice(0, 8) + '••••••••••••••••••••' + newRevealKey.slice(-6);
+    await callEmailAPI({
+      email       : currentUser.email,
+      type        : 'USER_KEY',
+      name        : currentUser.displayName || currentUser.email,
+      maskedKey   : masked,
+      generatedAt : new Date().toLocaleString('fr-FR')
+    });
+    document.getElementById('revealEmailStatus').textContent = '✅ Email envoyé à ' + currentUser.email;
+  } catch (e) {
+    document.getElementById('revealEmailStatus').textContent = '❌ Erreur : ' + (e.message || 'Envoi échoué.');
+    btn.disabled = false;
+  }
+};
+
+/* ─────────────────────────── EMAIL API (Vercel) ─── */
+
+async function callEmailAPI(body) {
+  if (!resendCfg?.endpointUrl) throw new Error('Endpoint email non configuré.');
+  const resp = await fetch(resendCfg.endpointUrl, {
+    method  : 'POST',
+    headers : { 'Content-Type': 'application/json' },
+    body    : JSON.stringify(body)
+  });
+  if (!resp.ok) {
+    const e = await resp.json().catch(() => ({}));
+    throw new Error(e.error || 'HTTP ' + resp.status);
+  }
+  return resp.json();
+}
+
+async function loadEmailConfig() {
+  try {
+    const snap = await getDoc(doc(db, CONFIG_PATH, 'email_api'));
+    if (snap.exists()) {
+      resendCfg = snap.data();
+      if (resendCfg.endpointUrl) document.getElementById('emailApiEndpoint').value = resendCfg.endpointUrl;
+    }
+  } catch (_) {}
+}
+
+window.saveEmailConfig = async function() {
+  const endpointUrl = document.getElementById('emailApiEndpoint').value.trim();
+  if (!endpointUrl) { toast('L\'URL de l\'endpoint est requise.', 'err'); return; }
+  if (!endpointUrl.startsWith('https://')) { toast('L\'URL doit commencer par https://', 'err'); return; }
+  const cfg = { endpointUrl, updatedAt: new Date().toISOString() };
+  try {
+    await setDoc(doc(db, CONFIG_PATH, 'email_api'), cfg);
+    resendCfg = cfg;
+    toast('Endpoint email sauvegardé !', 'ok');
+  } catch (_) { toast('Erreur de sauvegarde.', 'err'); }
+};
+
+window.testEmail = async function() {
+  if (!resendCfg?.endpointUrl) { toast('Configurez et sauvegardez l\'URL de l\'endpoint avant de tester.', 'err'); return; }
+  const res = document.getElementById('emailTestResult');
+  res.style.display = 'block';
+  res.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Envoi d\'un email de test à ' + currentUser.email + '...';
+  try {
+    await callEmailAPI({
+      email : currentUser.email,
+      type  : 'WELCOME',
+      name  : currentUser.displayName || 'Admin LevelUp'
+    });
+    res.innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--green)"></i> <strong style="color:var(--green)">Email de test envoyé !</strong> Vérifiez votre boite : ' + currentUser.email;
+  } catch (e) {
+    res.innerHTML = '<i class="fa-solid fa-circle-xmark" style="color:var(--red)"></i> <strong style="color:#fca5a5">Échec :</strong> ' + (e.message || JSON.stringify(e));
+  }
+};
+
+/* ─────────────────────────── AUTH ─── */
+window.googleLogin = async function() {
+  try {
+    document.getElementById('loginErr').style.display = 'none';
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (_) {
+    document.getElementById('loginErr').textContent = 'Connexion annulée ou échouée.';
+    document.getElementById('loginErr').style.display = 'block';
+  }
+};
+
+window.logout = async function() { await signOut(auth); };
+
+function showScreen(name) {
+  document.getElementById('loginScreen').style.display  = name === 'login'  ? 'flex'  : 'none';
+  document.getElementById('adminScreen').style.display  = name === 'admin'  ? 'block' : 'none';
+  document.getElementById('deniedScreen').style.display = name === 'denied' ? 'flex'  : 'none';
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const isAdmin = ADMIN_EMAILS.map(e => e.toLowerCase()).includes((user.email||'').toLowerCase());
+    if (!isAdmin) {
+      currentUser = null;
+      document.getElementById('deniedUserEmail').textContent = user.email || '';
+      showScreen('denied');
+      return;
+    }
+    currentUser = user;
+    showScreen('admin');
+
+    if (user.photoURL) {
+      Object.assign(document.getElementById('adminAvatar'), { src: user.photoURL });
+      document.getElementById('adminAvatar').style.display = 'block';
+    } else {
+      const t = document.getElementById('adminAvatarTxt');
+      t.textContent = (user.displayName || user.email || 'A')[0].toUpperCase();
+      t.style.display = 'flex';
+    }
+    const nameEl = document.getElementById('adminName');
+    nameEl.textContent = user.displayName || user.email;
+    nameEl.style.display = 'block';
+
+    buildScopeCheckboxes();
+    buildScopeTable();
+    await Promise.all([loadKeys(), loadEmailConfig()]);
+  } else {
+    currentUser = null;
+    showScreen('login');
+  }
+});
+
+/* ─────────────────────────── MODAL CLOSE ON BACKDROP ─── */
+['createModal','deleteModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) {
+      if (id === 'createModal') closeCreateModal();
+      if (id === 'deleteModal') closeDeleteModal();
+    }
+  });
+});
+</script>
+</body>
+</html>
