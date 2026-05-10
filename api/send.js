@@ -7,7 +7,9 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { email, type, name, ip, country, city, device, date, tools, count } = body || {};
+    const { email, type, name, ip, country, city, device, date, tools, count,
+            partyCode, movieTitle, inviterName, maskedKey, generatedAt,
+            title, message, subject, html } = body || {};
 
     if (!email || !type) return res.status(400).json({ error: "L'email et le type sont requis" });
 
@@ -28,12 +30,13 @@ export default async function handler(req, res) {
     `;
 
     const displayName = name || 'Utilisateur';
-    let subject = '';
+    let emailSubject = '';
     let contentHtml = '';
+    let rawHtml = null;
 
     // ── 1. BIENVENUE ──────────────────────────────────────────
     if (type === 'WELCOME') {
-      subject = "🌟 Bienvenue dans l'écosystème LevelUp !";
+      emailSubject = "🌟 Bienvenue dans l'écosystème LevelUp !";
       contentHtml = `
         <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #3b0764;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
           <tr><td align="center" class="padding-mobile" style="padding:50px 30px">
@@ -55,7 +58,7 @@ export default async function handler(req, res) {
 
     // ── 2. SUSPENSION ─────────────────────────────────────────
     } else if (type === 'SUSPENDED') {
-      subject = '⚠️ Ton compte LevelUp a été suspendu';
+      emailSubject = '⚠️ Ton compte LevelUp a été suspendu';
       contentHtml = `
         <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #7f1d1d;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
           <tr><td align="center" class="padding-mobile" style="padding:50px 30px">
@@ -74,7 +77,7 @@ export default async function handler(req, res) {
 
     // ── 3. SUPPRESSION ────────────────────────────────────────
     } else if (type === 'DELETED') {
-      subject = '🗑️ Ton compte LevelUp a été supprimé';
+      emailSubject = '🗑️ Ton compte LevelUp a été supprimé';
       contentHtml = `
         <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #3f3f46;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
           <tr><td align="center" class="padding-mobile" style="padding:50px 30px">
@@ -90,9 +93,9 @@ export default async function handler(req, res) {
           </td></tr>
         </table>`;
 
-    // ── 4. NOUVELLE CONNEXION (IP / APPAREIL) ─────────────────
+    // ── 4. NOUVELLE CONNEXION ─────────────────────────────────
     } else if (type === 'NEW_LOGIN') {
-      subject = '🔐 Nouvelle connexion détectée sur ton compte LevelUp';
+      emailSubject = '🔐 Nouvelle connexion détectée sur ton compte LevelUp';
       const loginIp = ip || 'Inconnue';
       const loginCity = city || '—';
       const loginCountry = country || '—';
@@ -102,30 +105,16 @@ export default async function handler(req, res) {
         <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #78350f;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
           <tr><td align="center" class="padding-mobile" style="padding:50px 30px">
             <div style="font-size:28px;font-weight:900;letter-spacing:1px;color:#fff;margin-bottom:16px">Level<span style="color:#f97316">Up</span></div>
-            <div style="width:56px;height:56px;border-radius:16px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-              <span style="font-size:24px">🔐</span>
-            </div>
             <h1 class="title-mobile fluid-text" style="font-size:24px;font-weight:800;margin:0 0 12px;color:#fff">Nouvelle connexion détectée</h1>
-            <p class="fluid-text" style="font-size:14px;color:#a1a1aa;line-height:1.6;margin:0 0 28px;max-width:90%">Bonjour <strong style="color:#fff">${displayName}</strong>, une connexion à ton compte LevelUp a été détectée depuis un nouvel appareil ou une nouvelle adresse IP.</p>
+            <p class="fluid-text" style="font-size:14px;color:#a1a1aa;line-height:1.6;margin:0 0 28px;max-width:90%">Bonjour <strong style="color:#fff">${displayName}</strong>, une connexion à ton compte LevelUp a été détectée.</p>
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1a1a24;border-radius:16px;margin-bottom:28px;width:100%;border:1px solid rgba(249,115,22,.15)">
               <tr><td align="left" style="padding:22px 20px">
                 <h3 style="font-size:11px;color:#f97316;text-transform:uppercase;font-weight:800;letter-spacing:1px;margin:0 0 16px">Détails de la connexion</h3>
                 <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                  <tr>
-                    <td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#71717a;font-weight:600">Adresse IP</span></td>
-                    <td align="right" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#d4d4d8;font-family:monospace">${loginIp}</span></td>
-                  </tr>
-                  <tr>
-                    <td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#71717a;font-weight:600">Localisation</span></td>
-                    <td align="right" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#d4d4d8">${loginCity}, ${loginCountry}</span></td>
-                  </tr>
-                  <tr>
-                    <td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#71717a;font-weight:600">Date &amp; heure</span></td>
-                    <td align="right" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#d4d4d8">${loginDate}</span></td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" style="padding:10px 0 0"><span style="font-size:11px;color:#52525b;word-break:break-all">Appareil : ${loginDevice}</span></td>
-                  </tr>
+                  <tr><td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#71717a;font-weight:600">Adresse IP</span></td><td align="right" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#d4d4d8;font-family:monospace">${loginIp}</span></td></tr>
+                  <tr><td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#71717a;font-weight:600">Localisation</span></td><td align="right" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#d4d4d8">${loginCity}, ${loginCountry}</span></td></tr>
+                  <tr><td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#71717a;font-weight:600">Date &amp; heure</span></td><td align="right" style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:12px;color:#d4d4d8">${loginDate}</span></td></tr>
+                  <tr><td colspan="2" style="padding:10px 0 0"><span style="font-size:11px;color:#52525b;word-break:break-all">Appareil : ${loginDevice}</span></td></tr>
                 </table>
               </td></tr>
             </table>
@@ -142,31 +131,119 @@ export default async function handler(req, res) {
     } else if (type === 'NEW_TOOL') {
       const toolCount = count || 1;
       const toolNames = tools || 'Nouvel outil';
-      subject = `🔧 ${toolCount > 1 ? toolCount + ' nouveaux outils disponibles' : 'Un nouvel outil disponible'} sur LevelUp !`;
+      emailSubject = `🔧 ${toolCount > 1 ? toolCount + ' nouveaux outils disponibles' : 'Un nouvel outil disponible'} sur LevelUp !`;
       contentHtml = `
         <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #14532d;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
           <tr><td align="center" class="padding-mobile" style="padding:50px 30px">
             <div style="font-size:28px;font-weight:900;letter-spacing:1px;color:#fff;margin-bottom:16px">Level<span style="color:#22c55e">Up</span></div>
-            <div style="width:56px;height:56px;border-radius:16px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-              <span style="font-size:24px">🔧</span>
-            </div>
             <h1 class="title-mobile fluid-text" style="font-size:24px;font-weight:800;margin:0 0 12px;color:#fff">${toolCount > 1 ? toolCount + ' nouveaux outils' : 'Un nouvel outil'} disponible${toolCount > 1 ? 's' : ''} !</h1>
             <p class="fluid-text" style="font-size:14px;color:#a1a1aa;line-height:1.6;margin:0 0 28px;max-width:90%">Bonjour <strong style="color:#fff">${displayName}</strong>, l'équipe LevelUp vient d'ajouter ${toolCount > 1 ? 'de nouveaux outils' : 'un nouvel outil'} à ton écosystème.</p>
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1a1a24;border-radius:16px;margin-bottom:28px;width:100%;border:1px solid rgba(34,197,94,.12)">
               <tr><td align="left" style="padding:22px 20px">
                 <h3 style="font-size:11px;color:#22c55e;text-transform:uppercase;font-weight:800;letter-spacing:1px;margin:0 0 14px">${toolCount > 1 ? 'Nouveaux outils ajoutés' : 'Nouvel outil ajouté'}</h3>
-                ${toolNames.split(',').map(t => `<p class="fluid-text" style="font-size:14px;color:#d4d4d8;margin:0 0 8px;line-height:1.4;display:flex;align-items:center;gap:8px">🔧 <strong>${t.trim()}</strong></p>`).join('')}
+                ${toolNames.split(',').map(t => `<p class="fluid-text" style="font-size:14px;color:#d4d4d8;margin:0 0 8px;line-height:1.4">🔧 <strong>${t.trim()}</strong></p>`).join('')}
               </td></tr>
             </table>
             <a href="https://levelup-ecosystem.com" class="btn-mobile" style="display:inline-block;background-color:#22c55e;color:#000;text-decoration:none;padding:18px 40px;border-radius:50px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:2px;border:1px solid #16a34a">Découvrir les outils</a>
           </td></tr>
         </table>`;
 
+    // ── 6. WATCH PARTY (SDK) ──────────────────────────────────
+    } else if (type === 'WATCH_PARTY') {
+      const wPartyCode    = partyCode    || '------';
+      const wMovieTitle   = movieTitle   || 'Watch Party';
+      const wInviterName  = inviterName  || displayName;
+      emailSubject = `🎬 ${wInviterName} t'invite à regarder ${wMovieTitle} ensemble !`;
+      contentHtml = `
+        <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #1e3a5f;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
+          <tr><td align="center" class="padding-mobile" style="padding:50px 30px">
+            <div style="font-size:28px;font-weight:900;letter-spacing:1px;color:#fff;margin-bottom:16px">Level<span style="color:#3b82f6">Up</span></div>
+            <div style="width:60px;height:60px;border-radius:18px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px">
+              <span style="font-size:28px">🎬</span>
+            </div>
+            <h1 class="title-mobile fluid-text" style="font-size:24px;font-weight:800;margin:0 0 12px;color:#fff">Invitation Watch Party</h1>
+            <p class="fluid-text" style="font-size:14px;color:#a1a1aa;line-height:1.6;margin:0 0 24px;max-width:90%">
+              <strong style="color:#fff">${wInviterName}</strong> t'invite à regarder
+              <strong style="color:#fff">${wMovieTitle}</strong> ensemble sur LevelMovie !
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1a1a24;border-radius:16px;margin-bottom:28px;width:100%;border:1px solid rgba(59,130,246,.2)">
+              <tr><td align="center" style="padding:28px 20px">
+                <p style="font-size:11px;color:#60a5fa;text-transform:uppercase;font-weight:800;letter-spacing:1px;margin:0 0 14px">Code d'accès Watch Party</p>
+                <div style="background:#0f1929;border:1px solid rgba(59,130,246,.35);border-radius:14px;padding:22px 20px;font-family:monospace;font-size:2rem;font-weight:900;color:#3b82f6;letter-spacing:.15em">${wPartyCode}</div>
+                <p style="font-size:12px;color:#52525b;margin:14px 0 0">Ce code est valable pour cette session uniquement.</p>
+              </td></tr>
+            </table>
+            <a href="https://levelup-ecosystem.com" class="btn-mobile" style="display:inline-block;background-color:#3b82f6;color:#fff;text-decoration:none;padding:18px 40px;border-radius:50px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:2px;border:1px solid #60a5fa">Rejoindre la Watch Party</a>
+            <p style="font-size:11px;color:#3f3f46;margin-top:24px">Si tu ne connais pas ${wInviterName}, ignore cet email.</p>
+          </td></tr>
+        </table>`;
+
+    // ── 7. CLÉ UTILISATEUR (SDK) ──────────────────────────────
+    } else if (type === 'USER_KEY') {
+      const keyMasked = maskedKey  || 'lvluser_••••••••••••••••••••••••••••••••••••••';
+      const keyDate   = generatedAt || new Date().toLocaleString('fr-FR');
+      emailSubject = '🔑 Votre clé personnelle LevelUp';
+      contentHtml = `
+        <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #3b0764;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
+          <tr><td align="center" class="padding-mobile" style="padding:50px 30px">
+            <div style="font-size:28px;font-weight:900;letter-spacing:1px;color:#fff;margin-bottom:16px">Level<span style="color:#a855f7">Up</span></div>
+            <div style="width:60px;height:60px;border-radius:18px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px">
+              <span style="font-size:28px">🔑</span>
+            </div>
+            <h1 class="title-mobile fluid-text" style="font-size:24px;font-weight:800;margin:0 0 12px;color:#fff">Votre clé personnelle LevelUp</h1>
+            <p class="fluid-text" style="font-size:14px;color:#a1a1aa;line-height:1.6;margin:0 0 24px;max-width:90%">
+              Bonjour <strong style="color:#fff">${displayName}</strong>, votre clé personnelle LevelUp a été générée le <strong style="color:#fff">${keyDate}</strong>.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1a1a24;border-radius:16px;margin-bottom:24px;width:100%;border:1px solid rgba(168,85,247,.2)">
+              <tr><td align="center" style="padding:28px 20px">
+                <p style="font-size:11px;color:#a855f7;text-transform:uppercase;font-weight:800;letter-spacing:1px;margin:0 0 14px">Votre clé (partiellement masquée)</p>
+                <div style="background:#0a0a0f;border:1px solid rgba(168,85,247,.35);border-radius:14px;padding:20px;font-family:monospace;font-size:1rem;font-weight:800;color:#a855f7;letter-spacing:.06em;word-break:break-all">${keyMasked}</div>
+                <p style="font-size:11px;color:#52525b;margin:12px 0 0">Pour des raisons de sécurité, la clé complète n'est affichée qu'une seule fois dans l'interface.</p>
+              </td></tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:12px;margin-bottom:28px">
+              <tr><td align="left" style="padding:14px 16px">
+                <p class="fluid-text" style="font-size:13px;color:#fca5a5;margin:0;line-height:1.5">⚠️ <strong>Ne partagez jamais cette clé.</strong> Elle est strictement personnelle et liée à votre compte. Si vous ne l'avez pas demandée, contactez le support.</p>
+              </td></tr>
+            </table>
+            <a href="https://levelup-ecosystem.com" class="btn-mobile" style="display:inline-block;background-color:#a855f7;color:#fff;text-decoration:none;padding:18px 40px;border-radius:50px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:2px;border:1px solid #c084fc">Accéder à LevelUp</a>
+          </td></tr>
+        </table>`;
+
+    // ── 8. NOTIFICATION SDK ───────────────────────────────────
+    } else if (type === 'SDK_NOTIFICATION') {
+      const notifTitle   = title   || 'Notification LevelUp';
+      const notifMessage = message || '';
+      emailSubject = `🔔 ${notifTitle}`;
+      contentHtml = `
+        <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #713f12;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
+          <tr><td align="center" class="padding-mobile" style="padding:50px 30px">
+            <div style="font-size:28px;font-weight:900;letter-spacing:1px;color:#fff;margin-bottom:16px">Level<span style="color:#eab308">Up</span></div>
+            <div style="width:60px;height:60px;border-radius:18px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.2);display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px">
+              <span style="font-size:28px">🔔</span>
+            </div>
+            <h1 class="title-mobile fluid-text" style="font-size:24px;font-weight:800;margin:0 0 12px;color:#fff">${notifTitle}</h1>
+            <p class="fluid-text" style="font-size:14px;color:#a1a1aa;line-height:1.6;margin:0 0 28px;max-width:90%">Bonjour <strong style="color:#fff">${displayName}</strong>, vous avez une nouvelle notification de LevelUp Ecosystem.</p>
+            ${notifMessage ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1a1a24;border-radius:16px;margin-bottom:28px;width:100%;border:1px solid rgba(234,179,8,.12)">
+              <tr><td align="left" style="padding:22px 20px">
+                <p class="fluid-text" style="font-size:14px;color:#d4d4d8;margin:0;line-height:1.7">${notifMessage}</p>
+              </td></tr>
+            </table>` : ''}
+            <a href="https://levelup-ecosystem.com" class="btn-mobile" style="display:inline-block;background-color:#eab308;color:#000;text-decoration:none;padding:18px 40px;border-radius:50px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:2px;border:1px solid #facc15">Ouvrir LevelUp</a>
+          </td></tr>
+        </table>`;
+
+    // ── 9. HTML CUSTOM (SDK email.send) ───────────────────────
+    } else if (type === 'CUSTOM_HTML') {
+      if (!subject || !html) return res.status(400).json({ error: 'subject et html requis pour CUSTOM_HTML' });
+      emailSubject = subject;
+      rawHtml = html;
+
     } else {
-      return res.status(400).json({ error: 'Type inconnu : utilisez WELCOME, SUSPENDED, DELETED, NEW_LOGIN ou NEW_TOOL' });
+      return res.status(400).json({ error: 'Type inconnu. Types valides : WELCOME, SUSPENDED, DELETED, NEW_LOGIN, NEW_TOOL, WATCH_PARTY, USER_KEY, SDK_NOTIFICATION, CUSTOM_HTML' });
     }
 
-    const finalHtml = `<!DOCTYPE html>
+    const finalHtml = rawHtml || `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -198,7 +275,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from: 'LevelUp <contact@levelup-ecosystem.com>',
         to: [email],
-        subject,
+        subject: emailSubject,
         html: finalHtml
       })
     });
