@@ -12,6 +12,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script>
+window._turnstileToken = null;
+window._turnstileWidgetId = undefined;
+window._renderTurnstile = function() {
+    const container = document.getElementById('cfTurnstile');
+    if (!container) return;
+    if (window._turnstileWidgetId !== undefined) return;
+    if (!window.turnstile) {
+        setTimeout(window._renderTurnstile, 300);
+        return;
+    }
+    window._turnstileWidgetId = window.turnstile.render(container, {
+        sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
+        theme: 'dark',
+        size: 'normal',
+        callback: function(token) {
+            window._turnstileToken = token;
+        },
+        'expired-callback': function() { window._turnstileToken = null; },
+        'error-callback': function() {
+            window._turnstileToken = '__bypass__';
+        }
+    });
+};
+</script>
 
 <style>
 /* ═══════════════════════════════════════
@@ -636,6 +662,35 @@ LOGOUT ANIMATION OVERLAY
 @media(max-width:820px){
 .mobile-nav.vis { display: block; }
 }
+
+/* ── TURNSTILE WIDGET ── */
+#cfTurnstile { display:flex; justify-content:center; }
+.turnstile-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; margin:14px 0 4px; min-height:66px; justify-content:center; }
+.turnstile-note { font-size:.68rem; color:var(--dim); display:flex; align-items:center; gap:5px; }
+
+/* ── BADGE NAVIGATION OUTILS ── */
+.lvl-nav-badge { position:absolute; top:2px; right:4px; width:8px; height:8px; border-radius:50%; background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 0 6px rgba(239,68,68,.7); animation:badgePulse 1.8s ease infinite; pointer-events:none; }
+.lvl-nav-badge.hidden { display:none !important; }
+@keyframes badgePulse { 0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.8} }
+
+/* ── IA APPS TAB BAR ── */
+.ia-apps-bar { display:flex; align-items:center; gap:6px; padding:7px 12px; background:rgba(10,10,10,.97); border-bottom:1px solid rgba(255,255,255,.06); overflow-x:auto; flex-shrink:0; scroll-behavior:smooth; -ms-overflow-style:none; scrollbar-width:none; }
+.ia-apps-bar::-webkit-scrollbar { display:none; }
+.ia-apps-bar.hidden { display:none !important; }
+.ia-app-tab { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.07); background:rgba(255,255,255,.03); color:rgba(255,255,255,.5); font-size:.75rem; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .2s; outline:none; font-family:var(--sans); flex-shrink:0; }
+.ia-app-tab:hover { background:rgba(255,255,255,.08); color:rgba(255,255,255,.85); border-color:rgba(255,255,255,.14); }
+.ia-app-tab.active { background:rgba(168,85,247,.15); border-color:rgba(168,85,247,.35); color:#d8b4fe; }
+.ia-overlay { display:flex; flex-direction:column; }
+.ia-overlay iframe { flex:1; min-height:0; }
+
+/* ── NOTIFICATION TOGGLE ── */
+.notif-toggle-wrap { display:flex; align-items:center; gap:10px; }
+.notif-toggle { position:relative; width:38px; height:22px; flex-shrink:0; }
+.notif-toggle input { opacity:0; width:0; height:0; }
+.notif-slider { position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,.1); border-radius:100px; border:1px solid rgba(255,255,255,.1); transition:.3s; }
+.notif-slider:before { content:''; position:absolute; width:16px; height:16px; left:2px; bottom:2px; background:#fff; border-radius:50%; transition:.3s; }
+.notif-toggle input:checked + .notif-slider { background:rgba(168,85,247,.5); border-color:rgba(168,85,247,.4); }
+.notif-toggle input:checked + .notif-slider:before { transform:translateX(16px); }
 
 /* ═══ RESPONSIVE MOBILE FIRST ═══ */
 @media(max-width:1100px){
@@ -1504,7 +1559,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="sb-nav">
 <div class="sbi on" onclick="pnl('home')" id="sbn-home"><i class="fa-solid fa-house"></i> Accueil</div>
 <div class="sbi" onclick="pnl('keys')" id="sbn-keys"><i class="fa-solid fa-key"></i> Clés d'accès</div>
-<div class="sbi" onclick="pnl('tools')" id="sbn-tools"><i class="fa-solid fa-wrench" style="color:#22c55e"></i> Outils</div>
+<div class="sbi" onclick="pnl('tools')" id="sbn-tools" style="position:relative"><i class="fa-solid fa-wrench" style="color:#22c55e"></i> Outils<span id="toolsNavBadge" class="lvl-nav-badge hidden"></span></div>
 <div class="sb-sep"></div>
 <div class="sbi" onclick="pnl('settings')" id="sbn-settings"><i class="fa-solid fa-gear"></i> Paramètres</div>
 <div class="sbi" onclick="openTerms()" id="sbn-terms"><i class="fa-solid fa-file-lines"></i> Conditions</div>
@@ -1638,6 +1693,22 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 </div>
 <div class="set-sec">
+<div class="set-title">Notifications par email</div>
+<div class="set-row">
+  <div class="set-info"><h5>Nouvelle connexion suspecte</h5><p>Recevez un email si une connexion est détectée depuis un nouvel appareil ou une nouvelle adresse IP</p></div>
+  <label class="notif-toggle notif-toggle-wrap"><input type="checkbox" id="notifLoginToggle" onchange="window.saveNotifPref('login',this.checked)" checked><span class="notif-slider"></span></label>
+</div>
+<div class="set-row">
+  <div class="set-info"><h5>Nouveaux outils disponibles</h5><p>Recevez un email lorsqu'un nouvel outil est ajouté à l'écosystème</p></div>
+  <label class="notif-toggle notif-toggle-wrap"><input type="checkbox" id="notifToolsToggle" onchange="window.saveNotifPref('tools',this.checked)" checked><span class="notif-slider"></span></label>
+</div>
+<div style="background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.1);border-radius:12px;padding:12px 14px;margin-top:4px;display:flex;align-items:flex-start;gap:10px">
+  <i class="fa-solid fa-circle-info" style="color:var(--purple);margin-top:1px;flex-shrink:0;font-size:.8rem"></i>
+  <p style="font-size:.76rem;margin:0;line-height:1.65">Les emails de sécurité sont limités à <strong style="color:var(--txt)">2 par jour</strong> et les notifications d'outils à <strong style="color:var(--txt)">3 par jour</strong> pour éviter tout abus.</p>
+</div>
+</div>
+
+<div class="set-sec">
 <div class="set-title">Conditions &amp; Légal</div>
 <div class="set-row" style="cursor:pointer" onclick="openTerms()">
 <div class="set-info"><h5>Conditions (App intégrée)</h5><p>Lire le résumé des conditions directement dans l'application</p></div>
@@ -1713,7 +1784,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="mn-in">
 <div class="mn-item on" onclick="pnl('home')" id="mbn-home"><i class="fa-solid fa-house"></i><span>Accueil</span></div>
 <div class="mn-item" onclick="pnl('keys')" id="mbn-keys"><i class="fa-solid fa-key"></i><span>Clés</span></div>
-<div class="mn-item" onclick="pnl('tools')" id="mbn-tools"><i class="fa-solid fa-wrench" style="color:#22c55e"></i><span>Outils</span></div>
+<div class="mn-item" onclick="pnl('tools')" id="mbn-tools" style="position:relative"><i class="fa-solid fa-wrench" style="color:#22c55e"></i><span>Outils</span><span id="toolsMobBadge" class="lvl-nav-badge hidden" style="top:-2px;right:-2px"></span></div>
 <div class="mn-item" onclick="pnl('settings')" id="mbn-settings"><i class="fa-solid fa-gear"></i><span>Réglages</span></div>
 <div class="mn-item" onclick="confirmLogout()"><i class="fa-solid fa-right-from-bracket"></i><span>Sortir</span></div>
 </div>
@@ -1738,6 +1809,11 @@ AUTH OVERLAY
 <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
 <span id="gBtnTxt">Continuer avec Google</span>
 </button>
+
+<div class="turnstile-wrap" id="turnstileWrap">
+  <div id="cfTurnstile"></div>
+  <div class="turnstile-note"><i class="fa-solid fa-shield-halved" style="color:var(--purple);font-size:.7rem"></i> Protection anti-bot Cloudflare</div>
+</div>
 
 <div id="authDevSection" class="hidden">
 <div style="display:flex;align-items:center;gap:10px;margin:24px 0;">
@@ -1957,6 +2033,7 @@ SMART FAB & IA ASSISTANT
 
 <!-- IA ASSISTANT IFRAME -->
 <div id="iaOverlay" class="ia-overlay">
+    <div id="iaAppsBar" class="ia-apps-bar hidden"></div>
     <iframe src="assistant.html" id="iaFrame" title="Assistant IA"></iframe>
 </div>
 
@@ -2325,6 +2402,16 @@ window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collectio
 
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
+
+// ── VÉRIFICATION TURNSTILE ──
+const token = window._turnstileToken;
+if (!token) {
+    toast_('Veuillez compléter la vérification de sécurité ci-dessous.', 'warn');
+    const wrap = document.getElementById('turnstileWrap');
+    if (wrap) { wrap.style.outline = '1px solid rgba(239,68,68,.5)'; wrap.style.borderRadius = '10px'; setTimeout(() => { wrap.style.outline = ''; }, 2000); }
+    return;
+}
+
 btn.disabled = true;
 document.getElementById('gBtnTxt').textContent = 'Connexion en cours...';
 try {
@@ -2337,6 +2424,11 @@ await signInWithPopup(auth, gProv);
 } catch(e) {
 btn.disabled = false;
 document.getElementById('gBtnTxt').textContent = 'Continuer avec Google';
+// Reset Turnstile token after failed attempt
+window._turnstileToken = null;
+if (window._turnstileWidgetId !== undefined && window.turnstile) {
+    window.turnstile.reset(window._turnstileWidgetId);
+}
 if(e.code !== 'auth/popup-closed-by-user') toast_('Erreur de connexion — réessayez', 'err');
 }
 };
@@ -2827,6 +2919,9 @@ await window._loadToolsHub(db, doc, getDoc);
 // ── MEDIA HUB (charge les iframes depuis Firebase) ──
 await window._loadMediaHub(db, doc, getDoc);
 
+// ── IA APPS HUB (charge les apps IA depuis Firebase) ──
+await window._loadIAApps(db, doc, getDoc);
+
 // Mise à jour de la barre de navigation si on modifie la base de données
 if (!window._user && typeof renderNavGuest === 'function') {
 renderNavGuest();
@@ -2956,7 +3051,89 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                 if(c.id !== 'toolsEmpty') panelGrid.appendChild(c.cloneNode(true));
             });
         }
+
+        // ── BADGE NOUVEAUX OUTILS ──
+        try {
+            const lastSeen = parseInt(localStorage.getItem('lvl_tools_seen_at') || '0', 10);
+            const newTools = allTools.filter(t => {
+                if (!t.notify || !t.added_at) return false;
+                const addedTs = typeof t.added_at === 'number' ? t.added_at
+                    : (t.added_at?.seconds ? t.added_at.seconds * 1000
+                    : new Date(t.added_at).getTime());
+                return addedTs > lastSeen;
+            });
+            if (newTools.length > 0) {
+                const badge1 = document.getElementById('toolsNavBadge');
+                const badge2 = document.getElementById('toolsMobBadge');
+                if (badge1) badge1.classList.remove('hidden');
+                if (badge2) badge2.classList.remove('hidden');
+
+                // Email de notification (1 seul groupé)
+                if (window._user && window.getNotifPref && window.getNotifPref('tools')) {
+                    const alreadyNotified = localStorage.getItem('lvl_tools_notified_set') || '';
+                    const newUnseen = newTools.filter(t => !alreadyNotified.includes(t.title || ''));
+                    if (newUnseen.length > 0 && window._emailQuota) {
+                        const names = newUnseen.map(t => t.title).join(', ');
+                        window._emailQuota.send({
+                            email: window._ud?.email || '',
+                            name: window._ud?.displayName || '',
+                            type: 'NEW_TOOL',
+                            tools: names,
+                            count: newUnseen.length
+                        });
+                        const notifiedSet = [...new Set([...alreadyNotified.split(','), ...newUnseen.map(t => t.title)])].join(',');
+                        localStorage.setItem('lvl_tools_notified_set', notifiedSet);
+                    }
+                }
+            }
+        } catch(_) {}
     } catch(e) { console.warn('Tools Hub Firebase:', e); }
+};
+
+// ── FONCTION IA APPS HUB (charge les apps depuis Firebase) ──
+window._loadIAApps = async function(db, doc, getDoc) {
+    try {
+        const ref = doc(db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'ia_apps');
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const apps = [];
+        for (let i = 1; i <= 30; i++) {
+            const app = data[`app_${i}`];
+            if (app && app.active) apps.push(app);
+        }
+        if (apps.length <= 1) return;
+        const bar = document.getElementById('iaAppsBar');
+        if (!bar) return;
+        bar.innerHTML = '';
+        apps.forEach((app, idx) => {
+            const isDefault = app.default === true || idx === 0;
+            const tab = document.createElement('button');
+            tab.className = 'ia-app-tab' + (isDefault ? ' active' : '');
+            tab.dataset.url = app.url || 'assistant.html';
+            let icoHtml = '';
+            if (app.logo_url) {
+                icoHtml = `<img src="${(app.logo_url||'').replace(/"/g,'&quot;')}" style="width:14px;height:14px;object-fit:contain;border-radius:3px" onerror="this.style.display='none'" loading="lazy">`;
+            } else if (app.icon_fa) {
+                icoHtml = `<i class="fa-solid ${app.icon_fa}" style="font-size:.65rem"></i>`;
+            } else {
+                icoHtml = `<i class="fa-solid fa-star" style="font-size:.65rem"></i>`;
+            }
+            tab.innerHTML = `${icoHtml}<span>${app.title || 'App'}</span>`;
+            tab.onclick = function() {
+                document.querySelectorAll('.ia-app-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const frame = document.getElementById('iaFrame');
+                if (frame) {
+                    const url = (this.dataset.url || 'assistant.html').trim();
+                    if (url.startsWith('<')) { frame.removeAttribute('src'); frame.srcdoc = url; }
+                    else { frame.removeAttribute('srcdoc'); frame.src = url; }
+                }
+            };
+            bar.appendChild(tab);
+        });
+        bar.classList.remove('hidden');
+    } catch(e) { console.warn('IA Apps Firebase:', e); }
 };
 
 // ── FONCTION MEDIA HUB (accès Firebase via paramètres) ──
@@ -3019,6 +3196,67 @@ return { country: data.country, city: data.city, ip: data.ip };
 return null;
 }
 
+// ══════════════════════════════════════════════════════
+//  SYSTÈME DE QUOTA EMAIL — ANTI-ABUS
+// ══════════════════════════════════════════════════════
+window._emailQuota = {
+    LIMITS: {
+        WELCOME:   { max: 1,  windowH: 720  },
+        NEW_LOGIN: { max: 2,  windowH: 24   },
+        NEW_TOOL:  { max: 3,  windowH: 24   },
+        SUSPENDED: { max: 1,  windowH: 168  },
+        DELETED:   { max: 1,  windowH: 168  }
+    },
+    canSend: function(type) {
+        const limit = window._emailQuota.LIMITS[type];
+        if (!limit) return true;
+        const key = `lvl_eq_${type}`;
+        const windowMs = limit.windowH * 3600000;
+        const now = Date.now();
+        let history = [];
+        try { history = JSON.parse(localStorage.getItem(key) || '[]'); } catch(_) {}
+        history = history.filter(ts => now - ts < windowMs);
+        if (history.length >= limit.max) {
+            console.log(`[LevelUp] Quota email atteint pour: ${type} (${history.length}/${limit.max})`);
+            return false;
+        }
+        history.push(now);
+        try { localStorage.setItem(key, JSON.stringify(history)); } catch(_) {}
+        return true;
+    },
+    send: function(payload) {
+        if (!window._emailQuota.canSend(payload.type)) return;
+        fetch('/api/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(() => {});
+    }
+};
+
+// ── PRÉFÉRENCES DE NOTIFICATION UTILISATEUR ──
+window.saveNotifPref = function(type, enabled) {
+    try {
+        const prefs = JSON.parse(localStorage.getItem('lvl_notif_prefs') || '{}');
+        prefs[type] = enabled;
+        localStorage.setItem('lvl_notif_prefs', JSON.stringify(prefs));
+        toast_(enabled ? 'Notifications activées ✓' : 'Notifications désactivées', 'info');
+    } catch(_) {}
+};
+window.getNotifPref = function(type) {
+    try {
+        const prefs = JSON.parse(localStorage.getItem('lvl_notif_prefs') || '{}');
+        return prefs[type] !== false;
+    } catch(_) { return true; }
+};
+window.loadNotifPrefs = function() {
+    const loginEl = document.getElementById('notifLoginToggle');
+    const toolsEl = document.getElementById('notifToolsToggle');
+    if (loginEl) loginEl.checked = window.getNotifPref('login');
+    if (toolsEl) toolsEl.checked = window.getNotifPref('tools');
+};
+
+
 onAuthStateChanged(auth, async (u) => {
 const savedKey = localStorage.getItem('lm_key');
 const savedUid = localStorage.getItem('lm_uid');
@@ -3045,6 +3283,43 @@ window._ud.lastIp = locData.ip;
 await setDoc(ref, { country: locData.country, city: locData.city, lastIp: locData.ip }, { merge: true });
 // Synchroniser la localisation dans la clé (pour cross-app sharing)
 setTimeout(() => saveLocationToKey(locData), 1500);
+
+// ── DÉTECTION NOUVELLE CONNEXION (IP / APPAREIL) ──
+setTimeout(async () => {
+    try {
+        const knownIps = window._ud.knownIps || [];
+        const currentIp = locData.ip;
+        const hasLoggedBefore = !!window._ud.lastLoginAt;
+        const isNewIp = currentIp && !knownIps.includes(currentIp);
+
+        if (isNewIp && hasLoggedBefore && window.getNotifPref('login')) {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+            const timeStr = now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+            window._emailQuota.send({
+                email: u.email || '',
+                name: window._ud.displayName || '',
+                type: 'NEW_LOGIN',
+                ip: currentIp,
+                country: locData.country || '',
+                city: locData.city || '',
+                device: navigator.userAgent.substring(0, 200),
+                date: `${dateStr} à ${timeStr}`
+            });
+        }
+
+        // Mettre à jour la liste des IPs connues (max 10)
+        if (currentIp) {
+            const updatedIps = knownIps.includes(currentIp)
+                ? knownIps
+                : [...knownIps, currentIp].slice(-10);
+            await setDoc(ref, {
+                knownIps: updatedIps,
+                lastLoginAt: new Date().toISOString()
+            }, { merge: true });
+        }
+    } catch(_) {}
+}, 2000);
 }
 } else {
 window._ud = {
@@ -3061,17 +3336,13 @@ window._ud.lastIp = locData.ip;
 }
 await setDoc(ref, window._ud);
 // ── EMAIL DE BIENVENUE (nouvel utilisateur) ──
-try {
-fetch('/api/send', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({
-email: u.email || '',
-name: window._ud.displayName || '',
-type: 'WELCOME'
-})
-}).catch(() => {});
-} catch(_) {}
+if (window._emailQuota) {
+    window._emailQuota.send({
+        email: u.email || '',
+        name: window._ud.displayName || '',
+        type: 'WELCOME'
+    });
+}
 }
 
 const secRef = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
@@ -3106,18 +3377,14 @@ window._accountUnsubscribe = onSnapshot(ref, async (snap) => {
         // Bloquer immédiatement l'interface
         const already = document.getElementById('accountBlockedOverlay');
         if (already) return;
-        // Envoyer l'email de notification (fire & forget)
-        try {
-            fetch('/api/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: window._ud?.email || u.email || '',
-                    name: window._ud?.displayName || '',
-                    type: status === 'suspended' ? 'SUSPENDED' : 'DELETED'
-                })
-            }).catch(() => {});
-        } catch(_) {}
+        // Envoyer l'email de notification (quota contrôlé)
+        if (window._emailQuota) {
+            window._emailQuota.send({
+                email: window._ud?.email || u.email || '',
+                name: window._ud?.displayName || '',
+                type: status === 'suspended' ? 'SUSPENDED' : 'DELETED'
+            });
+        }
         // Marquer qu'on a déjà envoyé (évite les doublons si snapshot refired)
         if (window._ud) window._ud._notifSent = true;
         // Afficher l'overlay de blocage
@@ -3550,6 +3817,8 @@ if (devSec) devSec.classList.add('hidden');
 }
 
 document.getElementById('authOverlay').classList.remove('hidden');
+// Rendre le widget Turnstile à l'ouverture de la modal
+if (window._renderTurnstile) window._renderTurnstile();
 };
 
 function closeAuth(){
@@ -3560,6 +3829,11 @@ const btnKey = document.getElementById('showKeyInputBtn');
 const wrapKey = document.getElementById('keyInputWrap');
 if(btnKey) btnKey.classList.remove('hidden');
 if(wrapKey) wrapKey.classList.add('hidden');
+// Reset Turnstile token + re-render widget à chaque fermeture
+window._turnstileToken = null;
+if (window._turnstileWidgetId !== undefined && window.turnstile) {
+    try { window.turnstile.reset(window._turnstileWidgetId); } catch(_) {}
+}
 }
 
 // TERMS
@@ -3576,6 +3850,20 @@ if(panel) panel.classList.add('on');
 const nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
 const mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
 window.scrollTo({top:0,behavior:'smooth'});
+
+// ── EFFACER BADGE OUTILS À L'OUVERTURE ──
+if (id === 'tools') {
+    const b1 = document.getElementById('toolsNavBadge');
+    const b2 = document.getElementById('toolsMobBadge');
+    if (b1) b1.classList.add('hidden');
+    if (b2) b2.classList.add('hidden');
+    try { localStorage.setItem('lvl_tools_seen_at', String(Date.now())); } catch(_) {}
+}
+
+// ── CHARGER LES PRÉFÉRENCES NOTIF ──
+if (id === 'settings') {
+    if (window.loadNotifPrefs) window.loadNotifPrefs();
+}
 }
 
 // KEY GENERATION (LVL-XXXXX-XXXXX format)
