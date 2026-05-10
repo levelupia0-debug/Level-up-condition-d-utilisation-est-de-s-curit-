@@ -637,7 +637,7 @@ import { getFirestore, collection, doc, getDocs, setDoc, getDoc, updateDoc, dele
 /* ── Config ── */
 const FIREBASE_CONFIG = {
   apiKey            : "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-  authDomain        : "levelup-ecosystem.com",
+  authDomain        : "levelup-ia.firebaseapp.com",
   projectId         : "levelup-ia",
   storageBucket     : "levelup-ia.firebasestorage.app",
   messagingSenderId : "229420004282",
@@ -647,16 +647,18 @@ const FIREBASE_CONFIG = {
 const SDK_KEYS_COL  = 'artifacts/level-ia-premium/sdk_keys';
 const CONFIG_PATH   = 'artifacts/level-ia-premium/config';
 
-// ⚙️ ADMINS — Remplace avec tes vrais emails Google
+// 👇👇👇 LE PROBLÈME EST LÀ 👇👇👇
+// ⚙️ ADMINS — Le code vérifie cette liste, il ne regarde pas dans la base de données !
 const ADMIN_EMAILS = [
-  'ton-email@gmail.com',
+  'TON_VRAI_EMAIL_GOOGLE_ICI@gmail.com', // <-- REMPLACE CECI PAR TON EMAIL !
   'autre-admin@gmail.com'
 ];
+// 👆👆👆 FIN DU PROBLÈME 👆👆👆
 
 /* ── Scope definitions ── */
 const SCOPE_DEFS = [
   { id: 'auth',          label: 'Auth',             icon: 'fa-user',       desc: 'Login / logout utilisateurs',            cls: 'sc-auth',   always: true },
-  { id: 'user.read',     label: 'Profil (lecture)',  icon: 'fa-eye',        desc: 'Lire les profils utilisateurs',          cls: 'sc-user' },
+  { id: 'user.read',     label: 'Profil (lecture)', icon: 'fa-eye',        desc: 'Lire les profils utilisateurs',          cls: 'sc-user' },
   { id: 'user.write',    label: 'Profil (écriture)', icon: 'fa-pen',        desc: 'Modifier les profils utilisateurs',      cls: 'sc-user' },
   { id: 'email.send',    label: 'Email custom',      icon: 'fa-envelope',   desc: 'Envoyer des emails transactionnels',     cls: 'sc-email' },
   { id: 'email.invite',  label: 'Invitations mail',  icon: 'fa-paper-plane',desc: 'Envoyer des invitations par email',      cls: 'sc-email' },
@@ -777,13 +779,13 @@ function getSelectedScopes() {
 function buildScopeTable() {
   const rows = {
     'auth'          : { methods: 'isLoggedIn, getUser, openLogin, logout, onLogin, onLogout',          desc: 'Authentification Firebase via Google. Inclus sur toutes les clés.' },
-    'user.read'     : { methods: 'getUser (données complètes)',                                          desc: 'Lecture des données de profil utilisateur.' },
-    'user.write'    : { methods: 'updateUser (à venir)',                                                 desc: 'Mise à jour du profil utilisateur.' },
-    'email.send'    : { methods: 'sendEmail(to, subject, html)',                                         desc: 'Envoi d\'emails HTML custom via Resend.' },
-    'email.invite'  : { methods: 'sendEmail (emails d\'invitation)',                                     desc: 'Envoi d\'invitations par email via Resend.' },
-    'watchparty'    : { methods: 'sendWatchPartyInvite({ to, partyCode, movieTitle, inviterName })',     desc: 'Invitations Watch Party LevelMovie par email.' },
-    'keygen'        : { methods: 'generateUserKey(), regenerateUserKey(), getKey()',                     desc: 'Génération de clés personnelles utilisateur. Jamais affichées en clair.' },
-    'notifications' : { methods: 'sendNotification({ to, title, message })',                             desc: 'Notifications in-app ou par email.' }
+    'user.read'     : { methods: 'getUser (données complètes)',                                        desc: 'Lecture des données de profil utilisateur.' },
+    'user.write'    : { methods: 'updateUser (à venir)',                                               desc: 'Mise à jour du profil utilisateur.' },
+    'email.send'    : { methods: 'sendEmail(to, subject, html)',                                       desc: 'Envoi d\'emails HTML custom via Resend.' },
+    'email.invite'  : { methods: 'sendEmail (emails d\'invitation)',                                   desc: 'Envoi d\'invitations par email via Resend.' },
+    'watchparty'    : { methods: 'sendWatchPartyInvite({ to, partyCode, movieTitle, inviterName })',   desc: 'Invitations Watch Party LevelMovie par email.' },
+    'keygen'        : { methods: 'generateUserKey(), regenerateUserKey(), getKey()',                   desc: 'Génération de clés personnelles utilisateur. Jamais affichées en clair.' },
+    'notifications' : { methods: 'sendNotification({ to, title, message })',                           desc: 'Notifications in-app ou par email.' }
   };
   const tbody = document.getElementById('scopeTableBody');
   if (!tbody) return;
