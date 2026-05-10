@@ -120,7 +120,7 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
 .sc-notif{background:rgba(234,179,8,.08);border-color:rgba(234,179,8,.25);color:#fde047}
 
 /* ─ SCOPE CHECKBOXES in modal ─ */
-.scope-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.scope-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:8px;margin-top:8px}
 .scope-check{display:flex;align-items:flex-start;gap:10px;background:var(--elev2);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 12px;cursor:pointer;transition:all .2s;user-select:none}
 .scope-check:hover{border-color:var(--bdr-hi)}
 .scope-check input{display:none}
@@ -159,7 +159,7 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
 /* ─ MODAL ─ */
 .modal-bg{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:24px}
 .modal-bg.open{display:flex}
-.modal{background:var(--elev);border:1px solid var(--bdr-hi);border-radius:20px;padding:28px 24px;max-width:480px;width:100%;animation:_min .25s cubic-bezier(.34,1.56,.64,1)}
+.modal{background:var(--elev);border:1px solid var(--bdr-hi);border-radius:20px;padding:28px 24px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;animation:_min .25s cubic-bezier(.34,1.56,.64,1)}
 @keyframes _min{from{transform:scale(.92) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
 .modal h3{font-size:1.1rem;margin-bottom:4px}
 .modal > p{font-size:.82rem;margin-bottom:20px}
@@ -234,7 +234,17 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
 <!-- ═══════════════════════════════════════ LOGIN ═══ -->
 <div id="loginScreen">
   <div class="login-box">
-    <div class="login-logo">⭐</div>
+    <div class="login-logo">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="url(#purpleGrad)" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 8px rgba(168,85,247,0.4));">
+        <defs>
+          <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#a855f7" />
+            <stop offset="100%" stop-color="#7c3aed" />
+          </linearGradient>
+        </defs>
+        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+      </svg>
+    </div>
     <h2>Admin SDK LevelUp</h2>
     <p>Connectez-vous avec votre compte administrateur pour gérer les clés d'intégration.</p>
     <button class="btn-google" onclick="googleLogin()">
@@ -249,7 +259,7 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
 <div id="adminScreen">
   <header>
     <div class="header-brand">
-      <span>⭐</span> LevelUp <span style="color:var(--purple)">SDK</span>
+      <i class="fa-solid fa-star" style="color:var(--purple); filter: drop-shadow(0px 2px 4px rgba(168,85,247,0.4));"></i> LevelUp <span style="color:var(--purple)">SDK</span>
     </div>
     <div class="header-user">
       <img id="adminAvatar" class="avatar" src="" alt="" style="display:none">
@@ -808,7 +818,10 @@ async function loadKeys() {
     allKeys.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     renderKeys();
     updateStats();
-  } catch (e) { toast('Erreur chargement des clés.', 'err'); }
+  } catch (e) { 
+    console.error("Erreur Firestore :", e);
+    toast('Erreur clés : ' + e.message, 'err'); 
+  }
 }
 
 function updateStats() {
@@ -915,7 +928,10 @@ window.toggleKey = async function(keyId) {
     await updateDoc(doc(db, SDK_KEYS_COL, keyId), { active: !key.active });
     toast(key.active ? 'Clé bloquée.' : 'Clé activée.', 'ok');
     await loadKeys();
-  } catch (_) { toast('Erreur lors du changement de statut.', 'err'); }
+  } catch (e) { 
+    console.error("Erreur modification statut :", e);
+    toast('Erreur : ' + e.message, 'err'); 
+  }
 };
 
 window.regenKey = async function(keyId) {
@@ -932,7 +948,10 @@ window.regenKey = async function(keyId) {
     newRevealKey = newId;
     openRevealModal(newId);
     await loadKeys();
-  } catch (_) { toast('Erreur lors de la régénération.', 'err'); }
+  } catch (e) { 
+    console.error("Erreur régénération :", e);
+    toast('Erreur : ' + e.message, 'err'); 
+  }
 };
 
 window.openDeleteModal = function(keyId) {
@@ -950,7 +969,10 @@ window.confirmDelete = async function() {
     toast('Clé supprimée.', 'ok');
     closeDeleteModal();
     await loadKeys();
-  } catch (_) { toast('Erreur lors de la suppression.', 'err'); }
+  } catch (e) { 
+    console.error("Erreur suppression :", e);
+    toast('Erreur : ' + e.message, 'err'); 
+  }
 };
 
 /* ─────────────────────────── CREATE MODAL ─── */
@@ -998,7 +1020,10 @@ window.createKey = async function() {
     newRevealKey = keyId;
     openRevealModal(keyId);
     await loadKeys();
-  } catch (_) { toast('Erreur lors de la création.', 'err'); }
+  } catch (e) { 
+    console.error("Erreur création clé :", e);
+    toast('Erreur : ' + e.message, 'err'); 
+  }
 };
 
 /* ─────────────────────────── REVEAL MODAL ─── */
