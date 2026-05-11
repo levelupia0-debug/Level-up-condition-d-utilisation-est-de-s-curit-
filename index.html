@@ -3000,7 +3000,6 @@ window._loadToolsHub = async function(db, doc, getDoc) {
         }
         if(emptyEl) emptyEl.style.display = 'none';
         if(panelEmpty) panelEmpty.style.display = 'none';
-        const GUEST_USE_LIMIT = 3; // Nombre max d'ouvertures d'outils sans connexion
         const DESC_LIMIT = 80;
         // Tous les outils sont VISIBLES — la limite s'applique uniquement à l'OUVERTURE
         allTools.forEach(tool => {
@@ -3067,27 +3066,7 @@ window._loadToolsHub = async function(db, doc, getDoc) {
 
             grid.appendChild(card);
         });
-        // Afficher le compteur d'usages gratuits restants si l'utilisateur n'est pas connecté
-        if (!window._user) {
-            const todayKey = `lvl_tools_used_${new Date().toDateString()}`;
-            const usedToday = parseInt(localStorage.getItem(todayKey) || '0', 10);
-            const remaining = Math.max(0, GUEST_USE_LIMIT - usedToday);
-            if (remaining < GUEST_USE_LIMIT) {
-                const infoEl = document.createElement('div');
-                infoEl.id = 'toolsGuestBanner';
-                infoEl.style.cssText = 'grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-radius:12px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.18);margin-bottom:4px;flex-wrap:wrap';
-                infoEl.innerHTML = `
-                    <span style="font-size:.78rem;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:7px">
-                        <i class="fa-solid fa-gauge-high" style="color:#a855f7;font-size:.8rem"></i>
-                        <strong style="color:#d8b4fe">${remaining}</strong> ouverture${remaining!==1?'s':''} gratuite${remaining!==1?'s':''} restante${remaining!==1?'s':''} aujourd'hui
-                    </span>
-                    <button onclick="closeToolsHub();setTimeout(()=>openAuth&&openAuth('login'),200)" style="padding:5px 14px;border-radius:8px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.35);color:#d8b4fe;font-size:.72rem;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;outline:none">
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Se connecter
-                    </button>
-                `;
-                grid.insertBefore(infoEl, grid.firstChild);
-            }
-        }
+
 
         // Cloner la grille dans le panel dashboard
         if (panelGrid) {
@@ -4552,61 +4531,8 @@ window.closeToolFullscreen = function() {
 };
 
 // openToolWindow : plein écran sur mobile, flottant sur desktop
-// Limite les invités à 3 ouvertures d'outils par jour (trackées en localStorage)
 window.openToolWindow = function(url, name) {
     if (!url) return;
-
-    // Si l'utilisateur est connecté → accès illimité
-    if (!window._user) {
-        const todayKey = `lvl_tools_used_${new Date().toDateString()}`;
-        const usedToday = parseInt(localStorage.getItem(todayKey) || '0', 10);
-        const GUEST_LIMIT = 3;
-
-        if (usedToday >= GUEST_LIMIT) {
-            // Limite atteinte → afficher une invite de connexion
-            const overlay = document.getElementById('toolsGuestLimitOverlay');
-            if (overlay) {
-                overlay.classList.remove('hidden');
-                return;
-            }
-            // Créer l'overlay si absent
-            const el = document.createElement('div');
-            el.id = 'toolsGuestLimitOverlay';
-            el.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(6,2,10,.95);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;padding:24px';
-            el.innerHTML = `
-                <div style="max-width:360px;width:100%;background:linear-gradient(145deg,#0d0618,#06020a);border:1px solid rgba(168,85,247,.28);border-radius:24px;padding:36px 28px;text-align:center;box-shadow:0 0 60px rgba(168,85,247,.12),0 32px 64px rgba(0,0,0,.8)">
-                    <div style="width:56px;height:56px;border-radius:16px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2L14.85 8.77L22 9.27L17 13.64L18.54 20.64L12 17L5.46 20.64L7 13.64L2 9.27L9.15 8.77L12 2Z" fill="url(#lmg)" stroke="#c084fc" stroke-width="0.5"/><defs><radialGradient id="lmg" cx="50%" cy="35%" r="60%"><stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#7c3aed"/></radialGradient></defs></svg>
-                    </div>
-                    <div style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-.02em">Limite atteinte</div>
-                    <div style="font-size:.84rem;color:rgba(255,255,255,.45);line-height:1.6;margin-bottom:24px">
-                        Vous avez utilisé vos <strong style="color:#d8b4fe">3 ouvertures gratuites</strong> d'aujourd'hui.<br>
-                        Connectez-vous pour un accès illimité à tous les outils.
-                    </div>
-                    <button onclick="document.getElementById('toolsGuestLimitOverlay').classList.add('hidden');openAuth&&openAuth('login')" style="width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:.88rem;font-weight:800;cursor:pointer;font-family:var(--sans);margin-bottom:10px;letter-spacing:.02em">
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Se connecter — Accès illimité
-                    </button>
-                    <button onclick="document.getElementById('toolsGuestLimitOverlay').classList.add('hidden')" style="width:100%;padding:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-size:.8rem;font-weight:600;cursor:pointer;font-family:var(--sans)">
-                        Retour aux outils
-                    </button>
-                </div>
-            `;
-            document.body.appendChild(el);
-            return;
-        }
-
-        // Incrémenter le compteur
-        localStorage.setItem(todayKey, String(usedToday + 1));
-
-        // Mettre à jour le bandeau de compteur si visible
-        const banner = document.getElementById('toolsGuestBanner');
-        if (banner) {
-            const newRemaining = Math.max(0, GUEST_LIMIT - (usedToday + 1));
-            const span = banner.querySelector('span');
-            if (span) span.innerHTML = `<i class="fa-solid fa-gauge-high" style="color:#a855f7;font-size:.8rem"></i> <strong style="color:#d8b4fe">${newRemaining}</strong> ouverture${newRemaining!==1?'s':''} gratuite${newRemaining!==1?'s':''} restante${newRemaining!==1?'s':''} aujourd'hui`;
-        }
-    }
-
     const isMobile = window.innerWidth <= 820;
     if (isMobile) { window.openToolFullscreen(url, name); }
     else { window.openToolFloat(url, name); }
