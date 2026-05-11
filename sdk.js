@@ -250,7 +250,12 @@
     _popupEl.id = '_lvl_ov';
     _popupEl.innerHTML = `
       <div id="_lvl_box">
-        <div id="_lvl_logo">⭐</div>
+        <div id=""_lvl_logo">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2L14.85 8.77L22 9.27L17 13.64L18.54 20.64L12 17L5.46 20.64L7 13.64L2 9.27L9.15 8.77L12 2Z" fill="url(#lg)" stroke="#c084fc" stroke-width="0.5"/>
+    <defs><radialGradient id="lg" cx="50%" cy="35%" r="60%"><stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#7c3aed"/></radialGradient></defs>
+  </svg>
+</div>
         <h3>Connexion LevelUp</h3>
         <p>Connectez-vous pour accéder à toutes vos fonctionnalités.</p>
         <div id="_lvl_ts_box"></div>
