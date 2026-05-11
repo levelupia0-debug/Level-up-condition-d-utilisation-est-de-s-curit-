@@ -8,7 +8,7 @@
 
   const FIREBASE_CONFIG = {
     apiKey            : "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-    authDomain        : "levelup-ia.firebaseapp.com",
+    authDomain        : "levelup-ecosystem.com",
     projectId         : "levelup-ia",
     storageBucket     : "levelup-ia.firebasestorage.app",
     messagingSenderId : "229420004282",
