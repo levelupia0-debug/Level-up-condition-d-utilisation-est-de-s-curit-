@@ -24,20 +24,98 @@ p{color:var(--muted)}
 button{font-family:var(--sans);cursor:pointer}
 input,select,textarea{font-family:var(--sans)}
 
+/* ─ LOADING OVERLAY ─ */
+#loadingScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;
+  transition:opacity .4s ease;
+}
+#loadingScreen.fade-out{opacity:0;pointer-events:none}
+.loading-logo{
+  width:60px;height:60px;
+  background:linear-gradient(145deg,rgba(168,85,247,.2),rgba(168,85,247,.08));
+  border:1px solid rgba(168,85,247,.35);border-radius:18px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 30px rgba(168,85,247,.2);
+  animation:pulse-glow 2s ease-in-out infinite;
+}
+@keyframes pulse-glow{
+  0%,100%{box-shadow:0 0 20px rgba(168,85,247,.15)}
+  50%{box-shadow:0 0 40px rgba(168,85,247,.35)}
+}
+.loading-dots{display:flex;gap:6px}
+.loading-dots span{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(168,85,247,.5);
+  animation:dot-bounce 1.2s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2){animation-delay:.15s}
+.loading-dots span:nth-child(3){animation-delay:.3s}
+@keyframes dot-bounce{0%,80%,100%{transform:scale(0.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
 /* ─ LOGIN ─ */
-#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
-.login-box{background:var(--elev);border:1px solid var(--bdr-hi);border-radius:24px;padding:40px 36px;max-width:380px;width:100%;text-align:center}
-.login-logo{width:56px;height:56px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px}
-.login-box h2{font-size:1.4rem;margin-bottom:6px}
-.login-box p{font-size:.85rem;margin-bottom:28px}
-.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 20px;border-radius:12px;background:#fff;border:1px solid #dadce0;color:#3c4043;font-size:.9rem;font-weight:600;transition:all .2s}
-.btn-google:hover{background:#f8f9fa;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+#loginScreen{
+  display:none;
+  align-items:center;justify-content:center;min-height:100vh;padding:24px;
+  background:var(--bg);position:relative;overflow:hidden;
+}
+.login-glow-1{
+  position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(168,85,247,.15) 0%,transparent 65%);
+  pointer-events:none;filter:blur(50px);
+}
+.login-glow-2{
+  position:absolute;bottom:-80px;right:-60px;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(99,102,241,.1) 0%,transparent 70%);
+  pointer-events:none;filter:blur(60px);
+}
+.login-box{
+  position:relative;z-index:1;
+  background:linear-gradient(145deg,#0d0d14,#0a0a0f);
+  border:1px solid rgba(168,85,247,.28);
+  border-radius:28px;
+  padding:44px 36px 36px;
+  max-width:390px;width:100%;text-align:center;
+  box-shadow:0 0 0 1px rgba(168,85,247,.06),0 0 80px rgba(168,85,247,.14),0 40px 80px rgba(0,0,0,.8);
+  animation:card-in .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes card-in{from{transform:scale(.9) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.login-logo{
+  width:64px;height:64px;margin:0 auto 18px;
+  background:linear-gradient(145deg,rgba(168,85,247,.2),rgba(168,85,247,.08));
+  border:1px solid rgba(168,85,247,.4);border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 28px rgba(168,85,247,.25);
+}
+.login-eyebrow{
+  font:700 .65rem/1 var(--sans);letter-spacing:.2em;
+  color:rgba(168,85,247,.7);text-transform:uppercase;margin:0 0 10px;
+}
+.login-box h2{font-size:1.45rem;margin-bottom:8px;color:var(--txt)}
+.login-box > p{font-size:.84rem;margin-bottom:28px;line-height:1.55}
+.btn-google{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:14px 20px;border-radius:14px;background:#fff;border:1px solid rgba(255,255,255,.9);
+  color:#3c4043;font-size:.9rem;font-weight:600;transition:all .22s;
+  box-shadow:0 4px 16px rgba(0,0,0,.25);cursor:pointer;
+}
+.btn-google:hover{background:#f8f9fa;box-shadow:0 6px 22px rgba(0,0,0,.35);transform:translateY(-1px)}
 .btn-google:active{transform:scale(.98)}
+#loginErr{color:#fca5a5;font-size:.78rem;margin-top:12px;display:none;line-height:1.5}
+.login-secure{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  margin-top:20px;font-size:.65rem;color:rgba(255,255,255,.2);
+}
+.login-secure svg{opacity:.5}
+.login-footer{font-size:.6rem;color:rgba(255,255,255,.1);margin-top:14px;letter-spacing:.06em}
 
 /* ─ DENIED ─ */
 #deniedScreen{display:none;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg)}
 .denied-box{background:var(--elev);border:1px solid rgba(239,68,68,.2);border-radius:24px;padding:40px 36px;max-width:420px;width:100%;text-align:center}
-.denied-icon{width:64px;height:64px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 20px}
+.denied-icon{width:64px;height:64px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
 .denied-box h2{font-size:1.3rem;margin-bottom:8px}
 .denied-box .sub{font-size:.85rem;line-height:1.6;margin-bottom:8px}
 .denied-email{display:inline-block;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);color:var(--purple);border-radius:100px;padding:3px 14px;font-size:.78rem;font-weight:600;margin:8px 0 20px}
@@ -209,10 +287,36 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
 <body>
 <div id="toastWrap" class="toast-wrap"></div>
 
+<!-- ═══════════════════════════════════════ LOADING ═══ -->
+<div id="loadingScreen">
+  <div class="loading-logo">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L14.6 8.26L21.5 9.27L16.75 13.97L17.97 20.82L12 17.77L6.03 20.82L7.25 13.97L2.5 9.27L9.4 8.26L12 2Z"
+        fill="url(#loadGrad)" stroke="rgba(192,132,252,0.4)" stroke-width="0.5" stroke-linejoin="round"/>
+      <defs>
+        <radialGradient id="loadGrad" cx="50%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="#e879f9"/>
+          <stop offset="55%" stop-color="#a855f7"/>
+          <stop offset="100%" stop-color="#6d28d9"/>
+        </radialGradient>
+      </defs>
+    </svg>
+  </div>
+  <div class="loading-dots">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════════ DENIED ═══ -->
 <div id="deniedScreen">
   <div class="denied-box">
-    <div class="denied-icon">🔒</div>
+    <div class="denied-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="11" width="18" height="11" rx="2.5" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1.5"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="12" cy="16" r="1.5" fill="#ef4444"/>
+      </svg>
+    </div>
     <h2>Accès réservé aux administrateurs</h2>
     <p class="sub">Ce panel est réservé à l'équipe LevelUp.<br>Votre compte n'est pas autorisé.</p>
     <div class="denied-email" id="deniedUserEmail"></div>
@@ -233,25 +337,44 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
 
 <!-- ═══════════════════════════════════════ LOGIN ═══ -->
 <div id="loginScreen">
+  <div class="login-glow-1"></div>
+  <div class="login-glow-2"></div>
   <div class="login-box">
     <div class="login-logo">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="url(#purpleGrad)" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 8px rgba(168,85,247,0.4));">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L14.6 8.26L21.5 9.27L16.75 13.97L17.97 20.82L12 17.77L6.03 20.82L7.25 13.97L2.5 9.27L9.4 8.26L12 2Z"
+          fill="url(#loginGrad)" stroke="rgba(192,132,252,0.5)" stroke-width="0.5" stroke-linejoin="round"
+          style="filter:drop-shadow(0 0 10px rgba(168,85,247,0.5))"/>
         <defs>
-          <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#a855f7" />
-            <stop offset="100%" stop-color="#7c3aed" />
-          </linearGradient>
+          <radialGradient id="loginGrad" cx="50%" cy="30%" r="65%">
+            <stop offset="0%" stop-color="#e879f9"/>
+            <stop offset="55%" stop-color="#a855f7"/>
+            <stop offset="100%" stop-color="#6d28d9"/>
+          </radialGradient>
         </defs>
-        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
       </svg>
     </div>
-    <h2>Admin SDK LevelUp</h2>
+    <div class="login-eyebrow">LevelUp Ecosystem</div>
+    <h2>Panel Admin SDK</h2>
     <p>Connectez-vous avec votre compte administrateur pour gérer les clés d'intégration.</p>
     <button class="btn-google" onclick="googleLogin()">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
       Continuer avec Google
     </button>
-    <p id="loginErr" style="color:#fca5a5;font-size:.78rem;margin-top:12px;display:none"></p>
+    <p id="loginErr"></p>
+    <div class="login-secure">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      Connexion sécurisée · Accès restreint aux administrateurs
+    </div>
+    <div class="login-footer">levelup-ecosystem.com · v2.3</div>
   </div>
 </div>
 
@@ -259,7 +382,11 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
 <div id="adminScreen">
   <header>
     <div class="header-brand">
-      <i class="fa-solid fa-star" style="color:var(--purple); filter: drop-shadow(0px 2px 4px rgba(168,85,247,0.4));"></i> LevelUp <span style="color:var(--purple)">SDK</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="filter:drop-shadow(0 0 6px rgba(168,85,247,0.6))">
+        <path d="M12 2L14.6 8.26L21.5 9.27L16.75 13.97L17.97 20.82L12 17.77L6.03 20.82L7.25 13.97L2.5 9.27L9.4 8.26L12 2Z"
+          fill="#a855f7" stroke="rgba(192,132,252,0.4)" stroke-width="0.5"/>
+      </svg>
+      LevelUp <span style="color:var(--purple)">SDK</span>
     </div>
     <div class="header-user">
       <img id="adminAvatar" class="avatar" src="" alt="" style="display:none">
@@ -295,7 +422,6 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
 
     <!-- ══ TAB: KEYS ══ -->
     <div id="tab-keys" class="tab-panel active">
-      <!-- Stats -->
       <div class="stats-grid" id="statsGrid">
         <div class="stat-card"><div class="stat-label">Total clés</div><div class="stat-value purple" id="statTotal">—</div></div>
         <div class="stat-card"><div class="stat-label">Actives</div><div class="stat-value green" id="statActive">—</div></div>
@@ -324,7 +450,6 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
         </div>
       </div>
 
-      <!-- Info banner -->
       <div style="background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:var(--r12);padding:14px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">
         <i class="fa-solid fa-circle-info" style="color:var(--purple);margin-top:2px;flex-shrink:0"></i>
         <div style="font-size:.82rem;line-height:1.6">
@@ -397,7 +522,6 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
         </div>
       </div>
 
-      <!-- Live preview -->
       <div style="background:var(--elev);border:1px solid rgba(168,85,247,.25);border-radius:var(--r16);overflow:hidden;margin-bottom:24px">
         <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
           <div style="display:flex;align-items:center;gap:8px;font-size:.84rem;font-weight:700">
@@ -417,17 +541,16 @@ main{max-width:960px;margin:0 auto;padding:36px 5%}
         </div>
       </div>
 
-      <!-- Integration code -->
       <div class="snippet-section">
         <h3><i class="fa-solid fa-code" style="color:var(--purple)"></i> Intégrer le widget dans une app</h3>
-        <p>Le bouton flottant 🤖 apparaît automatiquement sur toutes les pages où le SDK est chargé, dès que tu appelles <code style="color:var(--purple)">openAssistant()</code>. Ou intègre un bouton custom :</p>
+        <p>Le bouton flottant apparaît automatiquement sur toutes les pages où le SDK est chargé, dès que tu appelles <code style="color:var(--purple)">openAssistant()</code>.</p>
         <div class="snippet-box">&lt;!-- 1. Le SDK LevelUp avec une clé qui a le scope "auth" --&gt;
 &lt;script src="https://levelup-ecosystem.com/sdk.js"
   data-levelup-key="VOTRE_CLE_SDK"&gt;&lt;/script&gt;
 
 &lt;!-- 2. Ouvrir l'assistant depuis un bouton custom --&gt;
 &lt;button onclick="LevelUp.openAssistant()"&gt;
-  🤖 Assistant LevelUp
+  Assistant LevelUp
 &lt;/button&gt;
 
 &lt;script&gt;
@@ -442,8 +565,7 @@ LevelUp.closeAssistant();
       <div class="snippet-section">
         <h3><i class="fa-solid fa-window-maximize" style="color:var(--blue)"></i> Intégrer en iframe fixe dans une page</h3>
         <p>Si tu veux l'assistant intégré directement dans une zone de ta page (sans widget flottant) :</p>
-        <div class="snippet-box">&lt;!-- Iframe fixe, taille libre --&gt;
-&lt;iframe
+        <div class="snippet-box">&lt;iframe
   src="https://levelupia0-debug.github.io/levelup-assistant/"
   width="400"
   height="620"
@@ -456,7 +578,6 @@ LevelUp.closeAssistant();
       <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:var(--r12);padding:14px 18px;font-size:.82rem;line-height:1.6">
         <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
         <strong style="color:var(--green)"> Aucun scope spécial requis</strong> — l'assistant est disponible sur toutes les clés SDK actives.
-        L'utilisateur n'a pas besoin d'être connecté pour utiliser l'assistant.
       </div>
     </div>
 
@@ -476,7 +597,7 @@ LevelUp.closeAssistant();
 LevelUp.isLoggedIn();   // → true / false
 LevelUp.getUser();      // → { uid, name, email, photo, ... }
 
-// Ouvrir le popup de connexion (avec Turnstile)
+// Ouvrir le popup de connexion
 LevelUp.openLogin();
 
 // Écouter les événements
@@ -491,61 +612,44 @@ LevelUp.openDashboard();</div>
       <div class="snippet-section">
         <h3><i class="fa-solid fa-film" style="color:var(--orange)"></i> Watch Party — Scope : <code>watchparty</code></h3>
         <p>Invitations par email pour les Watch Party LevelMovie.</p>
-        <div class="snippet-box">// Envoyer une invitation Watch Party par email
-await LevelUp.sendWatchPartyInvite({
+        <div class="snippet-box">await LevelUp.sendWatchPartyInvite({
   to          : 'ami@email.com',
   partyCode   : 'PARTY-ABC123',
   movieTitle  : 'Inception',
-  inviterName : LevelUp.getUser().name   // optionnel
-});
-// → Envoie le type WATCH_PARTY via ton endpoint Vercel (template intégré dans le handler)</div>
+  inviterName : LevelUp.getUser().name
+});</div>
       </div>
 
       <div class="snippet-section">
         <h3><i class="fa-solid fa-key" style="color:var(--red)"></i> Clés utilisateur — Scope : <code>keygen</code></h3>
-        <p>Générer ou régénérer une clé personnelle pour l'utilisateur connecté. La clé est envoyée par email et n'est JAMAIS affichée en clair dans l'interface.</p>
-        <div class="snippet-box">// Générer une clé pour l'utilisateur (envoyée à son email)
+        <p>Générer ou régénérer une clé personnelle. La clé est envoyée par email et jamais affichée en clair.</p>
+        <div class="snippet-box">// Générer une clé (envoyée à l'email de l'utilisateur)
 const msg = await LevelUp.generateUserKey();
 console.log(msg); // → "✅ Clé générée et envoyée par email à user@email.com"
 
-// Régénérer la clé (invalide l'ancienne)
-const msg2 = await LevelUp.regenerateUserKey();
+// Régénérer (invalide l'ancienne)
+await LevelUp.regenerateUserKey();
 
-// Voir la clé masquée (6 derniers caractères seulement)
+// Voir la clé masquée
 LevelUp.getKey();  // → "••••••••••••abc123"</div>
       </div>
 
       <div class="snippet-section">
         <h3><i class="fa-solid fa-envelope" style="color:var(--blue)"></i> Email custom — Scope : <code>email.send</code></h3>
-        <p>Envoyer un email HTML personnalisé via ton compte Resend. Tu construis le HTML toi-même.</p>
-        <div class="snippet-box">// Envoyer un email HTML custom via Resend
-await LevelUp.sendEmail(
+        <div class="snippet-box">await LevelUp.sendEmail(
   'destinataire@email.com',
-  'Bienvenue sur LevelUp !',     // Sujet
-  `&lt;h1&gt;Bonjour ${user.name}&lt;/h1&gt;
-   &lt;p&gt;Bienvenue sur la plateforme LevelUp !&lt;/p&gt;`  // HTML complet
-);
-
-// Exemple avec une variable utilisateur
-const user = LevelUp.getUser();
-await LevelUp.sendEmail(
-  user.email,
-  '🎉 Ton compte est prêt',
-  `&lt;p&gt;Salut &lt;strong&gt;${user.name}&lt;/strong&gt;, bienvenue !&lt;/p&gt;`
+  'Bienvenue sur LevelUp !',
+  `&lt;h1&gt;Bonjour !&lt;/h1&gt;&lt;p&gt;Bienvenue sur la plateforme.&lt;/p&gt;`
 );</div>
       </div>
 
       <div class="snippet-section">
         <h3><i class="fa-solid fa-shield" style="color:var(--yellow)"></i> Vérifier les scopes</h3>
-        <div class="snippet-box">// Vérifier si la clé a un scope avant d'appeler une feature
-if (LevelUp.hasScope('watchparty')) {
+        <div class="snippet-box">if (LevelUp.hasScope('watchparty')) {
   await LevelUp.sendWatchPartyInvite({ ... });
 }
 
-// Voir tous les scopes de la clé active
-LevelUp.getScopes(); // → ['auth', 'watchparty', 'keygen', ...]
-
-// Infos générales sur la clé
+LevelUp.getScopes();  // → ['auth', 'watchparty', 'keygen', ...]
 LevelUp.getSdkInfo(); // → { name, scopes, active }</div>
       </div>
 
@@ -602,7 +706,7 @@ LevelUp.getSdkInfo(); // → { name, scopes, active }</div>
 <!-- ═══════════════════════════════════ MODAL REVEAL KEY ═══ -->
 <div id="revealModal" class="modal-bg">
   <div class="modal">
-    <h3>🔑 Clé créée avec succès</h3>
+    <h3><i class="fa-solid fa-key" style="color:var(--purple)"></i> Clé créée avec succès</h3>
     <div class="reveal-warning">
       <i class="fa-solid fa-triangle-exclamation"></i>
       <span>Copiez cette clé <strong>maintenant</strong> — elle ne sera plus jamais affichée en entier dans l'interface. Gardez-la dans un endroit sécurisé.</span>
@@ -657,7 +761,6 @@ const FIREBASE_CONFIG = {
 const SDK_KEYS_COL  = 'artifacts/level-ia-premium/sdk_keys';
 const CONFIG_PATH   = 'artifacts/level-ia-premium/config';
 
-// ⚙️ ADMINS — Liste des emails autorisés
 const ADMIN_EMAILS = [
   'levelup.ia0@gmail.com',
   'richelieubonte@gmail.com'
@@ -665,14 +768,14 @@ const ADMIN_EMAILS = [
 
 /* ── Scope definitions ── */
 const SCOPE_DEFS = [
-  { id: 'auth',          label: 'Auth',             icon: 'fa-user',       desc: 'Login / logout utilisateurs',            cls: 'sc-auth',   always: true },
-  { id: 'user.read',     label: 'Profil (lecture)', icon: 'fa-eye',        desc: 'Lire les profils utilisateurs',          cls: 'sc-user' },
-  { id: 'user.write',    label: 'Profil (écriture)', icon: 'fa-pen',        desc: 'Modifier les profils utilisateurs',      cls: 'sc-user' },
-  { id: 'email.send',    label: 'Email custom',      icon: 'fa-envelope',   desc: 'Envoyer des emails transactionnels',     cls: 'sc-email' },
-  { id: 'email.invite',  label: 'Invitations mail',  icon: 'fa-paper-plane',desc: 'Envoyer des invitations par email',      cls: 'sc-email' },
-  { id: 'watchparty',    label: 'Watch Party',       icon: 'fa-film',       desc: 'Codes et invitations Watch Party',       cls: 'sc-watch' },
-  { id: 'keygen',        label: 'Clés utilisateur',  icon: 'fa-key',        desc: 'Générer/régénérer des clés perso',       cls: 'sc-keygen' },
-  { id: 'notifications', label: 'Notifications',     icon: 'fa-bell',       desc: 'Envoyer des notifications',              cls: 'sc-notif' }
+  { id: 'auth',          label: 'Auth',              icon: 'fa-user',        desc: 'Login / logout utilisateurs',            cls: 'sc-auth',   always: true },
+  { id: 'user.read',     label: 'Profil (lecture)',  icon: 'fa-eye',         desc: 'Lire les profils utilisateurs',          cls: 'sc-user' },
+  { id: 'user.write',    label: 'Profil (écriture)', icon: 'fa-pen',         desc: 'Modifier les profils utilisateurs',      cls: 'sc-user' },
+  { id: 'email.send',    label: 'Email custom',       icon: 'fa-envelope',    desc: 'Envoyer des emails transactionnels',     cls: 'sc-email' },
+  { id: 'email.invite',  label: 'Invitations mail',   icon: 'fa-paper-plane', desc: 'Envoyer des invitations par email',      cls: 'sc-email' },
+  { id: 'watchparty',    label: 'Watch Party',        icon: 'fa-film',        desc: 'Codes et invitations Watch Party',       cls: 'sc-watch' },
+  { id: 'keygen',        label: 'Clés utilisateur',   icon: 'fa-key',         desc: 'Générer/régénérer des clés perso',       cls: 'sc-keygen' },
+  { id: 'notifications', label: 'Notifications',      icon: 'fa-bell',        desc: 'Envoyer des notifications',              cls: 'sc-notif' }
 ];
 
 /* ── Firebase init ── */
@@ -680,11 +783,19 @@ const app  = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-let currentUser = null;
-let allKeys     = [];
-let keyToDelete = null;
+let currentUser  = null;
+let allKeys      = [];
+let keyToDelete  = null;
 let newRevealKey = null;
-let resendCfg   = null;
+let resendCfg    = null;
+
+/* ── Hide loading overlay ── */
+function hideLoading() {
+  const el = document.getElementById('loadingScreen');
+  if (!el) return;
+  el.classList.add('fade-out');
+  setTimeout(() => el.remove(), 450);
+}
 
 /* ─────────────────────────── HELPERS ─── */
 
@@ -713,11 +824,6 @@ function copyText(text, label = 'Copié !') {
     document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
     toast(label, 'ok');
   }
-}
-
-function scopeClass(id) {
-  const def = SCOPE_DEFS.find(s => s.id === id);
-  return def?.cls || 'sc-auth';
 }
 
 function scopeChips(scopes = []) {
@@ -765,14 +871,14 @@ window.updateScopeCheck = function(id) {
   const box = document.getElementById('scb_' + id);
   if (!cb || !box) return;
   if (cb.checked) {
-    box.style.background    = 'var(--purple)';
-    box.style.borderColor   = 'var(--purple)';
-    box.style.color         = '#fff';
+    box.style.background  = 'var(--purple)';
+    box.style.borderColor = 'var(--purple)';
+    box.style.color       = '#fff';
     box.innerHTML = '<i class="fa-solid fa-check"></i>';
   } else {
-    box.style.background    = '';
-    box.style.borderColor   = '';
-    box.style.color         = '';
+    box.style.background  = '';
+    box.style.borderColor = '';
+    box.style.color       = '';
     box.innerHTML = '';
   }
 };
@@ -792,7 +898,7 @@ function buildScopeTable() {
     'email.send'    : { methods: 'sendEmail(to, subject, html)',                                       desc: 'Envoi d\'emails HTML custom via Resend.' },
     'email.invite'  : { methods: 'sendEmail (emails d\'invitation)',                                   desc: 'Envoi d\'invitations par email via Resend.' },
     'watchparty'    : { methods: 'sendWatchPartyInvite({ to, partyCode, movieTitle, inviterName })',   desc: 'Invitations Watch Party LevelMovie par email.' },
-    'keygen'        : { methods: 'generateUserKey(), regenerateUserKey(), getKey()',                   desc: 'Génération de clés personnelles utilisateur. Jamais affichées en clair.' },
+    'keygen'        : { methods: 'generateUserKey(), regenerateUserKey(), getKey()',                   desc: 'Génération de clés personnelles utilisateur.' },
     'notifications' : { methods: 'sendNotification({ to, title, message })',                           desc: 'Notifications in-app ou par email.' }
   };
   const tbody = document.getElementById('scopeTableBody');
@@ -818,9 +924,9 @@ async function loadKeys() {
     allKeys.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     renderKeys();
     updateStats();
-  } catch (e) { 
+  } catch (e) {
     console.error("Erreur Firestore :", e);
-    toast('Erreur clés : ' + e.message, 'err'); 
+    toast('Erreur clés : ' + e.message, 'err');
   }
 }
 
@@ -844,12 +950,12 @@ function renderKeys() {
     return;
   }
   list.innerHTML = allKeys.map(k => {
-    const scopes    = k.scopes || ['auth'];
-    const domains   = (k.allowedDomains || []).map(d => `<span class="domain-tag">${d}</span>`).join('') || '<span style="color:var(--dim)">Aucun</span>';
-    const masked    = k.id.slice(0, 12) + '••••••••••••••' + k.id.slice(-4);
-    const limitTxt  = k.dailyLimit > 0 ? `${(k.usageToday||0)}/${k.dailyLimit} auj.` : 'Illimité';
-    const dateC     = k.createdAt ? new Date(k.createdAt).toLocaleDateString('fr-FR') : '—';
-    const dateU     = k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString('fr-FR') : 'Jamais';
+    const scopes   = k.scopes || ['auth'];
+    const domains  = (k.allowedDomains || []).map(d => `<span class="domain-tag">${d}</span>`).join('') || '<span style="color:var(--dim)">Aucun</span>';
+    const masked   = k.id.slice(0, 12) + '••••••••••••••' + k.id.slice(-4);
+    const limitTxt = k.dailyLimit > 0 ? `${(k.usageToday||0)}/${k.dailyLimit} auj.` : 'Illimité';
+    const dateC    = k.createdAt ? new Date(k.createdAt).toLocaleDateString('fr-FR') : '—';
+    const dateU    = k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString('fr-FR') : 'Jamais';
     return `
     <div class="key-card ${k.active?'':'inactive'}" id="card-${k.id}">
       <div class="key-top">
@@ -908,13 +1014,13 @@ window.toggleVis = function(id) {
   const ico = document.getElementById('eye-' + id);
   if (!el) return;
   if (visKeys[id]) {
-    el.textContent   = id.slice(0, 12) + '••••••••••••••' + id.slice(-4);
-    ico.className    = 'fa-solid fa-eye';
-    visKeys[id]      = false;
+    el.textContent = id.slice(0, 12) + '••••••••••••••' + id.slice(-4);
+    ico.className  = 'fa-solid fa-eye';
+    visKeys[id]    = false;
   } else {
-    el.textContent   = id;
-    ico.className    = 'fa-solid fa-eye-slash';
-    visKeys[id]      = true;
+    el.textContent = id;
+    ico.className  = 'fa-solid fa-eye-slash';
+    visKeys[id]    = true;
   }
 };
 window.copyText = copyText;
@@ -928,9 +1034,9 @@ window.toggleKey = async function(keyId) {
     await updateDoc(doc(db, SDK_KEYS_COL, keyId), { active: !key.active });
     toast(key.active ? 'Clé bloquée.' : 'Clé activée.', 'ok');
     await loadKeys();
-  } catch (e) { 
+  } catch (e) {
     console.error("Erreur modification statut :", e);
-    toast('Erreur : ' + e.message, 'err'); 
+    toast('Erreur : ' + e.message, 'err');
   }
 };
 
@@ -939,7 +1045,7 @@ window.regenKey = async function(keyId) {
   if (!key) return;
   if (!confirm(`Régénérer la clé "${key.name}" ?\nLes apps utilisant l'ancienne clé perdront l'accès immédiatement.`)) return;
   try {
-    const newId  = genKey();
+    const newId   = genKey();
     const newData = { ...key, regeneratedFrom: keyId, createdAt: new Date().toISOString(), totalUsage: 0, usageToday: 0, lastUsedDate: null, lastUsedAt: null };
     delete newData.id;
     await setDoc(doc(db, SDK_KEYS_COL, newId), newData);
@@ -948,9 +1054,9 @@ window.regenKey = async function(keyId) {
     newRevealKey = newId;
     openRevealModal(newId);
     await loadKeys();
-  } catch (e) { 
+  } catch (e) {
     console.error("Erreur régénération :", e);
-    toast('Erreur : ' + e.message, 'err'); 
+    toast('Erreur : ' + e.message, 'err');
   }
 };
 
@@ -969,17 +1075,17 @@ window.confirmDelete = async function() {
     toast('Clé supprimée.', 'ok');
     closeDeleteModal();
     await loadKeys();
-  } catch (e) { 
+  } catch (e) {
     console.error("Erreur suppression :", e);
-    toast('Erreur : ' + e.message, 'err'); 
+    toast('Erreur : ' + e.message, 'err');
   }
 };
 
 /* ─────────────────────────── CREATE MODAL ─── */
 window.openCreateModal = function() {
-  document.getElementById('newKeyName').value   = '';
+  document.getElementById('newKeyName').value    = '';
   document.getElementById('newKeyDomains').value = '';
-  document.getElementById('newKeyLimit').value  = '0';
+  document.getElementById('newKeyLimit').value   = '0';
   buildScopeCheckboxes();
   document.getElementById('createModal').classList.add('open');
   setTimeout(() => document.getElementById('newKeyName').focus(), 120);
@@ -1020,9 +1126,9 @@ window.createKey = async function() {
     newRevealKey = keyId;
     openRevealModal(keyId);
     await loadKeys();
-  } catch (e) { 
+  } catch (e) {
     console.error("Erreur création clé :", e);
-    toast('Erreur : ' + e.message, 'err'); 
+    toast('Erreur : ' + e.message, 'err');
   }
 };
 
@@ -1069,7 +1175,6 @@ window.emailRevealKey = async function() {
 };
 
 /* ─────────────────────────── EMAIL API (Vercel) ─── */
-
 async function callEmailAPI(body) {
   if (!resendCfg?.endpointUrl) throw new Error('Endpoint email non configuré.');
   const resp = await fetch(resendCfg.endpointUrl, {
@@ -1125,21 +1230,25 @@ window.testEmail = async function() {
 
 /* ─────────────────────────── AUTH ─── */
 window.googleLogin = async function() {
+  const err = document.getElementById('loginErr');
+  err.style.display = 'none';
   try {
-    document.getElementById('loginErr').style.display = 'none';
     await signInWithPopup(auth, new GoogleAuthProvider());
-  } catch (_) {
-    document.getElementById('loginErr').textContent = 'Connexion annulée ou échouée.';
-    document.getElementById('loginErr').style.display = 'block';
+  } catch (e) {
+    if (e.code !== 'auth/popup-closed-by-user') {
+      err.textContent  = 'Connexion annulée ou échouée. Réessayez.';
+      err.style.display = 'block';
+    }
   }
 };
 
 window.logout = async function() { await signOut(auth); };
 
 function showScreen(name) {
-  document.getElementById('loginScreen').style.display  = name === 'login'  ? 'flex'  : 'none';
-  document.getElementById('adminScreen').style.display  = name === 'admin'  ? 'block' : 'none';
-  document.getElementById('deniedScreen').style.display = name === 'denied' ? 'flex'  : 'none';
+  document.getElementById('loginScreen').style.display  = name === 'login'  ? 'flex'   : 'none';
+  document.getElementById('adminScreen').style.display  = name === 'admin'  ? 'block'  : 'none';
+  document.getElementById('deniedScreen').style.display = name === 'denied' ? 'flex'   : 'none';
+  hideLoading();
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -1155,8 +1264,9 @@ onAuthStateChanged(auth, async (user) => {
     showScreen('admin');
 
     if (user.photoURL) {
-      Object.assign(document.getElementById('adminAvatar'), { src: user.photoURL });
-      document.getElementById('adminAvatar').style.display = 'block';
+      const av = document.getElementById('adminAvatar');
+      av.src = user.photoURL;
+      av.style.display = 'block';
     } else {
       const t = document.getElementById('adminAvatarTxt');
       t.textContent = (user.displayName || user.email || 'A')[0].toUpperCase();
