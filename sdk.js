@@ -1,5 +1,5 @@
 /**
- * LevelUp SDK — v2.2
+ * LevelUp SDK — v2.3
  * Auth · Email (via API Vercel) · Watch Party · Clés utilisateur · Scopes · Assistant IA
  * Usage: <script src="sdk.js" data-levelup-key="VOTRE_CLE_SDK"></script>
  */
@@ -27,13 +27,11 @@
   let _currentUser    = null;
   let _sdkKey         = null;
   let _keyData        = null;
-  let _emailApiUrl    = null;   // URL de l'endpoint Vercel email
+  let _emailApiUrl    = null;
   let _loginCbs       = [];
   let _logoutCbs      = [];
   let _popupEl        = null;
   let _assistantEl    = null;
-  let _turnstileToken = null;
-  let _turnstileWid   = null;
 
   /* ── Scopes ─────────────────────────────────────────── */
   const S = {
@@ -152,9 +150,40 @@
       ]);
       const p = pS.exists() ? pS.data() : {};
       const k = kS.exists() ? kS.data() : {};
-      return { uid, name: p.displayName || '', email: p.email || '', photo: p.photoURL || '',
-               key: k.apiKey || k.key || null, status: p.status || 'active', country: p.country || '', createdAt: p.createdAt || '' };
+      return {
+        uid,
+        name      : p.displayName || '',
+        email     : p.email || '',
+        photo     : p.photoURL || '',
+        key       : k.apiKey || k.key || null,
+        status    : p.status || 'active',
+        country   : p.country || '',
+        createdAt : p.createdAt || '',
+        _exists   : pS.exists()
+      };
     } catch (_) { return null; }
+  }
+
+  /* ── Upsert user profile (crée si absent) ───────────── */
+  async function _upsertUserProfile(fbUser) {
+    try {
+      const profileRef = window.__lvlup_doc(_db, USERS_PATH, fbUser.uid, 'profile', 'data');
+      const snap = await window.__lvlup_getDoc(profileRef);
+      if (!snap.exists()) {
+        await window.__lvlup_setDoc(profileRef, {
+          displayName : fbUser.displayName || '',
+          email       : fbUser.email || '',
+          photoURL    : fbUser.photoURL || '',
+          status      : 'active',
+          createdAt   : new Date().toISOString(),
+          lastLoginAt : new Date().toISOString()
+        });
+      } else {
+        await window.__lvlup_updateDoc(profileRef, {
+          lastLoginAt : new Date().toISOString()
+        });
+      }
+    } catch (_) {}
   }
 
   /* ── User key generation ────────────────────────────── */
@@ -189,60 +218,37 @@
     return key;
   }
 
-  /* ── Cloudflare Turnstile ───────────────────────────── */
-  const TURNSTILE_SITEKEY = '0x4AAAAAADMY4-j7dozqyHdf';
-
-  function _loadTurnstile() {
-    if (document.getElementById('_lvl_ts_script')) return;
-    const s = Object.assign(document.createElement('script'), {
-      id: '_lvl_ts_script',
-      src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
-      async: true, defer: true
-    });
-    document.head.appendChild(s);
-  }
-
-  function _renderTurnstile() {
-    const box = document.getElementById('_lvl_ts_box');
-    if (!box || _turnstileWid !== null) return;
-    if (!window.turnstile) { setTimeout(_renderTurnstile, 300); return; }
-    _turnstileToken = null;
-    _turnstileWid = window.turnstile.render(box, {
-      sitekey            : TURNSTILE_SITEKEY, theme: 'dark', size: 'flexible',
-      callback           : t  => { _turnstileToken = t; _setLoginBtn(true); },
-      'expired-callback' : () => { _turnstileToken = null; _setLoginBtn(false); },
-      'error-callback'   : () => { _turnstileToken = '__bypass__'; _setLoginBtn(true); }
-    });
-  }
-
-  function _setLoginBtn(on) {
-    const b = document.getElementById('_lvl_gbtn');
-    if (!b) return;
-    b.disabled = !on; b.style.opacity = on ? '1' : '0.5'; b.style.cursor = on ? 'pointer' : 'not-allowed';
-  }
-
   /* ── Login popup ─────────────────────────────────────── */
   function _openLoginPopup() {
     if (_popupEl) return;
-    _loadTurnstile();
-    _turnstileWid = null; _turnstileToken = null;
 
     const style = Object.assign(document.createElement('style'), { id: '_lvl_sty' });
     style.textContent = `
-      #_lvl_ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:_lvlFi .22s ease}
+      #_lvl_ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:_lvlFi .25s ease}
       @keyframes _lvlFi{from{opacity:0}to{opacity:1}}
-      #_lvl_box{background:#0a0a0f;border:1px solid rgba(168,85,247,.28);border-radius:22px;padding:34px 28px 28px;max-width:375px;width:92%;text-align:center;box-shadow:0 0 80px rgba(168,85,247,.13),0 32px 64px rgba(0,0,0,.85);animation:_lvlSi .3s cubic-bezier(.34,1.56,.64,1)}
-      @keyframes _lvlSi{from{transform:scale(.88) translateY(22px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
-      #_lvl_logo{width:50px;height:50px;margin:0 auto 18px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.32);border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px}
-      #_lvl_box h3{color:#fff;font:800 1.15rem/1.2 system-ui,sans-serif;margin:0 0 6px;letter-spacing:-.02em}
-      #_lvl_box p{color:rgba(255,255,255,.42);font:400 .82rem/1.5 system-ui,sans-serif;margin:0 0 18px}
-      #_lvl_ts_box{margin:0 auto 14px;display:flex;justify-content:center}
-      #_lvl_gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 20px;border-radius:12px;background:#fff;border:1px solid #dadce0;color:#3c4043;font:600 .9rem system-ui,sans-serif;cursor:not-allowed;transition:all .2s;margin-bottom:10px;opacity:.5}
-      #_lvl_gbtn:not(:disabled):hover{background:#f8f9fa;box-shadow:0 2px 10px rgba(0,0,0,.18)}
-      #_lvl_st{font:400 .78rem system-ui,sans-serif;color:#a855f7;margin-top:8px;min-height:18px}
-      #_lvl_sec{display:flex;align-items:center;justify-content:center;gap:5px;font:400 .67rem system-ui,sans-serif;color:rgba(255,255,255,.18);margin-top:10px}
-      #_lvl_cl{background:none;border:none;color:rgba(255,255,255,.22);font:400 .77rem system-ui,sans-serif;cursor:pointer;margin-top:6px;padding:6px;transition:color .2s}
+      #_lvl_box{position:relative;background:linear-gradient(145deg,#0d0d14 0%,#0a0a0f 100%);border:1px solid rgba(168,85,247,.3);border-radius:24px;padding:36px 28px 30px;max-width:370px;width:92%;text-align:center;box-shadow:0 0 0 1px rgba(168,85,247,.08),0 0 80px rgba(168,85,247,.18),0 40px 80px rgba(0,0,0,.9);animation:_lvlSi .35s cubic-bezier(.34,1.56,.64,1);overflow:hidden}
+      @keyframes _lvlSi{from{transform:scale(.88) translateY(24px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+      #_lvl_glow1{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:260px;height:260px;background:radial-gradient(circle,rgba(168,85,247,.22) 0%,transparent 70%);pointer-events:none;filter:blur(30px)}
+      #_lvl_glow2{position:absolute;bottom:-80px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(99,102,241,.14) 0%,transparent 70%);pointer-events:none;filter:blur(40px)}
+      #_lvl_logo{width:58px;height:58px;margin:0 auto 16px;background:linear-gradient(145deg,rgba(168,85,247,.18),rgba(168,85,247,.08));border:1px solid rgba(168,85,247,.35);border-radius:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(168,85,247,.25);position:relative;z-index:1}
+      #_lvl_brand{font:800 .7rem/1 system-ui,sans-serif;letter-spacing:.18em;color:rgba(168,85,247,.7);text-transform:uppercase;margin:0 0 10px;position:relative;z-index:1}
+      #_lvl_box h3{color:#fff;font:800 1.25rem/1.2 system-ui,sans-serif;margin:0 0 8px;letter-spacing:-.02em;position:relative;z-index:1}
+      #_lvl_box .sub{color:rgba(255,255,255,.38);font:400 .82rem/1.55 system-ui,sans-serif;margin:0 0 24px;position:relative;z-index:1}
+      #_lvl_gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 20px;border-radius:14px;background:#fff;border:1px solid rgba(255,255,255,.9);color:#3c4043;font:600 .9rem system-ui,sans-serif;cursor:pointer;transition:all .22s;margin-bottom:14px;position:relative;z-index:1;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+      #_lvl_gbtn:hover{background:#f8f9fa;box-shadow:0 6px 22px rgba(0,0,0,.4);transform:translateY(-1px)}
+      #_lvl_gbtn:active{transform:scale(.98)}
+      #_lvl_gbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+      #_lvl_divider{display:flex;align-items:center;gap:10px;margin:0 0 14px;position:relative;z-index:1}
+      #_lvl_divider span{color:rgba(255,255,255,.18);font:400 .72rem system-ui,sans-serif;white-space:nowrap}
+      #_lvl_divider::before,#_lvl_divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+      #_lvl_st{font:500 .8rem system-ui,sans-serif;color:#c084fc;min-height:20px;margin-bottom:4px;position:relative;z-index:1;animation:_lvlFi .2s ease}
+      #_lvl_badges{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px;position:relative;z-index:1}
+      #_lvl_badges span{font:400 .64rem system-ui,sans-serif;color:rgba(255,255,255,.2);display:flex;align-items:center;gap:4px}
+      #_lvl_cl{background:none;border:none;color:rgba(255,255,255,.2);font:400 .76rem system-ui,sans-serif;cursor:pointer;padding:6px 12px;transition:color .2s;position:relative;z-index:1;border-radius:8px}
       #_lvl_cl:hover{color:rgba(255,255,255,.5)}
+      #_lvl_footer{font:400 .6rem system-ui,sans-serif;color:rgba(255,255,255,.1);margin-top:14px;letter-spacing:.05em;position:relative;z-index:1}
+      @keyframes _lvlSpin{to{transform:rotate(360deg)}}
+      ._lvl_spin{display:inline-block;animation:_lvlSpin .8s linear infinite}
     `;
     document.head.appendChild(style);
 
@@ -250,25 +256,60 @@
     _popupEl.id = '_lvl_ov';
     _popupEl.innerHTML = `
       <div id="_lvl_box">
-        <div id=""_lvl_logo">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M12 2L14.85 8.77L22 9.27L17 13.64L18.54 20.64L12 17L5.46 20.64L7 13.64L2 9.27L9.15 8.77L12 2Z" fill="url(#lg)" stroke="#c084fc" stroke-width="0.5"/>
-    <defs><radialGradient id="lg" cx="50%" cy="35%" r="60%"><stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#7c3aed"/></radialGradient></defs>
-  </svg>
-</div>
-        <h3>Connexion LevelUp</h3>
-        <p>Connectez-vous pour accéder à toutes vos fonctionnalités.</p>
-        <div id="_lvl_ts_box"></div>
-        <button id="_lvl_gbtn" disabled onclick="window.__lvlup_doLogin()">
-          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <div id="_lvl_glow1"></div>
+        <div id="_lvl_glow2"></div>
+
+        <div id="_lvl_logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L14.6 8.26L21.5 9.27L16.75 13.97L17.97 20.82L12 17.77L6.03 20.82L7.25 13.97L2.5 9.27L9.4 8.26L12 2Z"
+              fill="url(#_lvl_star_grad)" stroke="rgba(192,132,252,0.5)" stroke-width="0.6" stroke-linejoin="round"/>
+            <defs>
+              <radialGradient id="_lvl_star_grad" cx="50%" cy="30%" r="65%">
+                <stop offset="0%" stop-color="#e879f9"/>
+                <stop offset="55%" stop-color="#a855f7"/>
+                <stop offset="100%" stop-color="#6d28d9"/>
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+
+        <div id="_lvl_brand">LevelUp</div>
+        <h3>Bienvenue</h3>
+        <p class="sub">Connectez-vous pour accéder à toutes vos fonctionnalités LevelUp.</p>
+
+        <button id="_lvl_gbtn" onclick="window.__lvlup_doLogin()">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
           Continuer avec Google
         </button>
+
         <div id="_lvl_st"></div>
-        <div id="_lvl_sec">🔒 Protégé par Cloudflare Turnstile</div>
+
+        <div id="_lvl_badges">
+          <span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="rgba(168,85,247,0.6)"/></svg>
+            LevelUp Ecosystem
+          </span>
+          <span style="width:1px;height:10px;background:rgba(255,255,255,.1)"></span>
+          <span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Connexion sécurisée
+          </span>
+          <span style="width:1px;height:10px;background:rgba(255,255,255,.1)"></span>
+          <span>
+            <svg width="11" height="11" viewBox="0 0 48 48" fill="none"><path fill="#4285F4" d="M44 20H24v8h11.5c-1.1 5-5.4 8-11.5 8a13 13 0 0 1 0-26c3.1 0 5.8 1.1 8 2.8L38 7C34 3.5 29.3 1 24 1 11.3 1 1 11.3 1 24s10.3 23 23 23c12.7 0 22-9 22-22 0-1.4-.1-2.7-.4-4z"/></svg>
+            Google OAuth
+          </span>
+        </div>
+
         <button id="_lvl_cl" onclick="window.__lvlup_closePopup()">Annuler</button>
+        <div id="_lvl_footer">levelup-ecosystem.com · v2.3</div>
       </div>`;
     document.body.appendChild(_popupEl);
-    setTimeout(_renderTurnstile, 200);
   }
 
   function _closeLoginPopup() {
@@ -277,15 +318,33 @@
     if (s) s.remove();
   }
 
-  function _setStatus(msg) {
+  function _setStatus(msg, loading = false) {
     const el = document.getElementById('_lvl_st');
-    if (el) el.textContent = msg;
+    if (!el) return;
+    el.innerHTML = loading
+      ? `<span class="_lvl_spin">◌</span> ${msg}`
+      : msg;
+  }
+
+  function _setLoginBtn(enabled) {
+    const b = document.getElementById('_lvl_gbtn');
+    if (!b) return;
+    b.disabled = !enabled;
   }
 
   window.__lvlup_doLogin = async function () {
-    if (!_turnstileToken) { _setStatus('Complétez la vérification de sécurité.'); return; }
-    try { _setStatus('Connexion en cours...'); await window.__lvlup_signInWithPopup(_auth, new window.__lvlup_GoogleAuthProvider()); }
-    catch (_) { _setStatus('Erreur de connexion. Réessayez.'); }
+    _setLoginBtn(false);
+    try {
+      _setStatus('Connexion en cours…', true);
+      await window.__lvlup_signInWithPopup(_auth, new window.__lvlup_GoogleAuthProvider());
+    } catch (e) {
+      _setLoginBtn(true);
+      if (e.code === 'auth/popup-closed-by-user') {
+        _setStatus('');
+      } else {
+        _setStatus('Erreur de connexion. Réessayez.');
+      }
+    }
   };
   window.__lvlup_closePopup = () => _closeLoginPopup();
 
@@ -295,7 +354,7 @@
     const style = document.createElement('style');
     style.id = '_lvl_ast_sty';
     style.textContent = `
-      #_lvl_ast_btn{position:fixed;bottom:24px;right:24px;z-index:2147483646;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;cursor:pointer;box-shadow:0 4px 20px rgba(168,85,247,.5);display:flex;align-items:center;justify-content:center;font-size:22px;transition:all .25s;animation:_lvlAstPop .4s cubic-bezier(.34,1.56,.64,1)}
+      #_lvl_ast_btn{position:fixed;bottom:24px;right:24px;z-index:2147483646;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;cursor:pointer;box-shadow:0 4px 20px rgba(168,85,247,.5);display:flex;align-items:center;justify-content:center;transition:all .25s;animation:_lvlAstPop .4s cubic-bezier(.34,1.56,.64,1)}
       @keyframes _lvlAstPop{from{transform:scale(0) rotate(-90deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
       #_lvl_ast_btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(168,85,247,.7)}
       #_lvl_ast_btn:active{transform:scale(.95)}
@@ -317,7 +376,13 @@
     const btn = document.createElement('button');
     btn.id = '_lvl_ast_btn';
     btn.title = 'Assistant LevelUp IA';
-    btn.innerHTML = `<span>🤖</span><div id="_lvl_ast_notif"></div>`;
+    btn.innerHTML = `
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" fill="rgba(255,255,255,0.9)"/>
+        <circle cx="9" cy="14" r="1.2" fill="#030303"/>
+        <circle cx="15" cy="14" r="1.2" fill="#030303"/>
+      </svg>
+      <div id="_lvl_ast_notif"></div>`;
     btn.onclick = _toggleAssistant;
 
     const panel = document.createElement('div');
@@ -325,11 +390,15 @@
     panel.innerHTML = `
       <div id="_lvl_ast_head">
         <div class="title">
-          <span>⭐</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L14.6 8.26L21.5 9.27L16.75 13.97L17.97 20.82L12 17.77L6.03 20.82L7.25 13.97L2.5 9.27L9.4 8.26L12 2Z" fill="#a855f7"/>
+          </svg>
           <span>LevelUp IA</span>
           <div class="dot"></div>
         </div>
-        <button id="_lvl_ast_close" onclick="window.__lvlup_closeAssistant()" title="Fermer">✕</button>
+        <button id="_lvl_ast_close" onclick="window.__lvlup_closeAssistant()" title="Fermer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
       </div>
       <iframe id="_lvl_ast_frame" src="" allow="microphone; camera" loading="lazy"></iframe>
       <div id="_lvl_ast_foot">Propulsé par LevelUp IA · <a href="${ECOSYSTEM_URL}" target="_blank" style="color:#a855f7;text-decoration:none">levelup-ecosystem.com</a></div>
@@ -379,15 +448,58 @@
 
     window.__lvlup_onAuthStateChanged(_auth, async fbUser => {
       if (fbUser) {
+        /* 1. Crée le profil Firestore si absent (premier login ou nouveau chemin SDK) */
+        await _upsertUserProfile(fbUser);
+
+        /* 2. Charge le profil */
         const profile = await _loadUserProfile(fbUser.uid);
-        if (profile && profile.status !== 'suspended' && profile.status !== 'deleted') {
-          _currentUser = profile;
-          _closeLoginPopup();
-          _loginCbs.forEach(cb => cb({ uid: profile.uid, name: profile.name, email: profile.email, photo: profile.photo, country: profile.country, createdAt: profile.createdAt }));
-        } else {
+
+        /* 3. Vérifie que le compte n'est pas suspendu */
+        if (profile && profile.status === 'suspended') {
           _currentUser = null;
           await window.__lvlup_signOut(_auth);
+          return;
         }
+        if (profile && profile.status === 'deleted') {
+          _currentUser = null;
+          await window.__lvlup_signOut(_auth);
+          return;
+        }
+
+        /* 4. Construit l'objet utilisateur (profil Firestore ou fallback Firebase) */
+        _currentUser = profile
+          ? {
+              uid       : profile.uid,
+              name      : profile.name || fbUser.displayName || '',
+              email     : profile.email || fbUser.email || '',
+              photo     : profile.photo || fbUser.photoURL || '',
+              key       : profile.key || null,
+              status    : profile.status || 'active',
+              country   : profile.country || '',
+              createdAt : profile.createdAt || ''
+            }
+          : {
+              uid       : fbUser.uid,
+              name      : fbUser.displayName || '',
+              email     : fbUser.email || '',
+              photo     : fbUser.photoURL || '',
+              key       : null,
+              status    : 'active',
+              country   : '',
+              createdAt : ''
+            };
+
+        /* 5. Ferme le popup et notifie les callbacks */
+        _closeLoginPopup();
+        _loginCbs.forEach(cb => cb({
+          uid       : _currentUser.uid,
+          name      : _currentUser.name,
+          email     : _currentUser.email,
+          photo     : _currentUser.photo,
+          country   : _currentUser.country,
+          createdAt : _currentUser.createdAt
+        }));
+
       } else {
         const was = !!_currentUser;
         _currentUser = null;
@@ -401,10 +513,15 @@
 
     /* AUTH */
     isLoggedIn    : () => !!_currentUser,
-    getUser       : () => _currentUser ? { uid: _currentUser.uid, name: _currentUser.name, email: _currentUser.email, photo: _currentUser.photo, country: _currentUser.country, createdAt: _currentUser.createdAt } : null,
+    getUser       : () => _currentUser
+      ? { uid: _currentUser.uid, name: _currentUser.name, email: _currentUser.email, photo: _currentUser.photo, country: _currentUser.country, createdAt: _currentUser.createdAt }
+      : null,
     openLogin     : () => { if (!_currentUser) _openLoginPopup(); },
     logout        : async () => { if (_auth) await window.__lvlup_signOut(_auth); },
-    onLogin       : cb => { _loginCbs.push(cb); if (_currentUser) cb({ uid: _currentUser.uid, name: _currentUser.name, email: _currentUser.email, photo: _currentUser.photo }); },
+    onLogin       : cb => {
+      _loginCbs.push(cb);
+      if (_currentUser) cb({ uid: _currentUser.uid, name: _currentUser.name, email: _currentUser.email, photo: _currentUser.photo });
+    },
     onLogout      : cb => { _logoutCbs.push(cb); },
     openDashboard : () => window.open(ECOSYSTEM_URL, '_blank'),
 
@@ -412,10 +529,20 @@
     hasScope  : scope => _hasScope(scope),
     getScopes : () => (_keyData?.scopes || []),
 
-    /* USER KEY — jamais exposée en clair dans getUser() */
+    /* USER KEY */
     getKey            : () => _currentUser?.key ? '••••••••••••' + _currentUser.key.slice(-6) : null,
-    generateUserKey   : async () => { _requireScope(S.KEYGEN); await _createUserKey(); return '✅ Clé générée et envoyée par email à ' + _currentUser.email; },
-    regenerateUserKey : async () => { _requireScope(S.KEYGEN); await _createUserKey(); return '✅ Clé régénérée et envoyée par email à ' + _currentUser.email; },
+    generateUserKey   : async () => {
+      _requireScope(S.KEYGEN);
+      if (!_currentUser) throw new Error('[LevelUp SDK] Utilisateur non connecté.');
+      await _createUserKey();
+      return '✅ Clé générée et envoyée par email à ' + _currentUser.email;
+    },
+    regenerateUserKey : async () => {
+      _requireScope(S.KEYGEN);
+      if (!_currentUser) throw new Error('[LevelUp SDK] Utilisateur non connecté.');
+      await _createUserKey();
+      return '✅ Clé régénérée et envoyée par email à ' + _currentUser.email;
+    },
 
     /* EMAIL (via API Vercel) */
     sendEmail : async (to, subject, html) => {
@@ -444,7 +571,9 @@
     closeAssistant : () => window.__lvlup_closeAssistant(),
 
     /* SDK INFO */
-    getSdkInfo : () => _keyData ? { name: _keyData.name, scopes: _keyData.scopes, active: _keyData.active } : null
+    getSdkInfo : () => _keyData
+      ? { name: _keyData.name, scopes: _keyData.scopes, active: _keyData.active }
+      : null
   };
 
   /* ── Boot ─────────────────────────────────────────────── */
