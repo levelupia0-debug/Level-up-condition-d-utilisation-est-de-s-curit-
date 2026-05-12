@@ -13,30 +13,31 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-const ICON_URL  = '/icon.svg';
-const APP_URL   = 'https://levelup-ecosystem.com';
+const ICON_URL = '/icon.svg';
+const APP_URL  = 'https://levelup-ecosystem.com';
 
-// ── Notification en arrière-plan / navigateur fermé ──
 messaging.onBackgroundMessage((payload) => {
     const title = payload.notification?.title || payload.data?.title || 'LevelUp Ecosystem';
     const body  = payload.notification?.body  || payload.data?.body  || 'Nouvelle notification.';
     const url   = payload.data?.url           || APP_URL;
+    const image = payload.data?.image         || undefined;
 
-    self.registration.showNotification(title, {
+    const options = {
         body,
-        icon:              ICON_URL,
-        badge:             ICON_URL,
-        image:             payload.data?.image  || undefined,
-        vibrate:           [300, 100, 400, 100, 300],
+        icon:               ICON_URL,
+        badge:              ICON_URL,
+        vibrate:            [300, 100, 400, 100, 300],
         requireInteraction: true,
-        tag:               'levelup-notif',
-        renotify:          true,
-        silent:            false,
-        data:              { url, ...payload.data }
-    });
+        tag:                'levelup-notif',
+        renotify:           true,
+        silent:             false,
+        data:               { url, ...payload.data }
+    };
+    if (image) options.image = image;
+
+    self.registration.showNotification(title, options);
 });
 
-// ── Clic sur la notification → focus ou ouvre l'app ──
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const target = event.notification.data?.url || APP_URL;
@@ -55,8 +56,6 @@ self.addEventListener('notificationclick', (event) => {
     );
 });
 
-// ── Obligatoire pour que Chrome valide l'installation PWA ──
 self.addEventListener('fetch', () => {});
-
 self.addEventListener('install',  ()  => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
