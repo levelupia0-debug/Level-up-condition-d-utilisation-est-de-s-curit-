@@ -871,6 +871,12 @@ Masqué automatiquement quand Firebase est prêt
 ═══════════════════════════════════════ -->
 <div id="appLoadingScreen">
   <svg style="width:0;height:0;position:absolute"><defs><linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs></svg>
+  <div class="als-logo-wrap">
+    <svg width="28" height="28" viewBox="0 0 576 512" fill="url(#pg2)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
+  </div>
+  <div class="als-spinner"><div class="als-spin-ring"></div></div>
+  <p class="als-msg">LevelUp Ecosystem</p>
+  <p class="als-sub" id="alsSubMsg">Chargement en cours…</p>
 </div>
 
 <!-- SVG GRADIENTS GLOBAUX -->
@@ -3731,7 +3737,13 @@ window._accountUnsubscribe = onSnapshot(ref, async (snap) => {
 
 } catch(e) {
 console.error('[Auth] Erreur lecture profil Firestore:', e);
-window._ud = window._ud || { displayName: u.displayName || 'Utilisateur', apiKey: null };
+window._ud = window._ud || {
+    displayName: u.displayName || 'Utilisateur',
+    email: u.email || '',
+    photoURL: u.photoURL || '',
+    uid: u.uid,
+    apiKey: null
+};
 // Tenter de récupérer la clé même en cas d'erreur sur le profil
 try {
     const secRefFallback = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
@@ -3743,10 +3755,16 @@ try {
         if (window._ud.apiKey) localStorage.setItem('lm_key', window._ud.apiKey);
     }
 } catch(e2) { console.error('[Auth] Impossible de charger la clé en fallback:', e2); }
+localStorage.setItem('lm_name', window._ud.displayName);
+if (window._ud.photoURL) localStorage.setItem('lm_photo', window._ud.photoURL);
+localStorage.setItem('lm_uid', u.uid);
 localStorage.setItem('lm_login_mode', 'google');
 await window.loadAppStatus();
 closeAuth();
 showDash(u);
+toast_('Bienvenue ' + (window._ud.displayName?.split(' ')[0] || '') + ' !', 'ok');
+// initFCM doit aussi être appelé dans le catch pour afficher le panneau admin
+setTimeout(() => initFCM(u), 1500);
 }
 } else if (savedKey && savedUid && loginMode === 'key') {
 // 🟡 UTILISATEUR CONNECTÉ VIA CLÉ (Anonyme en arrière plan)
@@ -3789,30 +3807,25 @@ await window.loadAppStatus();
 showLand();
 }
 } else {
-// u === null : Firebase n'a pas de session active
-// Ne pas afficher la landing si une connexion Google est en cours (popup ouvert)
+// u === null : pas de session Firebase active
+// — Ne rien faire si un popup/redirect Google est en cours
 if (window._authInProgress) return;
 
-// Si l'utilisateur avait une session Google précédente, ne pas afficher la landing immédiatement
-// car Firebase peut mettre quelques ms à restaurer le token depuis localStorage
 const hadSession = localStorage.getItem('lm_login_mode') === 'google';
 if (hadSession) {
-    // Attendre 2.5s max — si Firebase ne restaure pas la session, afficher la landing
-    await new Promise(resolve => {
-        const unsub = onAuthStateChanged(auth, (u2) => {
-            if (u2) { unsub(); resolve('restored'); }
-        });
-        setTimeout(() => { unsub(); resolve('timeout'); }, 2500);
-    }).then(async (result) => {
-        if (result === 'timeout') {
-            // Session vraiment expirée — nettoyer et afficher la landing
-            localStorage.removeItem('lm_login_mode');
-            window._user = null; window._ud = null;
-            await window.loadAppStatus();
-            showLand();
-        }
-        // Si 'restored', le 2ème onAuthStateChanged ci-dessus gère tout seul
-    });
+    // L'utilisateur avait une session Google. Firebase peut la restaurer dans les ms qui suivent.
+    // L'écran de chargement (appLoadingScreen) couvre ce délai visuellement.
+    // On attend 3s max : si Firebase ne rappelle pas avec un user, on considère la session expirée.
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Après 3s, si onAuthStateChanged a déjà fourni un user, window._user sera défini.
+    if (window._user) return; // session restaurée entre-temps, on sort
+    // Session vraiment expirée — nettoyer et afficher la landing
+    localStorage.removeItem('lm_login_mode');
+    localStorage.removeItem('lm_uid');
+    localStorage.removeItem('lm_key');
+    window._user = null; window._ud = null;
+    await window.loadAppStatus();
+    showLand();
 } else {
     window._user = null;
     window._ud = null;
@@ -4065,15 +4078,37 @@ window._toggleNotifItem = function(el) {
 
 // ── Supprimer notification (client-side) ──
 // ── Masquer l'écran de chargement initial ──
+const _isPWAMode = window.matchMedia('(display-mode: standalone)').matches || !!window.navigator.standalone;
+const _appStartTime = Date.now();
+// En PWA, afficher l'écran de chargement au minimum 3.5s pour éviter le flash blanc/noir
+const _PWA_MIN_SPLASH = _isPWAMode ? 3500 : 0;
+
 window._hideLoadingScreen = function() {
     const s = document.getElementById('appLoadingScreen');
     if (!s || s.dataset.hidden === '1') return;
-    s.dataset.hidden = '1';
-    s.classList.add('als-hiding');
-    setTimeout(() => { if (s) s.style.display = 'none'; }, 480);
+    const elapsed = Date.now() - _appStartTime;
+    const remaining = Math.max(0, _PWA_MIN_SPLASH - elapsed);
+    setTimeout(() => {
+        s.dataset.hidden = '1';
+        s.classList.add('als-hiding');
+        setTimeout(() => { if (s) s.style.display = 'none'; }, 480);
+    }, remaining);
 };
-// Fallback : masquer après 6 secondes au maximum
-setTimeout(window._hideLoadingScreen, 6000);
+// Fallback : masquer après 7 secondes au maximum
+setTimeout(window._hideLoadingScreen, 7000);
+
+// Messages dynamiques sur le splash (PWA seulement)
+if (_isPWAMode) {
+    const _splashMsgs = ['Connexion sécurisée…', 'Synchronisation…', 'Presque prêt…'];
+    let _si = 0;
+    const _splashInterval = setInterval(() => {
+        const el = document.getElementById('alsSubMsg');
+        if (!el) { clearInterval(_splashInterval); return; }
+        _si = (_si + 1) % _splashMsgs.length;
+        el.textContent = _splashMsgs[_si];
+    }, 1100);
+    setTimeout(() => clearInterval(_splashInterval), 4000);
+}
 
 // ── Supprimer TOUTES les notifications (admins) ──
 window.deleteAllNotifs = async function() {
