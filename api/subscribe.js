@@ -1,10 +1,8 @@
 import { createSign } from 'crypto';
 
-// ── Génère un access token OAuth2 depuis le service account ──
 async function getAccessToken() {
     const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     const now = Math.floor(Date.now() / 1000);
-
     const header  = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
     const payload = Buffer.from(JSON.stringify({
         iss:   sa.client_email,
@@ -13,14 +11,12 @@ async function getAccessToken() {
         iat:   now,
         exp:   now + 3600
     })).toString('base64url');
-
     const unsigned  = `${header}.${payload}`;
     const signer    = createSign('RSA-SHA256');
     signer.update(unsigned);
     signer.end();
     const signature = signer.sign(sa.private_key, 'base64url');
     const jwt       = `${unsigned}.${signature}`;
-
     const r = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -39,15 +35,16 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-        return res.status(500).json({ error: 'FIREBASE_SERVICE_ACCOUNT not configured on Vercel' });
+        return res.status(500).json({
+            error: 'FIREBASE_SERVICE_ACCOUNT non configuré — ajoutez cette variable dans le dashboard Vercel.'
+        });
     }
 
     const { token } = req.body || {};
-    if (!token) return res.status(400).json({ error: 'token required' });
+    if (!token) return res.status(400).json({ error: 'Le champ "token" FCM est obligatoire.' });
 
     try {
         const accessToken = await getAccessToken();
-
         const r = await fetch(
             `https://iid.googleapis.com/iid/v1/${token}/rel/topics/levelup-all`,
             {
@@ -61,7 +58,7 @@ export default async function handler(req, res) {
         );
         if (!r.ok) {
             const txt = await r.text();
-            return res.status(r.status).json({ error: 'Subscribe failed', details: txt });
+            return res.status(r.status).json({ error: 'Abonnement au topic échoué', details: txt });
         }
         return res.status(200).json({ success: true });
     } catch (err) {
