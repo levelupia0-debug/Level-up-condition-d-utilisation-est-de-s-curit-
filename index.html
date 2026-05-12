@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head> <link rel="manifest" href="manifest.json"> <meta name="google-site-verification" content="YqY4GBEbg3ZlrrmxH8W2U7KYzV1Z05jDGA62Sk10cWw" />
 <meta charset="UTF-8">
@@ -20,30 +21,32 @@ window._isProd = /levelup-ecosystem\.com$/.test(location.hostname);
 if (!window._isProd) { window._turnstileToken = '__bypass__'; }
 
 window._renderTurnstile = function() {
-    if (!window._isProd) {
-        // Cacher le widget sur dev, pas besoin de le charger
-        const wrap = document.getElementById('turnstileWrap');
-        if (wrap) wrap.style.display = 'none';
-        return;
-    }
-    const container = document.getElementById('cfTurnstile');
-    if (!container) return;
-    if (window._turnstileWidgetId !== undefined) return;
-    if (!window.turnstile) {
-        setTimeout(window._renderTurnstile, 300);
-        return;
-    }
-    window._turnstileWidgetId = window.turnstile.render(container, {
-        sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
-        theme: 'dark',
-        size: 'flexible',
-        callback: function(token) { window._turnstileToken = token; },
-        'expired-callback': function() { window._turnstileToken = null; },
-        'error-callback': function() { window._turnstileToken = '__bypass__'; }
-    });
+if (!window._isProd) {
+// Cacher le widget sur dev, pas besoin de le charger
+const wrap = document.getElementById(‘turnstileWrap’);
+if (wrap) wrap.style.display = ‘none’;
+return;
+}
+const container = document.getElementById(‘cfTurnstile’);
+if (!container) return;
+if (window._turnstileWidgetId !== undefined) return;
+if (!window.turnstile) {
+setTimeout(window._renderTurnstile, 300);
+return;
+}
+window._turnstileWidgetId = window.turnstile.render(container, {
+sitekey: ‘0x4AAAAAADMY4-j7dozqyHdf’,
+theme: ‘dark’,
+size: ‘flexible’,
+callback: function(token) { window._turnstileToken = token; },
+‘expired-callback’: function() { window._turnstileToken = null; },
+‘error-callback’: function() { window._turnstileToken = ‘**bypass**’; }
+});
 };
 </script>
+
 <!-- Turnstile chargé seulement en production -->
+
 <script>if(/levelup-ecosystem\.com$/.test(location.hostname)){var s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.defer=true;document.head.appendChild(s);}</script>
 
 <style>
@@ -862,6 +865,7 @@ nav{padding:12px 5%}
 .btn{padding:10px 18px;font-size:.84rem}
 }
 </style>
+
 </head>
 <body>
 
@@ -869,17 +873,13 @@ nav{padding:12px 5%}
 ÉCRAN DE CHARGEMENT INITIAL
 Masqué automatiquement quand Firebase est prêt
 ═══════════════════════════════════════ -->
+
 <div id="appLoadingScreen">
   <svg style="width:0;height:0;position:absolute"><defs><linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs></svg>
-  <div class="als-logo-wrap">
-    <svg width="28" height="28" viewBox="0 0 576 512" fill="url(#pg2)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-  </div>
-  <div class="als-spinner"><div class="als-spin-ring"></div></div>
-  <p class="als-msg">LevelUp Ecosystem</p>
-  <p class="als-sub" id="alsSubMsg">Chargement en cours…</p>
 </div>
 
 <!-- SVG GRADIENTS GLOBAUX -->
+
 <svg style="width:0;height:0;position:absolute" aria-hidden="true">
 <defs>
 <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#a855f7"/></linearGradient>
@@ -895,6 +895,7 @@ Masqué automatiquement quand Firebase est prêt
 <!-- ═══════════════════════════════════════
 NAVIGATION (INVISIBLE BACKGROUND)
 ═══════════════════════════════════════ -->
+
 <nav id="nav">
 <div class="brand" id="navBrand" onclick="window.goHome()">
 <svg width="20" height="20" viewBox="0 0 576 512" fill="url(#pg)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
@@ -916,11 +917,13 @@ Créer un compte
 </nav>
 
 <!-- BACKDROP NOTIFICATION DRAWER -->
+
 <div id="notifBackdrop" onclick="window.toggleNotifPanel()"></div>
 
 <!-- ═══════════════════════════════════════
 PANNEAU NOTIFICATIONS — DRAWER PRO
 ═══════════════════════════════════════ -->
+
 <div class="notif-panel" id="notifPanel">
   <div class="notif-panel-head">
     <h4><i class="fa-solid fa-bell" style="color:var(--purple)"></i>Notifications</h4>
@@ -967,6 +970,7 @@ PANNEAU NOTIFICATIONS — DRAWER PRO
 </div>
 
 <!-- BANNIÈRE MAINTENANCE GLOBALE -->
+
 <div id="globalMaintBanner" class="global-maint-banner">
     <i class="fa-solid fa-wrench"></i>
     <span id="globalMaintMsg">Maintenance en cours — Certaines fonctionnalités sont temporairement indisponibles.</span>
@@ -976,9 +980,11 @@ PANNEAU NOTIFICATIONS — DRAWER PRO
 <!-- ═══════════════════════════════════════
 LANDING PAGE
 ═══════════════════════════════════════ -->
+
 <div id="landing">
 
 <!-- ── HERO ── -->
+
 <section class="hero" id="heroSection">
 <div id="heroBgContainer">
 <div class="hero-bg1"></div>
@@ -1001,6 +1007,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── MARQUEE ── -->
+
 <div class="mq-wrap">
 <div class="mq-track">
 <div class="mq-i"><svg width="14" height="14" viewBox="0 0 576 512" fill="#a855f7"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg> Google Auth uniquement</div>
@@ -1052,6 +1059,7 @@ Créer un compte gratuit
 </div>
 
 <!-- ── STATS ── -->
+
 <section class="sec" style="padding:60px 5%">
 <div class="ctn">
 <div id="statsContainer">
@@ -1066,6 +1074,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── APPS SECTION ── -->
+
 <section class="sec" id="apps-sec">
 <div class="ctn">
 <div class="sec-head reveal">
@@ -1076,6 +1085,7 @@ Créer un compte gratuit
 <div class="apps-grid">
 
 <!-- LEVELMOVIE -->
+
 <div id="carte1Container" style="display: contents;">
 <div class="app-card reveal">
 <div class="app-head">
@@ -1105,6 +1115,7 @@ Créer un compte gratuit
 </div>
 
 <!-- LEVELMUSIC -->
+
 <div id="carte2Container" style="display: contents;">
 <div class="app-card reveal d1" id="musicCard">
 <div class="app-head">
@@ -1134,6 +1145,7 @@ Créer un compte gratuit
 </div>
 
 <!-- LEVEL IA -->
+
 <div id="carte3Container" style="display: contents;">
 <div class="app-card reveal d2">
 <div class="app-head">
@@ -1161,6 +1173,7 @@ Créer un compte gratuit
 </div>
 
 <!-- CARTE OUTILS -->
+
 <div id="carte4Container" style="display:contents;">
 <div class="app-card reveal d3" id="outilsCard" style="position:relative;overflow:hidden">
   <!-- Badge piloté par Firebase (champ tools_badge) -->
@@ -1193,9 +1206,11 @@ Créer un compte gratuit
 </div>
 
 <!-- NOUVEAU : Carte d'annonce dynamique -->
+
 <div id="cardAnnouncementContainer" class="transition-all duration-500 empty:hidden" style="display:none; animation: tIn 0.5s ease;"></div>
 
 <!-- BOUTON MEDIA HUB (affiché uniquement si Firebase a des iframes actives) -->
+
 <div class="text-center mt-10 reveal" id="mediaHubBtnWrap" style="display:none">
   <button onclick="openMediaHub()" class="media-hub-open-btn">
     <span class="media-hub-open-badge">NOUVEAU</span>
@@ -1210,6 +1225,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── HOW IT WORKS ── -->
+
 <section class="sec" id="how-sec" style="background:rgba(255,255,255,.012);border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)">
 <div class="ctn">
 <div class="sec-head reveal">
@@ -1243,6 +1259,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── DEEP DIVE LEVELMOVIE ── -->
+
 <section class="sec" style="padding-bottom:40px">
 <div class="ctn">
 <div class="sec-head reveal">
@@ -1286,6 +1303,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── DEEP DIVE LEVELMUSIC ── -->
+
 <section class="sec" style="padding-top:40px;padding-bottom:40px;background:rgba(59,130,246,.02);border-top:1px solid rgba(59,130,246,.08);border-bottom:1px solid rgba(59,130,246,.08)">
 <div class="ctn">
 <div class="deepdive rev reveal">
@@ -1331,6 +1349,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── DEEP DIVE LEVEL IA ── -->
+
 <section class="sec" style="padding-top:40px;padding-bottom:40px;background:rgba(168,85,247,.02);border-top:1px solid rgba(168,85,247,.08);border-bottom:1px solid rgba(168,85,247,.08)">
 <div class="ctn">
 <div class="deepdive rev reveal">
@@ -1381,6 +1400,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── PONT D'ÉCOSYSTÈME (SSO) ── -->
+
 <section class="sec" style="border-bottom:1px solid var(--bdr)">
 <div class="ctn">
 <div class="sec-head reveal text-center mx-auto" style="max-width:800px">
@@ -1402,6 +1422,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── MULTI-DEVICES ── -->
+
 <section class="sec" style="background:rgba(255,255,255,.01)">
 <div class="ctn">
 <div class="deepdive reveal">
@@ -1420,11 +1441,13 @@ Créer un compte gratuit
 </div>
 
 <!-- iPad (A gauche) -->
+
 <div class="dev-ipad">
 <div class="dev-screen"><svg width="40" height="40" viewBox="0 0 576 512" fill="var(--purple)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg></div>
 </div>
 
 <!-- iPhone (A droite) -->
+
 <div class="dev-iphone">
 <div class="dev-screen"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--blue)"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="18" cy="16" r="3" fill="currentColor"/></svg></div>
 </div>
@@ -1434,6 +1457,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── TRUST CENTER ── -->
+
 <section class="sec" style="border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)">
 <div class="ctn">
 <div class="sec-head reveal text-center mx-auto">
@@ -1467,6 +1491,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── ROADMAP ── -->
+
 <section class="sec" style="padding-bottom:100px">
 <div class="ctn">
 <div class="deepdive reveal">
@@ -1500,6 +1525,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── FEATURES BENTO ── -->
+
 <section class="sec" id="features-sec">
 <div class="ctn">
 <div class="sec-head reveal">
@@ -1563,6 +1589,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── COMMUNITY VALUES ── -->
+
 <section class="sec" style="background:rgba(255,255,255,.01);border-top:1px solid var(--bdr)">
 <div class="ctn">
 <div class="sec-head reveal" style="max-width:100%;text-align:center;margin-bottom:48px">
@@ -1591,6 +1618,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── QUOTE ── -->
+
 <section class="sec" style="padding:60px 5%">
 <div class="ctn">
 <div class="quote-card reveal">
@@ -1602,6 +1630,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── TECH STACK ── -->
+
 <section class="sec" style="padding-top:40px;border-top:1px solid var(--bdr)">
 <div class="ctn">
 <div class="sec-head reveal" style="max-width:100%;text-align:center;margin-bottom:40px">
@@ -1649,6 +1678,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── FAQ ── -->
+
 <section class="sec" id="faq-sec" style="background:rgba(255,255,255,.01);border-top:1px solid var(--bdr)">
 <div class="ctn">
 <div class="sec-head reveal">
@@ -1672,6 +1702,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── CTA FINAL ── -->
+
 <section class="sec" style="border-top:1px solid var(--bdr);text-align:center;padding:80px 5%" id="cta-sec">
 <div class="ctn">
 <div class="reveal">
@@ -1691,6 +1722,7 @@ Créer un compte
 </section>
 
 <!-- ── FOOTER ── -->
+
 <footer>
 <div class="foot-inner">
 <div class="foot-top">
@@ -1775,6 +1807,7 @@ LEVELUP
 <!-- ═══════════════════════════════════════
 DASHBOARD (CENTRE DE CONTRÔLE)
 ═══════════════════════════════════════ -->
+
 <div id="dashboard" class="hidden" style="display:none;min-height:100vh;padding-top:65px">
 <aside class="sidebar">
 <div class="sb-in">
@@ -1803,6 +1836,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <main class="db-main">
 
 <!-- HOME PANEL -->
+
 <div class="panel on" id="panel-home">
 <h1 class="pt" id="dbWelcome">Bonjour 👋</h1>
 <p class="ps">Bienvenue dans votre tableau de bord LevelUp Ecosystem.</p>
@@ -1848,6 +1882,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 
 <!-- KEYS PANEL -->
+
 <div class="panel" id="panel-keys">
 <h1 class="pt">Clés d'accès</h1>
 <p class="ps">Gérez votre clé d'accès à l'écosystème LevelUp.</p>
@@ -1895,6 +1930,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 
 <!-- SETTINGS PANEL -->
+
 <div class="panel" id="panel-settings">
 <h1 class="pt">Paramètres</h1>
 <p class="ps">Gérez votre compte et vos préférences de sécurité.</p>
@@ -1977,6 +2013,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 
 <!-- TOOLS PANEL -->
+
 <div class="panel" id="panel-tools">
 <h1 class="pt"><i class="fa-solid fa-wrench" style="color:#22c55e;font-size:1.15rem;margin-right:6px"></i>Outils LevelUp</h1>
 <p class="ps">Utilitaires IA, productivité, Dev et création — directement intégrés à l'écosystème.</p>
@@ -2005,6 +2042,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 
 <!-- HELP PANEL -->
+
 <div class="panel" id="panel-help">
 <h1 class="pt">Aide &amp; Support</h1>
 <p class="ps">Réponses aux questions fréquentes et moyens de nous contacter.</p>
@@ -2018,6 +2056,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </main>
 
 <!-- MOBILE NAVIGATION (DASHBOARD ONLY) -->
+
 <div class="mobile-nav" id="mobileNav">
 <div class="mn-in">
 <div class="mn-item on" onclick="pnl('home')" id="mbn-home"><i class="fa-solid fa-house"></i><span>Accueil</span></div>
@@ -2032,6 +2071,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <!-- ═══════════════════════════════════════
 AUTH OVERLAY
 ═══════════════════════════════════════ -->
+
 <div class="overlay hidden" id="authOverlay" onclick="bgClose(event,'authOverlay')">
 <!-- NOUVEAU : On applique l'ID directement sur la carte pour éviter de casser le design -->
 <div class="auth-card" id="authCardWrapper">
@@ -2048,7 +2088,7 @@ AUTH OVERLAY
 <span id="gBtnTxt">Continuer avec Google</span>
 </button>
 
-<div class="turnstile-wrap" id="turnstileWrap" style="display:none">
+<div class="turnstile-wrap" id="turnstileWrap">
   <div id="cfTurnstile"></div>
 </div>
 
@@ -2097,6 +2137,7 @@ AUTH OVERLAY
 <!-- ═══════════════════════════════════════
 PIN MODAL (NATIF)
 ═══════════════════════════════════════ -->
+
 <div class="overlay hidden" id="pinOverlay">
 <div class="pin-card" style="max-width: 320px; position: relative;">
 <button class="auth-close" onclick="closePin()"><i class="fa-solid fa-xmark"></i></button>
@@ -2105,17 +2146,20 @@ PIN MODAL (NATIF)
 <p id="pinSub" style="font-size:.82rem; margin-bottom: 15px;">Entrez votre PIN pour afficher votre clé</p>
 
 <!-- CORRECTION : Cet élément était manquant et faisait planter le Javascript -->
+
 <div id="pinErrorTxt" class="hidden" style="color:var(--red); font-size:0.85rem; margin-bottom:12px; font-weight:600;"></div>
 
 <input type="password" id="nativePinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" style="width:100%; text-align:center; font-size:1.8rem; letter-spacing:12px; padding:16px 12px; border-radius:14px; border:1px solid var(--bdr-hi); background:rgba(255,255,255,0.03); color:white; outline:none; margin-bottom:12px; transition:border-color 0.2s;" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length===4) window.handlePinNative();" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--bdr-hi)'">
 
 <button class="btn btn-g" style="width:100%; padding: 12px; border-radius: 12px; font-size: 0.9rem;" onclick="closePin()">Annuler</button>
+
 </div>
 </div>
 
 <!-- ═══════════════════════════════════════
 CONFIRM LOGOUT
 ═══════════════════════════════════════ -->
+
 <div class="overlay hidden" id="logoutOv" onclick="bgClose(event,'logoutOv')">
 <div class="conf-card">
 <div style="width:48px;height:48px;border-radius:var(--r12);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.1rem;color:var(--red)"><i class="fa-solid fa-right-from-bracket"></i></div>
@@ -2131,6 +2175,7 @@ CONFIRM LOGOUT
 <!-- ═══════════════════════════════════════
 CONFIRM REGENERATE
 ═══════════════════════════════════════ -->
+
 <div class="overlay hidden" id="regenOv" onclick="bgClose(event,'regenOv')">
 <div class="conf-card">
 <div style="width:48px;height:48px;border-radius:var(--r12);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.1rem;color:var(--red)"><i class="fa-solid fa-rotate"></i></div>
@@ -2146,6 +2191,7 @@ CONFIRM REGENERATE
 <!-- ═══════════════════════════════════════
 LOGOUT LOADING ANIMATION
 ═══════════════════════════════════════ -->
+
 <div class="logout-loader hidden" id="logoutLoadingOv">
 <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--purple); margin-bottom: 16px;"></i>
 <div style="font-family: var(--sans); font-size: .95rem; font-weight: 500; color: var(--muted); letter-spacing: 0.05em;">Déconnexion en cours...</div>
@@ -2154,6 +2200,7 @@ LOGOUT LOADING ANIMATION
 <!-- ═══════════════════════════════════════
 MEDIA HUB OVERLAY
 ═══════════════════════════════════════ -->
+
 <div id="mediaHubOverlay" class="media-hub-overlay hidden">
   <div class="media-hub-head">
     <div style="display:flex;align-items:center;gap:10px">
@@ -2182,6 +2229,7 @@ MEDIA HUB OVERLAY
 <!-- ═══════════════════════════════════════
 TOOLS HUB OVERLAY
 ═══════════════════════════════════════ -->
+
 <div id="toolsOverlay" class="tools-overlay hidden">
   <div class="tools-head">
     <div style="display:flex;align-items:center;gap:10px">
@@ -2216,6 +2264,7 @@ TOOLS HUB OVERLAY
 </div>
 
 <!-- OUTIL PLEIN ÉCRAN (mobile) -->
+
 <div id="toolFullscreen" class="tool-fullscreen hidden">
   <div class="tool-fs-head" style="padding:10px 14px;justify-content:space-between">
     <span id="toolFsTitle" style="font-size:.88rem;font-weight:700;color:var(--txt);font-family:var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;padding-right:10px"></span>
@@ -2237,6 +2286,7 @@ TOOLS HUB OVERLAY
 <!-- ═══════════════════════════════════════
 SMART FAB & IA ASSISTANT
 ═══════════════════════════════════════ -->
+
 <div class="fab-wrap" id="fabWrap">
     <div class="fab-menu" id="fabMenu">
         <button class="fab-item" onclick="toggleIA(event)">
@@ -2268,6 +2318,7 @@ SMART FAB & IA ASSISTANT
 </div>
 
 <!-- IA ASSISTANT IFRAME -->
+
 <div id="iaOverlay" class="ia-overlay">
     <div id="iaAppsBar" class="ia-apps-bar hidden"></div>
     <iframe src="assistant.html" id="iaFrame" title="Assistant IA"></iframe>
@@ -2289,6 +2340,7 @@ SMART FAB & IA ASSISTANT
 <!-- ═══════════════════════════════════════
 CONDITIONS D'UTILISATION — MODAL COMPLET
 ═══════════════════════════════════════ -->
+
 <div class="terms-overlay hidden" id="termsOverlay">
 <div class="terms-panel">
 <div class="terms-head">
@@ -2303,6 +2355,7 @@ Conditions Générales d'Utilisation
 <div class="terms-body">
 
 <!-- INTRO SVG BANNER -->
+
 <div style="background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(124,58,237,.05));border:1px solid rgba(168,85,247,.15);border-radius:var(--r16);padding:24px;margin-bottom:28px;display:flex;align-items:flex-start;gap:18px">
 <div style="flex-shrink:0">
 <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
@@ -2320,6 +2373,7 @@ Conditions Générales d'Utilisation
 </div>
 
 <!-- ARTICLE 1 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#pg)" stroke-width="1.5"/><text x="6.5" y="14.5" font-size="10" font-weight="700" fill="url(#pg)" font-family="Syne">1</text></svg>
 Identification des Parties et Définitions
@@ -2340,6 +2394,7 @@ Identification des Parties et Définitions
 </ul>
 
 <!-- ARTICLE 2 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#pg)" stroke-width="1.5"/><text x="5.5" y="14.5" font-size="10" font-weight="700" fill="url(#pg)" font-family="Syne">2</text></svg>
 Création de Compte et Authentification
@@ -2363,6 +2418,7 @@ Création de Compte et Authentification
 <p class="t-p">L'accès à LevelUp Ecosystem est réservé aux personnes âgées d'au moins <strong style="color:var(--txt)">16 ans</strong>. En créant un compte, vous déclarez avoir atteint l'âge minimum requis. LevelUp se réserve le droit de demander une vérification d'âge et de suspendre tout compte dont le titulaire ne respecterait pas cette condition.</p>
 
 <!-- ARTICLE 3 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#bg2)" stroke-width="1.5"/><text x="5.5" y="14.5" font-size="10" font-weight="700" fill="url(#bg2)" font-family="Syne">3</text></svg>
 Description des Services
@@ -2381,6 +2437,7 @@ Description des Services
 </div>
 
 <!-- ARTICLE 4 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#gg)" stroke-width="1.5"/><text x="5.5" y="14.5" font-size="10" font-weight="700" fill="url(#gg)" font-family="Syne">4</text></svg>
 Clé d'Accès LVL — Règles d'Utilisation
@@ -2401,6 +2458,7 @@ Clé d'Accès LVL — Règles d'Utilisation
 <div class="t-box"><p><i class="fa-solid fa-key" style="margin-right:6px"></i> <strong>Conseil de sécurité :</strong> Configurez un Code PIN pour protéger l'affichage de votre clé. En cas de suspicion de compromission, régénérez immédiatement votre clé depuis votre tableau de bord.</p></div>
 
 <!-- ARTICLE 5 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#pkg)" stroke-width="1.5"/><text x="5.5" y="14.5" font-size="10" font-weight="700" fill="url(#pkg)" font-family="Syne">5</text></svg>
 Protection des Données Personnelles et Vie Privée
@@ -2446,6 +2504,7 @@ Protection des Données Personnelles et Vie Privée
 <p class="t-p">Vos données sont conservées tant que votre compte LevelUp est actif. En cas de suppression de votre compte, toutes vos données (profil, clé, PIN hashé, conversations Level IA) sont définitivement supprimées dans un délai maximum de 30 jours. Certaines données peuvent être conservées plus longtemps si requis par la loi applicable.</p>
 
 <!-- ARTICLE 6 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#og)" stroke-width="1.5"/><text x="5.5" y="14.5" font-size="10" font-weight="700" fill="url(#og)" font-family="Syne">6</text></svg>
 Règles d'Utilisation Acceptable — Code de Conduite
@@ -2482,6 +2541,7 @@ Règles d'Utilisation Acceptable — Code de Conduite
 </div>
 
 <!-- ARTICLE 7 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#pg)" stroke-width="1.5"/><text x="5.5" y="14.5" font-size="10" font-weight="700" fill="url(#pg)" font-family="Syne">7</text></svg>
 Propriété Intellectuelle
@@ -2502,6 +2562,7 @@ Propriété Intellectuelle
 <p class="t-p">Les données que vous fournissez à Level IA (messages, fichiers, URLs) restent votre propriété. En utilisant Level IA, vous accordez à LevelUp une licence limitée, non-exclusive, pour traiter ces données dans le but exclusif de vous fournir le service demandé. LevelUp n'utilise pas votre contenu pour entraîner des modèles IA ou à d'autres fins commerciales.</p>
 
 <!-- ARTICLE 8 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#bg2)" stroke-width="1.5"/><text x="5.5" y="14.5" font-size="10" font-weight="700" fill="url(#bg2)" font-family="Syne">8</text></svg>
 Disponibilité des Services et Maintenance
@@ -2514,6 +2575,7 @@ Disponibilité des Services et Maintenance
 <p class="t-p">LevelUp se réserve le droit de modifier, mettre à jour, améliorer ou interrompre tout ou partie de ses services à tout moment, sans préavis. Cela inclut l'ajout ou la suppression de fonctionnalités, de modes Level IA, de contenu LevelMovie, ou de l'ensemble d'un service comme LevelMusic.</p>
 
 <!-- ARTICLE 9 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#gg)" stroke-width="1.5"/><text x="5.5" y="14.5" font-size="10" font-weight="700" fill="url(#gg)" font-family="Syne">9</text></svg>
 Limitation de Responsabilité et Garanties
@@ -2534,6 +2596,7 @@ Limitation de Responsabilité et Garanties
 <p class="t-p">Vous acceptez d'indemniser, défendre et tenir indemnes LevelUp Ecosystem de toute réclamation, dommage, perte, responsabilité et dépense (incluant les frais juridiques raisonnables) découlant de votre violation des présentes Conditions, de votre utilisation des services, ou de la violation de droits de tiers.</p>
 
 <!-- ARTICLE 10 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#pkg)" stroke-width="1.5"/><text x="6" y="14.5" font-size="8" font-weight="700" fill="url(#pkg)" font-family="Syne">10</text></svg>
 Sanctions et Résiliation
@@ -2554,6 +2617,7 @@ Sanctions et Résiliation
 <p class="t-p">En cas de résiliation (quelle qu'en soit la cause), votre Clé d'accès est immédiatement invalidée, votre accès à LevelMovie, LevelMusic et Level IA est révoqué, et vos données sont supprimées conformément à l'Article 5.6. Aucun remboursement n'est applicable dans la mesure où les services LevelUp sont entièrement gratuits.</p>
 
 <!-- ARTICLE 11 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#og)" stroke-width="1.5"/><text x="6" y="14.5" font-size="8" font-weight="700" fill="url(#og)" font-family="Syne">11</text></svg>
 Cookies et Traceurs
@@ -2567,6 +2631,7 @@ Cookies et Traceurs
 <p class="t-p">Aucune donnée de navigation n'est transmise à des régies publicitaires. Aucun pixel de tracking Facebook, Google Ads, ou similaire n'est présent sur LevelUp Ecosystem.</p>
 
 <!-- ARTICLE 12 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#pg)" stroke-width="1.5"/><text x="6" y="14.5" font-size="8" font-weight="700" fill="url(#pg)" font-family="Syne">12</text></svg>
 Modification des Conditions
@@ -2580,6 +2645,7 @@ Modification des Conditions
 <p class="t-p">Votre usage continu des services LevelUp après notification des modifications vaut acceptation des nouvelles conditions. Si vous n'acceptez pas les nouvelles conditions, vous devez cesser d'utiliser les services et supprimer votre compte.</p>
 
 <!-- ARTICLE 13 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#bg2)" stroke-width="1.5"/><text x="6" y="14.5" font-size="8" font-weight="700" fill="url(#bg2)" font-family="Syne">13</text></svg>
 Droit Applicable et Juridiction
@@ -2588,6 +2654,7 @@ Droit Applicable et Juridiction
 <p class="t-p">Si une clause des présentes Conditions est déclarée nulle ou inapplicable par une juridiction compétente, les autres clauses demeurent pleinement en vigueur.</p>
 
 <!-- ARTICLE 14 - CONTACT -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#gg)" stroke-width="1.5"/><text x="6" y="14.5" font-size="8" font-weight="700" fill="url(#gg)" font-family="Syne">14</text></svg>
 Contact et Support
@@ -2598,6 +2665,7 @@ Contact et Support
 </div>
 
 <!-- NOUVEAU: ARTICLE 15 & 16 -->
+
 <h2 class="t-h2">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="url(#blue-g)" stroke-width="1.5"/><text x="6" y="14.5" font-size="8" font-weight="700" fill="url(#blue-g)" font-family="Syne">15</text></svg>
 Versions "Preview" et Bêta
@@ -2626,9 +2694,10 @@ Charte DMCA et Droit d'auteur
 <!-- ═══════════════════════════════════════
 FIREBASE & APP LOGIC
 ═══════════════════════════════════════ -->
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, collection, query, where, onSnapshot, addDoc, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js";
 
@@ -2655,45 +2724,40 @@ gProv.setCustomParameters({ prompt: 'select_account' });
 window._auth = auth; window._db = db;
 window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collection, query, where };
 
-// Persistance locale explicite — attendue avant tout pour éviter les déconnexions au refresh
-try { await setPersistence(auth, browserLocalPersistence); } catch(_) {}
+// Persistance locale explicite — évite les déconnexions au retour sur le site
+try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) {}
 
-// Détection PWA standalone (popup bloqué dans ce contexte)
-const _isPWA = () => window.matchMedia('(display-mode: standalone)').matches || !!window.navigator.standalone;
-
-// Gérer le résultat du redirect Google (pour PWA) silencieusement
-try {
-    const redirectResult = await getRedirectResult(auth);
-    // Si un redirect est en cours, onAuthStateChanged s'en occupera automatiquement
-} catch(e) {
-    if (e.code !== 'auth/popup-closed-by-user') console.warn('[Auth] getRedirectResult:', e.code);
-}
+// SUPPRIMÉ : l'appel prématuré à signInAnonymously qui écrasait la session Google au rechargement.
 
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
 
+// ── VÉRIFICATION TURNSTILE ──
+const token = window._turnstileToken;
+if (!token) {
+    toast_('Veuillez compléter la vérification de sécurité ci-dessous.', 'warn');
+    const wrap = document.getElementById('turnstileWrap');
+    if (wrap) { wrap.style.outline = '1px solid rgba(239,68,68,.5)'; wrap.style.borderRadius = '10px'; setTimeout(() => { wrap.style.outline = ''; }, 2000); }
+    return;
+}
+
 btn.disabled = true;
 document.getElementById('gBtnTxt').textContent = 'Connexion en cours...';
-// Flag global — empêche le onAuthStateChanged null de montrer la landing pendant le popup
-window._authInProgress = true;
 try {
-if (_isPWA()) {
-    // En mode PWA, le popup est bloqué — on utilise le redirect à la place
-    // On nettoie le localStorage APRÈS la redirection (au retour, getRedirectResult s'en occupe)
-    await signInWithRedirect(auth, gProv);
-} else {
-    await signInWithPopup(auth, gProv);
-    // Nettoyage seulement APRÈS que le popup ait réussi (onAuthStateChanged prend le relais)
-    localStorage.removeItem('lm_key');
-    localStorage.removeItem('lm_uid');
-    localStorage.removeItem('lm_name');
-    localStorage.removeItem('lm_photo');
-    localStorage.removeItem('lm_login_mode');
-}
+localStorage.removeItem('lm_key');
+localStorage.removeItem('lm_uid');
+localStorage.removeItem('lm_name');
+localStorage.removeItem('lm_photo');
+localStorage.removeItem('lm_login_mode');
+await signInWithPopup(auth, gProv);
 } catch(e) {
-window._authInProgress = false;
 btn.disabled = false;
 document.getElementById('gBtnTxt').textContent = 'Continuer avec Google';
+// Reset Turnstile token after failed attempt
+window._turnstileToken = null;
+if (window._turnstileWidgetId !== undefined && window.turnstile) {
+    window.turnstile.reset(window._turnstileWidgetId);
+}
 if(e.code !== 'auth/popup-closed-by-user') toast_('Erreur de connexion — réessayez', 'err');
 }
 };
@@ -3541,9 +3605,6 @@ const savedUid = localStorage.getItem('lm_uid');
 const loginMode = localStorage.getItem('lm_login_mode');
 
 if (u) {
-// Connexion reçue — on libère le flag de connexion en cours
-window._authInProgress = false;
-
 if (!u.isAnonymous) {
 // 🟢 UTILISATEUR GOOGLE CONNECTÉ
 window._user = u;
@@ -3736,35 +3797,11 @@ window._accountUnsubscribe = onSnapshot(ref, async (snap) => {
 });
 
 } catch(e) {
-console.error('[Auth] Erreur lecture profil Firestore:', e);
-window._ud = window._ud || {
-    displayName: u.displayName || 'Utilisateur',
-    email: u.email || '',
-    photoURL: u.photoURL || '',
-    uid: u.uid,
-    apiKey: null
-};
-// Tenter de récupérer la clé même en cas d'erreur sur le profil
-try {
-    const secRefFallback = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
-    const secSnapFallback = await getDoc(secRefFallback);
-    if (secSnapFallback.exists()) {
-        const sDataFallback = secSnapFallback.data();
-        window._ud.apiKey = sDataFallback.apiKey || sDataFallback.key;
-        window._ud.keyCreatedAt = sDataFallback.keyCreatedAt;
-        if (window._ud.apiKey) localStorage.setItem('lm_key', window._ud.apiKey);
-    }
-} catch(e2) { console.error('[Auth] Impossible de charger la clé en fallback:', e2); }
-localStorage.setItem('lm_name', window._ud.displayName);
-if (window._ud.photoURL) localStorage.setItem('lm_photo', window._ud.photoURL);
-localStorage.setItem('lm_uid', u.uid);
+window._ud = window._ud || { displayName: u.displayName || 'Utilisateur' };
 localStorage.setItem('lm_login_mode', 'google');
 await window.loadAppStatus();
 closeAuth();
 showDash(u);
-toast_('Bienvenue ' + (window._ud.displayName?.split(' ')[0] || '') + ' !', 'ok');
-// initFCM doit aussi être appelé dans le catch pour afficher le panneau admin
-setTimeout(() => initFCM(u), 1500);
 }
 } else if (savedKey && savedUid && loginMode === 'key') {
 // 🟡 UTILISATEUR CONNECTÉ VIA CLÉ (Anonyme en arrière plan)
@@ -3807,31 +3844,8 @@ await window.loadAppStatus();
 showLand();
 }
 } else {
-// u === null : pas de session Firebase active
-// — Ne rien faire si un popup/redirect Google est en cours
-if (window._authInProgress) return;
-
-const hadSession = localStorage.getItem('lm_login_mode') === 'google';
-if (hadSession) {
-    // L'utilisateur avait une session Google. Firebase peut la restaurer dans les ms qui suivent.
-    // L'écran de chargement (appLoadingScreen) couvre ce délai visuellement.
-    // On attend 3s max : si Firebase ne rappelle pas avec un user, on considère la session expirée.
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    // Après 3s, si onAuthStateChanged a déjà fourni un user, window._user sera défini.
-    if (window._user) return; // session restaurée entre-temps, on sort
-    // Session vraiment expirée — nettoyer et afficher la landing
-    localStorage.removeItem('lm_login_mode');
-    localStorage.removeItem('lm_uid');
-    localStorage.removeItem('lm_key');
-    window._user = null; window._ud = null;
-    await window.loadAppStatus();
-    showLand();
-} else {
-    window._user = null;
-    window._ud = null;
-    await window.loadAppStatus();
-    showLand();
-}
+// Aucune session : connexion silencieuse pour initialisation
+signInAnonymously(auth).catch(e => console.error("Initialisation anonyme impossible:", e));
 }
 });
 
@@ -3919,29 +3933,14 @@ function initNotifPanel(u) {
     let _globalNotifs = [];
     let _userNotifs   = [];
 
-    let _mergeRenderTimer = null;
     const _mergeAndRender = () => {
-        // Debounce 150ms pour éviter deux rendus simultanés quand les deux onSnapshot tirent en rafale
-        clearTimeout(_mergeRenderTimer);
-        _mergeRenderTimer = setTimeout(() => {
-            const all = [..._userNotifs, ..._globalNotifs];
-            all.sort((a, b) => {
-                const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-                return tb - ta;
-            });
-            // Déduplication par contenu : même titre + même body + même fenêtre de 10s = doublon
-            const seen = new Set();
-            const merged = all.filter(n => {
-                const ta = n.createdAt?.toDate ? n.createdAt.toDate() : new Date(n.createdAt || 0);
-                const bucket = Math.floor(ta.getTime() / 10000); // fenêtre 10s
-                const key = `${(n.title || '').trim()}|${(n.body || '').trim()}|${bucket}`;
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-            });
-            _renderNotifList(merged.slice(0, 40));
-        }, 150);
+        const merged = [..._userNotifs, ..._globalNotifs];
+        merged.sort((a, b) => {
+            const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+            const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+            return tb - ta;
+        });
+        _renderNotifList(merged.slice(0, 40));
     };
 
     try {
@@ -4078,37 +4077,15 @@ window._toggleNotifItem = function(el) {
 
 // ── Supprimer notification (client-side) ──
 // ── Masquer l'écran de chargement initial ──
-const _isPWAMode = window.matchMedia('(display-mode: standalone)').matches || !!window.navigator.standalone;
-const _appStartTime = Date.now();
-// En PWA, afficher l'écran de chargement au minimum 3.5s pour éviter le flash blanc/noir
-const _PWA_MIN_SPLASH = _isPWAMode ? 3500 : 0;
-
 window._hideLoadingScreen = function() {
     const s = document.getElementById('appLoadingScreen');
     if (!s || s.dataset.hidden === '1') return;
-    const elapsed = Date.now() - _appStartTime;
-    const remaining = Math.max(0, _PWA_MIN_SPLASH - elapsed);
-    setTimeout(() => {
-        s.dataset.hidden = '1';
-        s.classList.add('als-hiding');
-        setTimeout(() => { if (s) s.style.display = 'none'; }, 480);
-    }, remaining);
+    s.dataset.hidden = '1';
+    s.classList.add('als-hiding');
+    setTimeout(() => { if (s) s.style.display = 'none'; }, 480);
 };
-// Fallback : masquer après 7 secondes au maximum
-setTimeout(window._hideLoadingScreen, 7000);
-
-// Messages dynamiques sur le splash (PWA seulement)
-if (_isPWAMode) {
-    const _splashMsgs = ['Connexion sécurisée…', 'Synchronisation…', 'Presque prêt…'];
-    let _si = 0;
-    const _splashInterval = setInterval(() => {
-        const el = document.getElementById('alsSubMsg');
-        if (!el) { clearInterval(_splashInterval); return; }
-        _si = (_si + 1) % _splashMsgs.length;
-        el.textContent = _splashMsgs[_si];
-    }, 1100);
-    setTimeout(() => clearInterval(_splashInterval), 4000);
-}
+// Fallback : masquer après 6 secondes au maximum
+setTimeout(window._hideLoadingScreen, 6000);
 
 // ── Supprimer TOUTES les notifications (admins) ──
 window.deleteAllNotifs = async function() {
@@ -4442,14 +4419,7 @@ async function _registerFCMAnonOrUser() {
     try {
         let swReg = null;
         if ('serviceWorker' in navigator) {
-            // Dé-enregistrer tous les anciens SW qui pourraient causer des doublons de notifications
-            const existingRegs = await navigator.serviceWorker.getRegistrations();
-            for (const reg of existingRegs) {
-                if (reg.active && !reg.active.scriptURL.includes('firebase-messaging-sw.js')) {
-                    await reg.unregister();
-                }
-            }
-            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/', updateViaCache: 'none' });
+            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
             await navigator.serviceWorker.ready;
         }
         const perm = await Notification.requestPermission();
@@ -4503,7 +4473,9 @@ function _attachFCMListeners() {
             if (msgId && lastMsg === msgId) return;
             if (msgId) sessionStorage.setItem(lastMsgKey, msgId);
             const title = payload.notification?.title || payload.data?.title || 'LevelUp';
-            // Firestore onSnapshot gère déjà l'affichage dans le panneau — on affiche seulement le toast visuel
+            const body  = payload.notification?.body  || payload.data?.body  || '';
+            const url   = payload.data?.url || '/';
+            _addNotifToPanel({ title, body, url, createdAt: new Date() });
             toast_(`🔔 ${title}`, 'ok');
         });
     }
@@ -4822,6 +4794,8 @@ if (devSec) devSec.classList.add('hidden');
 }
 
 document.getElementById('authOverlay').classList.remove('hidden');
+// Rendre le widget Turnstile à l'ouverture de la modal
+if (window._renderTurnstile) window._renderTurnstile();
 };
 
 function closeAuth(){
@@ -4832,6 +4806,11 @@ const btnKey = document.getElementById('showKeyInputBtn');
 const wrapKey = document.getElementById('keyInputWrap');
 if(btnKey) btnKey.classList.remove('hidden');
 if(wrapKey) wrapKey.classList.add('hidden');
+// Reset Turnstile token + re-render widget à chaque fermeture
+window._turnstileToken = null;
+if (window._turnstileWidgetId !== undefined && window.turnstile) {
+    try { window.turnstile.reset(window._turnstileWidgetId); } catch(_) {}
+}
 }
 
 // TERMS
@@ -5806,6 +5785,7 @@ document.getElementById('logoutOv').classList.remove('hidden');
 <!-- ═══════════════════════════════════════
 OVERLAY MAINTENANCE PRO (contrôlé via Firebase : global_maintenance)
 ═══════════════════════════════════════ -->
+
 <div id="maintOverlayPro" style="display:none;position:fixed;inset:0;z-index:999999;background:#07070d;overflow:hidden;flex-direction:column;align-items:center;justify-content:center">
   <!-- Particules générées par JS -->
   <div id="maintParticles" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
@@ -5843,6 +5823,7 @@ OVERLAY MAINTENANCE PRO (contrôlé via Firebase : global_maintenance)
 <!-- ═══════════════════════════════════════
 POPUP PERMISSION NOTIFICATIONS PUSH
 ═══════════════════════════════════════ -->
+
 <div id="pushPermModal">
   <div class="push-perm-card">
     <div class="push-perm-badge"><span></span>LevelUp Ecosystem</div>
@@ -5867,6 +5848,7 @@ POPUP PERMISSION NOTIFICATIONS PUSH
 <!-- ═══════════════════════════════════════
 MODALE ALERTE SÉCURITÉ
 ═══════════════════════════════════════ -->
+
 <div id="securityAlertModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:24px">
   <div style="background:linear-gradient(160deg,#0f0a1a,#130d20);border:1px solid rgba(239,68,68,.25);border-radius:22px;max-width:440px;width:100%;padding:0;box-shadow:0 32px 80px rgba(0,0,0,.85);overflow:hidden;animation:cIn .32s cubic-bezier(.34,1.46,.64,1)">
     <!-- Header -->
@@ -5925,6 +5907,7 @@ MODALE ALERTE SÉCURITÉ
 </div>
 
 <!-- ── POPUP NOTIF POUR TOUS LES VISITEURS (avant résolution auth) ── -->
+
 <script>
 (function() {
     // Afficher le popup push 1.2s après le chargement, pour TOUT visiteur
@@ -5955,6 +5938,7 @@ MODALE ALERTE SÉCURITÉ
 </script>
 
 <!-- ── IA MINI BAR LOGIC ── -->
+
 <script>
 (function() {
     function expandIA() {
@@ -5995,5 +5979,6 @@ MODALE ALERTE SÉCURITÉ
     });
 })();
 </script>
+
 </body>
 </html>
