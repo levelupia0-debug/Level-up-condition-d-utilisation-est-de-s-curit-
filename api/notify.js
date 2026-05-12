@@ -1,10 +1,8 @@
 import { createSign } from 'crypto';
 
-// ── Génère un access token OAuth2 depuis le service account ──
 async function getAccessToken() {
     const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     const now = Math.floor(Date.now() / 1000);
-
     const header  = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
     const payload = Buffer.from(JSON.stringify({
         iss:   sa.client_email,
@@ -13,14 +11,12 @@ async function getAccessToken() {
         iat:   now,
         exp:   now + 3600
     })).toString('base64url');
-
     const unsigned  = `${header}.${payload}`;
     const signer    = createSign('RSA-SHA256');
     signer.update(unsigned);
     signer.end();
     const signature = signer.sign(sa.private_key, 'base64url');
     const jwt       = `${unsigned}.${signature}`;
-
     const r = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -38,52 +34,71 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    // Vérification clé admin
     const adminKey    = req.headers['x-admin-key'];
     const adminSecret = process.env.ADMIN_SECRET;
     if (!adminKey || !adminSecret || adminKey !== adminSecret) {
-        return res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).json({
+            error: 'Non autorisé — la clé x-admin-key ne correspond pas à ADMIN_SECRET dans les variables d\'environnement Vercel.'
+        });
     }
 
     if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-        return res.status(500).json({ error: 'FIREBASE_SERVICE_ACCOUNT not configured on Vercel' });
+        return res.status(500).json({
+            error: 'FIREBASE_SERVICE_ACCOUNT non configuré — ajoutez cette variable d\'environnement dans le dashboard Vercel de votre projet.'
+        });
     }
 
-    const { title, body, url } = req.body || {};
-    if (!title || !body) return res.status(400).json({ error: 'title and body are required' });
+    const { title, body, url, image } = req.body || {};
+    if (!title || !body) return res.status(400).json({ error: 'Les champs "title" et "body" sont obligatoires.' });
 
     const targetUrl = url || 'https://levelup-ecosystem.com';
     const iconUrl   = 'https://levelup-ecosystem.com/icon.svg';
 
+    const webpushNotif = {
+        title,
+        body,
+        icon: iconUrl,
+        badge: iconUrl,
+        requireInteraction: true,
+        vibrate: [300, 100, 400, 100, 300]
+    };
+    if (image) webpushNotif.image = image;
+
     const message = {
         topic: 'levelup-all',
         notification: { title, body },
-        data: { title, body, url: targetUrl, icon: iconUrl, sentAt: new Date().toISOString() },
+        data: {
+            title,
+            body,
+            url: targetUrl,
+            icon: iconUrl,
+            ...(image ? { image } : {}),
+            sentAt: new Date().toISOString()
+        },
         webpush: {
             headers: { Urgency: 'high', TTL: '86400' },
-            notification: {
-                title,
-                body,
-                icon: iconUrl,
-                badge: iconUrl,
-                requireInteraction: true,
-                vibrate: [300, 100, 400, 100, 300]
-            },
+            notification: webpushNotif,
             fcm_options: { link: targetUrl }
         },
         android: {
             priority: 'high',
-            notification: { title, body, icon: 'notification_icon', channel_id: 'levelup_push' }
+            notification: {
+                title,
+                body,
+                icon: 'notification_icon',
+                channel_id: 'levelup_push',
+                ...(image ? { image_url: image } : {})
+            }
         },
         apns: {
-            payload: { aps: { alert: { title, body }, sound: 'default', badge: 1 } }
+            payload: { aps: { alert: { title, body }, sound: 'default', badge: 1 } },
+            ...(image ? { fcm_options: { image } } : {})
         }
     };
 
     try {
         const accessToken = await getAccessToken();
         const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
         const r = await fetch(
             `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`,
             {
@@ -96,7 +111,7 @@ export default async function handler(req, res) {
             }
         );
         const data = await r.json();
-        if (!r.ok) return res.status(r.status).json({ error: 'FCM v1 error', details: data });
+        if (!r.ok) return res.status(r.status).json({ error: 'Erreur FCM v1', details: data });
         return res.status(200).json({ success: true, name: data.name });
     } catch (err) {
         console.error('[notify]', err);
