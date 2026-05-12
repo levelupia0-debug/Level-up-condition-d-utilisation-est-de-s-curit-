@@ -38,13 +38,13 @@ export default async function handler(req, res) {
     const adminSecret = process.env.ADMIN_SECRET;
     if (!adminKey || !adminSecret || adminKey !== adminSecret) {
         return res.status(401).json({
-            error: 'Non autorisé — la clé x-admin-key ne correspond pas à ADMIN_SECRET dans les variables d\'environnement Vercel.'
+            error: 'Non autorisé — la clé x-admin-key ne correspond pas à ADMIN_SECRET.'
         });
     }
 
     if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
         return res.status(500).json({
-            error: 'FIREBASE_SERVICE_ACCOUNT non configuré — ajoutez cette variable d\'environnement dans le dashboard Vercel de votre projet.'
+            error: 'FIREBASE_SERVICE_ACCOUNT non configuré.'
         });
     }
 
@@ -66,7 +66,11 @@ export default async function handler(req, res) {
 
     const message = {
         topic: 'levelup-all',
-        notification: { title, body },
+        notification: { 
+            title, 
+            body,
+            ...(image ? { image } : {}) 
+        },
         data: {
             title,
             body,
@@ -87,7 +91,8 @@ export default async function handler(req, res) {
                 body,
                 icon: 'notification_icon',
                 channel_id: 'levelup_push',
-                ...(image ? { image_url: image } : {})
+                // Correction ici : Utilisation de "image" au lieu de "image_url"
+                ...(image ? { image: image } : {}) 
             }
         },
         apns: {
