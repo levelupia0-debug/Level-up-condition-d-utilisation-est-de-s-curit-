@@ -45,6 +45,7 @@ self.addEventListener('notificationclick', (event) => {
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+            // Chercher un onglet déjà ouvert sur le domaine et le focus au lieu d'en ouvrir un nouveau
             for (const client of list) {
                 if (client.url.startsWith(self.location.origin) && 'focus' in client) {
                     client.postMessage({ type: 'NOTIF_CLICK', url: full });
