@@ -12,11 +12,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script>
 window._turnstileToken = null;
 window._turnstileWidgetId = undefined;
+// ── Auto-bypass sur domaines non-production (Replit, localhost, etc.) ──
+window._isProd = /levelup-ecosystem\.com$/.test(location.hostname);
+if (!window._isProd) { window._turnstileToken = '__bypass__'; }
+
 window._renderTurnstile = function() {
+    if (!window._isProd) {
+        // Cacher le widget sur dev, pas besoin de le charger
+        const wrap = document.getElementById('turnstileWrap');
+        if (wrap) wrap.style.display = 'none';
+        return;
+    }
     const container = document.getElementById('cfTurnstile');
     if (!container) return;
     if (window._turnstileWidgetId !== undefined) return;
@@ -28,16 +37,14 @@ window._renderTurnstile = function() {
         sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
         theme: 'dark',
         size: 'flexible',
-        callback: function(token) {
-            window._turnstileToken = token;
-        },
+        callback: function(token) { window._turnstileToken = token; },
         'expired-callback': function() { window._turnstileToken = null; },
-        'error-callback': function() {
-            window._turnstileToken = '__bypass__';
-        }
+        'error-callback': function() { window._turnstileToken = '__bypass__'; }
     });
 };
 </script>
+<!-- Turnstile chargé seulement en production -->
+<script>if(/levelup-ecosystem\.com$/.test(location.hostname)){var s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.defer=true;document.head.appendChild(s);}</script>
 
 <style>
 /* ═══════════════════════════════════════
@@ -573,9 +580,6 @@ LOGOUT ANIMATION OVERLAY
 .tool-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(168,85,247,.7),transparent); opacity:0; transition:opacity .3s; z-index:2; }
 .tool-card:hover::before { opacity:1; }
 /* Preview iframe zone */
-.tool-preview-zone { width:100%; height:90px; overflow:hidden; position:relative; background:rgba(8,3,18,.8); border-bottom:1px solid rgba(255,255,255,.04); flex-shrink:0; }
-.tool-preview-iframe { width:400%; height:400%; transform:scale(0.25); transform-origin:top left; pointer-events:none; border:none; opacity:.85; }
-.tool-preview-fallback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:radial-gradient(ellipse at 50% 100%,rgba(168,85,247,.14),transparent 70%); }
 /* Card body */
 .tool-card-body { padding:13px 14px 14px; display:flex; flex-direction:column; gap:8px; flex:1; }
 .tool-card-header { display:flex; align-items:center; gap:10px; }
@@ -679,38 +683,62 @@ LOGOUT ANIMATION OVERLAY
 .notif-bell-btn i{font-size:.85rem}
 .notif-bell-count{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:100px;background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--bg);animation:badgePulse 2s ease infinite;line-height:1}
 .notif-bell-count.hidden{display:none!important}
-/* Dropdown panel */
-.notif-panel{position:fixed;top:58px;right:16px;width:340px;max-height:480px;background:var(--surf);border:1px solid var(--bdr-hi);border-radius:var(--r16);box-shadow:0 24px 60px rgba(0,0,0,.6);z-index:900;display:flex;flex-direction:column;overflow:hidden;transform:translateY(-8px) scale(.97);opacity:0;pointer-events:none;transition:all .22s cubic-bezier(.34,1.56,.64,1)}
-.notif-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:all}
-.notif-panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:1px solid var(--bdr);flex-shrink:0}
-.notif-panel-head h4{font-size:.88rem;font-weight:700;letter-spacing:-.02em}
-.notif-panel-head span{font-size:.72rem;color:var(--muted);cursor:pointer}
-.notif-panel-head span:hover{color:var(--purple)}
-.notif-list{overflow-y:auto;flex:1;padding:6px 0}
-.notif-list::-webkit-scrollbar{width:4px}
-.notif-list::-webkit-scrollbar-track{background:transparent}
-.notif-list::-webkit-scrollbar-thumb{background:var(--xdim);border-radius:2px}
-.notif-item{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;cursor:pointer;transition:background .15s;border-radius:0;text-decoration:none;color:inherit}
-.notif-item:hover{background:rgba(255,255,255,.04)}
-.notif-item.unread{background:rgba(168,85,247,.05)}
-.notif-item.unread:hover{background:rgba(168,85,247,.09)}
-.notif-item-ico{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.3));display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.notif-item-ico svg{width:16px;height:16px;fill:#a855f7}
-.notif-item-body{flex:1;min-width:0}
-.notif-item-title{font-size:.82rem;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.notif-item-body2{font-size:.76rem;color:var(--muted);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.notif-item-time{font-size:.68rem;color:var(--dim);margin-top:4px}
-.notif-empty{text-align:center;padding:40px 20px;color:var(--dim)}
-.notif-empty i{font-size:1.8rem;margin-bottom:10px;display:block;color:var(--xdim)}
-.notif-empty p{font-size:.8rem}
-/* Admin sender panel */
-.notif-sender{padding:12px 14px;border-top:1px solid var(--bdr);flex-shrink:0;display:none}
-.notif-sender.show{display:block}
-.notif-sender-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--purple);margin-bottom:8px}
-.notif-sender input,.notif-sender textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:var(--r8);color:var(--txt);font-size:.78rem;font-family:var(--sans);padding:7px 10px;margin-bottom:6px;outline:none;transition:border-color .2s;resize:none}
-.notif-sender input:focus,.notif-sender textarea:focus{border-color:rgba(168,85,247,.4)}
-.notif-sender textarea{height:52px;line-height:1.4}
-@media(max-width:420px){.notif-panel{right:8px;left:8px;width:auto}}
+/* ── NOTIFICATION DRAWER ── */
+#notifBackdrop{position:fixed;inset:0;z-index:895;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s}
+#notifBackdrop.open{opacity:1;pointer-events:all}
+.notif-panel{position:fixed;top:0;right:0;height:100%;width:390px;max-width:100vw;background:#0c0c14;border-left:1px solid rgba(255,255,255,.07);box-shadow:-24px 0 80px rgba(0,0,0,.75);z-index:900;display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.notif-panel.open{transform:translateX(0)}
+.notif-panel-head{display:flex;align-items:center;justify-content:space-between;padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;background:linear-gradient(180deg,rgba(168,85,247,.05),transparent)}
+.notif-panel-head h4{font-size:.95rem;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+.notif-panel-head-actions{display:flex;align-items:center;gap:8px}
+.notif-head-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.45);font-size:.68rem;padding:5px 10px;cursor:pointer;font-family:var(--sans);transition:all .2s;white-space:nowrap;font-weight:600}
+.notif-head-btn:hover{background:rgba(255,255,255,.1);color:var(--txt)}
+.notif-head-close{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:.8rem}
+.notif-head-close:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:#ef4444}
+.notif-list{overflow-y:auto;flex:1;padding:4px 0}
+/* Notification items */
+.notif-item{padding:14px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(255,255,255,.03);position:relative;user-select:none}
+.notif-item:hover{background:rgba(255,255,255,.025)}
+.notif-item.unread{background:rgba(168,85,247,.04)}
+.notif-item.unread::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#a855f7,#7c3aed);border-radius:0 2px 2px 0}
+.notif-item-row{display:flex;align-items:flex-start;gap:12px}
+.notif-item-ico{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.3));border:1px solid rgba(168,85,247,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.85rem;color:#c084fc}
+.notif-item-ico svg{width:15px;height:15px;fill:#c084fc}
+.notif-item-ico.ico-security{background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(239,68,68,.08));border-color:rgba(239,68,68,.2);color:#f87171}
+.notif-item-ico.ico-key{background:linear-gradient(135deg,rgba(234,179,8,.15),rgba(234,179,8,.08));border-color:rgba(234,179,8,.2);color:#fbbf24}
+.notif-item-ico.ico-info{background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(59,130,246,.08));border-color:rgba(59,130,246,.2);color:#60a5fa}
+.notif-item-content{flex:1;min-width:0}
+.notif-item-title{font-size:.84rem;font-weight:600;color:var(--txt);margin-bottom:4px;line-height:1.3}
+.notif-item-body2{font-size:.78rem;color:rgba(255,255,255,.48);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:all .2s}
+.notif-item.expanded .notif-item-body2{-webkit-line-clamp:unset;display:block}
+.notif-item-meta{display:flex;align-items:center;gap:8px;margin-top:6px}
+.notif-item-time{font-size:.67rem;color:rgba(255,255,255,.26)}
+.notif-item-del{background:none;border:none;color:rgba(255,255,255,.18);cursor:pointer;font-size:.62rem;padding:3px 6px;border-radius:4px;transition:all .2s;font-family:var(--sans);margin-left:auto;line-height:1}
+.notif-item-del:hover{background:rgba(239,68,68,.1);color:#f87171}
+.notif-item-actions{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05);max-height:0;overflow:hidden;opacity:0;transition:max-height .25s ease,opacity .2s ease}
+.notif-item.expanded .notif-item-actions{max-height:52px;opacity:1}
+.notif-action-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:.74rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;border:1px solid transparent}
+.notif-action-open{background:rgba(168,85,247,.12);color:#d8b4fe;border-color:rgba(168,85,247,.25)}
+.notif-action-open:hover{background:rgba(168,85,247,.25);color:#fff}
+.notif-action-security{background:rgba(239,68,68,.08);color:#f87171;border-color:rgba(239,68,68,.18)}
+.notif-action-security:hover{background:rgba(239,68,68,.18);color:#fff}
+.notif-empty{text-align:center;padding:64px 24px;color:var(--dim)}
+.notif-empty i{font-size:2.5rem;margin-bottom:14px;display:block;color:var(--xdim)}
+.notif-empty p{font-size:.84rem;line-height:1.65}
+/* Admin sender */
+.notif-admin-section{border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.notif-admin-toggle{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;font-size:.72rem;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:.08em;user-select:none;transition:background .15s}
+.notif-admin-toggle:hover{background:rgba(168,85,247,.05)}
+.notif-admin-toggle .chev{margin-left:auto;transition:transform .2s;font-size:.65rem;color:rgba(255,255,255,.3)}
+.notif-admin-toggle.open .chev{transform:rotate(180deg)}
+.notif-admin-body{padding:0 14px 14px;display:none}
+.notif-admin-body.open{display:block}
+.notif-admin-body input,.notif-admin-body textarea,.notif-admin-body select{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--r8);color:var(--txt);font-size:.78rem;font-family:var(--sans);padding:7px 10px;margin-bottom:6px;outline:none;transition:border-color .2s;resize:none}
+.notif-admin-body input:focus,.notif-admin-body textarea:focus,.notif-admin-body select:focus{border-color:rgba(168,85,247,.4)}
+.notif-admin-body textarea{height:52px;line-height:1.4}
+.notif-admin-body select{appearance:none;cursor:pointer}
+.notif-admin-body select option{background:#111}
+@media(max-width:600px){.notif-panel{width:100%;border-left:none;border-top:1px solid rgba(255,255,255,.08);top:auto;bottom:0;height:92dvh;border-radius:20px 20px 0 0;transform:translateY(110%)} .notif-panel.open{transform:translateY(0)}}
 
 /* ── IA APPS TAB BAR ── */
 .ia-apps-bar { display:flex; align-items:center; gap:6px; padding:7px 12px; background:rgba(10,10,10,.97); border-bottom:1px solid rgba(255,255,255,.06); overflow-x:auto; flex-shrink:0; scroll-behavior:smooth; -ms-overflow-style:none; scrollbar-width:none; }
@@ -730,6 +758,29 @@ LOGOUT ANIMATION OVERLAY
 .notif-slider:before { content:''; position:absolute; width:16px; height:16px; left:2px; bottom:2px; background:#fff; border-radius:50%; transition:.3s; }
 .notif-toggle input:checked + .notif-slider { background:rgba(168,85,247,.5); border-color:rgba(168,85,247,.4); }
 .notif-toggle input:checked + .notif-slider:before { transform:translateX(16px); }
+
+/* ── PUSH PERMISSION POPUP ── */
+#pushPermModal { position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;padding:0 0 24px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .3s }
+#pushPermModal.show { opacity:1;pointer-events:all }
+.push-perm-card { background:linear-gradient(160deg,#111118,#0d0d14);border:1px solid rgba(168,85,247,.22);border-radius:24px;padding:28px 24px 24px;max-width:420px;width:calc(100% - 32px);box-shadow:0 32px 80px rgba(0,0,0,.8),0 0 0 1px rgba(168,85,247,.08),inset 0 1px 0 rgba(255,255,255,.05);position:relative;overflow:hidden;transform:translateY(40px) scale(.97);transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s }
+#pushPermModal.show .push-perm-card { transform:translateY(0) scale(1) }
+.push-perm-card::before { content:'';position:absolute;top:-80px;right:-60px;width:240px;height:240px;background:radial-gradient(circle,rgba(168,85,247,.18),transparent 70%);pointer-events:none;border-radius:50% }
+.push-perm-logo { width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(124,58,237,.35));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin-bottom:16px;position:relative }
+.push-perm-logo i { font-size:1.5rem;color:#c084fc }
+.push-perm-logo::after { content:'';position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#7c3aed);border:2px solid #0d0d14;display:flex;align-items:center;justify-content:center }
+.push-perm-badge { display:inline-flex;align-items:center;gap:6px;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a855f7;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);padding:3px 10px;border-radius:100px;margin-bottom:12px }
+.push-perm-badge span { width:6px;height:6px;border-radius:50%;background:#a855f7;display:block;animation:bdot 1.4s ease infinite }
+.push-perm-title { font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:8px;line-height:1.2 }
+.push-perm-desc { font-size:.84rem;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:20px }
+.push-perm-features { display:flex;flex-direction:column;gap:8px;margin-bottom:22px }
+.push-perm-feat { display:flex;align-items:center;gap:10px;font-size:.8rem;color:rgba(255,255,255,.7) }
+.push-perm-feat i { width:28px;height:28px;border-radius:50%;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;font-size:.72rem;color:#c084fc;flex-shrink:0 }
+.push-perm-btns { display:flex;flex-direction:column;gap:8px }
+.push-perm-yes { background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:14px;padding:13px;font-size:.9rem;font-weight:700;cursor:pointer;width:100%;font-family:var(--sans);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;box-shadow:0 4px 20px rgba(168,85,247,.35) }
+.push-perm-yes:hover { transform:translateY(-1px);box-shadow:0 8px 28px rgba(168,85,247,.5) }
+.push-perm-no { background:none;border:none;color:rgba(255,255,255,.3);font-size:.8rem;font-weight:500;cursor:pointer;padding:8px;width:100%;font-family:var(--sans);transition:color .2s }
+.push-perm-no:hover { color:rgba(255,255,255,.6) }
+
 
 /* ═══ RESPONSIVE MOBILE FIRST ═══ */
 @media(max-width:1100px){
@@ -817,26 +868,49 @@ Créer un compte
 </div>
 </nav>
 
+<!-- BACKDROP NOTIFICATION DRAWER -->
+<div id="notifBackdrop" onclick="window.toggleNotifPanel()"></div>
+
 <!-- ═══════════════════════════════════════
-PANNEAU NOTIFICATIONS
+PANNEAU NOTIFICATIONS — DRAWER PRO
 ═══════════════════════════════════════ -->
 <div class="notif-panel" id="notifPanel">
   <div class="notif-panel-head">
-    <h4><i class="fa-solid fa-bell" style="color:var(--purple);margin-right:6px"></i>Notifications</h4>
-    <span onclick="window.notifMarkAllRead()">Tout marquer lu</span>
+    <h4><i class="fa-solid fa-bell" style="color:var(--purple)"></i>Notifications</h4>
+    <div class="notif-panel-head-actions">
+      <button class="notif-head-btn" onclick="window.notifMarkAllRead()">Tout lu</button>
+      <button class="notif-head-close" onclick="window.toggleNotifPanel()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
   </div>
   <div class="notif-list" id="notifList">
-    <div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Aucune notification</p></div>
+    <div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Aucune notification pour le moment</p></div>
   </div>
-  <!-- Panneau envoi (super admins uniquement) -->
-  <div class="notif-sender" id="notifSenderPanel">
-    <div class="notif-sender-title"><i class="fa-solid fa-paper-plane" style="margin-right:5px"></i>Envoyer une notification push</div>
-    <input type="text" id="notifSendTitle" placeholder="Titre de la notification" maxlength="80">
-    <textarea id="notifSendBody" placeholder="Message (corps de la notification)" maxlength="200"></textarea>
-    <input type="text" id="notifSendUrl" placeholder="URL au clic (ex: https://ia.levelup-ecosystem.com)" style="margin-bottom:8px">
-    <button onclick="window.sendPushNotif()" class="btn btn-p" style="width:100%;font-size:.78rem;padding:8px 14px">
-      <i class="fa-solid fa-rocket"></i> Envoyer à tous les utilisateurs
-    </button>
+  <!-- Section admin (super admins uniquement) -->
+  <div class="notif-admin-section" id="notifAdminSection" style="display:none">
+    <div class="notif-admin-toggle" id="notifAdminToggle" onclick="window._toggleAdminPanel()">
+      <i class="fa-solid fa-paper-plane"></i> Envoyer une notification
+      <i class="fa-solid fa-chevron-down chev"></i>
+    </div>
+    <div class="notif-admin-body" id="notifAdminBody">
+      <input type="text" id="notifSendTitle" placeholder="Titre de la notification" maxlength="80">
+      <textarea id="notifSendBody" placeholder="Message (corps de la notification)" maxlength="300"></textarea>
+      <input type="text" id="notifSendImage" placeholder="URL image (optionnel — ex: https://…/image.jpg)">
+      <select id="notifSendDest">
+        <option value="">→ Destination au clic (optionnel)</option>
+        <option value="https://levelup-ecosystem.com">🏠 Accueil / Landing</option>
+        <option value="https://levelup-ecosystem.com/#dashboard">📊 Tableau de bord</option>
+        <option value="https://ia.levelup-ecosystem.com">🤖 Level IA</option>
+        <option value="https://levelup-ecosystem.com/#outils">🛠️ Outils</option>
+        <option value="https://movie.levelup-ecosystem.com">🎬 LevelMovie</option>
+        <option value="https://music.levelup-ecosystem.com">🎵 LevelMusic</option>
+        <option value="https://levelup-ecosystem.com/#parametres">⚙️ Paramètres</option>
+        <option value="custom">✏️ URL personnalisée…</option>
+      </select>
+      <input type="text" id="notifSendCustomUrl" placeholder="URL personnalisée" style="display:none">
+      <button onclick="window.sendPushNotif()" class="btn btn-p" style="width:100%;font-size:.78rem;padding:9px 14px;margin-top:4px">
+        <i class="fa-solid fa-rocket"></i> Envoyer à tous les utilisateurs
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1813,6 +1887,15 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 
 <div class="set-sec">
+<div class="set-title">Notifications push</div>
+<div class="set-row">
+  <div class="set-info"><h5>Notifications en temps réel</h5><p>Recevez des alertes même quand l'app est fermée — nouvelles sorties films, musiques, outils IA et plus</p></div>
+  <label class="notif-toggle notif-toggle-wrap"><input type="checkbox" id="notifPushToggle" onchange="window.togglePushNotif(this.checked)"><span class="notif-slider"></span></label>
+</div>
+<div id="notifPushStatus" style="font-size:.75rem;color:var(--muted);margin-top:6px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--bdr);display:none"></div>
+</div>
+
+<div class="set-sec">
 <div class="set-title">Conditions &amp; Légal</div>
 <div class="set-row" style="cursor:pointer" onclick="openTerms()">
 <div class="set-info"><h5>Conditions (App intégrée)</h5><p>Lire le résumé des conditions directement dans l'application</p></div>
@@ -2783,6 +2866,17 @@ const snap = await getDoc(ref);
 window._appsStatus = snap.exists() ? snap.data() : {};
 } catch(e) { window._appsStatus = {}; }
 
+// Charger aussi admin_push_key depuis levelup-ecosystem (chemin correct)
+try {
+    const ekRef = doc(db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'config', 'apps');
+    const ekSnap = await getDoc(ekRef);
+    if (ekSnap.exists()) {
+        const ekData = ekSnap.data();
+        if (ekData.admin_push_key) window._appsStatus.admin_push_key = ekData.admin_push_key;
+        if (ekData.ADMIN_SECRET) window._appsStatus.admin_push_key = ekData.ADMIN_SECRET;
+    }
+} catch(e) { /* silencieux — clé optionnelle */ }
+
 const s = window._appsStatus || {};
 
 // -- PANNEAU PUBLICITAIRE EN FRANÇAIS CLAIR --
@@ -3112,16 +3206,7 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                 }
             }
 
-            // Preview iframe (scaled down) avec fallback
-            const iframeId = `tprev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-            const previewHtml = url ? `
-                <div class="tool-preview-zone">
-                    <iframe class="tool-preview-iframe" src="${urlEsc}" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms" tabindex="-1" aria-hidden="true" id="${iframeId}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"></iframe>
-                    <div class="tool-preview-fallback tool-pf-hidden" style="display:none"><div class="tool-card-ico" style="width:44px;height:44px;font-size:1.2rem">${icoInner}</div></div>
-                </div>` : '';
-
             card.innerHTML = `
-                ${previewHtml}
                 <div class="tool-card-body">
                     <div class="tool-card-header">
                         <div class="tool-card-ico">${icoInner}</div>
@@ -3418,16 +3503,43 @@ setTimeout(async () => {
             const now = new Date();
             const dateStr = now.toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
             const timeStr = now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
-            window._emailQuota.send({
-                email: u.email || '',
-                name: window._ud.displayName || '',
-                type: 'NEW_LOGIN',
-                ip: currentIp,
-                country: locData.country || '',
-                city: locData.city || '',
-                device: navigator.userAgent.substring(0, 200),
-                date: `${dateStr} à ${timeStr}`
-            });
+            const fullDate = `${dateStr} à ${timeStr}`;
+
+            // ── LIMITE 3 EMAILS/MOIS — le reste en push in-app ──
+            const monthKey = `lvl_login_notif_${now.toISOString().slice(0, 7)}`;
+            const emailCount = parseInt(localStorage.getItem(monthKey) || '0', 10);
+            const canSendEmail = emailCount < 3;
+
+            if (canSendEmail) {
+                window._emailQuota.send({
+                    email: u.email || '',
+                    name: window._ud.displayName || '',
+                    type: 'NEW_LOGIN',
+                    ip: currentIp,
+                    country: locData.country || '',
+                    city: locData.city || '',
+                    device: navigator.userAgent.substring(0, 200),
+                    date: fullDate
+                });
+                localStorage.setItem(monthKey, String(emailCount + 1));
+            }
+
+            // ── TOUJOURS créer une notification in-app (push/sécurité) ──
+            try {
+                const { collection: col2, addDoc: add2, serverTimestamp: sts2 } = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js');
+                const userNotifRef = col2(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'notifications');
+                await add2(userNotifRef, {
+                    type: 'security',
+                    title: '🔐 Nouvelle connexion détectée',
+                    body: `Connexion depuis ${locData.city || 'un nouvel emplacement'} (${currentIp}) — ${fullDate}`,
+                    ip: currentIp,
+                    city: locData.city || '',
+                    country: locData.country || '',
+                    device: navigator.userAgent.substring(0, 200),
+                    date: fullDate,
+                    createdAt: sts2()
+                });
+            } catch(_) {}
         }
 
         // Mettre à jour la liste des IPs connues (max 10)
@@ -3623,6 +3735,9 @@ renderNavLogged(u);
 updateLoggedUI();
 window.refreshUI();
 if(window.updateFabNavBtn) window.updateFabNavBtn();
+
+// Afficher popup permission push si pas encore décidé (3s après chargement)
+setTimeout(() => { try { showPushPermPopup(); } catch(_) {} }, 3000);
 }
 
 function showLand() {
@@ -3646,6 +3761,11 @@ renderNavGuest();
 updateGuestUI();
 window.updateAppCards();
 if(window.updateFabNavBtn) window.updateFabNavBtn();
+
+// Afficher popup permission push même pour les visiteurs anonymes (4s après chargement)
+setTimeout(() => { try { showPushPermPopup(); } catch(_) {} }, 4000);
+// Si déjà accordé, s'enregistrer silencieusement
+setTimeout(() => { try { if (_getPushPref() === 'granted' && Notification.permission === 'granted') _registerFCMAnonOrUser(); } catch(_) {} }, 2000);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3656,123 +3776,138 @@ const SUPER_ADMINS = ['levelup.ia0@gmail.com', 'richelieubonte@gmail.com'];
 const NOTIF_COLL   = ['artifacts', 'levelup-ecosystem', 'public', 'data', 'notifications'];
 const LAST_SEEN_KEY = 'lvl_notif_last_seen';
 
-// ── Enregistrement SW + token FCM ──
+// ── Enregistrement SW + token FCM (utilisateurs connectés) ──
 async function initFCM(u) {
-    if (!_messaging || VAPID_KEY === 'YOUR_VAPID_KEY_HERE') {
-        console.log('[FCM] VAPID key not configured yet — skipping push registration.');
-        initNotifPanel(u);
-        return;
-    }
-    try {
-        // Enregistrer le service worker
-        let swReg = null;
-        if ('serviceWorker' in navigator) {
-            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-            await navigator.serviceWorker.ready;
-        }
-
-        // Demander la permission
-        const perm = await Notification.requestPermission();
-        if (perm !== 'granted') {
-            console.log('[FCM] Permission refusée');
-            initNotifPanel(u);
-            return;
-        }
-
-        // Obtenir le token FCM
-        const token = await getToken(_messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
-        if (!token) { initNotifPanel(u); return; }
-
-        // Sauvegarder le token dans Firestore (optionnel, pour records)
-        try {
-            const tRef = doc(db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'fcm_tokens', u.uid);
-            await setDoc(tRef, { token, uid: u.uid, email: u.email || '', updatedAt: new Date().toISOString() }, { merge: true });
-        } catch(e) {}
-
-        // Abonner le token au topic /topics/levelup-all via notre API Vercel
-        try {
-            await fetch('/api/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token })
-            });
-        } catch(e) {}
-
-        // Écouter les messages quand l'app est au premier plan
-        onMessage(_messaging, (payload) => {
-            const title = payload.notification?.title || payload.data?.title || 'LevelUp';
-            const body  = payload.notification?.body  || payload.data?.body  || '';
-            const url   = payload.data?.url || '/';
-            // Ajouter dans la liste en temps réel
-            _addNotifToPanel({ title, body, url, createdAt: new Date() });
-            // Afficher toast in-app aussi
-            toast_(`🔔 ${title}`, 'ok');
-        });
-
-        // Écouter les clics sur notifications (depuis SW)
-        navigator.serviceWorker.addEventListener('message', (e) => {
-            if (e.data?.type === 'NOTIF_CLICK' && e.data?.url) {
-                window.open(e.data.url, '_blank');
-            }
-        });
-
-    } catch(err) {
-        console.error('[FCM] Erreur init:', err);
+    // Si permission déjà accordée, enregistrer directement sans popup
+    if (_getPushPref && _getPushPref() === 'granted' && Notification.permission === 'granted') {
+        await _registerFCMAnonOrUser();
     }
     initNotifPanel(u);
+    _updatePushToggleUI && _updatePushToggleUI();
 }
 
 // ── Panneau notifications (in-app, depuis Firestore) ──
 function initNotifPanel(u) {
     const isSuperAdmin = SUPER_ADMINS.includes(u?.email || window._ud?.email || '');
 
-    // Afficher le panneau admin si super admin
-    const senderPanel = document.getElementById('notifSenderPanel');
-    if (senderPanel && isSuperAdmin) senderPanel.classList.add('show');
+    // Afficher la section admin si super admin
+    const adminSection = document.getElementById('notifAdminSection');
+    if (adminSection && isSuperAdmin) adminSection.style.display = '';
 
     // Écouter les 20 dernières notifications en temps réel
+    // ── Notifications globales (Firestore public) ──
+    let _globalNotifs = [];
+    let _userNotifs   = [];
+
+    const _mergeAndRender = () => {
+        const merged = [..._userNotifs, ..._globalNotifs];
+        merged.sort((a, b) => {
+            const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+            const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+            return tb - ta;
+        });
+        _renderNotifList(merged.slice(0, 40));
+    };
+
     try {
         const colRef = collection(db, ...NOTIF_COLL);
         const q = query(colRef, orderBy('createdAt', 'desc'), limit(20));
         window._notifUnsub && window._notifUnsub();
         window._notifUnsub = onSnapshot(q, (snap) => {
-            const notifs = [];
-            snap.forEach(d => notifs.push({ id: d.id, ...d.data() }));
-            _renderNotifList(notifs);
+            _globalNotifs = [];
+            snap.forEach(d => _globalNotifs.push({ id: d.id, ...d.data() }));
+            _mergeAndRender();
         });
     } catch(e) {
-        console.error('[notif] Firestore listener error', e);
+        console.error('[notif] Firestore global error', e);
     }
+
+    // ── Notifications personnelles de l'utilisateur (sécurité, clé…) ──
+    if (u && !u.isAnonymous) {
+        try {
+            const userNotifCol = collection(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'notifications');
+            const uq = query(userNotifCol, orderBy('createdAt', 'desc'), limit(20));
+            window._userNotifUnsub && window._userNotifUnsub();
+            window._userNotifUnsub = onSnapshot(uq, (snap) => {
+                _userNotifs = [];
+                snap.forEach(d => _userNotifs.push({ id: 'u_' + d.id, ...d.data() }));
+                _mergeAndRender();
+            });
+        } catch(e) {
+            console.error('[notif] Firestore user error', e);
+        }
+    }
+}
+
+function _getDeletedNotifIds() {
+    try { return new Set(JSON.parse(localStorage.getItem('lvl_notif_deleted') || '[]')); } catch(_) { return new Set(); }
+}
+function _saveDeletedNotifId(id) {
+    try {
+        const ids = _getDeletedNotifIds();
+        ids.add(id);
+        localStorage.setItem('lvl_notif_deleted', JSON.stringify([...ids].slice(-200)));
+    } catch(_) {}
+}
+
+function _buildNotifItemHtml(n, isUnread) {
+    const ts = n.createdAt?.toDate ? n.createdAt.toDate() : (n.createdAt ? new Date(n.createdAt) : new Date());
+    const timeStr = _relTime(ts);
+    const type = n.type || '';
+
+    let icoClass = '', icoContent = '<svg viewBox="0 0 576 512"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>';
+    if (type === 'security') { icoClass = 'ico-security'; icoContent = '<i class="fa-solid fa-shield-halved"></i>'; }
+    else if (type === 'key') { icoClass = 'ico-key'; icoContent = '<i class="fa-solid fa-key"></i>'; }
+    else if (type === 'info') { icoClass = 'ico-info'; icoContent = '<i class="fa-solid fa-circle-info"></i>'; }
+
+    const secData = (type === 'security') ? encodeURIComponent(JSON.stringify({ ip: n.ip || '', city: n.city || '', country: n.country || '', date: n.date || '', device: n.device || '' })) : '';
+
+    let actionsHtml = '';
+    if (n.url && type !== 'security') {
+        actionsHtml += `<button class="notif-action-btn notif-action-open" onclick="event.stopPropagation();window.open('${(n.url||'').replace(/'/g,"\\'")}','_blank')"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.65rem"></i> Ouvrir</button>`;
+    }
+    if (type === 'security') {
+        actionsHtml += `<button class="notif-action-btn notif-action-security" onclick="event.stopPropagation();window._openSecurityAlert('${secData}')"><i class="fa-solid fa-shield-halved" style="font-size:.65rem"></i> Voir les détails</button>`;
+    }
+
+    const idAttr = n.id ? `data-id="${n.id}"` : '';
+    const delClick = n.id ? `event.stopPropagation();window._deleteNotifItem('${n.id}',this.closest('.notif-item'))` : `event.stopPropagation();this.closest('.notif-item').remove()`;
+
+    return `<div class="notif-item${isUnread?' unread':''}" ${idAttr} onclick="window._toggleNotifItem(this)">
+  <div class="notif-item-row">
+    <div class="notif-item-ico ${icoClass}">${icoContent}</div>
+    <div class="notif-item-content">
+      <div class="notif-item-title">${_esc(n.title || '')}</div>
+      <div class="notif-item-body2">${_esc(n.body || '')}</div>
+      <div class="notif-item-meta">
+        <span class="notif-item-time">${timeStr}</span>
+        <button class="notif-item-del" onclick="${delClick}" title="Supprimer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+  </div>
+  ${actionsHtml ? `<div class="notif-item-actions">${actionsHtml}</div>` : ''}
+</div>`;
 }
 
 function _renderNotifList(notifs) {
     const list = document.getElementById('notifList');
     if (!list) return;
     const lastSeen = parseInt(localStorage.getItem(LAST_SEEN_KEY) || '0');
+    const deletedIds = _getDeletedNotifIds();
     let unread = 0;
 
-    if (!notifs.length) {
-        list.innerHTML = '<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Aucune notification</p></div>';
+    const visible = notifs.filter(n => !n.id || !deletedIds.has(n.id));
+    if (!visible.length) {
+        list.innerHTML = '<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Aucune notification pour le moment</p></div>';
         _updateBadge(0);
         return;
     }
 
-    list.innerHTML = notifs.map(n => {
+    list.innerHTML = visible.map(n => {
         const ts = n.createdAt?.toDate ? n.createdAt.toDate() : (n.createdAt ? new Date(n.createdAt) : new Date());
         const isUnread = ts.getTime() > lastSeen;
         if (isUnread) unread++;
-        const timeStr = _relTime(ts);
-        const urlAttr = n.url ? `onclick="window.open('${n.url.replace(/'/g,"\\'")}','_blank');window.notifMarkAllRead()"` : 'onclick="window.notifMarkAllRead()"';
-        return `<div class="notif-item${isUnread?' unread':''}" ${urlAttr}>
-  <div class="notif-item-ico">
-    <svg viewBox="0 0 576 512"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-  </div>
-  <div class="notif-item-body">
-    <div class="notif-item-title">${_esc(n.title || '')}</div>
-    <div class="notif-item-body2">${_esc(n.body || '')}</div>
-    <div class="notif-item-time">${timeStr}</div>
-  </div>
-</div>`;
+        return _buildNotifItemHtml(n, isUnread);
     }).join('');
 
     _updateBadge(unread);
@@ -3784,26 +3919,72 @@ function _addNotifToPanel(n) {
     const empty = list.querySelector('.notif-empty');
     if (empty) empty.remove();
     const div = document.createElement('div');
-    div.className = 'notif-item unread';
-    div.onclick = () => { if (n.url) window.open(n.url, '_blank'); window.notifMarkAllRead(); };
-    div.innerHTML = `
-  <div class="notif-item-ico"><svg viewBox="0 0 576 512" fill="#a855f7"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg></div>
-  <div class="notif-item-body">
-    <div class="notif-item-title">${_esc(n.title || '')}</div>
-    <div class="notif-item-body2">${_esc(n.body || '')}</div>
-    <div class="notif-item-time">À l'instant</div>
-  </div>`;
-    list.prepend(div);
+    div.outerHTML; // force create
+    const tmp = document.createElement('div');
+    tmp.innerHTML = _buildNotifItemHtml(n, true);
+    const item = tmp.firstElementChild;
+    if (item) list.prepend(item);
     const cnt = document.getElementById('notifCount');
     if (cnt) {
         const cur = parseInt(cnt.textContent || '0') + 1;
         cnt.textContent = cur > 99 ? '99+' : cur;
         cnt.classList.remove('hidden');
-        // Animation bell
         const bell = document.getElementById('notifBellBtn');
         if (bell) { bell.style.animation='bellRing .5s ease 3'; setTimeout(()=>bell.style.animation='',1600); }
     }
 }
+
+// ── Expand/collapse notification item ──
+window._toggleNotifItem = function(el) {
+    if (!el) return;
+    el.classList.toggle('expanded');
+};
+
+// ── Supprimer notification (client-side) ──
+window._deleteNotifItem = function(id, el) {
+    if (id) _saveDeletedNotifId(id);
+    if (el) {
+        el.style.transition = 'opacity .2s,max-height .25s';
+        el.style.opacity = '0';
+        el.style.overflow = 'hidden';
+        el.style.maxHeight = el.offsetHeight + 'px';
+        requestAnimationFrame(() => { el.style.maxHeight = '0'; el.style.padding = '0'; });
+        setTimeout(() => {
+            el.remove();
+            if (!document.querySelector('#notifList .notif-item')) {
+                const list = document.getElementById('notifList');
+                if (list) list.innerHTML = '<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Aucune notification pour le moment</p></div>';
+                _updateBadge(0);
+            }
+        }, 280);
+    }
+};
+
+// ── Ouvrir modale alerte sécurité ──
+window._openSecurityAlert = function(encodedData) {
+    let data = {};
+    try { data = JSON.parse(decodeURIComponent(encodedData)); } catch(_) {}
+    const modal = document.getElementById('securityAlertModal');
+    if (!modal) return;
+    const fmt = (v, fallback) => v || fallback;
+    document.getElementById('secAlertIp').textContent = fmt(data.ip, 'IP inconnue');
+    document.getElementById('secAlertCity').textContent = fmt(data.city, '') + (data.country ? `, ${data.country}` : '');
+    document.getElementById('secAlertDate').textContent = fmt(data.date, 'Date inconnue');
+    document.getElementById('secAlertDevice').textContent = fmt(data.device, 'Appareil inconnu').substring(0, 80);
+    modal.style.display = 'flex';
+    window.toggleNotifPanel();
+};
+window._closeSecAlert = function() {
+    const m = document.getElementById('securityAlertModal');
+    if (m) m.style.display = 'none';
+};
+window._secAlertContact = function() {
+    const ip = document.getElementById('secAlertIp')?.textContent || '';
+    const date = document.getElementById('secAlertDate')?.textContent || '';
+    const sub = encodeURIComponent(`[Sécurité] Connexion suspecte — ${date} — ${ip}`);
+    const body = encodeURIComponent(`Bonjour,\n\nJ'ai reçu une alerte de connexion suspecte sur mon compte LevelUp Ecosystem.\n\nAdresse IP : ${ip}\nDate : ${date}\n\nJe n'étais pas à l'origine de cette connexion et souhaite sécuriser mon compte.\n\nCordialement,\n${window._ud?.displayName || ''}`);
+    window.open(`mailto:support@levelup-ecosystem.com?subject=${sub}&body=${body}`, '_blank');
+};
 
 function _updateBadge(count) {
     const cnt = document.getElementById('notifCount');
@@ -3828,81 +4009,260 @@ function _esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Toggle panneau notifications ──
+// ── Toggle panneau notifications (drawer) ──
 window.toggleNotifPanel = function() {
     const panel = document.getElementById('notifPanel');
+    const backdrop = document.getElementById('notifBackdrop');
     if (!panel) return;
     const isOpen = panel.classList.contains('open');
     if (isOpen) {
         panel.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('open');
+        document.body.style.overflow = '';
     } else {
         panel.classList.add('open');
+        if (backdrop) backdrop.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        // Marquer comme vus après 1.5s d'ouverture
+        setTimeout(() => {
+            localStorage.setItem(LAST_SEEN_KEY, Date.now().toString());
+            _updateBadge(0);
+            document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+        }, 1500);
     }
 };
-
-// Fermer le panneau si clic à l'extérieur
-document.addEventListener('click', (e) => {
-    const panel = document.getElementById('notifPanel');
-    const bell  = document.getElementById('notifBellBtn');
-    if (!panel || !panel.classList.contains('open')) return;
-    if (panel.contains(e.target) || (bell && bell.contains(e.target))) return;
-    panel.classList.remove('open');
-});
 
 // ── Marquer tout comme lu ──
 window.notifMarkAllRead = function() {
     localStorage.setItem(LAST_SEEN_KEY, Date.now().toString());
     _updateBadge(0);
     document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
-    document.getElementById('notifPanel')?.classList.remove('open');
 };
+
+// ── Toggle panneau admin notifications ──
+window._toggleAdminPanel = function() {
+    const toggle = document.getElementById('notifAdminToggle');
+    const body = document.getElementById('notifAdminBody');
+    if (!body) return;
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    if (toggle) toggle.classList.toggle('open', !isOpen);
+};
+
+// ── Sélecteur destination deep link ──
+document.addEventListener('DOMContentLoaded', () => {
+    const destSel = document.getElementById('notifSendDest');
+    const customUrl = document.getElementById('notifSendCustomUrl');
+    if (destSel && customUrl) {
+        destSel.addEventListener('change', () => {
+            customUrl.style.display = destSel.value === 'custom' ? 'block' : 'none';
+        });
+    }
+});
 
 // ── Envoi notification push (super admins) ──
 window.sendPushNotif = async function() {
-    const title = document.getElementById('notifSendTitle')?.value.trim();
-    const body  = document.getElementById('notifSendBody')?.value.trim();
-    const url   = document.getElementById('notifSendUrl')?.value.trim() || 'https://levelup-ecosystem.com';
+    const title    = document.getElementById('notifSendTitle')?.value.trim();
+    const body     = document.getElementById('notifSendBody')?.value.trim();
+    const image    = document.getElementById('notifSendImage')?.value.trim() || undefined;
+    const destSel  = document.getElementById('notifSendDest');
+    const customUrl = document.getElementById('notifSendCustomUrl')?.value.trim();
+    let url = 'https://levelup-ecosystem.com';
+    if (destSel) {
+        url = destSel.value === 'custom' ? (customUrl || url) : (destSel.value || url);
+    }
     if (!title || !body) { toast_('Titre et message requis', 'warn'); return; }
 
-    const btn = document.querySelector('#notifSenderPanel button');
+    const btn = document.querySelector('#notifAdminBody button.btn-p');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Envoi...'; }
 
     try {
         // 1. Écrire dans Firestore (pour l'historique in-app)
         const colRef = collection(db, ...NOTIF_COLL);
         await addDoc(colRef, {
-            title,
-            body,
-            url,
+            title, body, url,
+            ...(image ? { image } : {}),
             createdAt: serverTimestamp(),
             sentBy: window._ud?.email || 'admin'
         });
 
-        // 2. Envoyer le push FCM via Vercel (navigateur fermé compris)
-        // admin_push_key stocké dans Firebase config/apps sur levelup-ecosystem
+        // 2. Envoyer le push FCM via l'API (navigateur fermé compris)
         const adminKey = window._appsStatus?.admin_push_key || '';
-        if (adminKey) {
+        if (!adminKey) {
+            // Message d'erreur clair avec le chemin exact à vérifier
+            toast_('Clé admin introuvable — Vérifiez dans Firestore : artifacts → levelup-ecosystem → public → data → config → apps → champ "admin_push_key"', 'warn');
+            toast_('Notification sauvegardée en base (in-app uniquement)', 'info');
+        } else {
+            const payload = { title, body, url };
+            if (image) payload.image = image;
             const r = await fetch('/api/notify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
-                body: JSON.stringify({ title, body, url })
+                body: JSON.stringify(payload)
             });
             const d = await r.json();
-            if (!r.ok) throw new Error(d.error || 'FCM error');
-        } else {
-            toast_('⚠️ admin_push_key manquant dans Firebase (config/apps sur levelup-ecosystem)', 'warn');
+            if (!r.ok) {
+                const detail = d.details ? JSON.stringify(d.details) : '';
+                throw new Error(`${d.error || 'Erreur FCM'}${detail ? ' — ' + detail : ''}`);
+            }
+            toast_('🚀 Notification push envoyée à tous les utilisateurs !', 'ok');
         }
 
-        toast_('🚀 Notification envoyée à tous les utilisateurs !', 'ok');
-        if (document.getElementById('notifSendTitle')) document.getElementById('notifSendTitle').value = '';
-        if (document.getElementById('notifSendBody')) document.getElementById('notifSendBody').value = '';
-        if (document.getElementById('notifSendUrl')) document.getElementById('notifSendUrl').value = '';
+        // Vider les champs
+        ['notifSendTitle','notifSendBody','notifSendImage'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.value = '';
+        });
+        if (destSel) destSel.value = '';
+        if (document.getElementById('notifSendCustomUrl')) {
+            document.getElementById('notifSendCustomUrl').value = '';
+            document.getElementById('notifSendCustomUrl').style.display = 'none';
+        }
     } catch(e) {
-        toast_('Erreur envoi: ' + e.message, 'err');
+        toast_('Erreur envoi : ' + e.message, 'err');
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Envoyer à tous les utilisateurs'; }
     }
 };
+
+// ══════════════════════════════════════════════════════════════
+// PUSH PERMISSION POPUP — LOGIQUE
+// ══════════════════════════════════════════════════════════════
+
+const PUSH_PREF_KEY = 'lvl_push_pref'; // 'granted' | 'denied' | 'later' | ''
+
+function _getPushPref() { return localStorage.getItem(PUSH_PREF_KEY) || ''; }
+function _setPushPref(v) { localStorage.setItem(PUSH_PREF_KEY, v); }
+
+// Afficher le popup si la permission n'a pas encore été tranchée
+window._pushPopupShown = false;
+function showPushPermPopup() {
+    if (window._pushPopupShown) return;
+    if (_getPushPref() === 'granted' || _getPushPref() === 'denied') return;
+    if (Notification.permission === 'granted') { _setPushPref('granted'); return; }
+    if (Notification.permission === 'denied')  { _setPushPref('denied');  return; }
+    window._pushPopupShown = true;
+    const m = document.getElementById('pushPermModal');
+    if (m) m.classList.add('show');
+}
+
+// L'utilisateur clique "Activer"
+window.acceptPushPerm = async function() {
+    const m = document.getElementById('pushPermModal');
+    if (m) m.classList.remove('show');
+    _setPushPref('granted');
+    // Déclencher le vrai popup natif du navigateur + enregistrer FCM
+    await _registerFCMAnonOrUser();
+    _updatePushToggleUI();
+};
+
+// L'utilisateur clique "Non merci"
+window.declinePushPerm = function() {
+    const m = document.getElementById('pushPermModal');
+    if (m) m.classList.remove('show');
+    _setPushPref('later'); // On peut re-demander plus tard
+    _updatePushToggleUI();
+};
+
+// Toggle dans les paramètres
+window.togglePushNotif = async function(enabled) {
+    if (enabled) {
+        if (Notification.permission === 'denied') {
+            _showPushBlockedMsg();
+            const el = document.getElementById('notifPushToggle');
+            if (el) el.checked = false;
+            return;
+        }
+        _setPushPref('granted');
+        await _registerFCMAnonOrUser();
+    } else {
+        _setPushPref('denied');
+    }
+    _updatePushToggleUI();
+};
+
+function _showPushBlockedMsg() {
+    const st = document.getElementById('notifPushStatus');
+    if (!st) return;
+    st.style.display = 'block';
+    st.style.color = 'var(--red)';
+    st.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="margin-right:5px"></i>Les notifications ont été bloquées par le navigateur. Allez dans les réglages de votre navigateur → Site → Notifications → Autoriser.';
+}
+
+function _updatePushToggleUI() {
+    const el = document.getElementById('notifPushToggle');
+    const st = document.getElementById('notifPushStatus');
+    const perm = Notification.permission;
+    const pref = _getPushPref();
+    if (!el) return;
+
+    if (perm === 'granted' && pref === 'granted') {
+        el.checked = true;
+        if (st) { st.style.display = 'block'; st.style.color = 'var(--green)'; st.innerHTML = '<i class="fa-solid fa-circle-check" style="margin-right:5px"></i>Notifications push actives — vous recevrez des alertes même app fermée.'; }
+    } else if (perm === 'denied') {
+        el.checked = false;
+        _showPushBlockedMsg();
+    } else {
+        el.checked = false;
+        if (st) { st.style.display = 'block'; st.style.color = 'var(--muted)'; st.innerHTML = 'Activez pour recevoir des notifications push en temps réel.'; }
+    }
+}
+
+// Enregistrement FCM pour tout utilisateur (connecté ou anonyme)
+async function _registerFCMAnonOrUser() {
+    if (!_messaging || VAPID_KEY === 'YOUR_VAPID_KEY_HERE') return;
+    try {
+        let swReg = null;
+        if ('serviceWorker' in navigator) {
+            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+            await navigator.serviceWorker.ready;
+        }
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') { _setPushPref(perm === 'denied' ? 'denied' : 'later'); _updatePushToggleUI(); return; }
+        _setPushPref('granted');
+
+        const token = await getToken(_messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
+        if (!token) return;
+
+        // Sauvegarder en Firestore si utilisateur identifié
+        const uid = window._user?.uid;
+        if (uid) {
+            try {
+                const tRef = doc(db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'fcm_tokens', uid);
+                await setDoc(tRef, { token, uid, email: window._ud?.email || '', updatedAt: new Date().toISOString() }, { merge: true });
+            } catch(_) {}
+        }
+
+        // Abonner au topic global
+        try {
+            await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+        } catch(_) {}
+
+        // Écouter messages foreground (une seule fois)
+        if (!window._fcmFgListenerSet) {
+            window._fcmFgListenerSet = true;
+            onMessage(_messaging, (payload) => {
+                const title = payload.notification?.title || payload.data?.title || 'LevelUp';
+                const body  = payload.notification?.body  || payload.data?.body  || '';
+                const url   = payload.data?.url || '/';
+                _addNotifToPanel({ title, body, url, createdAt: new Date() });
+                toast_(`🔔 ${title}`, 'ok');
+            });
+        }
+        if ('serviceWorker' in navigator && !window._swMsgListenerSet) {
+            window._swMsgListenerSet = true;
+            navigator.serviceWorker.addEventListener('message', (e) => {
+                if (e.data?.type === 'NOTIF_CLICK' && e.data?.url) window.open(e.data.url, '_blank');
+            });
+        }
+        _updatePushToggleUI();
+    } catch(err) {
+        console.error('[FCM] _registerFCMAnonOrUser error:', err);
+    }
+}
 
 // ── Animation cloche (keyframe déclarée via JS pour éviter conflit CSS) ──
 if (!document.getElementById('bellRingStyle')) {
@@ -4257,6 +4617,7 @@ if (id === 'tools') {
 // ── CHARGER LES PRÉFÉRENCES NOTIF ──
 if (id === 'settings') {
     if (window.loadNotifPrefs) window.loadNotifPrefs();
+    try { _updatePushToggleUI(); } catch(_) {}
 }
 }
 
@@ -4301,6 +4662,19 @@ await setDoc(secRef, payload, {merge: true});
 window._ud.apiKey = key; window._ud.keyCreatedAt = now;
 localStorage.setItem('lm_key', key); localStorage.setItem('lm_uid', u.uid);
 window.refreshUI(); toast_('Clé générée avec succès !','ok');
+
+// ── NOTIFICATION IN-APP : Clé créée ──
+try {
+    const { collection: col3, addDoc: add3, serverTimestamp: sts3 } = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js');
+    const userNotifRef = col3(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'notifications');
+    await add3(userNotifRef, {
+        type: 'key',
+        title: '🔑 Votre clé LevelUp est prête',
+        body: 'Votre clé API a été générée. Copiez-la depuis votre tableau de bord et utilisez-la pour accéder à toutes vos applications.',
+        url: 'https://levelup-ecosystem.com/#dashboard',
+        createdAt: sts3()
+    });
+} catch(_) {}
 }
 function confirmRegen(){
 if(window._user && window._user.isKeyAuth) { toast_('Connexion par clé : Régénération bloquée. Utilisez Google.', 'err'); return; }
@@ -4957,7 +5331,7 @@ window.openToolWindow = function(url, name) {
 //  GESTIONNAIRE DE FENÊTRES FLOTTANTES MULTIPLES (max 3)
 // ══════════════════════════════════════════════════════
 window._floatWindows = [];
-const _FLOAT_MAX = 3;
+const _FLOAT_MAX = 10;
 const _FLOAT_Z_BASE = 1200;
 
 window._floatBringToFront = function(id) {
@@ -5221,5 +5595,90 @@ OVERLAY MAINTENANCE PRO (contrôlé via Firebase : global_maintenance)
 <style>
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
+
+<!-- ═══════════════════════════════════════
+POPUP PERMISSION NOTIFICATIONS PUSH
+═══════════════════════════════════════ -->
+<div id="pushPermModal">
+  <div class="push-perm-card">
+    <div class="push-perm-badge"><span></span>LevelUp Ecosystem</div>
+    <div class="push-perm-logo"><i class="fa-solid fa-bell"></i></div>
+    <div class="push-perm-title">Restez dans la boucle 🔔</div>
+    <div class="push-perm-desc">Activez les notifications pour ne rien manquer — nouvelles sorties, fonctionnalités et mises à jour en avant-première.</div>
+    <div class="push-perm-features">
+      <div class="push-perm-feat"><i class="fa-solid fa-film"></i>Nouvelles sorties LevelMovie</div>
+      <div class="push-perm-feat"><i class="fa-solid fa-music"></i>Nouveautés LevelMusic</div>
+      <div class="push-perm-feat"><i class="fa-solid fa-robot"></i>Nouvelles fonctions Level IA</div>
+      <div class="push-perm-feat"><i class="fa-solid fa-bolt"></i>Mises à jour & annonces exclusives</div>
+    </div>
+    <div class="push-perm-btns">
+      <button class="push-perm-yes" onclick="window.acceptPushPerm()">
+        <i class="fa-solid fa-bell"></i> Activer les notifications
+      </button>
+      <button class="push-perm-no" onclick="window.declinePushPerm()">Non merci, peut-être plus tard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+MODALE ALERTE SÉCURITÉ
+═══════════════════════════════════════ -->
+<div id="securityAlertModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:24px">
+  <div style="background:linear-gradient(160deg,#0f0a1a,#130d20);border:1px solid rgba(239,68,68,.25);border-radius:22px;max-width:440px;width:100%;padding:0;box-shadow:0 32px 80px rgba(0,0,0,.85);overflow:hidden;animation:cIn .32s cubic-bezier(.34,1.46,.64,1)">
+    <!-- Header -->
+    <div style="padding:24px 24px 20px;background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04));border-bottom:1px solid rgba(239,68,68,.12);display:flex;align-items:center;gap:14px">
+      <div style="width:48px;height:48px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="fa-solid fa-shield-halved" style="color:#f87171;font-size:1.2rem"></i>
+      </div>
+      <div>
+        <div style="font-size:1rem;font-weight:700;color:#fff;letter-spacing:-.02em">Connexion suspecte détectée</div>
+        <div style="font-size:.78rem;color:rgba(239,68,68,.7);margin-top:3px">Une connexion depuis un nouvel emplacement a été détectée</div>
+      </div>
+    </div>
+    <!-- Body -->
+    <div style="padding:22px 24px">
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:22px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+          <i class="fa-solid fa-network-wired" style="color:rgba(255,255,255,.35);font-size:.85rem;flex-shrink:0"></i>
+          <div>
+            <div style="font-size:.68rem;color:rgba(255,255,255,.3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.08em">Adresse IP</div>
+            <div id="secAlertIp" style="font-size:.84rem;color:#fff;font-weight:600;font-family:monospace">—</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+          <i class="fa-solid fa-location-dot" style="color:rgba(255,255,255,.35);font-size:.85rem;flex-shrink:0"></i>
+          <div>
+            <div style="font-size:.68rem;color:rgba(255,255,255,.3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.08em">Localisation</div>
+            <div id="secAlertCity" style="font-size:.84rem;color:#fff;font-weight:600">—</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+          <i class="fa-regular fa-clock" style="color:rgba(255,255,255,.35);font-size:.85rem;flex-shrink:0"></i>
+          <div>
+            <div style="font-size:.68rem;color:rgba(255,255,255,.3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.08em">Date & heure</div>
+            <div id="secAlertDate" style="font-size:.84rem;color:#fff;font-weight:600">—</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+          <i class="fa-solid fa-laptop" style="color:rgba(255,255,255,.35);font-size:.85rem;flex-shrink:0"></i>
+          <div>
+            <div style="font-size:.68rem;color:rgba(255,255,255,.3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.08em">Appareil</div>
+            <div id="secAlertDevice" style="font-size:.75rem;color:rgba(255,255,255,.55);font-weight:500;word-break:break-all">—</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:.8rem;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:18px;text-align:center">Reconnaissez-vous cette connexion ? Si ce n'était pas vous, contactez notre support immédiatement.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button onclick="window._closeSecAlert()" style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.1));border:1px solid rgba(34,197,94,.3);color:#4ade80;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;outline:none" onmouseover="this.style.background='linear-gradient(135deg,rgba(34,197,94,.35),rgba(34,197,94,.2))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.1))'">
+          <i class="fa-solid fa-check"></i> Oui, c'était bien moi
+        </button>
+        <button onclick="window._secAlertContact()" style="width:100%;padding:12px;border-radius:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;outline:none" onmouseover="this.style.background='rgba(239,68,68,.18)'" onmouseout="this.style.background='rgba(239,68,68,.08)'">
+          <i class="fa-solid fa-envelope"></i> Non, contacter le support
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
