@@ -2622,7 +2622,7 @@ FIREBASE & APP LOGIC
 ═══════════════════════════════════════ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, collection, query, where, onSnapshot, addDoc, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js";
 
@@ -2649,24 +2649,43 @@ gProv.setCustomParameters({ prompt: 'select_account' });
 window._auth = auth; window._db = db;
 window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collection, query, where };
 
-// Persistance locale explicite — évite les déconnexions au retour sur le site
-try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) {}
+// Persistance locale explicite — attendue avant tout pour éviter les déconnexions au refresh
+try { await setPersistence(auth, browserLocalPersistence); } catch(_) {}
 
-// SUPPRIMÉ : l'appel prématuré à signInAnonymously qui écrasait la session Google au rechargement.
+// Détection PWA standalone (popup bloqué dans ce contexte)
+const _isPWA = () => window.matchMedia('(display-mode: standalone)').matches || !!window.navigator.standalone;
+
+// Gérer le résultat du redirect Google (pour PWA) silencieusement
+try {
+    const redirectResult = await getRedirectResult(auth);
+    // Si un redirect est en cours, onAuthStateChanged s'en occupera automatiquement
+} catch(e) {
+    if (e.code !== 'auth/popup-closed-by-user') console.warn('[Auth] getRedirectResult:', e.code);
+}
 
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
 
 btn.disabled = true;
 document.getElementById('gBtnTxt').textContent = 'Connexion en cours...';
+// Flag global — empêche le onAuthStateChanged null de montrer la landing pendant le popup
+window._authInProgress = true;
 try {
-localStorage.removeItem('lm_key');
-localStorage.removeItem('lm_uid');
-localStorage.removeItem('lm_name');
-localStorage.removeItem('lm_photo');
-localStorage.removeItem('lm_login_mode');
-await signInWithPopup(auth, gProv);
+if (_isPWA()) {
+    // En mode PWA, le popup est bloqué — on utilise le redirect à la place
+    // On nettoie le localStorage APRÈS la redirection (au retour, getRedirectResult s'en occupe)
+    await signInWithRedirect(auth, gProv);
+} else {
+    await signInWithPopup(auth, gProv);
+    // Nettoyage seulement APRÈS que le popup ait réussi (onAuthStateChanged prend le relais)
+    localStorage.removeItem('lm_key');
+    localStorage.removeItem('lm_uid');
+    localStorage.removeItem('lm_name');
+    localStorage.removeItem('lm_photo');
+    localStorage.removeItem('lm_login_mode');
+}
 } catch(e) {
+window._authInProgress = false;
 btn.disabled = false;
 document.getElementById('gBtnTxt').textContent = 'Continuer avec Google';
 if(e.code !== 'auth/popup-closed-by-user') toast_('Erreur de connexion — réessayez', 'err');
@@ -3516,6 +3535,9 @@ const savedUid = localStorage.getItem('lm_uid');
 const loginMode = localStorage.getItem('lm_login_mode');
 
 if (u) {
+// Connexion reçue — on libère le flag de connexion en cours
+window._authInProgress = false;
+
 if (!u.isAnonymous) {
 // 🟢 UTILISATEUR GOOGLE CONNECTÉ
 window._user = u;
@@ -3767,11 +3789,36 @@ await window.loadAppStatus();
 showLand();
 }
 } else {
-// Aucune session Firebase — afficher la page d'accueil directement
-window._user = null;
-window._ud = null;
-await window.loadAppStatus();
-showLand();
+// u === null : Firebase n'a pas de session active
+// Ne pas afficher la landing si une connexion Google est en cours (popup ouvert)
+if (window._authInProgress) return;
+
+// Si l'utilisateur avait une session Google précédente, ne pas afficher la landing immédiatement
+// car Firebase peut mettre quelques ms à restaurer le token depuis localStorage
+const hadSession = localStorage.getItem('lm_login_mode') === 'google';
+if (hadSession) {
+    // Attendre 2.5s max — si Firebase ne restaure pas la session, afficher la landing
+    await new Promise(resolve => {
+        const unsub = onAuthStateChanged(auth, (u2) => {
+            if (u2) { unsub(); resolve('restored'); }
+        });
+        setTimeout(() => { unsub(); resolve('timeout'); }, 2500);
+    }).then(async (result) => {
+        if (result === 'timeout') {
+            // Session vraiment expirée — nettoyer et afficher la landing
+            localStorage.removeItem('lm_login_mode');
+            window._user = null; window._ud = null;
+            await window.loadAppStatus();
+            showLand();
+        }
+        // Si 'restored', le 2ème onAuthStateChanged ci-dessus gère tout seul
+    });
+} else {
+    window._user = null;
+    window._ud = null;
+    await window.loadAppStatus();
+    showLand();
+}
 }
 });
 
@@ -3859,14 +3906,29 @@ function initNotifPanel(u) {
     let _globalNotifs = [];
     let _userNotifs   = [];
 
+    let _mergeRenderTimer = null;
     const _mergeAndRender = () => {
-        const merged = [..._userNotifs, ..._globalNotifs];
-        merged.sort((a, b) => {
-            const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-            const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-            return tb - ta;
-        });
-        _renderNotifList(merged.slice(0, 40));
+        // Debounce 150ms pour éviter deux rendus simultanés quand les deux onSnapshot tirent en rafale
+        clearTimeout(_mergeRenderTimer);
+        _mergeRenderTimer = setTimeout(() => {
+            const all = [..._userNotifs, ..._globalNotifs];
+            all.sort((a, b) => {
+                const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return tb - ta;
+            });
+            // Déduplication par contenu : même titre + même body + même fenêtre de 10s = doublon
+            const seen = new Set();
+            const merged = all.filter(n => {
+                const ta = n.createdAt?.toDate ? n.createdAt.toDate() : new Date(n.createdAt || 0);
+                const bucket = Math.floor(ta.getTime() / 10000); // fenêtre 10s
+                const key = `${(n.title || '').trim()}|${(n.body || '').trim()}|${bucket}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+            _renderNotifList(merged.slice(0, 40));
+        }, 150);
     };
 
     try {
@@ -4345,7 +4407,14 @@ async function _registerFCMAnonOrUser() {
     try {
         let swReg = null;
         if ('serviceWorker' in navigator) {
-            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+            // Dé-enregistrer tous les anciens SW qui pourraient causer des doublons de notifications
+            const existingRegs = await navigator.serviceWorker.getRegistrations();
+            for (const reg of existingRegs) {
+                if (reg.active && !reg.active.scriptURL.includes('firebase-messaging-sw.js')) {
+                    await reg.unregister();
+                }
+            }
+            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/', updateViaCache: 'none' });
             await navigator.serviceWorker.ready;
         }
         const perm = await Notification.requestPermission();
