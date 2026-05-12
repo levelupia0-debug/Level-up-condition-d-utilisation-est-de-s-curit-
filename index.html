@@ -2042,7 +2042,7 @@ AUTH OVERLAY
 <span id="gBtnTxt">Continuer avec Google</span>
 </button>
 
-<div class="turnstile-wrap" id="turnstileWrap">
+<div class="turnstile-wrap" id="turnstileWrap" style="display:none">
   <div id="cfTurnstile"></div>
 </div>
 
@@ -2657,15 +2657,6 @@ try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) 
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
 
-// ── VÉRIFICATION TURNSTILE ──
-const token = window._turnstileToken;
-if (!token) {
-    toast_('Veuillez compléter la vérification de sécurité ci-dessous.', 'warn');
-    const wrap = document.getElementById('turnstileWrap');
-    if (wrap) { wrap.style.outline = '1px solid rgba(239,68,68,.5)'; wrap.style.borderRadius = '10px'; setTimeout(() => { wrap.style.outline = ''; }, 2000); }
-    return;
-}
-
 btn.disabled = true;
 document.getElementById('gBtnTxt').textContent = 'Connexion en cours...';
 try {
@@ -2678,11 +2669,6 @@ await signInWithPopup(auth, gProv);
 } catch(e) {
 btn.disabled = false;
 document.getElementById('gBtnTxt').textContent = 'Continuer avec Google';
-// Reset Turnstile token after failed attempt
-window._turnstileToken = null;
-if (window._turnstileWidgetId !== undefined && window.turnstile) {
-    window.turnstile.reset(window._turnstileWidgetId);
-}
 if(e.code !== 'auth/popup-closed-by-user') toast_('Erreur de connexion — réessayez', 'err');
 }
 };
@@ -3722,7 +3708,19 @@ window._accountUnsubscribe = onSnapshot(ref, async (snap) => {
 });
 
 } catch(e) {
-window._ud = window._ud || { displayName: u.displayName || 'Utilisateur' };
+console.error('[Auth] Erreur lecture profil Firestore:', e);
+window._ud = window._ud || { displayName: u.displayName || 'Utilisateur', apiKey: null };
+// Tenter de récupérer la clé même en cas d'erreur sur le profil
+try {
+    const secRefFallback = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
+    const secSnapFallback = await getDoc(secRefFallback);
+    if (secSnapFallback.exists()) {
+        const sDataFallback = secSnapFallback.data();
+        window._ud.apiKey = sDataFallback.apiKey || sDataFallback.key;
+        window._ud.keyCreatedAt = sDataFallback.keyCreatedAt;
+        if (window._ud.apiKey) localStorage.setItem('lm_key', window._ud.apiKey);
+    }
+} catch(e2) { console.error('[Auth] Impossible de charger la clé en fallback:', e2); }
 localStorage.setItem('lm_login_mode', 'google');
 await window.loadAppStatus();
 closeAuth();
@@ -3769,8 +3767,11 @@ await window.loadAppStatus();
 showLand();
 }
 } else {
-// Aucune session : connexion silencieuse pour initialisation
-signInAnonymously(auth).catch(e => console.error("Initialisation anonyme impossible:", e));
+// Aucune session Firebase — afficher la page d'accueil directement
+window._user = null;
+window._ud = null;
+await window.loadAppStatus();
+showLand();
 }
 });
 
@@ -4398,9 +4399,7 @@ function _attachFCMListeners() {
             if (msgId && lastMsg === msgId) return;
             if (msgId) sessionStorage.setItem(lastMsgKey, msgId);
             const title = payload.notification?.title || payload.data?.title || 'LevelUp';
-            const body  = payload.notification?.body  || payload.data?.body  || '';
-            const url   = payload.data?.url || '/';
-            _addNotifToPanel({ title, body, url, createdAt: new Date() });
+            // Firestore onSnapshot gère déjà l'affichage dans le panneau — on affiche seulement le toast visuel
             toast_(`🔔 ${title}`, 'ok');
         });
     }
@@ -4719,8 +4718,6 @@ if (devSec) devSec.classList.add('hidden');
 }
 
 document.getElementById('authOverlay').classList.remove('hidden');
-// Rendre le widget Turnstile à l'ouverture de la modal
-if (window._renderTurnstile) window._renderTurnstile();
 };
 
 function closeAuth(){
@@ -4731,11 +4728,6 @@ const btnKey = document.getElementById('showKeyInputBtn');
 const wrapKey = document.getElementById('keyInputWrap');
 if(btnKey) btnKey.classList.remove('hidden');
 if(wrapKey) wrapKey.classList.add('hidden');
-// Reset Turnstile token + re-render widget à chaque fermeture
-window._turnstileToken = null;
-if (window._turnstileWidgetId !== undefined && window.turnstile) {
-    try { window.turnstile.reset(window._turnstileWidgetId); } catch(_) {}
-}
 }
 
 // TERMS
