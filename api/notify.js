@@ -37,46 +37,67 @@ export default async function handler(req, res) {
     const adminKey    = req.headers['x-admin-key'];
     const adminSecret = process.env.ADMIN_SECRET;
     if (!adminKey || !adminSecret || adminKey !== adminSecret) {
-        return res.status(401).json({ error: 'Non autorisé' });
+        return res.status(401).json({
+            error: 'Non autorisé — la clé x-admin-key ne correspond pas à ADMIN_SECRET.'
+        });
+    }
+
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+        return res.status(500).json({
+            error: 'FIREBASE_SERVICE_ACCOUNT non configuré.'
+        });
     }
 
     const { title, body, url, image } = req.body || {};
-    if (!title || !body) return res.status(400).json({ error: 'Champs requis manquants' });
+    if (!title || !body) return res.status(400).json({ error: 'Les champs "title" et "body" sont obligatoires.' });
 
     const targetUrl = url || 'https://levelup-ecosystem.com';
     const iconUrl   = 'https://levelup-ecosystem.com/icon.svg';
 
-    // Création d'un message ultra-optimisé (on ne répète pas les données)
+    const webpushNotif = {
+        title,
+        body,
+        icon: iconUrl,
+        badge: iconUrl,
+        requireInteraction: true,
+        vibrate: [300, 100, 400, 100, 300]
+    };
+    if (image) webpushNotif.image = image;
+
     const message = {
         topic: 'levelup-all',
-        // Notification générale (suffisante pour la plupart des appareils)
         notification: { 
             title, 
             body,
             ...(image ? { image } : {}) 
         },
-        // On ne met dans DATA que ce qui est nécessaire pour le clic
         data: {
-            click_action: targetUrl,
-            url: targetUrl
+            title,
+            body,
+            url: targetUrl,
+            icon: iconUrl,
+            ...(image ? { image } : {}),
+            sentAt: new Date().toISOString()
+        },
+        webpush: {
+            headers: { Urgency: 'high', TTL: '86400' },
+            notification: webpushNotif,
+            fcm_options: { link: targetUrl }
         },
         android: {
             priority: 'high',
             notification: {
+                title,
+                body,
                 icon: 'notification_icon',
                 channel_id: 'levelup_push',
-                // On ne remet pas le titre/body ici, Android prendra la notification générale
-                ...(image ? { image } : {})
+                // Correction ici : Utilisation de "image" au lieu de "image_url"
+                ...(image ? { image: image } : {}) 
             }
         },
-        webpush: {
-            headers: { Urgency: 'high' },
-            notification: {
-                icon: iconUrl,
-                badge: iconUrl,
-                image: image || undefined
-            },
-            fcm_options: { link: targetUrl }
+        apns: {
+            payload: { aps: { alert: { title, body }, sound: 'default', badge: 1 } },
+            ...(image ? { fcm_options: { image } } : {})
         }
     };
 
@@ -94,10 +115,11 @@ export default async function handler(req, res) {
                 body: JSON.stringify({ message })
             }
         );
-        const resData = await r.json();
-        if (!r.ok) return res.status(r.status).json({ error: 'Erreur FCM v1', details: resData });
-        return res.status(200).json({ success: true });
+        const data = await r.json();
+        if (!r.ok) return res.status(r.status).json({ error: 'Erreur FCM v1', details: data });
+        return res.status(200).json({ success: true, name: data.name });
     } catch (err) {
+        console.error('[notify]', err);
         return res.status(500).json({ error: err.message });
     }
 }
