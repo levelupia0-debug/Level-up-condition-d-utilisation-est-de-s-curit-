@@ -43,9 +43,7 @@ export default async function handler(req, res) {
     }
 
     if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-        return res.status(500).json({
-            error: 'FIREBASE_SERVICE_ACCOUNT non configuré.'
-        });
+        return res.status(500).json({ error: 'FIREBASE_SERVICE_ACCOUNT non configuré.' });
     }
 
     const { title, body, url, image } = req.body || {};
@@ -54,30 +52,43 @@ export default async function handler(req, res) {
     const targetUrl = url || 'https://levelup-ecosystem.com';
     const iconUrl   = 'https://levelup-ecosystem.com/icon.svg';
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // CORRECTION CRITIQUE : on supprime le champ "notification" à la racine.
+    //
+    // Avant : message = { notification:{...}, webpush:{notification:{...}} }
+    //   → Chrome affichait la notification racine AUTOMATIQUEMENT (sans le SW)
+    //   → ET le SW affichait aussi webpush.notification via onBackgroundMessage
+    //   → RÉSULTAT : 2 notifications natives = 2 vibrations pour 1 seul push
+    //
+    // Après : message = { data:{...}, webpush:{notification:{...}} }
+    //   → Pas de notification racine = pas d'affichage automatique du navigateur
+    //   → Seul onBackgroundMessage dans le SW s'exécute = 1 seule notification
+    // ─────────────────────────────────────────────────────────────────────────
+
     const webpushNotif = {
         title,
         body,
-        icon: iconUrl,
-        badge: iconUrl,
-        requireInteraction: true,
-        vibrate: [300, 100, 400, 100, 300]
+        icon:               iconUrl,
+        badge:              iconUrl,
+        requireInteraction: false,
+        vibrate:            [200, 80, 200],
+        tag:                `lvlup-${Buffer.from(title + body).toString('base64').slice(0, 20)}`,
+        renotify:           false
     };
     if (image) webpushNotif.image = image;
 
     const message = {
         topic: 'levelup-all',
-        notification: { 
-            title, 
-            body,
-            ...(image ? { image } : {}) 
-        },
+
+        // ← PAS DE CHAMP "notification" ICI — c'était la source des doublons
+
         data: {
             title,
             body,
-            url: targetUrl,
-            icon: iconUrl,
-            ...(image ? { image } : {}),
-            sentAt: new Date().toISOString()
+            url:     targetUrl,
+            icon:    iconUrl,
+            sentAt:  new Date().toISOString(),
+            ...(image ? { image } : {})
         },
         webpush: {
             headers: { Urgency: 'high', TTL: '86400' },
@@ -89,10 +100,10 @@ export default async function handler(req, res) {
             notification: {
                 title,
                 body,
-                icon: 'notification_icon',
+                icon:       'notification_icon',
                 channel_id: 'levelup_push',
-                // Correction ici : Utilisation de "image" au lieu de "image_url"
-                ...(image ? { image: image } : {}) 
+                tag:        `lvlup-${title.slice(0, 10)}`,
+                ...(image ? { image } : {})
             }
         },
         apns: {
@@ -110,7 +121,7 @@ export default async function handler(req, res) {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type':  'application/json'
                 },
                 body: JSON.stringify({ message })
             }
