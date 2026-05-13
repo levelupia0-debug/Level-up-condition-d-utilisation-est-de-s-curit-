@@ -16,34 +16,50 @@ const messaging = firebase.messaging();
 const ICON_URL = '/icon.svg';
 const APP_URL  = 'https://levelup-ecosystem.com';
 
-// Cache anti-doublon : mémorise les IDs des notifs affichées dans les 30 dernières secondes
-const _recentNotifKeys = new Set();
+// ─── ANTI-DOUBLON SW ──────────────────────────────────────────────────────────
+// Fenêtre de dédup 30s basée sur le contenu — empêche 2 affichages du même push
+const _shownKeys = new Set();
 
-function _getNotifKey(title, body) {
-    return `${title}|${body}|${Math.floor(Date.now() / 15000)}`; // fenêtre 15s
+function _notifKey(title, body) {
+    // Bucket de 15s : même notif dans la même fenêtre = doublon
+    return `${title}|${body}|${Math.floor(Date.now() / 15000)}`;
 }
 
-messaging.onBackgroundMessage((payload) => {
+// ─── HANDLER PRINCIPAL ────────────────────────────────────────────────────────
+messaging.onBackgroundMessage(async (payload) => {
     const title = payload.notification?.title || payload.data?.title || 'LevelUp Ecosystem';
     const body  = payload.notification?.body  || payload.data?.body  || 'Nouvelle notification.';
-    const url   = payload.data?.url           || APP_URL;
-    const image = payload.data?.image         || undefined;
+    const url   = payload.data?.url || APP_URL;
+    const image = payload.data?.image || undefined;
 
-    // Anti-doublon SW : si même notif reçue dans la fenêtre de 15s, ignorer
-    const key = _getNotifKey(title, body);
-    if (_recentNotifKeys.has(key)) return;
-    _recentNotifKeys.add(key);
-    setTimeout(() => _recentNotifKeys.delete(key), 30000);
+    // ── 1. Anti-doublon contenu (même notif reçue 2x par FCM) ──
+    const key = _notifKey(title, body);
+    if (_shownKeys.has(key)) return;
+    _shownKeys.add(key);
+    setTimeout(() => _shownKeys.delete(key), 30000);
 
-    // Tag unique basé sur le contenu — empêche le navigateur d'en stacker deux identiques
-    const tag = `lvlup-${btoa(unescape(encodeURIComponent(title + body))).slice(0, 16)}`;
+    // ── 2. CRITIQUE : si l'app est ouverte et visible, NE PAS afficher une
+    //    notification système — envoyer le payload à la page à la place.
+    //    La page a son propre onMessage() qui gère le toast in-app.
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const focusedClient = allClients.find(c => c.focused);
+
+    if (focusedClient) {
+        // App active — on signale juste à la page qu'une notif est arrivée
+        focusedClient.postMessage({ type: 'SW_FG_NOTIF', payload: { title, body, url } });
+        return; // ← PAS de notification système = zéro doublon
+    }
+
+    // ── 3. App en arrière-plan : afficher la notification système ──
+    // Tag unique basé sur le contenu pour que le navigateur fusionne les doublons
+    const tag = `lvlup-${btoa(unescape(encodeURIComponent(title + body))).slice(0, 20)}`;
 
     const options = {
         body,
         icon:               ICON_URL,
         badge:              ICON_URL,
-        vibrate:            [300, 100, 400, 100, 300],
-        requireInteraction: true,
+        vibrate:            [200, 80, 200],
+        requireInteraction: false,
         tag,
         renotify:           false,
         silent:             false,
@@ -51,9 +67,11 @@ messaging.onBackgroundMessage((payload) => {
     };
     if (image) options.image = image;
 
-    self.registration.showNotification(title, options);
+    // Si une notif avec le même tag est déjà affichée, la remplacer (renotify:false)
+    await self.registration.showNotification(title, options);
 });
 
+// ─── CLIC SUR NOTIF ──────────────────────────────────────────────────────────
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const target = event.notification.data?.url || APP_URL;
@@ -61,7 +79,6 @@ self.addEventListener('notificationclick', (event) => {
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-            // Chercher un onglet déjà ouvert sur le domaine et le focus au lieu d'en ouvrir un nouveau
             for (const client of list) {
                 if (client.url.startsWith(self.location.origin) && 'focus' in client) {
                     client.postMessage({ type: 'NOTIF_CLICK', url: full });
@@ -73,6 +90,7 @@ self.addEventListener('notificationclick', (event) => {
     );
 });
 
+// ─── LIFECYCLE ────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', () => {});
-self.addEventListener('install',  ()  => self.skipWaiting());
+self.addEventListener('install',  () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
