@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head> <link rel="manifest" href="manifest.json"> <meta name="google-site-verification" content="YqY4GBEbg3ZlrrmxH8W2U7KYzV1Z05jDGA62Sk10cWw" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -968,15 +968,19 @@ NAVIGATION (INVISIBLE BACKGROUND)
 LEVELUP
 </div>
 <div class="nav-links">
-<a onclick="sTo('apps-sec')">Applications</a>
-<a onclick="sTo('how-sec')">Comment ça marche</a>
-<a onclick="sTo('features-sec')">Fonctionnalités</a>
-<a onclick="sTo('faq-sec')">FAQ</a>
-<a onclick="openTerms()">Conditions</a>
+<a onclick="sTo('apps-sec')" data-i18n="nav.applications">Applications</a>
+<a onclick="sTo('how-sec')" data-i18n="nav.howItWorks">Comment ça marche</a>
+<a onclick="sTo('features-sec')" data-i18n="nav.features">Fonctionnalités</a>
+<a onclick="sTo('faq-sec')" data-i18n="nav.faq">FAQ</a>
+<a onclick="openTerms()" data-i18n="nav.terms">Conditions</a>
 </div>
 <div class="nav-right" id="navRight">
-<button class="btn btn-g btn-sm" onclick="window.openAuth('login')">Connexion</button>
-<button class="btn btn-p btn-sm hidden sm:inline-flex" onclick="window.openAuth('create')">
+<div class="lang-btns" style="margin-right:6px">
+<button class="lang-btn active" data-lang="en" onclick="window.setLang('en')">EN</button>
+<button class="lang-btn" data-lang="fr" onclick="window.setLang('fr')">FR</button>
+</div>
+<button class="btn btn-g btn-sm" onclick="window.openAuth('login')" data-i18n="nav.login">Connexion</button>
+<button class="btn btn-p btn-sm hidden sm:inline-flex" onclick="window.openAuth('create')" data-i18n="nav.createAccount">
 Créer un compte
 </button>
 </div>
@@ -2064,13 +2068,13 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 
 <div class="set-sec">
-<div class="set-title">Langue / Language</div>
+<div class="set-title" data-i18n="set.lang.title">Langue / Language</div>
 <div class="set-row" style="flex-direction:column;align-items:flex-start;gap:12px">
-  <div class="set-info"><h5>Traduction automatique</h5><p>Sélectionne la langue de toute l'interface via le sélecteur ci-dessous</p></div>
-  <div id="settingsGtranslate" style="display:flex;align-items:center;gap:10px;padding:6px 0">
-    <div class="gtranslate_wrapper"></div>
+  <div class="set-info"><h5 data-i18n="set.lang.label">Langue de l'interface</h5><p data-i18n="set.lang.desc">Sélectionnez la langue de toute l'interface</p></div>
+  <div class="lang-btns">
+    <button class="lang-btn" data-lang="en" onclick="window.setLang('en')">🇬🇧 English</button>
+    <button class="lang-btn" data-lang="fr" onclick="window.setLang('fr')">🇫🇷 Français</button>
   </div>
-  <p style="font-size:.72rem;color:rgba(255,255,255,.3);margin:0">Propulsé par <a href="https://gtranslate.io" target="_blank" rel="noopener" style="color:rgba(168,85,247,.6);text-decoration:none">GTranslate</a></p>
 </div>
 </div>
 
@@ -6340,25 +6344,775 @@ document.addEventListener('keydown', function(e) {
 })();
 </script>
 
-<!-- ═══ GTRANSLATE ═══ -->
-<style>
-/* Positionner le widget GTranslate sans gêner les boutons nav */
-body > .gtranslate_wrapper:first-of-type,
-.gtranslate_wrapper:not(#settingsGtranslate .gtranslate_wrapper) {
-    position: fixed !important;
-    bottom: 80px !important;
-    right: 14px !important;
-    top: auto !important;
-    left: auto !important;
-    z-index: 850 !important;
+<!-- ═══ LevelUp i18n — EN/FR Custom Translation System ═══ -->
+<script>
+(function(){
+'use strict';
+
+var T = {
+  en: {
+    /* Navigation */
+    'nav.applications':'Applications',
+    'nav.howItWorks':'How it works',
+    'nav.features':'Features',
+    'nav.faq':'FAQ',
+    'nav.terms':'Terms',
+    'nav.login':'Login',
+    'nav.createAccount':'Create account',
+    'nav.home':'Home',
+    'nav.keys':'Keys',
+    'nav.tools':'Tools',
+    'nav.notif':'Notifs',
+    'nav.settings':'Settings',
+    /* Notifications */
+    'apple.notice':'iPhone users: you may receive some notifications twice. We are working on this — we apologize for the inconvenience.',
+    'notif.empty':'No notifications yet',
+    /* Search */
+    'search.movies':'Movies & Series',
+    'search.music':'Music',
+    'search.placeholder':'Search for a movie, series\u2026',
+    /* Settings lang section */
+    'set.lang.title':'Language / Langue',
+    'set.lang.label':'Interface language',
+    'set.lang.desc':'Select the language for the entire interface',
+    /* Legal modal / streaming popup */
+    'legal.title':'Legal streaming sources'
+  },
+  fr: {
+    /* Navigation */
+    'nav.applications':'Applications',
+    'nav.howItWorks':'Comment \u00e7a marche',
+    'nav.features':'Fonctionnalit\u00e9s',
+    'nav.faq':'FAQ',
+    'nav.terms':'Conditions',
+    'nav.login':'Connexion',
+    'nav.createAccount':'Cr\u00e9er un compte',
+    'nav.home':'Accueil',
+    'nav.keys':'Cl\u00e9s',
+    'nav.tools':'Outils',
+    'nav.notif':'Notifs',
+    'nav.settings':'R\u00e9glages',
+    /* Notifications */
+    'apple.notice':'Utilisateurs iPhone\u00a0: vous pourriez recevoir certaines notifications en double. Nous travaillons sur ce probl\u00e8me \u2014 veuillez nous en excuser.',
+    'notif.empty':'Aucune notification pour le moment',
+    /* Search */
+    'search.movies':'Films & S\u00e9ries',
+    'search.music':'Musique',
+    'search.placeholder':'Rechercher un film, une s\u00e9rie\u2026',
+    /* Settings lang section */
+    'set.lang.title':'Langue / Language',
+    'set.lang.label':'Langue de l\u2019interface',
+    'set.lang.desc':'S\u00e9lectionnez la langue de toute l\u2019interface',
+    /* Legal modal */
+    'legal.title':'Conditions G\u00e9n\u00e9rales d\u2019Utilisation'
+  }
+};
+
+/* ── ID-based content map per language ── */
+var ID_MAP = {
+  en: {
+    /* Hero */
+    heroBadge: {text:'LevelUp Ecosystem \u2014 Central Platform \u00b7 2026'},
+    heroTitle: {html:'One account.<br>One key.<br><span class="grd">The entire LevelUp universe.</span>'},
+    heroSubtitle: {text:'Sign in once with Google and instantly access LevelMovie, LevelMusic and Level IA. Your centralized digital identity, secured by PIN, synchronized across all your devices in real time.'},
+    /* Auth modal */
+    authTitle: {text:'Join LevelUp'},
+    authDesc: {text:'Sign in with Google to access the entire ecosystem and generate your free access key.'},
+    gBtnTxt: {text:'Continue with Google'},
+    showKeyInputBtn: {html:'<i class="fa-solid fa-key" style="color:var(--purple)"></i> Sign in with an LVL key'},
+    /* PIN modal */
+    pinTitle: {text:'PIN code required'},
+    pinSub: {text:'Enter your PIN to display your key'},
+    /* Dashboard home */
+    dbWelcome: {text:'Hello \uD83D\uDC4B'},
+    /* Keys panel */
+    hKS: {text:'No key generated'},
+    /* Logout loading */
+    logoutLoadingOv: {childText:['','Signing out\u2026']},
+    /* Maintenance */
+    globalMaintMsg: {text:'Maintenance in progress \u2014 Some features are temporarily unavailable.'},
+    /* IA mini placeholder */
+    iaMiniInput: {placeholder:'Ask the AI a question\u2026'},
+    /* Tools panel */
+    toolsPanelEmpty: {childHtml: null},
+    /* Search close label */
+    searchOverlay: {childText: null},
+    /* Media hub */
+    mediaHubEmpty: {childText: null}
+  },
+  fr: {
+    /* Hero */
+    heroBadge: {text:'LevelUp Ecosystem \u2014 Plateforme Centrale \u00b7 2026'},
+    heroTitle: {html:'Un compte.<br>Une cl\u00e9.<br><span class="grd">Tout l\u2019univers LevelUp.</span>'},
+    heroSubtitle: {text:'Connectez-vous une seule fois avec Google et acc\u00e9dez instantan\u00e9ment \u00e0 LevelMovie, LevelMusic et Level IA. Votre identit\u00e9 num\u00e9rique centralis\u00e9e, s\u00e9curis\u00e9e par PIN, synchronis\u00e9e sur tous vos appareils en temps r\u00e9el.'},
+    /* Auth modal */
+    authTitle: {text:'Rejoindre LevelUp'},
+    authDesc: {text:'Connectez-vous avec Google pour acc\u00e9der \u00e0 tout l\u2019\u00e9cosyst\u00e8me et g\u00e9n\u00e9rer votre cl\u00e9 d\u2019acc\u00e8s gratuite.'},
+    gBtnTxt: {text:'Continuer avec Google'},
+    showKeyInputBtn: {html:'<i class="fa-solid fa-key" style="color:var(--purple)"></i> Se connecter avec une cl\u00e9 LVL'},
+    /* PIN modal */
+    pinTitle: {text:'Code PIN requis'},
+    pinSub: {text:'Entrez votre PIN pour afficher votre cl\u00e9'},
+    /* Dashboard home */
+    dbWelcome: {text:'Bonjour \uD83D\uDC4B'},
+    /* Keys panel */
+    hKS: {text:'Aucune cl\u00e9 g\u00e9n\u00e9r\u00e9e'},
+    /* Logout loading */
+    logoutLoadingOv: {childText: null},
+    /* Maintenance */
+    globalMaintMsg: {text:'Maintenance en cours \u2014 Certaines fonctionnalit\u00e9s sont temporairement indisponibles.'},
+    /* IA mini placeholder */
+    iaMiniInput: {placeholder:'Poser une question \u00e0 l\u2019IA\u2026'},
+    toolsPanelEmpty: {childHtml: null},
+    searchOverlay: {childText: null},
+    mediaHubEmpty: {childText: null}
+  }
+};
+
+/* ── Selector-based content map per language ── */
+/* Each entry: [selector, property, value] */
+var SEL_MAP = {
+  en: [
+    /* Nav hero CTA */
+    ['#heroCta .btn-p','text','Create a free account'],
+    ['#heroCta .btn-g','html','<i class="fa-solid fa-grid-2"></i> Explore apps'],
+    /* Stats strip */
+    ['.stats-strip .stat-item:nth-child(1) .sl','text','Available apps'],
+    ['.stats-strip .stat-item:nth-child(1) .ss','text','LevelMovie \u00b7 LevelMusic \u00b7 Level IA'],
+    ['.stats-strip .stat-item:nth-child(2) .sl','text','One key for all'],
+    ['.stats-strip .stat-item:nth-child(2) .ss','text','A single unified access'],
+    ['.stats-strip .stat-item:nth-child(3) .sl','text','Free'],
+    ['.stats-strip .stat-item:nth-child(3) .ss','text','No hidden subscription'],
+    ['.stats-strip .stat-item:nth-child(4) .sl','text','No password'],
+    ['.stats-strip .stat-item:nth-child(4) .ss','text','Google Auth only'],
+    /* Apps section header */
+    ['#apps-sec .sec-label','html','<i class="fa-solid fa-lock"></i>&nbsp; Login and key required for premium apps \u00b7 Free tools without account'],
+    ['#apps-sec .sec-head h2','text','The LevelUp universe in four apps'],
+    ['#apps-sec .sec-head p','text','Three premium applications accessible with your key, and a free integrated toolbox. A single key generated from your dashboard gives you access to the entire ecosystem.'],
+    /* App 1 - LevelMovie */
+    ['#app1Title','text','LevelMovie'],
+    ['#app1Desc','text','World cinema in your pocket. Films, series, K-Dramas, anime and Bollywood content available in HD streaming with multi-server support and personal list management.'],
+    ['#app1Feat .feat-item:nth-child(1)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>World catalog \u2014 HD films & series'],
+    ['#app1Feat .feat-item:nth-child(2)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>K-Dramas, Anime, Bollywood, TV shows'],
+    ['#app1Feat .feat-item:nth-child(3)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Multi-server to avoid interruptions'],
+    ['#app1Feat .feat-item:nth-child(4)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>My List \u2014 save your favorites'],
+    ['#app1Feat .feat-item:nth-child(5)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Clean interface, immersive player'],
+    ['#movieFootCard .lock-btn','html','<i class="fa-solid fa-lock"></i> Unlock LevelMovie'],
+    /* App 2 - LevelMusic */
+    ['#app2Title','text','LevelMusic'],
+    ['#app2Desc','text','World music in discovery format. Listen to exclusive 30-second high-quality previews, explore new genres and prepare your playlists for the full version coming soon.'],
+    ['#app2Feat .feat-item:nth-child(1)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Premium audio previews (30s)'],
+    ['#app2Feat .feat-item:nth-child(2)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>World music catalog'],
+    ['#app2Feat .feat-item:nth-child(3)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Quick & smooth discovery'],
+    ['#app2Feat .feat-item:nth-child(4)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Collaborative playlists'],
+    ['#app2Feat .feat-item:nth-child(5)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Full version in preparation'],
+    ['#musicFoot .lock-btn','html','<i class="fa-solid fa-lock"></i> Unlock LevelMusic'],
+    /* App 3 - Level IA */
+    ['#app3Title','text','Level IA'],
+    ['#app3Desc','text','A professional-level AI assistant, powered by Gemini 2.5 Flash. Persistent cloud memory, multiple personalities, file analysis and real-time URL reading.'],
+    ['#app3Feat .feat-item:nth-child(1)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Advanced AI \u2014 Gemini 2.5 Flash'],
+    ['#app3Feat .feat-item:nth-child(2)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>PDF, image analysis & URL reading'],
+    ['#app3Feat .feat-item:nth-child(3)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Synchronized cloud AI memory'],
+    ['#app3Feat .feat-item:nth-child(4)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Modes: Auto, Expert, Work, Marco'],
+    ['#app3Feat .feat-item:nth-child(5)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Hybrid Cloud/Local storage'],
+    ['#iaFoot #iaBtn','html','<i class="fa-solid fa-lock"></i> Unlock Level IA'],
+    /* App 4 - Tools */
+    ['#app4Title','text','LevelUp Tools'],
+    ['#app4Desc','text','A smart, free toolbox directly integrated into the ecosystem. Access our essential utilities without an account \u2014 some advanced features require login.'],
+    ['#app4Feat .feat-item:nth-child(1)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>No account required'],
+    ['#app4Feat .feat-item:nth-child(2)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>AI & Productivity utilities'],
+    ['#app4Feat .feat-item:nth-child(3)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Dev tools, Analytics & Creation'],
+    ['#app4Feat .feat-item:nth-child(4)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Advanced features with login'],
+    ['#app4Feat .feat-item:nth-child(5)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Regularly updated'],
+    ['#outilsFoot button','html','<i class="fa-solid fa-wrench" style="font-size:.78rem"></i> Open tools'],
+    /* How it works */
+    ['#how-sec .sec-label','html','<i class="fa-solid fa-list-check"></i>&nbsp; How it works'],
+    ['#how-sec .sec-head h2','text','Ready in four steps'],
+    ['#how-sec .sec-head p','text','LevelUp Ecosystem has been designed to be as simple as possible. Zero passwords, zero friction, zero complex setup. Just your Google account and you\u2019re in.'],
+    ['#how-sec .step:nth-child(1) h4','text','Google Login'],
+    ['#how-sec .step:nth-child(1) p','text','Press \u201cContinue with Google\u201d. A Google popup opens, choose your account, that\u2019s it. No form, no password, no email verification. Your Google identity becomes your LevelUp identity.'],
+    ['#how-sec .step:nth-child(2) h4','text','Generate your key'],
+    ['#how-sec .step:nth-child(2) p','text','From your dashboard, in the \u201cAccess Keys\u201d section, click \u201cGenerate my key\u201d. A unique key in LVL-XXXXX-XXXXX format is instantly created and saved to your cloud account.'],
+    ['#how-sec .step:nth-child(3) h4','text','Secure with a PIN'],
+    ['#how-sec .step:nth-child(3) p','text','Set up a 4-digit PIN code in the \u201cAccess Keys\u201d section. Your key will be hidden by default and will only appear after the correct PIN is entered. Maximum protection.'],
+    ['#how-sec .step:nth-child(4) h4','text','Access the apps'],
+    ['#how-sec .step:nth-child(4) p','text','Copy your key, open LevelMovie or Level IA. The dashboard will automatically and securely transmit your profile information to the application. Your access is immediately unlocked.'],
+    /* SSO bridge */
+    ['#how-sec + section .sec-label, section .sec-label[style*="bridge"]','html','<i class="fa-solid fa-bridge"></i>&nbsp; Single Sign-On (SSO)'],
+    /* Trust center */
+    ['section .sec-label[style*="Matrice"], section .sec-label[style*="Matrix"]','html','<i class="fa-solid fa-shield-halved"></i>&nbsp; Security Matrix'],
+    ['.trust-grid .trust-card:nth-child(1) h4','text','Google OAuth 2.0'],
+    ['.trust-grid .trust-card:nth-child(1) p','text','No stored password. Authentication is delegated to Google\u2019s ultra-secure servers.'],
+    ['.trust-grid .trust-card:nth-child(2) h4','text','Cryptographic Hashing'],
+    ['.trust-grid .trust-card:nth-child(2) p','text','Your PIN is irreversibly encrypted (hashed). Even our administrators cannot read it.'],
+    ['.trust-grid .trust-card:nth-child(3) h4','text','Firestore Rules'],
+    ['.trust-grid .trust-card:nth-child(3) p','text','Strict backend rules ensure a user can only read or modify their own data.'],
+    /* Roadmap */
+    ['.rm-item:nth-child(1) .rm-date','text','Phase 1 (Current)'],
+    ['.rm-item:nth-child(1) .rm-title','text','Ecosystem Foundations'],
+    ['.rm-item:nth-child(1) .rm-desc','text','Launch of the central platform, SSO bridge integration, release of LevelMovie and Level IA. Setting up LevelMusic in Preview.'],
+    ['.rm-item:nth-child(2) .rm-date','text','Phase 2 (In development)'],
+    ['.rm-item:nth-child(2) .rm-title','text','Full LevelMusic Deployment'],
+    ['.rm-item:nth-child(2) .rm-desc','text','Opening of the full music catalog, unlimited listening time, offline mode and global collaborative playlists.'],
+    ['.rm-item:nth-child(3) .rm-date','text','Phase 3 (Future)'],
+    ['.rm-item:nth-child(3) .rm-title','text','Native Mobile Apps'],
+    ['.rm-item:nth-child(3) .rm-desc','text','Development of iOS and Android applications for an even faster experience and perfect integration with the phone system.'],
+    /* Features bento */
+    ['#features-sec .sec-label','html','&nbsp; Key Features'],
+    ['#features-sec .sec-head h2','html','Security, performance<br>and simplicity combined'],
+    ['#features-sec .sec-head p','text','Every feature of the LevelUp ecosystem has been designed to provide the best possible experience, without compromising on security or ease of use.'],
+    /* Values */
+    ['.values-grid .val-card:nth-child(1) h4','text','Privacy first'],
+    ['.values-grid .val-card:nth-child(1) p','text','Your data belongs to you. We don\u2019t profile, resell, or share your personal information with third parties for commercial purposes.'],
+    ['.values-grid .val-card:nth-child(2) h4','text','Permanent free access'],
+    ['.values-grid .val-card:nth-child(2) p','text','Access to all core features of the LevelUp ecosystem is and will remain free. Premium quality shouldn\u2019t be reserved for those who can pay.'],
+    ['.values-grid .val-card:nth-child(3) h4','text','Continuous innovation'],
+    ['.values-grid .val-card:nth-child(3) p','text','The LevelUp team continuously improves the platform. LevelMusic is in active development, new Level IA features arrive every week, and the ecosystem grows.'],
+    /* Quote */
+    ['.quote-text','text','The LevelUp ecosystem is not just a platform \u2014 it\u2019s a commitment. The commitment to create tools that respect the user, that actually work, and that remain accessible to everyone, regardless of their means.'],
+    /* Tech stack */
+    ['.tech-grid .tech-card:nth-child(1) p','text','Firestore database, authentication, and real-time sync.'],
+    ['.tech-grid .tech-card:nth-child(2) p','text','Google DeepMind\u2019s cutting-edge AI engine powering Level IA.'],
+    ['.tech-grid .tech-card:nth-child(3) p','text','Global edge hosting and high-performance global CDN.'],
+    ['.tech-grid .tech-card:nth-child(4) p','text','The standard for passwordless authentication.'],
+    ['.tech-grid .tech-card:nth-child(5) p','text','Source code hosting and version control.'],
+    /* FAQ */
+    ['#faq-sec .sec-label','html','<i class="fa-regular fa-circle-question"></i>&nbsp; Frequently asked questions'],
+    ['#faq-sec .sec-head h2','text','Everything you want to know'],
+    ['#faq-sec .sec-head p','text','Clear and honest answers to the most frequently asked questions about LevelUp Ecosystem, key management, security and access to applications.'],
+    ['#faq-sec .faq-item:nth-child(1) .faq-q h4','text','Why is login Google-only?'],
+    ['#faq-sec .faq-item:nth-child(1) .faq-a','text','We use exclusively Google OAuth to eliminate password-related risks (hacking, forgetting, brute force attacks). Google has the world\u2019s best authentication infrastructure. Your Google account is already secured by Google\u2019s 2-step verification \u2014 LevelUp benefits from it directly.'],
+    ['#faq-sec .faq-item:nth-child(2) .faq-q h4','text','Does my key work across all my devices?'],
+    ['#faq-sec .faq-item:nth-child(2) .faq-a','text','Yes. Your key is stored in your LevelUp cloud account. Sign in from any smartphone, tablet or computer \u2014 your key is instantly available. There is no device limit.'],
+    ['#faq-sec .faq-item:nth-child(3) .faq-q h4','text','What if I lose access to my Google account?'],
+    ['#faq-sec .faq-item:nth-child(3) .faq-a','text','Your LevelUp account is linked to your Google UID, which remains stable even if you change your Google email. If you lose access, first recover your Google account via Google\u2019s standard procedure, then log back into LevelUp. Contact support at support@levelup-ecosystem.com if you need help.'],
+    ['#faq-sec .faq-item:nth-child(4) .faq-q h4','text','I forgot my PIN. What should I do?'],
+    ['#faq-sec .faq-item:nth-child(4) .faq-a','text','Go to your LevelUp dashboard \u2192 Settings \u2192 Security \u2192 Reset PIN. You can choose a new PIN at any time. Your access key does not change when you change your PIN \u2014 only the protective lock is replaced.'],
+    ['#faq-sec .faq-item:nth-child(5) .faq-q h4','text','Can I share my key with someone else?'],
+    ['#faq-sec .faq-item:nth-child(5) .faq-a','text','No. Your key is strictly personal. Sharing a key is a violation of LevelUp\u2019s Terms of Use and results in immediate key revocation. If multiple people in your circle want access to LevelUp, each must create their own free account.'],
+    ['#faq-sec .faq-item:nth-child(6) .faq-q h4','text','\uD83C\uDFB5 Is LevelMusic complete?'],
+    ['#faq-sec .faq-item:nth-child(6) .faq-a','text','LevelMusic is currently in \u201cDiscovery\u201d version. You can listen to 30-second premium previews to explore the world catalog. The full version is in development.'],
+    ['#faq-sec .faq-item:nth-child(7) .faq-q h4','text','Is it really free? Why?'],
+    ['#faq-sec .faq-item:nth-child(7) .faq-a','text','Yes, completely free. LevelUp Ecosystem is a project born from a passion for accessible technology. There is no hidden subscription, no freemium, no advertising. The business model is based on community and the team\u2019s long-term vision.'],
+    ['#faq-sec .faq-item:nth-child(8) .faq-q h4','text','What Google data is sent to LevelUp?'],
+    ['#faq-sec .faq-item:nth-child(8) .faq-a','text','LevelUp receives only: your Google display name, your email address, and your profile photo. These data are used exclusively to personalize your interface. They are never shared or sold. Your Google password is never transmitted.'],
+    ['#faq-sec .faq-item:nth-child(9) .faq-q h4','text','How do I regenerate my key if I think it has been compromised?'],
+    ['#faq-sec .faq-item:nth-child(9) .faq-a','text','From your dashboard \u2192 \u201cAccess Keys\u201d \u2192 \u201cRegenerate\u201d button. A new key is instantly created and the old one is immediately invalidated. Remember to update your key in all your LevelUp applications after regeneration.'],
+    ['#faq-sec .faq-item:nth-child(10) .faq-q h4','text','\uD83D\uDCE7 Contact support'],
+    /* CTA section */
+    ['#cta-sec .badge','text','Join the LevelUp ecosystem today'],
+    ['#cta-sec h2','html','Ready to join<br>LevelUp Ecosystem?'],
+    ['#cta-sec p','text','Create your account in 30 seconds with Google, generate your key, and access the entire LevelUp universe. It\u2019s free, always.'],
+    ['#ctaSection .btn-p','text','Create an account'],
+    ['#ctaSection .btn-g','html','<i class="fa-solid fa-file-lines"></i> Read the terms'],
+    /* Footer */
+    ['.foot-brand p','text','Premium infrastructure architected by LevelUp. 100% free access, secured by Google Auth & Firebase.'],
+    ['.foot-col:nth-child(2) h5','text','Applications'],
+    ['.foot-col:nth-child(3) h5','text','Platform'],
+    ['.foot-col:nth-child(3) a:nth-child(2)','text','My dashboard'],
+    ['.foot-col:nth-child(3) a:nth-child(3)','text','Generate my key'],
+    ['.foot-col:nth-child(3) a:nth-child(5)','text','How it works'],
+    ['.foot-col:nth-child(4) h5','text','Legal & Support'],
+    ['.foot-col:nth-child(4) a:nth-child(2)','text','Terms (In-app)'],
+    ['.foot-col:nth-child(4) a:nth-child(3)','text','Full Terms'],
+    ['.foot-col:nth-child(4) a:nth-child(4)','text','Privacy Policy'],
+    ['.foot-col:nth-child(4) a:nth-child(5)','text','Contact support'],
+    ['.foot-bot span:nth-child(1)','text','\u00a9 2026 LevelUp Ecosystem. All rights reserved.'],
+    ['.foot-bot span:nth-child(2)','text','Powered by Google & Firebase'],
+    /* Search modal */
+    ['.search-close-btn','html','<i class="fa-solid fa-arrow-left"></i> Exit search'],
+    ['.search-empty','text','Search for a movie, series or music\u2026'],
+    /* Dashboard sidebar */
+    ['#sbn-home','html','<i class="fa-solid fa-house"></i> Home'],
+    ['#sbn-keys','html','<i class="fa-solid fa-key"></i> Access Keys'],
+    ['#sbn-tools','html','<i class="fa-solid fa-wrench" style="color:#22c55e"></i> Tools<span id="toolsNavBadge" class="lvl-nav-badge hidden"></span>'],
+    ['#sbn-settings','html','<i class="fa-solid fa-gear"></i> Settings'],
+    ['#sbn-terms','html','<i class="fa-solid fa-file-lines"></i> Terms'],
+    ['#sbn-help','html','<i class="fa-regular fa-circle-question"></i> Help'],
+    ['.sb-user .sb-info span','text','Active account'],
+    ['.sb-foot .btn','html','<i class="fa-solid fa-right-from-bracket"></i> Sign out'],
+    /* Dashboard home panel */
+    ['#panel-home .ps','text','Welcome to your LevelUp Ecosystem dashboard.'],
+    ['#panel-home .db-stat:nth-child(1) .db-sl','text','Status'],
+    ['#panel-home .db-stat:nth-child(1) .db-sv','text','Active \u2713'],
+    ['#panel-home .db-stat:nth-child(1) .db-ss','text','Connected'],
+    ['#panel-home .db-stat:nth-child(2) .db-sl','text','Access Key'],
+    ['#panel-home .db-stat:nth-child(3) .db-sl','text','Applications'],
+    ['#panel-home .db-stat:nth-child(3) .db-ss','text','In the ecosystem'],
+    ['#panel-home > div[style*="Quick"], #panel-home > div[style*="Acc\u00e8s"]','text','Quick access'],
+    ['#panel-home .qa-tile:nth-child(1) .qa-inf span','text','Cinema & Series'],
+    ['#panel-home .qa-tile:nth-child(2) .qa-inf span','text','Previews & Discovery'],
+    ['#panel-home .qa-tile:nth-child(3) .qa-inf span','text','Artificial Intelligence'],
+    ['#panel-home .qa-tile:nth-child(4) .qa-inf h4','text','Tools'],
+    ['#panel-home .qa-tile:nth-child(4) .qa-inf span','text','Toolbox'],
+    /* Keys panel */
+    ['#panel-keys .pt','text','Access Keys'],
+    ['#panel-keys .ps','text','Manage your access key to the LevelUp ecosystem.'],
+    ['#panel-keys .kc-top h4','text','LevelUp Ecosystem Key'],
+    ['#panel-keys .kc-top p','text','Valid for all LevelUp applications'],
+    ['#panel-keys .kbadge','html','<i class="fa-solid fa-circle" style="font-size:.4rem"></i> Active'],
+    ['#kToggle','html','<i class="fa-solid fa-eye"></i> View'],
+    ['#panel-keys .kbt:nth-child(2)','html','<i class="fa-regular fa-copy"></i> Copy'],
+    ['#panel-keys .kmeta span:nth-child(1)','html','<i class="fa-solid fa-calendar-days"></i> Created on <b id="kDate">\u2014</b>'],
+    ['#pinBtnTxt','text','Configure a PIN'],
+    ['#panel-keys .btn[onclick="confirmRegen()"]','html','<i class="fa-solid fa-rotate"></i> Regenerate key'],
+    ['#sec-generate h4','text','No key generated'],
+    ['#sec-generate p','text','Generate your personal access key to unlock LevelMovie, LevelMusic and Level IA.'],
+    ['#sec-generate .btn-p','html','<i class="fa-solid fa-sparkles"></i> Generate my free key'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] p:first-child','html','<i class="fa-solid fa-circle-info"></i> How to use your key?'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(1)','text','Enter your PIN to display your key (if configured)'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(2)','text','Copy your key from this page'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(3)','text','Open LevelMovie, LevelMusic or Level IA'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(4)','text','Paste the key in the \u201cAccess Key\u201d field during activation'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(5)','text','Enjoy all the features!'],
+    /* Settings panel */
+    ['#panel-settings .pt','text','Settings'],
+    ['#panel-settings .ps','text','Manage your account and security preferences.'],
+    ['#panel-settings .set-sec:nth-child(1) .set-title','text','Account Information'],
+    ['#nameDisplayRow .set-info h5','text','Display name'],
+    ['#nameDisplayRow .btn','html','<i class="fa-solid fa-pen-to-square"></i> Edit'],
+    ['#panel-settings .set-row:has(#setEmail) .set-info h5','text','Email address'],
+    ['#panel-settings .set-row:has(#setJoined) .set-info h5','text','Member since'],
+    ['#panel-settings .set-row:last-child .set-info h5','text','Identity provider'],
+    ['#panel-settings .set-sec:nth-child(2) .set-title','text','Key security'],
+    ['#setPinStatus','text','Protects the display of your access keys'],
+    ['#setPinBtn','text','Configure'],
+    ['#panel-settings .set-sec:nth-child(3) .set-title','text','Email notifications'],
+    ['#panel-settings #notifLoginToggle ~ * .set-info h5, #panel-settings .set-row:has(#notifLoginToggle) .set-info h5','text','Suspicious new login'],
+    ['#panel-settings .set-row:has(#notifLoginToggle) .set-info p','text','Receive an email if a login is detected from a new device or IP address'],
+    ['#panel-settings .set-row:has(#notifToolsToggle) .set-info h5','text','New tools available'],
+    ['#panel-settings .set-row:has(#notifToolsToggle) .set-info p','text','Receive an email when a new tool is added to the ecosystem'],
+    ['#panel-settings .set-sec:nth-child(4) .set-title','text','Push notifications'],
+    ['#panel-settings .set-row:has(#notifPushToggle) .set-info h5','text','Real-time notifications'],
+    ['#panel-settings .set-row:has(#notifPushToggle) .set-info p','text','Receive alerts even when the app is closed \u2014 new film releases, music, AI tools and more'],
+    ['#panel-settings .set-sec:nth-child(6) .set-title','text','Search'],
+    ['#panel-settings .set-row:has([onclick*="openSearch"]) .set-info h5','text','Search for a movie or series'],
+    ['#panel-settings .set-row:has([onclick*="openSearch"]) .set-info p','text','Movies, series, music \u2014 available from any screen'],
+    ['#panel-settings .set-sec:nth-child(7) .set-title','text','Terms & Legal'],
+    ['#panel-settings .set-row:nth-child(2) .set-info h5','text','Terms (In-app)'],
+    ['#panel-settings .set-row:nth-child(2) .set-info p','text','Read the terms summary directly in the application'],
+    ['#panel-settings .set-row[style*="red"] .set-info h5','text','Delete my account'],
+    ['#panel-settings .set-row[style*="red"] .set-info p','text','Irreversible action \u2014 all your data will be erased.'],
+    ['#panel-settings .set-row[style*="red"] button','text','Delete'],
+    ['#logoutSection button','html','<i class="fa-solid fa-sign-out-alt"></i> Sign Out of LevelUp'],
+    /* Tools panel */
+    ['#panel-tools .ps','text','AI utilities, productivity, Dev and creation \u2014 directly integrated into the ecosystem.'],
+    ['#panel-tools > div > div > h4','text','Direct access to all tools'],
+    ['#panel-tools > div > div > p','text','Applications, utilities and services integrated directly into the LevelUp ecosystem. Free, no installation \u2014 usable instantly. Third-party tools are not exclusively ours: you can discover quality applications and services selected for you.'],
+    ['#toolsPanelEmpty .tcs-badge','html','<span style="width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0"></span> Under construction'],
+    ['#toolsPanelEmpty .tcs-title','text','LevelUp Tools'],
+    ['#toolsPanelEmpty .tcs-sub','text','Our smart toolbox is coming soon. Powerful applications and utilities, directly integrated into your ecosystem.'],
+    ['#panel-tools > div[style*="margin-top"] button','html','<i class="fa-solid fa-expand" style="font-size:.78rem"></i> Full screen view'],
+    /* Help panel */
+    ['#panel-help .pt','text','Help & Support'],
+    ['#panel-help .ps','text','Answers to frequently asked questions and ways to contact us.'],
+    ['#panel-help .help-card:nth-child(3) h4','text','\uD83D\uDD11 How do I get my access key?'],
+    ['#panel-help .help-card:nth-child(3) p','text','Go to \u201cAccess Keys\u201d and click \u201cGenerate my key\u201d. It\u2019s instant and free. Then configure a PIN to secure the display of your key.'],
+    ['#panel-help .help-card:nth-child(4) h4','text','\uD83C\uDFAC My key doesn\u2019t work in LevelMovie'],
+    ['#panel-help .help-card:nth-child(4) p','text','Copy the complete key from \u201cAccess Keys\u201d (use the \u201cCopy\u201d button). Verify it matches the \u201cLVL-XXXXX-XXXXX\u201d format. If the problem persists, regenerate it.'],
+    ['#panel-help .help-card:nth-child(5) h4','text','\uD83D\uDD12 I forgot my PIN'],
+    ['#panel-help .help-card:nth-child(5) p','text','Go to Settings \u2192 Security \u2192 click \u201cEdit\u201d. You can set a new PIN without knowing the old one. Your key does not change.'],
+    ['#panel-help .help-card:nth-child(6) h4','text','\uD83C\uDFB5 Is LevelMusic complete?'],
+    ['#panel-help .help-card:nth-child(6) p','text','LevelMusic is currently in \u201cDiscovery\u201d version. You can listen to 30-second premium previews to explore the world catalog. The full version is in development.'],
+    ['#panel-help .help-card:nth-child(7) h4','text','\uD83D\uDCE7 Contact support'],
+    /* Logout modal */
+    ['#logoutOv .conf-card h3','text','Sign out?'],
+    ['#logoutOv .conf-card p','text','You will need to sign in again to access your keys and applications.'],
+    ['#logoutOv .btn-g','text','Cancel'],
+    ['#logoutOv .btn-sm','html','<i class="fa-solid fa-right-from-bracket"></i> Sign out'],
+    /* Regen modal */
+    ['#regenOv .conf-card h3','text','Regenerate key?'],
+    ['#regenOv .conf-card p','html','Your old key will be <strong style="color:var(--red)">immediately invalidated</strong> in all your LevelUp applications.'],
+    ['#regenOv .btn-g','text','Cancel'],
+    ['#regenOv .btn-sm','html','<i class="fa-solid fa-rotate"></i> Regenerate'],
+    /* Logout loading */
+    ['#logoutLoadingOv > div','text','Signing out\u2026'],
+    /* Tools overlay */
+    ['#toolsOverlay h3','text','Tools'],
+    ['#toolsOverlay p[style*="muted"]','text','LevelUp ecosystem toolbox'],
+    ['#toolsEmpty .tcs-badge','html','<span style="width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0"></span> Under construction'],
+    ['#toolsEmpty .tcs-title','text','LevelUp Tools'],
+    ['#toolsEmpty .tcs-sub','text','Our smart toolbox is coming soon. Powerful applications and utilities, directly integrated into your ecosystem.'],
+    ['#toolsEmpty .tcs-feat:nth-child(1)','html','<i class="fa-solid fa-brain" style="color:#a855f7"></i> AI & Productivity'],
+    ['#toolsEmpty .tcs-feat:nth-child(2)','html','<i class="fa-solid fa-chart-bar" style="color:#3b82f6"></i> Analytics & Stats'],
+    ['#toolsEmpty .tcs-feat:nth-child(3)','html','<i class="fa-solid fa-file-code" style="color:#22c55e"></i> Dev Tools'],
+    ['#toolsEmpty .tcs-feat:nth-child(4)','html','<i class="fa-solid fa-music" style="color:#f97316"></i> Creation'],
+    /* Media hub */
+    ['#mediaHubOverlay h3','text','Media Hub'],
+    ['#mediaHubOverlay p[style*="muted"]','text','Music & Videos integrated'],
+    /* FAB tooltips */
+    ['#fabWrap .fab-item:nth-child(1) .tooltip','text','Open AI Assistant'],
+    ['#fabWrap .fab-item:nth-child(3) .tooltip','text','Quick scroll'],
+    ['#fabWrap .fab-item:nth-child(4) .tooltip','text','Tools'],
+    ['#fabWrap .fab-item:nth-child(5) .tooltip','text','Search movies & music'],
+    ['#fabNavTip','text','Sign in'],
+    /* Tool fullscreen */
+    ['[title="Quitter l\'outil"], [title="Exit tool"]','attr-title','Exit tool'],
+    /* Auth note */
+    ['#authDevSection .btn.btn-g','html','<i class="fa-solid fa-key" style="color:var(--purple)"></i> Sign in with an LVL key'],
+    /* Pin cancel */
+    ['#pinOverlay .btn-g','text','Cancel'],
+    /* Name change */
+    ['#nameChangeBox label','html','New name <span style="color:rgba(255,255,255,.3)">(letters only, max 10 letters + 4 digits)</span>'],
+    ['#nameChangeBox #nameHint','text','Letters + numbers only. Max 10 letters, max 4 digits.'],
+    ['#nameChangeBox .btn-g','text','Cancel'],
+    ['#nameChangeBox .btn-p','html','<i class="fa-solid fa-check"></i> Save'],
+    /* Notification admin panel */
+    ['#notifAdminToggle','html','<i class="fa-solid fa-paper-plane"></i> Send a notification <i class="fa-solid fa-chevron-down chev"></i>'],
+    ['#notifSendTitle','attr-placeholder','Notification title'],
+    ['#notifSendBody','attr-placeholder','Message (notification body)'],
+    ['#notifSendImage','attr-placeholder','\uD83D\uDDBC\uFE0F Image URL (e.g. https://levelup-ecosystem.com/icon.svg)'],
+    ['#notifSendCustomUrl','attr-placeholder','\uD83D\uDD17 e.g. https://your-site.com/page'],
+    ['#notifTypeGroup .notif-type-btn:nth-child(1)','text','\uD83D\uDCE3 Push+App'],
+    ['#notifTypeGroup .notif-type-btn:nth-child(2)','text','\uD83D\uDCF2 Push only'],
+    ['#notifTypeGroup .notif-type-btn:nth-child(3)','text','\uD83D\uDD14 In-app'],
+    ['.notif-head-btn','text','Mark all read'],
+    /* Maintenance banner close title */
+    ['.global-maint-banner-close','attr-title','Hide']
+  ],
+  fr: [
+    /* Nav hero CTA */
+    ['#heroCta .btn-p','text','Cr\u00e9er un compte gratuit'],
+    ['#heroCta .btn-g','html','<i class="fa-solid fa-grid-2"></i> Explorer les apps'],
+    /* Stats strip */
+    ['.stats-strip .stat-item:nth-child(1) .sl','text','Applications disponibles'],
+    ['.stats-strip .stat-item:nth-child(1) .ss','text','LevelMovie \u00b7 LevelMusic \u00b7 Level IA'],
+    ['.stats-strip .stat-item:nth-child(2) .sl','text','Cl\u00e9 pour tout'],
+    ['.stats-strip .stat-item:nth-child(2) .ss','text','Un seul acc\u00e8s unifi\u00e9'],
+    ['.stats-strip .stat-item:nth-child(3) .sl','text','Gratuit'],
+    ['.stats-strip .stat-item:nth-child(3) .ss','text','Aucun abonnement cach\u00e9'],
+    ['.stats-strip .stat-item:nth-child(4) .sl','text','Mot de passe'],
+    ['.stats-strip .stat-item:nth-child(4) .ss','text','Google Auth uniquement'],
+    /* Apps section header */
+    ['#apps-sec .sec-label','html','<i class="fa-solid fa-lock"></i>&nbsp; Connexion et cl\u00e9 requises pour les apps premium \u00b7 Outils gratuits sans compte'],
+    ['#apps-sec .sec-head h2','text','L\u2019univers LevelUp en quatre apps'],
+    ['#apps-sec .sec-head p','text','Trois applications premium accessibles avec votre cl\u00e9, et une bo\u00eete \u00e0 outils gratuite directement int\u00e9gr\u00e9e. Une seule cl\u00e9 g\u00e9n\u00e9r\u00e9e depuis votre tableau de bord vous donne acc\u00e8s \u00e0 tout l\u2019\u00e9cosyst\u00e8me.'],
+    /* App 1 */
+    ['#app1Title','text','LevelMovie'],
+    ['#app1Desc','text','Le cin\u00e9ma mondial dans votre poche. Films, s\u00e9ries, K-Dramas, animes et contenus Bollywood disponibles en streaming haute d\u00e9finition avec multi-serveurs et gestion de liste personnalis\u00e9e.'],
+    ['#app1Feat .feat-item:nth-child(1)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Catalogue mondial \u2014 films & s\u00e9ries HD'],
+    ['#app1Feat .feat-item:nth-child(2)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>K-Dramas, Animes, Bollywood, TV shows'],
+    ['#app1Feat .feat-item:nth-child(3)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Multi-serveurs pour \u00e9viter les coupures'],
+    ['#app1Feat .feat-item:nth-child(4)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Ma liste \u2014 sauvegardez vos favoris'],
+    ['#app1Feat .feat-item:nth-child(5)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Interface \u00e9pur\u00e9e, lecteur immersif'],
+    ['#movieFootCard .lock-btn','html','<i class="fa-solid fa-lock"></i> D\u00e9bloquer LevelMovie'],
+    /* App 2 */
+    ['#app2Title','text','LevelMusic'],
+    ['#app2Desc','text','La musique du monde entier en format d\u00e9couverte. \u00c9coutez des extraits exclusifs de 30 secondes en haute qualit\u00e9, explorez de nouveaux genres et pr\u00e9parez vos playlists pour la version int\u00e9grale \u00e0 venir.'],
+    ['#app2Feat .feat-item:nth-child(1)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Extraits audio Premium (30s)'],
+    ['#app2Feat .feat-item:nth-child(2)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Catalogue musical mondial'],
+    ['#app2Feat .feat-item:nth-child(3)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>D\u00e9couverte rapide & fluide'],
+    ['#app2Feat .feat-item:nth-child(4)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Playlists collaboratives'],
+    ['#app2Feat .feat-item:nth-child(5)','html','<span class="ck ck-b"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Version int\u00e9grale en pr\u00e9paration'],
+    ['#musicFoot .lock-btn','html','<i class="fa-solid fa-lock"></i> D\u00e9bloquer LevelMusic'],
+    /* App 3 */
+    ['#app3Title','text','Level IA'],
+    ['#app3Desc','text','Un assistant IA de niveau professionnel, propuls\u00e9 par Gemini 2.5 Flash. M\u00e9moire cloud persistante, personnalit\u00e9s multiples, analyse de fichiers et lecture d\u2019URLs en temps r\u00e9el.'],
+    ['#app3Feat .feat-item:nth-child(1)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>IA avanc\u00e9e \u2014 Gemini 2.5 Flash'],
+    ['#app3Feat .feat-item:nth-child(2)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Analyse PDF, images & lecture d\u2019URLs'],
+    ['#app3Feat .feat-item:nth-child(3)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>M\u00e9moire IA cloud synchronis\u00e9e'],
+    ['#app3Feat .feat-item:nth-child(4)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Modes\u00a0: Auto, Expert, Travail, Marco'],
+    ['#app3Feat .feat-item:nth-child(5)','html','<span class="ck ck-p"><i class="fa-solid fa-check" style="font-size:.5rem"></i></span>Stockage hybride Cloud/Local'],
+    ['#iaFoot #iaBtn','html','<i class="fa-solid fa-lock"></i> D\u00e9bloquer Level IA'],
+    /* App 4 */
+    ['#app4Title','text','Outils LevelUp'],
+    ['#app4Desc','text','Une bo\u00eete \u00e0 outils intelligente, gratuite et directement int\u00e9gr\u00e9e \u00e0 l\u2019\u00e9cosyst\u00e8me. Acc\u00e9dez sans compte \u00e0 nos utilitaires essentiels \u2014 certaines fonctionnalit\u00e9s avanc\u00e9es n\u00e9cessitent une connexion.'],
+    ['#app4Feat .feat-item:nth-child(1)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Acc\u00e8s sans compte requis'],
+    ['#app4Feat .feat-item:nth-child(2)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Utilitaires IA & Productivit\u00e9'],
+    ['#app4Feat .feat-item:nth-child(3)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Outils Dev, Analyses & Cr\u00e9ation'],
+    ['#app4Feat .feat-item:nth-child(4)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Fonctions avanc\u00e9es avec connexion'],
+    ['#app4Feat .feat-item:nth-child(5)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Mis \u00e0 jour r\u00e9guli\u00e8rement'],
+    ['#outilsFoot button','html','<i class="fa-solid fa-wrench" style="font-size:.78rem"></i> Ouvrir les outils'],
+    /* How it works */
+    ['#how-sec .sec-label','html','<i class="fa-solid fa-list-check"></i>&nbsp; Comment \u00e7a marche'],
+    ['#how-sec .sec-head h2','text','En quatre \u00e9tapes, vous \u00eates pr\u00eat'],
+    ['#how-sec .sec-head p','text','LevelUp Ecosystem a \u00e9t\u00e9 pens\u00e9 pour \u00eatre le plus simple possible. Zero mot de passe, z\u00e9ro friction, z\u00e9ro configuration complexe. Juste votre compte Google et vous \u00eates dedans.'],
+    ['#how-sec .step:nth-child(1) h4','text','Connexion Google'],
+    ['#how-sec .step:nth-child(1) p','text','Appuyez sur \u201cContinuer avec Google\u201d. Une popup Google s\u2019ouvre, choisissez votre compte, c\u2019est tout. Aucun formulaire, aucun mot de passe, aucune v\u00e9rification par email. Votre identit\u00e9 Google devient votre identit\u00e9 LevelUp.'],
+    ['#how-sec .step:nth-child(2) h4','text','G\u00e9n\u00e9rer votre cl\u00e9'],
+    ['#how-sec .step:nth-child(2) p','text','Depuis votre tableau de bord, section \u201cCl\u00e9s d\u2019acc\u00e8s\u201d, cliquez sur \u201cG\u00e9n\u00e9rer ma cl\u00e9\u201d. Une cl\u00e9 unique au format LVL-XXXXX-XXXXX est cr\u00e9\u00e9e instantan\u00e9ment et sauvegard\u00e9e dans votre compte cloud.'],
+    ['#how-sec .step:nth-child(3) h4','text','S\u00e9curiser avec un PIN'],
+    ['#how-sec .step:nth-child(3) p','text','Configurez un code PIN \u00e0 4 chiffres depuis la section \u201cCl\u00e9s d\u2019acc\u00e8s\u201d. Votre cl\u00e9 sera masqu\u00e9e par d\u00e9faut et ne s\u2019affichera qu\u2019apr\u00e8s la saisie correcte de votre PIN. Protection maximale.'],
+    ['#how-sec .step:nth-child(4) h4','text','Acc\u00e9der aux apps'],
+    ['#how-sec .step:nth-child(4) p','text','Copiez votre cl\u00e9, ouvrez LevelMovie ou Level IA. Le tableau de bord transmettra automatiquement et de mani\u00e8re s\u00e9curis\u00e9e vos informations de profil \u00e0 l\u2019application. Votre acc\u00e8s est imm\u00e9diatement d\u00e9bloqu\u00e9.'],
+    /* Trust */
+    ['.trust-grid .trust-card:nth-child(1) h4','text','Google OAuth 2.0'],
+    ['.trust-grid .trust-card:nth-child(1) p','text','Aucun mot de passe stock\u00e9. L\u2019authentification est d\u00e9l\u00e9gu\u00e9e aux serveurs ultra-s\u00e9curis\u00e9s de Google.'],
+    ['.trust-grid .trust-card:nth-child(2) h4','text','Hashage Cryptographique'],
+    ['.trust-grid .trust-card:nth-child(2) p','text','Votre code PIN est irr\u00e9versiblement crypt\u00e9 (hash\u00e9). M\u00eame nos administrateurs ne peuvent pas le lire.'],
+    ['.trust-grid .trust-card:nth-child(3) h4','text','R\u00e8gles Firestore'],
+    ['.trust-grid .trust-card:nth-child(3) p','text','Des r\u00e8gles backend strictes garantissent qu\u2019un utilisateur ne peut lire ou modifier que ses propres donn\u00e9es.'],
+    /* Roadmap */
+    ['.rm-item:nth-child(1) .rm-date','text','Phase 1 (Actuelle)'],
+    ['.rm-item:nth-child(1) .rm-title','text','Fondations de l\u2019\u00c9cosyst\u00e8me'],
+    ['.rm-item:nth-child(1) .rm-desc','text','Lancement de la plateforme centrale, int\u00e9gration du pont SSO, sortie de LevelMovie et Level IA. Mise en place de LevelMusic en Preview.'],
+    ['.rm-item:nth-child(2) .rm-date','text','Phase 2 (En d\u00e9veloppement)'],
+    ['.rm-item:nth-child(2) .rm-title','text','D\u00e9ploiement Int\u00e9gral LevelMusic'],
+    ['.rm-item:nth-child(2) .rm-desc','text','Ouverture du catalogue musical complet, \u00e9coute sans limite de temps, mode hors-ligne et playlists collaboratives mondiales.'],
+    ['.rm-item:nth-child(3) .rm-date','text','Phase 3 (Future)'],
+    ['.rm-item:nth-child(3) .rm-title','text','Applications Mobiles Natives'],
+    ['.rm-item:nth-child(3) .rm-desc','text','D\u00e9veloppement d\u2019applications iOS et Android pour une exp\u00e9rience encore plus rapide et une int\u00e9gration parfaite au syst\u00e8me du t\u00e9l\u00e9phone.'],
+    /* Features bento */
+    ['#features-sec .sec-label','html','&nbsp; Fonctionnalit\u00e9s Cl\u00e9s'],
+    ['#features-sec .sec-head h2','html','S\u00e9curit\u00e9, performance<br>et simplicit\u00e9 r\u00e9unies'],
+    ['#features-sec .sec-head p','text','Chaque fonctionnalit\u00e9 de l\u2019\u00e9cosyst\u00e8me LevelUp a \u00e9t\u00e9 pens\u00e9e pour vous offrir la meilleure exp\u00e9rience possible, sans compromis sur la s\u00e9curit\u00e9 ni sur la facilit\u00e9 d\u2019utilisation.'],
+    /* Values */
+    ['.values-grid .val-card:nth-child(1) h4','text','Vie priv\u00e9e d\u2019abord'],
+    ['.values-grid .val-card:nth-child(1) p','text','Vos donn\u00e9es vous appartiennent. Nous ne profilons pas, ne revendons pas, ne partageons pas vos informations personnelles avec des tiers \u00e0 des fins commerciales.'],
+    ['.values-grid .val-card:nth-child(2) h4','text','Gratuit\u00e9 permanente'],
+    ['.values-grid .val-card:nth-child(2) p','text','L\u2019acc\u00e8s \u00e0 toutes les fonctionnalit\u00e9s de base de l\u2019\u00e9cosyst\u00e8me LevelUp est et restera gratuit. La qualit\u00e9 premium ne devrait pas \u00eatre r\u00e9serv\u00e9e \u00e0 ceux qui peuvent payer.'],
+    ['.values-grid .val-card:nth-child(3) h4','text','Innovation continue'],
+    ['.values-grid .val-card:nth-child(3) p','text','L\u2019\u00e9quipe LevelUp am\u00e9liore continuellement la plateforme. LevelMusic est en d\u00e9veloppement actif, de nouvelles fonctionnalit\u00e9s Level IA arrivent chaque semaine, et l\u2019\u00e9cosyst\u00e8me grandit.'],
+    /* Quote */
+    ['.quote-text','text','L\u2019\u00e9cosyst\u00e8me LevelUp n\u2019est pas juste une plateforme \u2014 c\u2019est un engagement. L\u2019engagement de cr\u00e9er des outils qui respectent l\u2019utilisateur, qui fonctionnent vraiment, et qui restent accessibles \u00e0 tous, quels que soient leurs moyens.'],
+    /* Tech stack */
+    ['.tech-grid .tech-card:nth-child(1) p','text','Base de donn\u00e9es Firestore, authentification, et synchronisation.'],
+    ['.tech-grid .tech-card:nth-child(2) p','text','Le moteur IA de pointe de Google DeepMind qui propulse Level IA.'],
+    ['.tech-grid .tech-card:nth-child(3) p','text','H\u00e9bergement edge global et CDN mondial performant.'],
+    ['.tech-grid .tech-card:nth-child(4) p','text','Le standard pour une authentification sans mot de passe.'],
+    ['.tech-grid .tech-card:nth-child(5) p','text','H\u00e9bergement et contr\u00f4le de version du code source.'],
+    /* FAQ */
+    ['#faq-sec .sec-label','html','<i class="fa-regular fa-circle-question"></i>&nbsp; Questions fr\u00e9quentes'],
+    ['#faq-sec .sec-head h2','text','Tout ce que vous voulez savoir'],
+    ['#faq-sec .sec-head p','text','Des r\u00e9ponses claires et honn\u00eates aux questions les plus pos\u00e9es sur LevelUp Ecosystem, la gestion des cl\u00e9s, la s\u00e9curit\u00e9 et l\u2019acc\u00e8s aux applications.'],
+    ['#faq-sec .faq-item:nth-child(1) .faq-q h4','text','Pourquoi la connexion est-elle uniquement Google ?'],
+    ['#faq-sec .faq-item:nth-child(2) .faq-q h4','text','Ma cl\u00e9 fonctionne-t-elle sur tous mes appareils ?'],
+    ['#faq-sec .faq-item:nth-child(3) .faq-q h4','text','Que se passe-t-il si je perds acc\u00e8s \u00e0 mon compte Google ?'],
+    ['#faq-sec .faq-item:nth-child(4) .faq-q h4','text','J\u2019ai oubli\u00e9 mon PIN. Que faire ?'],
+    ['#faq-sec .faq-item:nth-child(5) .faq-q h4','text','Puis-je partager ma cl\u00e9 avec quelqu\u2019un d\u2019autre ?'],
+    ['#faq-sec .faq-item:nth-child(6) .faq-q h4','text','\uD83C\uDFB5 LevelMusic est-il complet ?'],
+    ['#faq-sec .faq-item:nth-child(7) .faq-q h4','text','Est-ce vraiment gratuit ? Pourquoi ?'],
+    ['#faq-sec .faq-item:nth-child(8) .faq-q h4','text','Quelles donn\u00e9es Google sont transmises \u00e0 LevelUp ?'],
+    ['#faq-sec .faq-item:nth-child(9) .faq-q h4','text','Comment r\u00e9g\u00e9n\u00e9rer ma cl\u00e9 si je pense qu\u2019elle a \u00e9t\u00e9 compromise ?'],
+    ['#faq-sec .faq-item:nth-child(10) .faq-q h4','text','\uD83D\uDCE7 Contacter le support'],
+    /* CTA */
+    ['#cta-sec .badge','text','Rejoignez l\u2019\u00e9cosyst\u00e8me LevelUp d\u00e8s maintenant'],
+    ['#cta-sec h2','html','Pr\u00eat \u00e0 rejoindre<br>LevelUp Ecosystem ?'],
+    ['#cta-sec p','text','Cr\u00e9ez votre compte en 30 secondes avec Google, g\u00e9n\u00e9rez votre cl\u00e9, et acc\u00e9dez \u00e0 tout l\u2019univers LevelUp. C\u2019est gratuit, toujours.'],
+    ['#ctaSection .btn-p','text','Cr\u00e9er un compte'],
+    ['#ctaSection .btn-g','html','<i class="fa-solid fa-file-lines"></i> Lire les conditions'],
+    /* Footer */
+    ['.foot-brand p','text','Infrastructure premium architectur\u00e9e par LevelUp. Acc\u00e8s 100% gratuit, s\u00e9curis\u00e9 par Google Auth & Firebase.'],
+    ['.foot-col:nth-child(2) h5','text','Applications'],
+    ['.foot-col:nth-child(3) h5','text','Plateforme'],
+    ['.foot-col:nth-child(3) a:nth-child(2)','text','Mon tableau de bord'],
+    ['.foot-col:nth-child(3) a:nth-child(3)','text','G\u00e9n\u00e9rer ma cl\u00e9'],
+    ['.foot-col:nth-child(3) a:nth-child(5)','text','Comment \u00e7a marche'],
+    ['.foot-col:nth-child(4) h5','text','L\u00e9gal & Support'],
+    ['.foot-col:nth-child(4) a:nth-child(2)','text','Conditions (App int\u00e9gr\u00e9e)'],
+    ['.foot-col:nth-child(4) a:nth-child(3)','text','Conditions compl\u00e8tes'],
+    ['.foot-col:nth-child(4) a:nth-child(4)','text','R\u00e8gles de confidentialit\u00e9'],
+    ['.foot-col:nth-child(4) a:nth-child(5)','text','Contact support'],
+    ['.foot-bot span:nth-child(1)','text','\u00a9 2026 LevelUp Ecosystem. Tous droits r\u00e9serv\u00e9s.'],
+    ['.foot-bot span:nth-child(2)','text','Propuls\u00e9 par Google & Firebase'],
+    /* Search */
+    ['.search-close-btn','html','<i class="fa-solid fa-arrow-left"></i> Quitter la recherche'],
+    ['.search-empty','text','Cherche un film, une s\u00e9rie ou une musique\u2026'],
+    /* Dashboard sidebar */
+    ['#sbn-home','html','<i class="fa-solid fa-house"></i> Accueil'],
+    ['#sbn-keys','html','<i class="fa-solid fa-key"></i> Cl\u00e9s d\u2019acc\u00e8s'],
+    ['#sbn-tools','html','<i class="fa-solid fa-wrench" style="color:#22c55e"></i> Outils<span id="toolsNavBadge" class="lvl-nav-badge hidden"></span>'],
+    ['#sbn-settings','html','<i class="fa-solid fa-gear"></i> Param\u00e8tres'],
+    ['#sbn-terms','html','<i class="fa-solid fa-file-lines"></i> Conditions'],
+    ['#sbn-help','html','<i class="fa-regular fa-circle-question"></i> Aide'],
+    ['.sb-user .sb-info span','text','Compte actif'],
+    ['.sb-foot .btn','html','<i class="fa-solid fa-right-from-bracket"></i> Se d\u00e9connecter'],
+    /* Dashboard home */
+    ['#panel-home .ps','text','Bienvenue dans votre tableau de bord LevelUp Ecosystem.'],
+    ['#panel-home .db-stat:nth-child(1) .db-sl','text','Statut'],
+    ['#panel-home .db-stat:nth-child(1) .db-sv','text','Actif \u2713'],
+    ['#panel-home .db-stat:nth-child(1) .db-ss','text','Connect\u00e9'],
+    ['#panel-home .db-stat:nth-child(2) .db-sl','text','Cl\u00e9 d\u2019acc\u00e8s'],
+    ['#panel-home .db-stat:nth-child(3) .db-sl','text','Applications'],
+    ['#panel-home .db-stat:nth-child(3) .db-ss','text','Dans l\u2019\u00e9cosyst\u00e8me'],
+    ['#panel-home .qa-tile:nth-child(1) .qa-inf span','text','Cin\u00e9ma & S\u00e9ries'],
+    ['#panel-home .qa-tile:nth-child(2) .qa-inf span','text','Extraits & D\u00e9couverte'],
+    ['#panel-home .qa-tile:nth-child(3) .qa-inf span','text','Intelligence Artificielle'],
+    ['#panel-home .qa-tile:nth-child(4) .qa-inf h4','text','Outils'],
+    ['#panel-home .qa-tile:nth-child(4) .qa-inf span','text','Bo\u00eete \u00e0 outils'],
+    /* Keys panel */
+    ['#panel-keys .pt','text','Cl\u00e9s d\u2019acc\u00e8s'],
+    ['#panel-keys .ps','text','G\u00e9rez votre cl\u00e9 d\u2019acc\u00e8s \u00e0 l\u2019\u00e9cosyst\u00e8me LevelUp.'],
+    ['#panel-keys .kc-top h4','text','Cl\u00e9 LevelUp Ecosystem'],
+    ['#panel-keys .kc-top p','text','Valide pour toutes les applications LevelUp'],
+    ['#panel-keys .kbadge','html','<i class="fa-solid fa-circle" style="font-size:.4rem"></i> Active'],
+    ['#kToggle','html','<i class="fa-solid fa-eye"></i> Voir'],
+    ['#panel-keys .kbt:nth-child(2)','html','<i class="fa-regular fa-copy"></i> Copier'],
+    ['#pinBtnTxt','text','Configurer un PIN'],
+    ['#panel-keys .btn[onclick="confirmRegen()"]','html','<i class="fa-solid fa-rotate"></i> R\u00e9g\u00e9n\u00e9rer la cl\u00e9'],
+    ['#sec-generate h4','text','Aucune cl\u00e9 g\u00e9n\u00e9r\u00e9e'],
+    ['#sec-generate p','text','G\u00e9n\u00e9rez votre cl\u00e9 d\u2019acc\u00e8s personnelle pour d\u00e9bloquer LevelMovie, LevelMusic et Level IA.'],
+    ['#sec-generate .btn-p','html','<i class="fa-solid fa-sparkles"></i> G\u00e9n\u00e9rer ma cl\u00e9 gratuite'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] p:first-child','html','<i class="fa-solid fa-circle-info"></i> Comment utiliser votre cl\u00e9 ?'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(1)','text','Entrez votre PIN pour afficher votre cl\u00e9 (si configur\u00e9)'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(2)','text','Copiez votre cl\u00e9 depuis cette page'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(3)','text','Ouvrez LevelMovie, LevelMusic ou Level IA'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(4)','text','Collez la cl\u00e9 dans le champ \u201cCl\u00e9 d\u2019acc\u00e8s\u201d lors de l\u2019activation'],
+    ['#panel-keys > div[style*="rgba(168,85,247"] ol li:nth-child(5)','text','Profitez de toutes les fonctionnalit\u00e9s !'],
+    /* Settings */
+    ['#panel-settings .pt','text','Param\u00e8tres'],
+    ['#panel-settings .ps','text','G\u00e9rez votre compte et vos pr\u00e9f\u00e9rences de s\u00e9curit\u00e9.'],
+    ['#panel-settings .set-sec:nth-child(1) .set-title','text','Informations Compte'],
+    ['#nameDisplayRow .set-info h5','text','Nom d\u2019affichage'],
+    ['#nameDisplayRow .btn','html','<i class="fa-solid fa-pen-to-square"></i> Modifier'],
+    ['#panel-settings .set-sec:nth-child(2) .set-title','text','S\u00e9curit\u00e9 des cl\u00e9s'],
+    ['#setPinStatus','text','Prot\u00e8ge l\u2019affichage de vos cl\u00e9s d\u2019acc\u00e8s'],
+    ['#setPinBtn','text','Configurer'],
+    ['#panel-settings .set-sec:nth-child(3) .set-title','text','Notifications par email'],
+    ['#panel-settings .set-row:has(#notifLoginToggle) .set-info h5','text','Nouvelle connexion suspecte'],
+    ['#panel-settings .set-row:has(#notifLoginToggle) .set-info p','text','Recevez un email si une connexion est d\u00e9tect\u00e9e depuis un nouvel appareil ou une nouvelle adresse IP'],
+    ['#panel-settings .set-row:has(#notifToolsToggle) .set-info h5','text','Nouveaux outils disponibles'],
+    ['#panel-settings .set-row:has(#notifToolsToggle) .set-info p','text','Recevez un email lorsqu\u2019un nouvel outil est ajout\u00e9 \u00e0 l\u2019\u00e9cosyst\u00e8me'],
+    ['#panel-settings .set-sec:nth-child(4) .set-title','text','Notifications push'],
+    ['#panel-settings .set-row:has(#notifPushToggle) .set-info h5','text','Notifications en temps r\u00e9el'],
+    ['#panel-settings .set-row:has(#notifPushToggle) .set-info p','text','Recevez des alertes m\u00eame quand l\u2019app est ferm\u00e9e \u2014 nouvelles sorties films, musiques, outils IA et plus'],
+    ['#panel-settings .set-sec:nth-child(6) .set-title','text','Recherche'],
+    ['#panel-settings .set-row:has([onclick*="openSearch"]) .set-info h5','text','Rechercher un film ou une s\u00e9rie'],
+    ['#panel-settings .set-row:has([onclick*="openSearch"]) .set-info p','text','Films, s\u00e9ries, musiques \u2014 disponible depuis n\u2019importe quel \u00e9cran'],
+    ['#panel-settings .set-sec:nth-child(7) .set-title','text','Conditions & L\u00e9gal'],
+    ['#panel-settings .set-row[style*="red"] .set-info h5','text','Supprimer mon compte'],
+    ['#panel-settings .set-row[style*="red"] .set-info p','text','Action irr\u00e9versible \u2014 toutes vos donn\u00e9es seront effac\u00e9es.'],
+    ['#panel-settings .set-row[style*="red"] button','text','Supprimer'],
+    ['#logoutSection button','html','<i class="fa-solid fa-sign-out-alt"></i> Se D\u00e9connecter de LevelUp'],
+    /* Tools panel */
+    ['#panel-tools .ps','text','Utilitaires IA, productivit\u00e9, Dev et cr\u00e9ation \u2014 directement int\u00e9gr\u00e9s \u00e0 l\u2019\u00e9cosyst\u00e8me.'],
+    ['#panel-tools > div > div > h4','text','Acc\u00e8s direct \u00e0 tous les outils'],
+    ['#panel-tools > div > div > p','text','Applications, utilitaires et services int\u00e9gr\u00e9s directement dans l\u2019\u00e9cosyst\u00e8me LevelUp. Gratuit, sans installation \u2014 utilisable instantan\u00e9ment. Les outils tiers ne sont pas exclusivement les n\u00f4tres : vous pouvez d\u00e9couvrir ici des applications et services de qualit\u00e9 s\u00e9lectionn\u00e9s pour vous.'],
+    ['#toolsPanelEmpty .tcs-badge','html','<span style="width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0"></span> En construction'],
+    ['#toolsPanelEmpty .tcs-title','text','Outils LevelUp'],
+    ['#toolsPanelEmpty .tcs-sub','text','Notre bo\u00eete \u00e0 outils intelligente arrive bient\u00f4t. Des applications et utilitaires puissants, directement int\u00e9gr\u00e9s \u00e0 votre \u00e9cosyst\u00e8me.'],
+    ['#panel-tools > div[style*="margin-top"] button','html','<i class="fa-solid fa-expand" style="font-size:.78rem"></i> Vue plein \u00e9cran'],
+    /* Help panel */
+    ['#panel-help .pt','text','Aide & Support'],
+    ['#panel-help .ps','text','R\u00e9ponses aux questions fr\u00e9quentes et moyens de nous contacter.'],
+    ['#panel-help .help-card:nth-child(3) h4','text','\uD83D\uDD11 Comment obtenir ma cl\u00e9 d\u2019acc\u00e8s ?'],
+    ['#panel-help .help-card:nth-child(3) p','text','Allez dans \u201cCl\u00e9s d\u2019acc\u00e8s\u201d et cliquez \u201cG\u00e9n\u00e9rer ma cl\u00e9\u201d. C\u2019est instantan\u00e9 et gratuit. Configurez ensuite un PIN pour s\u00e9curiser l\u2019affichage de votre cl\u00e9.'],
+    ['#panel-help .help-card:nth-child(4) h4','text','\uD83C\uDFAC Ma cl\u00e9 ne fonctionne pas dans LevelMovie'],
+    ['#panel-help .help-card:nth-child(4) p','text','Copiez la cl\u00e9 compl\u00e8te depuis \u201cCl\u00e9s d\u2019acc\u00e8s\u201d (utilisez le bouton \u201cCopier\u201d). V\u00e9rifiez qu\u2019elle respecte le format \u201cLVL-XXXXX-XXXXX\u201d. Si le probl\u00e8me persiste, r\u00e9g\u00e9n\u00e9rez-la.'],
+    ['#panel-help .help-card:nth-child(5) h4','text','\uD83D\uDD12 J\u2019ai oubli\u00e9 mon PIN'],
+    ['#panel-help .help-card:nth-child(5) p','text','Allez dans Param\u00e8tres \u2192 S\u00e9curit\u00e9 \u2192 cliquez \u201cModifier\u201d. Vous pouvez d\u00e9finir un nouveau PIN sans conna\u00eetre l\u2019ancien. Votre cl\u00e9 ne change pas.'],
+    ['#panel-help .help-card:nth-child(6) h4','text','\uD83C\uDFB5 LevelMusic est-il complet ?'],
+    ['#panel-help .help-card:nth-child(6) p','text','LevelMusic est actuellement en version \u201cD\u00e9couverte\u201d. Vous pouvez \u00e9couter des extraits premium de 30 secondes pour explorer le catalogue mondial. La version compl\u00e8te est en d\u00e9veloppement.'],
+    ['#panel-help .help-card:nth-child(7) h4','text','\uD83D\uDCE7 Contacter le support'],
+    /* Logout modal */
+    ['#logoutOv .conf-card h3','text','Se d\u00e9connecter ?'],
+    ['#logoutOv .conf-card p','text','Vous devrez vous reconnecter pour acc\u00e9der \u00e0 vos cl\u00e9s et applications.'],
+    ['#logoutOv .btn-g','text','Annuler'],
+    ['#logoutOv .btn-sm','html','<i class="fa-solid fa-right-from-bracket"></i> D\u00e9connexion'],
+    /* Regen modal */
+    ['#regenOv .conf-card h3','text','R\u00e9g\u00e9n\u00e9rer la cl\u00e9 ?'],
+    ['#regenOv .conf-card p','html','Votre ancienne cl\u00e9 sera <strong style="color:var(--red)">imm\u00e9diatement invalid\u00e9e</strong> dans toutes vos applications LevelUp.'],
+    ['#regenOv .btn-g','text','Annuler'],
+    ['#regenOv .btn-sm','html','<i class="fa-solid fa-rotate"></i> R\u00e9g\u00e9n\u00e9rer'],
+    /* Logout loading */
+    ['#logoutLoadingOv > div','text','D\u00e9connexion en cours...'],
+    /* Tools overlay */
+    ['#toolsOverlay h3','text','Outils'],
+    ['#toolsOverlay p[style*="muted"]','text','Bo\u00eete \u00e0 outils de l\u2019\u00e9cosyst\u00e8me LevelUp'],
+    ['#toolsEmpty .tcs-badge','html','<span style="width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0"></span> En construction'],
+    ['#toolsEmpty .tcs-title','text','Outils LevelUp'],
+    ['#toolsEmpty .tcs-sub','text','Notre bo\u00eete \u00e0 outils intelligente arrive bient\u00f4t. Des applications et utilitaires puissants, directement int\u00e9gr\u00e9s \u00e0 votre \u00e9cosyst\u00e8me.'],
+    ['#toolsEmpty .tcs-feat:nth-child(1)','html','<i class="fa-solid fa-brain" style="color:#a855f7"></i> IA & Productivit\u00e9'],
+    ['#toolsEmpty .tcs-feat:nth-child(2)','html','<i class="fa-solid fa-chart-bar" style="color:#3b82f6"></i> Analyses & Stats'],
+    ['#toolsEmpty .tcs-feat:nth-child(3)','html','<i class="fa-solid fa-file-code" style="color:#22c55e"></i> Outils Dev'],
+    ['#toolsEmpty .tcs-feat:nth-child(4)','html','<i class="fa-solid fa-music" style="color:#f97316"></i> Cr\u00e9ation'],
+    /* Media hub */
+    ['#mediaHubOverlay h3','text','M\u00e9dia Hub'],
+    ['#mediaHubOverlay p[style*="muted"]','text','Musique & Vid\u00e9os int\u00e9gr\u00e9es'],
+    /* FAB */
+    ['#fabWrap .fab-item:nth-child(1) .tooltip','text','Ouvrir l\u2019Assistant IA'],
+    ['#fabWrap .fab-item:nth-child(3) .tooltip','text','D\u00e9filement rapide'],
+    ['#fabWrap .fab-item:nth-child(4) .tooltip','text','Outils'],
+    ['#fabWrap .fab-item:nth-child(5) .tooltip','text','Rechercher films & musique'],
+    ['#fabNavTip','text','Se connecter'],
+    /* Auth */
+    ['#authDevSection .btn.btn-g','html','<i class="fa-solid fa-key" style="color:var(--purple)"></i> Se connecter avec une cl\u00e9 LVL'],
+    /* Pin cancel */
+    ['#pinOverlay .btn-g','text','Annuler'],
+    /* Name change */
+    ['#nameChangeBox label','html','Nouveau nom <span style="color:rgba(255,255,255,.3)">(lettres seulement, max 10 lettres + 4 chiffres)</span>'],
+    ['#nameChangeBox #nameHint','text','Lettres + chiffres uniquement. Max 10 lettres, max 4 chiffres.'],
+    ['#nameChangeBox .btn-g','text','Annuler'],
+    ['#nameChangeBox .btn-p','html','<i class="fa-solid fa-check"></i> Sauvegarder'],
+    /* Notification admin */
+    ['#notifAdminToggle','html','<i class="fa-solid fa-paper-plane"></i> Envoyer une notification <i class="fa-solid fa-chevron-down chev"></i>'],
+    ['#notifSendTitle','attr-placeholder','Titre de la notification'],
+    ['#notifSendBody','attr-placeholder','Message (corps de la notification)'],
+    ['#notifSendImage','attr-placeholder','\uD83D\uDDBC\uFE0F URL image (ex: https://levelup-ecosystem.com/icon.svg)'],
+    ['#notifSendCustomUrl','attr-placeholder','\uD83D\uDD17 ex: https://ton-site.com/page ou https://levelup-ecosystem.com/#outils'],
+    ['#notifTypeGroup .notif-type-btn:nth-child(1)','text','\uD83D\uDCE3 Push+App'],
+    ['#notifTypeGroup .notif-type-btn:nth-child(2)','text','\uD83D\uDCF2 Push seul'],
+    ['#notifTypeGroup .notif-type-btn:nth-child(3)','text','\uD83D\uDD14 In-app'],
+    ['.notif-head-btn','text','Tout lu'],
+    ['.global-maint-banner-close','attr-title','Masquer']
+  ]
+};
+
+function applyLang(lang) {
+  var t = T[lang] || T.en;
+  var sel = SEL_MAP[lang] || SEL_MAP.en;
+  var idm = ID_MAP[lang] || ID_MAP.en;
+
+  /* 1. data-i18n text */
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n');
+    if (t[key] !== undefined) el.textContent = t[key];
+  });
+
+  /* 2. data-i18n-placeholder */
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n-placeholder');
+    if (t[key] !== undefined) el.placeholder = t[key];
+  });
+
+  /* 3. ID map — targets elements directly by id */
+  Object.keys(idm).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var cfg = idm[id];
+    if (cfg.text !== undefined) el.textContent = cfg.text;
+    else if (cfg.html !== undefined) el.innerHTML = cfg.html;
+    else if (cfg.placeholder !== undefined) el.placeholder = cfg.placeholder;
+  });
+
+  /* 4. Selector map */
+  sel.forEach(function(entry) {
+    var selector = entry[0], prop = entry[1], val = entry[2];
+    try {
+      var els = document.querySelectorAll(selector);
+      els.forEach(function(el) {
+        if (prop === 'text') el.textContent = val;
+        else if (prop === 'html') el.innerHTML = val;
+        else if (prop === 'attr-placeholder') el.placeholder = val;
+        else if (prop === 'attr-title') el.title = val;
+      });
+    } catch(e) { /* ignore invalid selectors in older browsers */ }
+  });
+
+  /* 5. <html lang> */
+  document.documentElement.lang = lang;
+
+  /* 6. Update language button active states (nav + settings) */
+  document.querySelectorAll('.lang-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  /* 7. Save preference */
+  try { localStorage.setItem('lvl_lang', lang); } catch(e) {}
 }
-/* Widget dans les paramètres : position relative intégrée */
-#settingsGtranslate .gtranslate_wrapper {
-    position: relative !important;
-    display: inline-block !important;
-}
-</style>
-<script>window.gtranslateSettings = {"default_language":"fr","native_language_names":true,"detect_browser_language":true,"wrapper_selector":".gtranslate_wrapper","flag_size":24,"switcher_horizontal_position":"right","switcher_vertical_position":"top","switcher_open_direction":"top","alt_flags":{"en":"usa","pt":"brazil","es":"mexico"}}</script>
-<script src="https://cdn.gtranslate.net/widgets/latest/dwf.js" defer></script>
+
+window.setLang = function(lang) {
+  applyLang(lang);
+};
+
+/* Apply on DOMContentLoaded — default EN */
+document.addEventListener('DOMContentLoaded', function() {
+  var saved;
+  try { saved = localStorage.getItem('lvl_lang'); } catch(e) {}
+  applyLang(saved || 'en');
+});
+
+})();
+</script>
 </body>
 </html>
