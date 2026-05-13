@@ -12,39 +12,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<script>
-window._turnstileToken = null;
-window._turnstileWidgetId = undefined;
-// ── Auto-bypass sur domaines non-production (Replit, localhost, etc.) ──
-window._isProd = /levelup-ecosystem\.com$/.test(location.hostname);
-if (!window._isProd) { window._turnstileToken = '__bypass__'; }
-
-window._renderTurnstile = function() {
-    if (!window._isProd) {
-        // Cacher le widget sur dev, pas besoin de le charger
-        const wrap = document.getElementById('turnstileWrap');
-        if (wrap) wrap.style.display = 'none';
-        return;
-    }
-    const container = document.getElementById('cfTurnstile');
-    if (!container) return;
-    if (window._turnstileWidgetId !== undefined) return;
-    if (!window.turnstile) {
-        setTimeout(window._renderTurnstile, 300);
-        return;
-    }
-    window._turnstileWidgetId = window.turnstile.render(container, {
-        sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
-        theme: 'dark',
-        size: 'flexible',
-        callback: function(token) { window._turnstileToken = token; },
-        'expired-callback': function() { window._turnstileToken = null; },
-        'error-callback': function() { window._turnstileToken = '__bypass__'; }
-    });
-};
-</script>
-<!-- Turnstile chargé seulement en production -->
-<script>if(/levelup-ecosystem\.com$/.test(location.hostname)){var s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.defer=true;document.head.appendChild(s);}</script>
 
 <style>
 /* ═══════════════════════════════════════
@@ -681,10 +648,6 @@ LOGOUT ANIMATION OVERLAY
 .mobile-nav.vis { display: block; }
 }
 
-/* ── TURNSTILE WIDGET ── */
-#cfTurnstile { width:100%; }
-#cfTurnstile iframe { border-radius:10px !important; }
-.turnstile-wrap { margin:12px 0 6px; width:100%; }
 
 /* ── BADGE NAVIGATION OUTILS ── */
 .lvl-nav-badge { position:absolute; top:2px; right:4px; width:8px; height:8px; border-radius:50%; background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 0 6px rgba(239,68,68,.7); animation:badgePulse 1.8s ease infinite; pointer-events:none; }
@@ -1761,7 +1724,7 @@ LEVELUP
 </div>
 <div class="foot-bot">
 <span>© 2026 LevelUp Ecosystem. Tous droits réservés.</span>
-<span style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:rgba(255,255,255,.25)"><i class="fa-solid fa-shield-halved" style="color:#f97316;font-size:.7rem"></i> Anti-bot Cloudflare Turnstile activé</span>
+<span style="font-size:.72rem;color:rgba(255,255,255,.25)">Propulsé par Google &amp; Firebase</span>
 </div>
 </div>
 </footer>
@@ -2043,27 +2006,6 @@ AUTH OVERLAY
 <span id="gBtnTxt">Continuer avec Google</span>
 </button>
 
-<div class="turnstile-wrap" id="turnstileWrap">
-  <div id="cfTurnstile"></div>
-</div>
-
-<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 2px;flex-wrap:wrap">
-  <div style="display:flex;align-items:center;gap:5px;opacity:.45">
-    <svg width="13" height="13" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-    <span style="font-size:.65rem;font-weight:600;color:rgba(255,255,255,.5);font-family:var(--sans)">Google</span>
-  </div>
-  <div style="width:1px;height:10px;background:rgba(255,255,255,.1)"></div>
-  <div style="display:flex;align-items:center;gap:5px;opacity:.45">
-    <svg width="13" height="13" viewBox="0 0 512 512"><path fill="#FFAC33" d="M256 0C157.6 0 77.6 65.9 54.5 154.8 38.3 146 19.4 141.2 0 141.2v80c22.6 0 43.2 8.7 58.5 22.9L256 512l197.5-267.9C469 230 489.6 221.2 512 221.2v-80c-19.4 0-38.3 4.8-54.5 13.6C434.4 65.9 354.4 0 256 0z"/></svg>
-    <span style="font-size:.65rem;font-weight:600;color:rgba(255,255,255,.5);font-family:var(--sans)">Firebase</span>
-  </div>
-  <div style="width:1px;height:10px;background:rgba(255,255,255,.1)"></div>
-  <div style="display:flex;align-items:center;gap:5px;opacity:.45">
-    <svg width="15" height="10" viewBox="0 0 109 42" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M84.5 33.1c.4-1.6.3-3.1-.4-4.3-.7-1.3-2-2.2-3.7-2.7l-23.5-5.6c-.5-.1-.8-.4-.9-.7-.1-.4 0-.8.3-1.2 1.5-2 4.1-3.1 7.9-3.1 4.5 0 7.3 1.7 8.3 5.1l.2.6 12.5-3c-.1-.4-.2-.8-.4-1.2C82.4 9.2 75.5 5 64.1 5c-7.5 0-13.6 2.1-17.8 6.1-1.3 1.2-2.3 2.6-3.1 4.1l-1.5-9.3H29.4l2.9 17.7-9.6-17.7H9.6L0 42h13.3l5.7-24.8 10.7 24.8H40l2.1-12.8c.1.9.3 1.8.6 2.6 2.3 6.5 8.5 10.2 17.6 10.2 5.8 0 10.8-1.4 14.5-4.2l.1.1.2.9H88l-3.5-5.7z" fill="#F48120"/><path d="M108.8 16.9c-1.4-7.4-6.7-11.6-14.8-11.6-4 0-7.6 1.1-10.3 3.3l-1.2-2.7H70.1L64.5 42h13.3l3.5-20.4c.7-3.9 2.9-5.9 6.6-5.9 3.1 0 4.4 1.7 3.9 5.3L87.9 42h13.3l3.9-22.4c.1-.8.1-1.5-.3-2.7z" fill="#F48120"/></svg>
-    <span style="font-size:.65rem;font-weight:600;color:rgba(255,255,255,.5);font-family:var(--sans)">Cloudflare</span>
-  </div>
-</div>
-<p style="text-align:center;font-size:.6rem;color:rgba(255,255,255,.2);margin:6px 0 0;font-family:var(--sans)">Protection anti-bot active · Aucune donnée revendue</p>
 
 <div id="authDevSection" class="hidden">
 <div style="display:flex;align-items:center;gap:10px;margin:24px 0;">
@@ -2490,7 +2432,6 @@ Propriété Intellectuelle
 <li><strong style="color:var(--txt)">Firebase / Google Cloud</strong> — Services Google LLC, soumis aux conditions d'utilisation Google Cloud</li>
 <li><strong style="color:var(--txt)">Gemini API</strong> — API de Google LLC pour Level IA, soumise aux conditions d'utilisation de l'API Gemini</li>
 <li><strong style="color:var(--txt)">Vercel</strong> — Hébergement pour LevelMovie, selon les conditions Vercel Inc.</li>
-<li><strong style="color:var(--txt)">Cloudflare Turnstile</strong> — Système de protection anti-bot de Cloudflare Inc., soumis aux <a href="https://www.cloudflare.com/terms/" target="_blank" style="color:var(--purple);text-decoration:none">conditions Cloudflare</a>. LevelUp utilise Turnstile pour protéger les formulaires d'inscription et de connexion contre les robots et les tentatives d'abus automatisées, sans collecter de données comportementales intrusives.</li>
 <li><strong style="color:var(--txt)">Font Awesome</strong> — Icônes sous licence Font Awesome Free (CC BY 4.0 pour les icônes, SIL OFL pour les polices)</li>
 <li><strong style="color:var(--txt)">Google Fonts</strong> — Polices Syne et Inter sous licence Open Font License (OFL)</li>
 </ul>
@@ -2659,15 +2600,6 @@ try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) 
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
 
-// ── VÉRIFICATION TURNSTILE ──
-const token = window._turnstileToken;
-if (!token) {
-    toast_('Veuillez compléter la vérification de sécurité ci-dessous.', 'warn');
-    const wrap = document.getElementById('turnstileWrap');
-    if (wrap) { wrap.style.outline = '1px solid rgba(239,68,68,.5)'; wrap.style.borderRadius = '10px'; setTimeout(() => { wrap.style.outline = ''; }, 2000); }
-    return;
-}
-
 btn.disabled = true;
 document.getElementById('gBtnTxt').textContent = 'Connexion en cours...';
 try {
@@ -2680,11 +2612,6 @@ await signInWithPopup(auth, gProv);
 } catch(e) {
 btn.disabled = false;
 document.getElementById('gBtnTxt').textContent = 'Continuer avec Google';
-// Reset Turnstile token after failed attempt
-window._turnstileToken = null;
-if (window._turnstileWidgetId !== undefined && window.turnstile) {
-    window.turnstile.reset(window._turnstileWidgetId);
-}
 if(e.code !== 'auth/popup-closed-by-user') toast_('Erreur de connexion — réessayez', 'err');
 }
 };
@@ -4721,8 +4648,6 @@ if (devSec) devSec.classList.add('hidden');
 }
 
 document.getElementById('authOverlay').classList.remove('hidden');
-// Rendre le widget Turnstile à l'ouverture de la modal
-if (window._renderTurnstile) window._renderTurnstile();
 };
 
 function closeAuth(){
@@ -4733,11 +4658,6 @@ const btnKey = document.getElementById('showKeyInputBtn');
 const wrapKey = document.getElementById('keyInputWrap');
 if(btnKey) btnKey.classList.remove('hidden');
 if(wrapKey) wrapKey.classList.add('hidden');
-// Reset Turnstile token + re-render widget à chaque fermeture
-window._turnstileToken = null;
-if (window._turnstileWidgetId !== undefined && window.turnstile) {
-    try { window.turnstile.reset(window._turnstileWidgetId); } catch(_) {}
-}
 }
 
 // TERMS
