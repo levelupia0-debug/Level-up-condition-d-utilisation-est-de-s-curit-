@@ -689,14 +689,14 @@ LOGOUT ANIMATION OVERLAY
 .poster-card img{width:100%;height:165px;object-fit:cover;display:block}
 .poster-card-title{position:absolute;bottom:0;left:0;right:0;padding:20px 7px 7px;background:linear-gradient(0deg,rgba(0,0,0,.92) 0%,transparent 100%);font-size:.58rem;font-weight:700;color:rgba(255,255,255,.75);font-family:var(--sans);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* ── SEARCH MODAL ── */
-.search-overlay{position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:16px}
-.search-panel{width:100%;max-width:680px;max-height:90vh;background:#0d0d14;border:1px solid rgba(255,255,255,.08);border-radius:22px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.7)}
-.search-header{padding:18px 18px 0;display:flex;flex-direction:column;gap:12px}
+/* ── SEARCH MODAL (FULL SCREEN) ── */
+.search-overlay{position:fixed;inset:0;z-index:1500;background:#09090f;display:flex;flex-direction:column}
+.search-panel{width:100%;max-width:none;height:100dvh;max-height:none;flex:1;background:transparent;border:none;border-radius:0;display:flex;flex-direction:column;overflow:hidden}
+.search-header{padding:14px 18px 0;display:flex;flex-direction:column;gap:10px;max-width:860px;width:100%;margin:0 auto;box-sizing:border-box}
 .search-close-row{display:flex;align-items:center;justify-content:space-between}
 .search-modal-title{font-size:.8rem;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em}
-.search-close-btn{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:.8rem}
-.search-close-btn:hover{background:rgba(255,255,255,.1);color:white}
+.search-close-btn{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.55);cursor:pointer;transition:all .2s;font-size:.8rem;font-weight:600;font-family:var(--sans)}
+.search-close-btn:hover{background:rgba(255,255,255,.1);color:white;border-color:rgba(255,255,255,.18)}
 .search-tabs{display:flex;gap:5px;background:rgba(255,255,255,.04);border-radius:10px;padding:4px}
 .search-tab{flex:1;padding:8px 14px;border-radius:7px;font-size:.78rem;font-weight:700;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,.35);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--sans)}
 .search-tab.active{background:rgba(168,85,247,.14);border:1px solid rgba(168,85,247,.28);color:#d8b4fe}
@@ -705,7 +705,7 @@ LOGOUT ANIMATION OVERLAY
 .search-input-wrap i{color:rgba(255,255,255,.28);font-size:.85rem}
 .search-input{background:none;border:none;outline:none;color:white;font-size:.9rem;font-family:var(--sans);flex:1}
 .search-input::placeholder{color:rgba(255,255,255,.22)}
-.search-results{flex:1;overflow-y:auto;padding:14px 18px 18px;scrollbar-width:thin;scrollbar-color:rgba(168,85,247,.3) transparent}
+.search-results{flex:1;overflow-y:auto;padding:14px 18px 24px;scrollbar-width:thin;scrollbar-color:rgba(168,85,247,.3) transparent;max-width:860px;width:100%;margin:0 auto;box-sizing:border-box;align-self:stretch}
 .search-results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
 .src-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:all .2s}
 .src-card:hover{border-color:rgba(168,85,247,.3);transform:translateY(-2px)}
@@ -728,7 +728,7 @@ LOGOUT ANIMATION OVERLAY
 .search-loading{display:flex;align-items:center;justify-content:center;gap:9px;padding:36px;color:rgba(255,255,255,.28);font-size:.78rem}
 .search-spinner{width:18px;height:18px;border:2px solid rgba(168,85,247,.3);border-top-color:#a855f7;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:480px){.search-results-grid{grid-template-columns:repeat(2,1fr)}.search-panel{max-height:96vh;border-radius:18px 18px 0 0;align-self:flex-end}}
+@media(max-width:480px){.search-results-grid{grid-template-columns:repeat(2,1fr)}}
 
 /* ── CLOCHE NOTIFICATIONS ── */
 .notif-bell-btn{position:relative;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;color:var(--muted)}
@@ -799,7 +799,41 @@ LOGOUT ANIMATION OVERLAY
   .notif-list{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   .notif-item-del{font-size:.85rem;padding:8px 11px;border-radius:8px;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center}
   .notif-action-btn{padding:9px 16px;font-size:.8rem}
+  .notif-admin-body.open{display:block}
 }
+
+/* ── STREAMING PROVIDERS POPUP ── */
+#streamPopup{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+#streamPopup.open{opacity:1;pointer-events:all}
+.stream-popup-card{background:#0f0f1a;border:1px solid rgba(255,255,255,.09);border-radius:20px;width:100%;max-width:440px;max-height:82dvh;display:flex;flex-direction:column;overflow:hidden;animation:cIn .28s cubic-bezier(.34,1.46,.64,1)}
+.stream-popup-head{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.stream-popup-title{flex:1;font-size:.95rem;font-weight:700;color:#fff}
+.stream-popup-close{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:.85rem;padding:6px 10px;border-radius:8px;transition:all .2s}
+.stream-popup-close:hover{color:#fff;background:rgba(255,255,255,.06)}
+.stream-popup-body{padding:14px 18px 18px;overflow-y:auto;flex:1}
+.stream-cat-title{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.28);margin:12px 0 8px}
+.stream-cat-title:first-child{margin-top:0}
+.stream-providers{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.stream-provider{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:.8rem;font-weight:500;color:var(--txt)}
+.stream-provider img{width:28px;height:28px;border-radius:6px;object-fit:cover}
+.stream-link{color:rgba(168,85,247,.8);font-size:.72rem;margin-top:10px;display:block;text-align:center;text-decoration:none}
+.stream-link:hover{color:var(--purple)}
+.stream-empty{text-align:center;padding:28px 16px;color:rgba(255,255,255,.3);font-size:.85rem}
+
+/* ── APPLE DOUBLE NOTIF NOTICE ── */
+.lvl-apple-notice{margin:8px 14px 0;padding:11px 36px 11px 13px;border-radius:10px;background:rgba(255,149,0,.07);border:1px solid rgba(255,149,0,.18);display:flex;align-items:flex-start;gap:9px;font-size:.74rem;line-height:1.55;color:rgba(255,255,255,.65);position:relative}
+.lvl-apple-notice i.fa-apple{color:#ff9500;flex-shrink:0;font-size:.9rem;margin-top:1px}
+.lvl-apple-notice-close{position:absolute;top:7px;right:9px;background:none;border:none;color:rgba(255,255,255,.22);cursor:pointer;font-size:.72rem;padding:2px 5px;line-height:1}
+
+/* ── LANGUAGE SELECTOR ── */
+.lang-btns{display:flex;gap:8px;flex-wrap:wrap;padding:0 2px 4px}
+.lang-btn{padding:9px 18px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.5);font-size:.84rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.lang-btn.active,.lang-btn:hover{background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:var(--purple)}
+
+/* ── ADMIN NOTIF TYPE SELECTOR ── */
+.notif-type-group{display:flex;gap:5px;margin-bottom:8px}
+.notif-type-btn{flex:1;padding:7px 4px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.4);font-size:.69rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:var(--sans);text-align:center;outline:none;white-space:nowrap}
+.notif-type-btn.active{background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.35);color:#d8b4fe}
 
 /* ── IA APPS TAB BAR ── */
 .ia-apps-bar { display:flex; align-items:center; gap:6px; padding:7px 12px; background:rgba(10,10,10,.97); border-bottom:1px solid rgba(255,255,255,.06); overflow-x:auto; flex-shrink:0; scroll-behavior:smooth; -ms-overflow-style:none; scrollbar-width:none; }
@@ -962,8 +996,14 @@ PANNEAU NOTIFICATIONS — DRAWER PRO
       <button class="notif-head-close" onclick="window.toggleNotifPanel()"><i class="fa-solid fa-xmark"></i></button>
     </div>
   </div>
+  <!-- Notice Apple iOS double notification -->
+  <div class="lvl-apple-notice" id="appleNotifNotice" style="display:none">
+    <i class="fa-brands fa-apple"></i>
+    <span data-i18n="apple.notice">Utilisateurs iPhone : vous pourriez recevoir certaines notifications en double. Nous travaillons sur ce problème — veuillez nous en excuser.</span>
+    <button class="lvl-apple-notice-close" onclick="document.getElementById('appleNotifNotice').style.display='none';localStorage.setItem('lvl_apple_notice_dismissed','1')" title="Fermer"><i class="fa-solid fa-xmark"></i></button>
+  </div>
   <div class="notif-list" id="notifList">
-    <div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Aucune notification pour le moment</p></div>
+    <div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p data-i18n="notif.empty">Aucune notification pour le moment</p></div>
   </div>
   <!-- Section admin (super admins uniquement) -->
   <div class="notif-admin-section" id="notifAdminSection" style="display:none">
@@ -987,6 +1027,11 @@ PANNEAU NOTIFICATIONS — DRAWER PRO
         <option value="custom">✏️ URL personnalisée…</option>
       </select>
       <input type="text" id="notifSendCustomUrl" placeholder="🔗 ex: https://ton-site.com/page ou https://levelup-ecosystem.com/#outils" style="display:none">
+      <div class="notif-type-group" id="notifTypeGroup">
+        <button class="notif-type-btn active" data-type="both" onclick="window._setNotifType('both',this)">📣 Push+App</button>
+        <button class="notif-type-btn" data-type="push" onclick="window._setNotifType('push',this)">📲 Push seul</button>
+        <button class="notif-type-btn" data-type="inapp" onclick="window._setNotifType('inapp',this)">🔔 In-app</button>
+      </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button onclick="window.sendPushNotif()" class="btn btn-p" style="flex:1;font-size:.78rem;padding:9px 12px">
           <i class="fa-solid fa-rocket"></i> Envoyer à tous
@@ -1815,24 +1860,24 @@ LEVELUP
 <!-- ══════════════════════════════════════════
 SEARCH MODAL — FILMS & MUSIQUE
 ══════════════════════════════════════════ -->
-<div class="search-overlay hidden" id="searchOverlay" onclick="if(event.target===this)window.closeSearch()">
+<div class="search-overlay hidden" id="searchOverlay">
   <div class="search-panel">
     <div class="search-header">
       <div class="search-close-row">
         <span class="search-modal-title"><i class="fa-solid fa-magnifying-glass" style="color:var(--purple);margin-right:6px"></i>LevelUp Search</span>
-        <button class="search-close-btn" onclick="window.closeSearch()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="search-close-btn" onclick="window.closeSearch()"><i class="fa-solid fa-arrow-left"></i> Quitter la recherche</button>
       </div>
       <div class="search-tabs">
         <button class="search-tab active" id="srTabMovies" onclick="window.switchSearchTab('movies')">
-          <i class="fa-solid fa-film"></i> Films &amp; Séries
+          <i class="fa-solid fa-film"></i> <span data-i18n="search.movies">Films &amp; Séries</span>
         </button>
         <button class="search-tab" id="srTabMusic" onclick="window.switchSearchTab('music')">
-          <i class="fa-solid fa-music"></i> Musique
+          <i class="fa-solid fa-music"></i> <span data-i18n="search.music">Musique</span>
         </button>
       </div>
       <div class="search-input-wrap">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input class="search-input" id="searchInput" type="text" placeholder="Rechercher un film, une série…" autocomplete="off" maxlength="120" oninput="window.debounceSearch(this.value)">
+        <input class="search-input" id="searchInput" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="120" placeholder="Rechercher un film, une série…" data-i18n-placeholder="search.placeholder" oninput="window.debounceSearch(this.value)" style="font-size:16px">
         <button onclick="document.getElementById('searchInput').value='';window.clearSearchResults()" id="srClearBtn" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;padding:0;font-size:.8rem;display:none"><i class="fa-solid fa-times"></i></button>
       </div>
     </div>
@@ -2019,6 +2064,25 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 
 <div class="set-sec">
+<div class="set-title">Langue / Language</div>
+<div class="set-row" style="flex-direction:column;align-items:flex-start;gap:12px">
+  <div class="set-info"><h5>Traduction automatique</h5><p>Sélectionne la langue de toute l'interface via le sélecteur ci-dessous</p></div>
+  <div id="settingsGtranslate" style="display:flex;align-items:center;gap:10px;padding:6px 0">
+    <div class="gtranslate_wrapper"></div>
+  </div>
+  <p style="font-size:.72rem;color:rgba(255,255,255,.3);margin:0">Propulsé par <a href="https://gtranslate.io" target="_blank" rel="noopener" style="color:rgba(168,85,247,.6);text-decoration:none">GTranslate</a></p>
+</div>
+</div>
+
+<div class="set-sec">
+<div class="set-title">Recherche</div>
+<div class="set-row" style="cursor:pointer" onclick="window.openSearch()">
+  <div class="set-info"><h5>Rechercher un film ou une série</h5><p>Films, séries, musiques — disponible depuis n'importe quel écran</p></div>
+  <button class="btn btn-g btn-xs" onclick="window.openSearch();event.stopPropagation()"><i class="fa-solid fa-magnifying-glass"></i> Ouvrir</button>
+</div>
+</div>
+
+<div class="set-sec">
 <div class="set-title">Conditions &amp; Légal</div>
 <div class="set-row" style="cursor:pointer" onclick="openTerms()">
 <div class="set-info"><h5>Conditions (App intégrée)</h5><p>Lire le résumé des conditions directement dans l'application</p></div>
@@ -2092,11 +2156,11 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <!-- MOBILE NAVIGATION (DASHBOARD ONLY) -->
 <div class="mobile-nav" id="mobileNav">
 <div class="mn-in">
-<div class="mn-item on" onclick="pnl('home')" id="mbn-home"><i class="fa-solid fa-house"></i><span>Accueil</span></div>
-<div class="mn-item" onclick="pnl('keys')" id="mbn-keys"><i class="fa-solid fa-key"></i><span>Clés</span></div>
-<div class="mn-item" onclick="pnl('tools')" id="mbn-tools" style="position:relative"><i class="fa-solid fa-wrench" style="color:#22c55e"></i><span>Outils</span><span id="toolsMobBadge" class="lvl-nav-badge hidden" style="top:-2px;right:-2px"></span></div>
-<div class="mn-item" onclick="pnl('settings')" id="mbn-settings"><i class="fa-solid fa-gear"></i><span>Réglages</span></div>
-<div class="mn-item" onclick="confirmLogout()"><i class="fa-solid fa-right-from-bracket"></i><span>Sortir</span></div>
+<div class="mn-item on" onclick="pnl('home')" id="mbn-home"><i class="fa-solid fa-house"></i><span data-i18n="nav.home">Accueil</span></div>
+<div class="mn-item" onclick="pnl('keys')" id="mbn-keys"><i class="fa-solid fa-key"></i><span data-i18n="nav.keys">Clés</span></div>
+<div class="mn-item" onclick="pnl('tools')" id="mbn-tools" style="position:relative"><i class="fa-solid fa-wrench" style="color:#22c55e"></i><span data-i18n="nav.tools">Outils</span><span id="toolsMobBadge" class="lvl-nav-badge hidden" style="top:-2px;right:-2px"></span></div>
+<div class="mn-item" style="position:relative" onclick="window.toggleNotifPanel()" id="mbn-notif"><i class="fa-solid fa-bell"></i><span data-i18n="nav.notif">Notifs</span><span class="lvl-nav-badge hidden" id="notifMobBadge" style="top:-2px;right:-2px"></span></div>
+<div class="mn-item" onclick="pnl('settings')" id="mbn-settings"><i class="fa-solid fa-gear"></i><span data-i18n="nav.settings">Réglages</span></div>
 </div>
 </div>
 </div>
@@ -3928,20 +3992,30 @@ function initNotifPanel(u) {
         console.error('[notif] Firestore global error', e);
     }
 
-    // ── Notifications personnelles de l'utilisateur (sécurité, clé…) ──
-    if (u && !u.isAnonymous) {
-        try {
-            const userNotifCol = collection(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'notifications');
-            const uq = query(userNotifCol, orderBy('createdAt', 'desc'), limit(20));
-            window._userNotifUnsub && window._userNotifUnsub();
-            window._userNotifUnsub = onSnapshot(uq, (snap) => {
-                _userNotifs = [];
-                snap.forEach(d => _userNotifs.push({ id: 'u_' + d.id, ...d.data() }));
-                _mergeAndRender();
-            });
-        } catch(e) {
-            console.error('[notif] Firestore user error', e);
-        }
+    // [Level IA per-user listener removed — global NOTIF_COLL only]
+
+    // ── Afficher notice Apple si iOS et pas encore rejeté ──
+    try {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const dismissed = localStorage.getItem('lvl_apple_notice_dismissed') === '1';
+        const notice = document.getElementById('appleNotifNotice');
+        if (notice && isIOS && !dismissed) notice.style.display = '';
+    } catch(_) {}
+
+    // ── Super admin : afficher section + auto-ouvrir le body ──
+    if (isSuperAdmin) {
+        // Re-check après rendu (timing safe)
+        setTimeout(() => {
+            const sec = document.getElementById('notifAdminSection');
+            const body = document.getElementById('notifAdminBody');
+            const toggle = document.getElementById('notifAdminToggle');
+            if (sec) sec.style.display = '';
+            if (body && !body.classList.contains('open')) {
+                body.classList.add('open');
+                if (toggle) toggle.classList.add('open');
+            }
+        }, 400);
     }
 }
 
@@ -4149,12 +4223,14 @@ window._secAlertContact = function() {
 
 function _updateBadge(count) {
     const cnt = document.getElementById('notifCount');
-    if (!cnt) return;
+    const mob = document.getElementById('notifMobBadge');
     if (count > 0) {
-        cnt.textContent = count > 99 ? '99+' : count;
-        cnt.classList.remove('hidden');
+        const label = count > 99 ? '99+' : count;
+        if (cnt) { cnt.textContent = label; cnt.classList.remove('hidden'); }
+        if (mob) { mob.textContent = label; mob.classList.remove('hidden'); }
     } else {
-        cnt.classList.add('hidden');
+        if (cnt) cnt.classList.add('hidden');
+        if (mob) mob.classList.add('hidden');
     }
 }
 
@@ -4222,6 +4298,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Envoi notification push (super admins) ──
+// ── Sélecteur type de notification (admin) ──
+window._notifSendType = 'both'; // both | push | inapp
+window._setNotifType = function(type, btn) {
+    window._notifSendType = type;
+    document.querySelectorAll('.notif-type-btn').forEach(b => b.classList.toggle('active', b === btn));
+};
+
 window.sendPushNotif = async function() {
     const title    = document.getElementById('notifSendTitle')?.value.trim();
     const body     = document.getElementById('notifSendBody')?.value.trim();
@@ -4234,54 +4317,57 @@ window.sendPushNotif = async function() {
     }
     if (!title || !body) { toast_('Titre et message requis', 'warn'); return; }
 
+    const sendType = window._notifSendType || 'both';
     const btn = document.querySelector('#notifAdminBody button.btn-p');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Envoi...'; }
 
     try {
-        // 1. Écrire dans Firestore (pour l'historique in-app)
-        const colRef = collection(db, ...NOTIF_COLL);
-        await addDoc(colRef, {
-            title, body, url,
-            ...(image ? { image } : {}),
-            createdAt: serverTimestamp(),
-            sentBy: window._ud?.email || 'admin'
-        });
-
-        // 2. Envoyer le push FCM via l'API (navigateur fermé compris)
-        const adminKey = window._appsStatus?.admin_push_key || '';
-        if (!adminKey) {
-            // Message d'erreur clair avec le chemin exact à vérifier
-            toast_('Clé admin introuvable — Vérifiez dans Firestore : artifacts → levelup-ecosystem → public → data → config → apps → champ "admin_push_key"', 'warn');
-            toast_('Notification sauvegardée en base (in-app uniquement)', 'info');
-        } else {
-            const payload = { title, body, url };
-            if (image) payload.image = image;
-            const r = await fetch('/api/notify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
-                body: JSON.stringify(payload)
+        // 1. Écrire dans Firestore (in-app) si type = both | inapp
+        if (sendType === 'both' || sendType === 'inapp') {
+            const colRef = collection(db, ...NOTIF_COLL);
+            await addDoc(colRef, {
+                title, body, url,
+                ...(image ? { image } : {}),
+                createdAt: serverTimestamp(),
+                sentBy: window._ud?.email || 'admin'
             });
-            const d = await r.json();
-            if (!r.ok) {
-                const detail = d.details ? JSON.stringify(d.details) : '';
-                throw new Error(`${d.error || 'Erreur FCM'}${detail ? ' — ' + detail : ''}`);
-            }
-            toast_('🚀 Notification push envoyée à tous les utilisateurs !', 'ok');
         }
+
+        // 2. Envoyer push FCM (natif) si type = both | push
+        if (sendType === 'both' || sendType === 'push') {
+            const adminKey = window._appsStatus?.admin_push_key || '';
+            if (!adminKey) {
+                toast_('Clé admin introuvable — artifacts→levelup-ecosystem→public→data→config→apps→admin_push_key', 'warn');
+            } else {
+                const payload = { title, body, url };
+                if (image) payload.image = image;
+                const r = await fetch('/api/notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                    body: JSON.stringify(payload)
+                });
+                const d = await r.json();
+                if (!r.ok) {
+                    const detail = d.details ? JSON.stringify(d.details) : '';
+                    throw new Error(`${d.error || 'Erreur FCM'}${detail ? ' — ' + detail : ''}`);
+                }
+            }
+        }
+
+        const typeLabels = { both: '🚀 Push + In-app', push: '📲 Push natif', inapp: '🔔 In-app' };
+        toast_(`${typeLabels[sendType] || '🚀'} Notification envoyée !`, 'ok');
 
         // Vider les champs
         ['notifSendTitle','notifSendBody','notifSendImage'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
         if (destSel) destSel.value = '';
-        if (document.getElementById('notifSendCustomUrl')) {
-            document.getElementById('notifSendCustomUrl').value = '';
-            document.getElementById('notifSendCustomUrl').style.display = 'none';
-        }
+        const customUrlEl = document.getElementById('notifSendCustomUrl');
+        if (customUrlEl) { customUrlEl.value = ''; customUrlEl.style.display = 'none'; }
     } catch(e) {
         toast_('Erreur envoi : ' + e.message, 'err');
     } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Envoyer à tous les utilisateurs'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Envoyer à tous'; }
     }
 };
 
@@ -4438,25 +4524,31 @@ function _attachFCMListeners() {
     if (!window._fcmFgListenerSet) {
         window._fcmFgListenerSet = true;
         onMessage(_messaging, (payload) => {
-            // Anti-doublon foreground : ignorer si même message reçu dans les 5s
-            const msgId = payload.messageId || payload.data?.sentAt || payload.notification?.title;
-            const lastMsgKey = 'lvl_fcm_last_msg';
-            const lastMsg = sessionStorage.getItem(lastMsgKey);
-            if (msgId && lastMsg === msgId) return;
-            if (msgId) sessionStorage.setItem(lastMsgKey, msgId);
-            const title = payload.notification?.title || payload.data?.title || 'LevelUp';
-            const body  = payload.notification?.body  || payload.data?.body  || '';
-            const url   = payload.data?.url || '/';
-            _addNotifToPanel({ title, body, url, createdAt: new Date() });
-            toast_(`🔔 ${title}`, 'ok');
+            _handleFCMPayload(payload);
         });
     }
     if ('serviceWorker' in navigator && !window._swMsgListenerSet) {
         window._swMsgListenerSet = true;
         navigator.serviceWorker.addEventListener('message', (e) => {
             if (e.data?.type === 'NOTIF_CLICK' && e.data?.url) window.open(e.data.url, '_blank');
+            // Fallback SW→foreground quand l'app était visible (évite le doublon natif)
+            if (e.data?.type === 'FCM_FOREGROUND_FALLBACK') _handleFCMPayload(e.data.payload);
         });
     }
+}
+
+function _handleFCMPayload(payload) {
+    const msgId = payload?.messageId || payload?.data?.sentAt || payload?.notification?.title || '';
+    const lastMsgKey = 'lvl_fcm_last_msg';
+    const lastMsg = sessionStorage.getItem(lastMsgKey);
+    if (msgId && lastMsg === msgId) return;
+    if (msgId) sessionStorage.setItem(lastMsgKey, msgId);
+    setTimeout(() => { try { sessionStorage.removeItem(lastMsgKey); } catch(_) {} }, 8000);
+    const title = payload?.notification?.title || payload?.data?.title || 'LevelUp';
+    const body  = payload?.notification?.body  || payload?.data?.body  || '';
+    const url   = payload?.data?.url || '/';
+    _addNotifToPanel({ title, body, url, createdAt: new Date() });
+    toast_(`🔔 ${title}`, 'ok');
 }
 
 // ── Animation cloche (keyframe déclarée via JS pour éviter conflit CSS) ──
@@ -5928,6 +6020,20 @@ MODALE ALERTE SÉCURITÉ
 })();
 </script>
 
+<!-- ═══ STREAMING PROVIDERS POPUP ═══ -->
+<div id="streamPopup" onclick="if(event.target===this)window._closeStreamPopup()">
+  <div class="stream-popup-card">
+    <div class="stream-popup-head">
+      <div style="width:32px;height:32px;border-radius:8px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-satellite-dish" style="color:var(--purple);font-size:.75rem"></i></div>
+      <div class="stream-popup-title" id="streamPopupTitle" data-i18n="legal.title">Sources légales de streaming</div>
+      <button class="stream-popup-close" onclick="window._closeStreamPopup()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="stream-popup-body" id="streamPopupBody">
+      <div class="stream-empty"><div class="search-spinner" style="width:18px;height:18px;margin:0 auto 10px"></div> Chargement…</div>
+    </div>
+  </div>
+</div>
+
 <!-- ── SEARCH MODAL + POSTER SCROLLER LOGIC ── -->
 <script>
 (function() {
@@ -6071,30 +6177,80 @@ ${artwork
     el.appendChild(grid);
 }
 
-// ─── STREAMING PROVIDERS CHECK (TMDB) ─────────────────────────────────────────
+// ─── STREAMING PROVIDERS FULL POPUP (TMDB) ────────────────────────────────────
 window.checkStreaming = async function(id, type, btn) {
     btn.disabled = true;
     btn.innerHTML = '<div class="search-spinner" style="width:11px;height:11px;border-width:1.5px;margin:0 auto"></div>';
     try {
         const r    = await fetch(`${TMDB_BASE}/${type}/${id}/watch/providers?api_key=${TMDB_KEY}`);
         const data = await r.json();
-        const fr   = (data.results || {}).FR || (data.results || {}).CA || (data.results || {}).US || {};
-        const providers = [...(fr.flatrate || []), ...(fr.free || []), ...(fr.ads || [])].slice(0, 4);
-        if (!providers.length) {
-            btn.innerHTML = '<i class="fa-solid fa-ban"></i> Non dispo en streaming';
-            btn.style.opacity = '.45';
+        const res  = data.results || {};
+        // Priorité FR, sinon CA, sinon BE, sinon US
+        const region = res.FR || res.CA || res.BE || res.US || Object.values(res)[0] || {};
+        const tmdbLink = region.link || `https://www.themoviedb.org/${type}/${id}/watch`;
+
+        const cats = [
+            { key: 'flatrate', label: '📺 Inclus dans l\'abonnement' },
+            { key: 'free',     label: '🆓 Gratuit' },
+            { key: 'ads',      label: '📢 Avec publicités' },
+            { key: 'rent',     label: '🛒 À la location' },
+            { key: 'buy',      label: '💳 À l\'achat' },
+        ];
+
+        const body = document.getElementById('streamPopupBody');
+        const popup = document.getElementById('streamPopup');
+        if (!body || !popup) return;
+
+        let hasAny = false;
+        let html = '';
+        cats.forEach(({ key, label }) => {
+            const providers = region[key] || [];
+            if (!providers.length) return;
+            hasAny = true;
+            html += `<div class="stream-cat-title">${label}</div><div class="stream-providers">`;
+            providers.forEach(p => {
+                const logo = p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : '';
+                html += `<div class="stream-provider">${logo ? `<img src="${logo}" alt="${p.provider_name}" loading="lazy" onerror="this.style.display='none'">` : ''}<span>${p.provider_name}</span></div>`;
+            });
+            html += `</div>`;
+        });
+
+        if (!hasAny) {
+            html = `<div class="stream-empty"><i class="fa-solid fa-ban" style="font-size:1.8rem;opacity:.2;display:block;margin-bottom:12px"></i>Non disponible en streaming dans votre région pour le moment.</div>`;
         } else {
-            const names = providers.map(p => p.provider_name).join(' · ');
-            btn.innerHTML = `<i class="fa-solid fa-check"></i> ${names}`;
+            html += `<a href="${tmdbLink}" target="_blank" rel="noopener" class="stream-link"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem;margin-right:4px"></i>Voir sur TMDB</a>`;
+        }
+
+        body.innerHTML = html;
+        popup.classList.add('open');
+
+        // Mettre à jour le bouton source
+        if (hasAny) {
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> Voir les sources`;
             btn.style.color = '#86efac';
             btn.style.borderColor = 'rgba(34,197,94,.3)';
             btn.style.background  = 'rgba(34,197,94,.08)';
+        } else {
+            btn.innerHTML = '<i class="fa-solid fa-ban"></i> Non dispo';
+            btn.style.opacity = '.5';
         }
     } catch {
         btn.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i> Erreur';
+    } finally {
         btn.disabled = false;
     }
 };
+
+window._closeStreamPopup = function() {
+    const p = document.getElementById('streamPopup');
+    if (p) p.classList.remove('open');
+};
+// Fermer avec Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('streamPopup')?.classList.contains('open')) {
+        window._closeStreamPopup();
+    }
+});
 
 // ─── ESC KEY ──────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', function(e) {
@@ -6183,5 +6339,26 @@ document.addEventListener('keydown', function(e) {
     });
 })();
 </script>
+
+<!-- ═══ GTRANSLATE ═══ -->
+<style>
+/* Positionner le widget GTranslate sans gêner les boutons nav */
+body > .gtranslate_wrapper:first-of-type,
+.gtranslate_wrapper:not(#settingsGtranslate .gtranslate_wrapper) {
+    position: fixed !important;
+    bottom: 80px !important;
+    right: 14px !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: 850 !important;
+}
+/* Widget dans les paramètres : position relative intégrée */
+#settingsGtranslate .gtranslate_wrapper {
+    position: relative !important;
+    display: inline-block !important;
+}
+</style>
+<script>window.gtranslateSettings = {"default_language":"fr","native_language_names":true,"detect_browser_language":true,"wrapper_selector":".gtranslate_wrapper","flag_size":24,"switcher_horizontal_position":"right","switcher_vertical_position":"top","switcher_open_direction":"top","alt_flags":{"en":"usa","pt":"brazil","es":"mexico"}}</script>
+<script src="https://cdn.gtranslate.net/widgets/latest/dwf.js" defer></script>
 </body>
 </html>
