@@ -16,44 +16,38 @@ const messaging = firebase.messaging();
 const ICON_URL = '/icon.svg';
 const APP_URL  = 'https://levelup-ecosystem.com';
 
-// ─── ANTI-DOUBLON SW ──────────────────────────────────────────────────────────
-// Fenêtre de dédup 30s basée sur le contenu — empêche 2 affichages du même push
+// ─── ANTI-DOUBLON ─────────────────────────────────────────────────────────────
+// On ne montre jamais le même (title+body) deux fois dans la même fenêtre de 15s
 const _shownKeys = new Set();
-
 function _notifKey(title, body) {
-    // Bucket de 15s : même notif dans la même fenêtre = doublon
     return `${title}|${body}|${Math.floor(Date.now() / 15000)}`;
 }
 
 // ─── HANDLER PRINCIPAL ────────────────────────────────────────────────────────
+// RÈGLE UNIQUE : le SW est la SEULE source de notifications système.
+// La page (onMessage) gère les toasts in-app ; le SW gère le reste.
+// → Zéro doublon garanti.
 messaging.onBackgroundMessage(async (payload) => {
     const title = payload.notification?.title || payload.data?.title || 'LevelUp Ecosystem';
     const body  = payload.notification?.body  || payload.data?.body  || 'Nouvelle notification.';
     const url   = payload.data?.url || APP_URL;
     const image = payload.data?.image || undefined;
 
-    // ── 1. Anti-doublon contenu (même notif reçue 2x par FCM) ──
+    // 1. Dédup — même message reçu deux fois par FCM (rare mais possible)
     const key = _notifKey(title, body);
     if (_shownKeys.has(key)) return;
     _shownKeys.add(key);
     setTimeout(() => _shownKeys.delete(key), 30000);
 
-    // ── 2. CRITIQUE : si l'app est ouverte et visible, NE PAS afficher une
-    //    notification système — envoyer le payload à la page à la place.
-    //    La page a son propre onMessage() qui gère le toast in-app.
+    // 2. Si l'app est OUVERTE ET VISIBLE : on ne montre PAS de notification système.
+    //    onMessage() dans la page s'en charge déjà via le toast in-app.
+    //    → NE PAS envoyer SW_FG_NOTIF : ce postMessage causait un deuxième toast.
     const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const focusedClient = allClients.find(c => c.focused);
+    const visibleClient = allClients.find(c => c.visibilityState === 'visible');
+    if (visibleClient) return; // page visible → onMessage() gère → on s'arrête ici
 
-    if (focusedClient) {
-        // App active — on signale juste à la page qu'une notif est arrivée
-        focusedClient.postMessage({ type: 'SW_FG_NOTIF', payload: { title, body, url } });
-        return; // ← PAS de notification système = zéro doublon
-    }
-
-    // ── 3. App en arrière-plan : afficher la notification système ──
-    // Tag unique basé sur le contenu pour que le navigateur fusionne les doublons
+    // 3. App en arrière-plan ou fermée → notification système
     const tag = `lvlup-${btoa(unescape(encodeURIComponent(title + body))).slice(0, 20)}`;
-
     const options = {
         body,
         icon:               ICON_URL,
@@ -67,7 +61,6 @@ messaging.onBackgroundMessage(async (payload) => {
     };
     if (image) options.image = image;
 
-    // Si une notif avec le même tag est déjà affichée, la remplacer (renotify:false)
     await self.registration.showNotification(title, options);
 });
 
@@ -81,7 +74,6 @@ self.addEventListener('notificationclick', (event) => {
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
             for (const client of list) {
                 if (client.url.startsWith(self.location.origin) && 'focus' in client) {
-                    client.postMessage({ type: 'NOTIF_CLICK', url: full });
                     return client.focus();
                 }
             }
