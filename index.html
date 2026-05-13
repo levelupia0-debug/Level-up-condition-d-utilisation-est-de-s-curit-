@@ -3165,7 +3165,7 @@ window.updateAppCards();
 if(window.updateFabNavBtn) window.updateFabNavBtn();
 
 // Si déjà accordé, s'enregistrer silencieusement
-setTimeout(() => { try { if (_getPushPref() === 'granted' && Notification.permission === 'granted') _registerFCMAnonOrUser(); } catch(_) {} }, 2000);
+setTimeout(() => { try { if (!_fcmBootDone && _getPushPref() === 'granted' && Notification.permission === 'granted') { _fcmBootDone = true; _registerFCMAnonOrUser(); } } catch(_) {} }, 2000);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3179,7 +3179,8 @@ const LAST_SEEN_KEY = 'lvl_notif_last_seen';
 // ── Enregistrement SW + token FCM (utilisateurs connectés) ──
 async function initFCM(u) {
     // Si permission déjà accordée, enregistrer directement sans popup
-    if (_getPushPref && _getPushPref() === 'granted' && Notification.permission === 'granted') {
+    if (!_fcmBootDone && _getPushPref && _getPushPref() === 'granted' && Notification.permission === 'granted') {
+        _fcmBootDone = true;
         await _registerFCMAnonOrUser();
     }
     initNotifPanel(u);
@@ -3666,9 +3667,10 @@ function _updatePushToggleUI() {
 
 // Enregistrement FCM pour tout utilisateur (connecté ou anonyme)
 // Garde anti-doublon : une seule inscription par heure max
-const _FCM_REG_KEY = 'lvl_fcm_last_reg';
+const _FCM_REG_KEY   = 'lvl_fcm_last_reg';
 const _FCM_TOKEN_KEY = 'lvl_fcm_token';
-let _fcmRegistering = false;
+let _fcmRegistering  = false;
+let _fcmBootDone     = false; // ← empêche les double-boot entre chemins (guest/user/banner)
 
 async function _registerFCMAnonOrUser() {
     if (!_messaging || VAPID_KEY === 'YOUR_VAPID_KEY_HERE') return;
@@ -3729,33 +3731,61 @@ async function _registerFCMAnonOrUser() {
 }
 
 function _attachFCMListeners() {
+    // ── BroadcastChannel cross-tab : un seul onglet affiche la notif ──
+    if (!window._fgNotifBC) {
+        try {
+            window._fgNotifBC = new BroadcastChannel('lvl_notif_dedup');
+            window._fgNotifBC.onmessage = (e) => {
+                if (e.data?.type === 'NOTIF_SHOWN') {
+                    if (!window._fgNotifSet) window._fgNotifSet = new Set();
+                    window._fgNotifSet.add(e.data.key); // marquer comme déjà traité
+                }
+            };
+        } catch(_) {}
+    }
+
     if (!window._fcmFgListenerSet) {
         window._fcmFgListenerSet = true;
         onMessage(_messaging, (payload) => {
-            // Anti-doublon foreground renforcé (même logique que le SW)
             const msgTitle = payload.notification?.title || payload.data?.title || '';
             const msgBody  = payload.notification?.body  || payload.data?.body  || '';
-            const msgId    = payload.messageId || payload.data?.sentAt || msgTitle;
+            // Clé de dédup basée sur contenu + fenêtre 15s
             const dedupKey = `${msgTitle}|${msgBody}|${Math.floor(Date.now()/15000)}`;
+
             if (!window._fgNotifSet) window._fgNotifSet = new Set();
-            if (window._fgNotifSet.has(dedupKey)) return;
+            if (window._fgNotifSet.has(dedupKey)) return; // doublon détecté
             window._fgNotifSet.add(dedupKey);
             setTimeout(() => window._fgNotifSet.delete(dedupKey), 30000);
-            const lastMsgKey = 'lvl_fcm_last_msg';
-            const lastMsg = sessionStorage.getItem(lastMsgKey);
-            if (msgId && lastMsg === msgId) return;
-            if (msgId) sessionStorage.setItem(lastMsgKey, msgId);
-            const title = payload.notification?.title || payload.data?.title || 'LevelUp';
-            const body  = payload.notification?.body  || payload.data?.body  || '';
+
+            // Signaler aux autres onglets que cette notif a été traitée
+            try { window._fgNotifBC?.postMessage({ type: 'NOTIF_SHOWN', key: dedupKey }); } catch(_) {}
+
+            const title = msgTitle || 'LevelUp';
+            const body  = msgBody  || '';
             const url   = payload.data?.url || '/';
             _addNotifToPanel({ title, body, url, createdAt: new Date() });
             toast_(`🔔 ${title}`, 'ok');
         });
     }
+
+    // ── Écouter les messages du SW (clic notif + SW_FG_NOTIF) ──
     if ('serviceWorker' in navigator && !window._swMsgListenerSet) {
         window._swMsgListenerSet = true;
         navigator.serviceWorker.addEventListener('message', (e) => {
-            if (e.data?.type === 'NOTIF_CLICK' && e.data?.url) window.open(e.data.url, '_blank');
+            if (e.data?.type === 'NOTIF_CLICK' && e.data?.url) {
+                window.open(e.data.url, '_blank');
+            }
+            // SW nous signale une notif alors que l'app est au premier plan
+            if (e.data?.type === 'SW_FG_NOTIF' && e.data?.payload) {
+                const p = e.data.payload;
+                const k = `${p.title}|${p.body}|${Math.floor(Date.now()/15000)}`;
+                if (!window._fgNotifSet) window._fgNotifSet = new Set();
+                if (window._fgNotifSet.has(k)) return;
+                window._fgNotifSet.add(k);
+                setTimeout(() => window._fgNotifSet.delete(k), 30000);
+                _addNotifToPanel({ title: p.title, body: p.body, url: p.url, createdAt: new Date() });
+                toast_(`🔔 ${p.title}`, 'ok');
+            }
         });
     }
 }
