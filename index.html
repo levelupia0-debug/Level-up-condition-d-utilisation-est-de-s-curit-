@@ -996,8 +996,6 @@ nav{padding:12px 5%}
 @media(min-width:821px){.db-main{padding-bottom:28px}}
 </style>
 
-<!-- Cloudflare Turnstile -->
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
 </head>
 <body>
 
@@ -2450,17 +2448,7 @@ AUTH OVERLAY
 <h2 id="authTitle">Rejoindre LevelUp</h2>
 <p id="authDesc">Connectez-vous avec Google pour accéder à tout l'écosystème et générer votre clé d'accès gratuite.</p>
 
-<!-- Cloudflare Turnstile -->
-<div id="tsSkeleton" style="height:65px;background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;gap:10px">
-  <div style="width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.1);border-top-color:#a855f7;animation:als-spin .8s linear infinite"></div>
-  <span style="font-size:.78rem;color:rgba(255,255,255,.35)">Vérification de sécurité…</span>
-</div>
-<div id="tsWidget" style="display:none;margin-bottom:16px;min-height:65px"></div>
-<div id="tsSkip" style="display:none;font-size:.72rem;color:rgba(255,255,255,.3);text-align:center;margin-bottom:12px">
-  <i class="fa-solid fa-shield-check" style="color:#22c55e;margin-right:4px"></i>Protection active
-</div>
-
-<button class="google-signin-btn" id="gSignInBtn" onclick="window.googleSignIn()" disabled style="opacity:.6;cursor:not-allowed">
+<button class="google-signin-btn" id="gSignInBtn" onclick="window.googleSignIn()">
 <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
 <span id="gBtnTxt">Continuer avec Google</span>
 </button>
@@ -3093,51 +3081,6 @@ window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collectio
 try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) {}
 
 // SUPPRIMÉ : l'appel prématuré à signInAnonymously qui écrasait la session Google au rechargement.
-
-// ── CLOUDFLARE TURNSTILE — init + bypass 3s ──────────────────────────────────
-window._tsVerified = false;
-window._tsWidgetId = null;
-
-function _tsEnable() {
-    const btn = document.getElementById('gSignInBtn');
-    if (!btn) return;
-    btn.disabled = false;
-    btn.style.opacity = '';
-    btn.style.cursor = '';
-}
-function _tsRenderWidget() {
-    const container = document.getElementById('tsWidget');
-    const skeleton = document.getElementById('tsSkeleton');
-    const skip = document.getElementById('tsSkip');
-    if (!container || !window.turnstile) return;
-    if (skeleton) skeleton.style.display = 'none';
-    container.style.display = '';
-    try {
-        window._tsWidgetId = window.turnstile.render(container, {
-            sitekey: window._TURNSTILE_SITEKEY || '1x00000000000000000000AA',
-            theme: 'dark',
-            callback: function(token) {
-                window._tsVerified = true;
-                window._tsToken = token;
-                if (skip) { skip.style.display = ''; container.style.display = 'none'; }
-                _tsEnable();
-            },
-            'expired-callback': function() {
-                window._tsVerified = false;
-                window._tsToken = null;
-                _tsRenderWidget();
-            },
-            'error-callback': function() {
-                // On erreur, on libère quand même le bouton après 3s
-                setTimeout(_tsEnable, 3000);
-            }
-        });
-    } catch(e) {
-        // Fallback si Turnstile plante
-        setTimeout(_tsEnable, 3000);
-    }
-}
-// ─────────────────────────────────────────────────────────────────────────────
 
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
@@ -5312,47 +5255,6 @@ if(window.updateFabNavBtn) window.updateFabNavBtn();
 };
 
 // AUTH
-// Réinitialise Turnstile et démarre le bypass 3s à l'ouverture de l'overlay auth
-function _tsResetOnOpen() {
-    window._tsVerified = false;
-    window._tsToken = null;
-    const btn = document.getElementById('gSignInBtn');
-    if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.style.cursor = 'not-allowed'; }
-    const skeleton = document.getElementById('tsSkeleton');
-    const widget = document.getElementById('tsWidget');
-    const skip = document.getElementById('tsSkip');
-    if (skeleton) skeleton.style.display = '';
-    if (widget) { widget.style.display = 'none'; widget.innerHTML = ''; }
-    if (skip) skip.style.display = 'none';
-    // Rend le widget Turnstile si disponible, sinon attends
-    if (window.turnstile) {
-        _tsRenderWidget();
-    } else {
-        // Turnstile pas encore chargé — écoute le callback onload
-        window._tsPendingRender = true;
-    }
-    // Bypass 3s : débloque le bouton si Turnstile reste bloqué
-    clearTimeout(window._tsBypassTimer);
-    window._tsBypassTimer = setTimeout(function() {
-        if (!window._tsVerified) {
-            const sk = document.getElementById('tsSkeleton');
-            const wi = document.getElementById('tsWidget');
-            const sp = document.getElementById('tsSkip');
-            if (sk) sk.style.display = 'none';
-            if (wi) wi.style.display = 'none';
-            if (sp) { sp.style.display = ''; sp.innerHTML = '<i class="fa-solid fa-shield-halved" style="color:#f97316;margin-right:4px"></i><span style="color:rgba(255,255,255,.35)">Vérification ignorée (délai)</span>'; }
-            _tsEnable();
-        }
-    }, 3000);
-}
-
-window.onTurnstileLoad = function() {
-    if (window._tsPendingRender) {
-        window._tsPendingRender = false;
-        _tsRenderWidget();
-    }
-};
-
 window.openAuth = function(mode = 'create') {
 if(window._user) { window.openDashboard(); return; }
 
@@ -5374,15 +5276,11 @@ if (devSec) devSec.classList.add('hidden');
 }
 
 document.getElementById('authOverlay').classList.remove('hidden');
-// Démarre Turnstile avec bypass 3s à chaque ouverture
-_tsResetOnOpen();
 };
 
 function closeAuth(){
 document.getElementById('authOverlay').classList.add('hidden');
-// Annule le bypass Turnstile en cours et réactive le bouton pour la prochaine ouverture
-clearTimeout(window._tsBypassTimer);
-const b=document.getElementById('gSignInBtn'); if(b) { b.disabled=false; b.style.opacity=''; b.style.cursor=''; }
+const b=document.getElementById('gSignInBtn'); if(b) { b.disabled=false; }
 const t=document.getElementById('gBtnTxt'); if(t) t.textContent='Continuer avec Google';
 const btnKey = document.getElementById('showKeyInputBtn');
 const wrapKey = document.getElementById('keyInputWrap');
