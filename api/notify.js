@@ -53,35 +53,16 @@ export default async function handler(req, res) {
     const iconUrl   = 'https://levelup-ecosystem.com/icon.svg';
 
     // ─────────────────────────────────────────────────────────────────────────
-    // CORRECTION CRITIQUE : on supprime le champ "notification" à la racine.
-    //
-    // Avant : message = { notification:{...}, webpush:{notification:{...}} }
-    //   → Chrome affichait la notification racine AUTOMATIQUEMENT (sans le SW)
-    //   → ET le SW affichait aussi webpush.notification via onBackgroundMessage
-    //   → RÉSULTAT : 2 notifications natives = 2 vibrations pour 1 seul push
-    //
-    // Après : message = { data:{...}, webpush:{notification:{...}} }
-    //   → Pas de notification racine = pas d'affichage automatique du navigateur
-    //   → Seul onBackgroundMessage dans le SW s'exécute = 1 seule notification
+    // CORRECTION : Passage en mode Data-Only pour le WebPush.
+    // En supprimant le bloc "notification" de "webpush", on empêche iOS/Chrome 
+    // d'afficher une notification native automatiquement.
+    // C'est le Service Worker qui prendra le relais via onBackgroundMessage.
     // ─────────────────────────────────────────────────────────────────────────
-
-    const webpushNotif = {
-        title,
-        body,
-        icon:               iconUrl,
-        badge:              iconUrl,
-        requireInteraction: false,
-        vibrate:            [200, 80, 200],
-        tag:                `lvlup-${Buffer.from(title + body).toString('base64').slice(0, 20)}`,
-        renotify:           false
-    };
-    if (image) webpushNotif.image = image;
 
     const message = {
         topic: 'levelup-all',
 
-        // ← PAS DE CHAMP "notification" ICI — c'était la source des doublons
-
+        // Toutes les infos passent par la "data" pour le Service Worker
         data: {
             title,
             body,
@@ -90,11 +71,13 @@ export default async function handler(req, res) {
             sentAt:  new Date().toISOString(),
             ...(image ? { image } : {})
         },
+        
         webpush: {
             headers: { Urgency: 'high', TTL: '86400' },
-            notification: webpushNotif,
+            // Pas de champ "notification" ici !
             fcm_options: { link: targetUrl }
         },
+        
         android: {
             priority: 'high',
             notification: {
@@ -106,6 +89,7 @@ export default async function handler(req, res) {
                 ...(image ? { image } : {})
             }
         },
+        
         apns: {
             payload: { aps: { alert: { title, body }, sound: 'default', badge: 1 } },
             ...(image ? { fcm_options: { image } } : {})
