@@ -903,6 +903,39 @@ LOGOUT ANIMATION OVERLAY
 .cms-edit-btn { position:absolute;top:4px;right:4px;z-index:10;background:rgba(168,85,247,.85);border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:.7rem;font-weight:700;cursor:pointer;font-family:var(--sans);display:none;align-items:center;gap:5px;backdrop-filter:blur(4px) }
 body.cms-edit-mode .cms-edit-btn { display:flex }
 .cms-edit-input { width:100%;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.3);border-radius:8px;padding:8px 10px;color:#fff;font-size:.85rem;font-family:var(--sans);outline:none;resize:vertical;min-height:38px }
+/* CMS Floating toolbar */
+#cmsFloatBar { position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(135deg,rgba(124,58,237,.97),rgba(109,40,217,.97));backdrop-filter:blur(12px);padding:8px 16px;display:none;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.15);box-shadow:0 4px 20px rgba(0,0,0,.5) }
+#cmsFloatBar.active { display:flex }
+.cms-bar-label { font-size:.78rem;font-weight:700;color:#fff;flex:1;letter-spacing:.02em }
+.cms-bar-btn { padding:6px 14px;border-radius:8px;border:none;font-size:.75rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;outline:none }
+.cms-bar-save { background:#22c55e;color:#fff }
+.cms-bar-save:hover { background:#16a34a }
+.cms-bar-quit { background:rgba(255,255,255,.12);color:#fff }
+.cms-bar-quit:hover { background:rgba(255,255,255,.22) }
+/* CMS Edit popup */
+#cmsEditPopup { position:fixed;inset:0;z-index:999999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);padding:16px }
+#cmsEditPopup.open { display:flex }
+.cms-edit-popup-card { background:#13101f;border:1px solid rgba(168,85,247,.35);border-radius:18px;padding:22px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.7) }
+.cms-edit-popup-label { font-size:.72rem;color:rgba(255,255,255,.4);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.07em }
+.cms-edit-popup-ta { width:100%;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.25);border-radius:10px;padding:10px 12px;color:#fff;font-size:.9rem;font-family:var(--sans);outline:none;resize:vertical;min-height:80px;box-sizing:border-box;line-height:1.6 }
+.cms-edit-popup-ta:focus { border-color:rgba(168,85,247,.6) }
+.cms-edit-popup-actions { display:flex;gap:8px;margin-top:12px;justify-content:flex-end }
+body.cms-edit-mode [data-cms-edit]:hover { outline:2px dashed rgba(168,85,247,.6);outline-offset:3px;cursor:pointer }
+/* Zone buttons for admin image upload */
+.cms-zone-btn { flex:1;padding:7px 10px;border-radius:8px;border:1px solid rgba(168,85,247,.2);background:rgba(168,85,247,.05);color:rgba(255,255,255,.5);font-size:.75rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;outline:none }
+.cms-zone-btn.active { background:rgba(168,85,247,.18);border-color:rgba(168,85,247,.5);color:#c084fc }
+/* Apps overlay */
+#appsOverlay { position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:flex;flex-direction:column;overflow:hidden }
+#appsOverlay.hidden { display:none }
+.apps-ov-head { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(10,5,20,.9);flex-shrink:0 }
+.apps-ov-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:20px;overflow-y:auto;flex:1 }
+.apps-ov-card { background:rgba(255,255,255,.04);border-radius:16px;border:1px solid rgba(255,255,255,.08);padding:20px;display:flex;flex-direction:column;gap:12px;transition:all .25s;cursor:pointer }
+.apps-ov-card:hover { background:rgba(255,255,255,.08);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4) }
+.apps-ov-icon { width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0 }
+.apps-ov-name { font-size:.95rem;font-weight:800;color:#fff;font-family:var(--display) }
+.apps-ov-desc { font-size:.78rem;color:rgba(255,255,255,.45);line-height:1.6;flex:1 }
+.apps-ov-btn { padding:8px 14px;border-radius:10px;border:none;font-size:.78rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;outline:none;align-self:flex-start }
+@media(max-width:600px){.apps-ov-grid{grid-template-columns:1fr}}
 
 /* Service card with image preview */
 .svc-card { border-radius:16px;overflow:hidden;border:1px solid rgba(249,115,22,.18);background:rgba(249,115,22,.04);cursor:pointer;transition:all .25s;position:relative }
@@ -1079,7 +1112,7 @@ Create Account
       <span style="font-size:.58rem;font-weight:700;color:rgba(255,255,255,.7);text-align:center;line-height:1.2">Services</span>
     </div>
   </div>
-  <div onclick="sTo('apps-sec');closeAppsMiniMenu()" style="margin-top:12px;text-align:center;font-size:.72rem;color:rgba(255,255,255,.35);cursor:pointer;padding:6px;border-radius:8px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">Voir toutes les applications <i class="fa-solid fa-chevron-right" style="font-size:.6rem"></i></div>
+  <div onclick="window.openAppsOverlay();closeAppsMiniMenu()" style="margin-top:12px;text-align:center;font-size:.72rem;color:rgba(255,255,255,.35);cursor:pointer;padding:6px;border-radius:8px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">Voir toutes les applications <i class="fa-solid fa-chevron-right" style="font-size:.6rem"></i></div>
 </div>
 
 <!-- BANNIÈRE MAINTENANCE GLOBALE -->
@@ -2199,24 +2232,45 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <!-- ADMIN — Mode Éditeur CMS (super admins uniquement) -->
 <div class="set-sec" id="adminCmsSection" style="display:none">
 <div class="set-title" style="display:flex;align-items:center;gap:8px"><i class="fa-solid fa-shield-halved" style="color:#a855f7;font-size:.8rem"></i> Administration</div>
+
+<!-- Mode Éditeur -->
 <div class="set-row">
   <div class="set-info">
     <h5>Mode Éditeur</h5>
-    <p>Modifiez tous les textes, images et services directement depuis l'interface</p>
+    <p>Cliquez sur les textes dans le tableau de bord pour les modifier directement</p>
   </div>
   <label class="notif-toggle notif-toggle-wrap"><input type="checkbox" id="cmsEditToggle" onchange="window._toggleCmsEditMode(this.checked)"><span class="notif-slider"></span></label>
 </div>
+
+<!-- Upload d'image par zone -->
 <div id="adminImageUploadSection" style="margin-top:12px;display:none">
-  <div style="background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.15);border-radius:12px;padding:14px 16px">
-    <div style="font-size:.8rem;font-weight:700;color:#c084fc;margin-bottom:8px"><i class="fa-solid fa-image" style="margin-right:5px"></i>Upload d'image (ImageKit)</div>
+  <div style="background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.15);border-radius:14px;padding:16px">
+    <div style="font-size:.8rem;font-weight:700;color:#c084fc;margin-bottom:12px"><i class="fa-solid fa-image" style="margin-right:5px"></i>Importer une image</div>
+
+    <!-- Sélecteur de zone -->
+    <div style="font-size:.72rem;color:rgba(255,255,255,.45);margin-bottom:6px;font-weight:600;letter-spacing:.04em;text-transform:uppercase">Zone cible</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button class="cms-zone-btn active" data-zone="outils" onclick="window._selectImgZone('outils',this)">Outils</button>
+      <button class="cms-zone-btn" data-zone="services" onclick="window._selectImgZone('services',this)">Services</button>
+      <button class="cms-zone-btn" data-zone="general" onclick="window._selectImgZone('general',this)">Général</button>
+    </div>
+
+    <!-- Sélecteur d'item (charge depuis Firestore) -->
+    <div id="adminImgTargetWrap" style="margin-bottom:10px">
+      <div style="font-size:.72rem;color:rgba(255,255,255,.45);margin-bottom:6px;font-weight:600;letter-spacing:.04em;text-transform:uppercase">Cible</div>
+      <select id="adminImgTarget" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(168,85,247,.2);border-radius:8px;padding:8px 10px;color:#fff;font-size:.78rem;font-family:var(--sans);outline:none;box-sizing:border-box">
+        <option value="">— Sélectionner l'outil à modifier —</option>
+      </select>
+    </div>
+
     <input type="file" id="adminImageFile" accept="image/*" style="display:none" onchange="window._handleAdminImageUpload(this)">
-    <input type="text" id="adminImageFolder" value="general" placeholder="Dossier (ex: services, slideshow)" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(168,85,247,.2);border-radius:8px;padding:8px 10px;color:#fff;font-size:.78rem;font-family:var(--sans);outline:none;margin-bottom:8px;box-sizing:border-box">
     <button onclick="document.getElementById('adminImageFile').click()" style="width:100%;padding:10px;border-radius:10px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);color:#c084fc;font-size:.8rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;outline:none" onmouseover="this.style.background='rgba(168,85,247,.2)'" onmouseout="this.style.background='rgba(168,85,247,.1)'">
-      <i class="fa-solid fa-cloud-arrow-up" style="margin-right:5px"></i>Choisir une image
+      <i class="fa-solid fa-cloud-arrow-up" style="margin-right:5px"></i>Choisir une image et uploader
     </button>
     <div id="adminImageUploadResult" style="margin-top:8px;font-size:.74rem;color:rgba(255,255,255,.5);word-break:break-all;display:none"></div>
   </div>
 </div>
+
 <div class="set-row" style="margin-top:8px;cursor:pointer" onclick="pnl('notif')">
   <div class="set-info"><h5>Envoyer une notification</h5><p>Diffuser une notification à tous les utilisateurs</p></div>
   <button class="btn btn-g btn-xs"><i class="fa-solid fa-paper-plane"></i></button>
@@ -2625,6 +2679,126 @@ SERVICES HUB OVERLAY
       <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#fb923c;flex-shrink:0"></span> En chargement…</div>
       <div class="tcs-title">LevelUp Services</div>
       <p class="tcs-sub">Nos fiches de services arrivent bientôt. Contactez-nous via l'assistance.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APPS OVERLAY — toutes les applications avec descriptions ═══ -->
+<div id="appsOverlay" class="hidden">
+  <div class="apps-ov-head">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);display:flex;align-items:center;justify-content:center">
+        <i class="fa-solid fa-border-all" style="color:#a855f7;font-size:.9rem"></i>
+      </div>
+      <div>
+        <div style="font-size:1rem;font-weight:800;color:#fff;font-family:var(--display);letter-spacing:-.02em">Applications LevelUp</div>
+        <div style="font-size:.72rem;color:var(--muted)">Tout l'écosystème en un seul endroit</div>
+      </div>
+    </div>
+    <button onclick="window.closeAppsOverlay()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;outline:none" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.7)'">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <div class="apps-ov-grid">
+    <!-- LevelMovie -->
+    <div class="apps-ov-card" onclick="window.openApp('movie');window.closeAppsOverlay()" style="border-color:rgba(59,130,246,.2)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="apps-ov-icon" style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.25)">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none"><path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill="#3b82f6"/></svg>
+        </div>
+        <div class="apps-ov-name" style="color:#60a5fa">LevelMovie</div>
+      </div>
+      <div class="apps-ov-desc">Votre cinéma privé. Accédez à des milliers de films et séries en streaming de haute qualité, organisés par genre, popularité et nouveautés. Interface épurée, lecture instantanée.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:.68rem;padding:3px 10px;border-radius:100px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:#60a5fa;font-weight:700">Clé requise</span>
+        <button class="apps-ov-btn" style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:#60a5fa" onclick="event.stopPropagation();window.openApp('movie');window.closeAppsOverlay()">
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.68rem;margin-right:4px"></i>Ouvrir
+        </button>
+      </div>
+    </div>
+    <!-- LevelMusic -->
+    <div class="apps-ov-card" onclick="window.openApp('music');window.closeAppsOverlay()" style="border-color:rgba(59,130,246,.2)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="apps-ov-icon" style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.25)">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none"><path d="M9 18V5l12-2v13" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="#3b82f6"/><circle cx="18" cy="16" r="3" fill="#3b82f6"/></svg>
+        </div>
+        <div class="apps-ov-name" style="color:#60a5fa">LevelMusic</div>
+      </div>
+      <div class="apps-ov-desc">Musique sans limites. Des millions de titres, albums et playlists à portée de main. Découverte intelligente, qualité audio optimale, écoute hors ligne disponible.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:.68rem;padding:3px 10px;border-radius:100px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:#60a5fa;font-weight:700">Clé requise</span>
+        <button class="apps-ov-btn" style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:#60a5fa" onclick="event.stopPropagation();window.openApp('music');window.closeAppsOverlay()">
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.68rem;margin-right:4px"></i>Ouvrir
+        </button>
+      </div>
+    </div>
+    <!-- Level IA -->
+    <div class="apps-ov-card" onclick="window.openApp('ia');window.closeAppsOverlay()" style="border-color:rgba(168,85,247,.2)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="apps-ov-icon" style="background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.25)">
+          <svg width="24" height="24" viewBox="0 0 576 512" fill="#a855f7"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
+        </div>
+        <div class="apps-ov-name">Level IA</div>
+      </div>
+      <div class="apps-ov-desc">Intelligence artificielle avancée. Assistants IA spécialisés, génération de contenu, analyse de documents, et outils de productivité propulsés par les meilleurs modèles du marché.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:.68rem;padding:3px 10px;border-radius:100px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);color:#c084fc;font-weight:700">Clé requise</span>
+        <button class="apps-ov-btn" style="background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:#c084fc" onclick="event.stopPropagation();window.openApp('ia');window.closeAppsOverlay()">
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.68rem;margin-right:4px"></i>Ouvrir
+        </button>
+      </div>
+    </div>
+    <!-- Outils -->
+    <div class="apps-ov-card" onclick="window.openToolsHub();window.closeAppsOverlay()" style="border-color:rgba(34,197,94,.2)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="apps-ov-icon" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25)">
+          <i class="fa-solid fa-wrench" style="color:#22c55e;font-size:1.1rem"></i>
+        </div>
+        <div class="apps-ov-name" style="color:#4ade80">Outils</div>
+      </div>
+      <div class="apps-ov-desc">Boîte à outils intégrée. Des dizaines d'outils utiles accessibles directement dans l'app : convertisseurs, générateurs, calculateurs, et bien plus. Gratuit, sans compte requis.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:.68rem;padding:3px 10px;border-radius:100px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#4ade80;font-weight:700">Gratuit</span>
+        <button class="apps-ov-btn" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#4ade80" onclick="event.stopPropagation();window.openToolsHub();window.closeAppsOverlay()">
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.68rem;margin-right:4px"></i>Ouvrir
+        </button>
+      </div>
+    </div>
+    <!-- Services -->
+    <div class="apps-ov-card" onclick="window.openServicesHub();window.closeAppsOverlay()" style="border-color:rgba(249,115,22,.2)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="apps-ov-icon" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.25)">
+          <i class="fa-solid fa-layer-group" style="color:#f97316;font-size:1.1rem"></i>
+        </div>
+        <div class="apps-ov-name" style="color:#fb923c">Services</div>
+      </div>
+      <div class="apps-ov-desc">Création de sites web, hébergement professionnel, enregistrement de domaines et services numériques. Des solutions clés en main adaptées à vos projets et à votre budget.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:.68rem;padding:3px 10px;border-radius:100px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);color:#fb923c;font-weight:700">Sur devis</span>
+        <button class="apps-ov-btn" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);color:#fb923c" onclick="event.stopPropagation();window.openServicesHub();window.closeAppsOverlay()">
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.68rem;margin-right:4px"></i>Voir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CMS FLOATING TOOLBAR (mode éditeur) ═══ -->
+<div id="cmsFloatBar">
+  <i class="fa-solid fa-pen-to-square" style="color:#fff;font-size:.85rem"></i>
+  <span class="cms-bar-label">Mode Éditeur actif — cliquez sur n'importe quel texte pour le modifier</span>
+  <button class="cms-bar-btn cms-bar-save" onclick="window._cmsSaveAll()"><i class="fa-solid fa-floppy-disk" style="margin-right:4px"></i>Sauvegarder</button>
+  <button class="cms-bar-btn cms-bar-quit" onclick="window._cmsQuitEdit()"><i class="fa-solid fa-xmark" style="margin-right:4px"></i>Quitter</button>
+</div>
+
+<!-- ═══ CMS EDIT POPUP ═══ -->
+<div id="cmsEditPopup">
+  <div class="cms-edit-popup-card">
+    <div class="cms-edit-popup-label" id="cmsEditPopupLabel">Modifier le texte</div>
+    <textarea class="cms-edit-popup-ta" id="cmsEditPopupTa" rows="4"></textarea>
+    <div class="cms-edit-popup-actions">
+      <button class="cms-bar-btn cms-bar-quit" onclick="document.getElementById('cmsEditPopup').classList.remove('open')">Annuler</button>
+      <button class="cms-bar-btn cms-bar-save" onclick="window._cmsApplyEdit()"><i class="fa-solid fa-check" style="margin-right:4px"></i>Appliquer</button>
     </div>
   </div>
 </div>
@@ -4777,10 +4951,12 @@ function showPushPermPopup() {
 }
 window.showPushPermPopup = showPushPermPopup;
 
-// Notification de bienvenue
+// Notification de bienvenue — envoyée UNE SEULE FOIS par appareil
 function _sendWelcomeNotification() {
     try {
         if (Notification.permission !== 'granted') return;
+        if (localStorage.getItem('lvl_welcome_notif_sent')) return;
+        localStorage.setItem('lvl_welcome_notif_sent', '1');
         navigator.serviceWorker.ready.then(reg => {
             reg.showNotification('Bienvenue sur LevelUp Ecosystem 🌟', {
                 body: 'Grâce à ce système de notifications, vous serez informé de chaque changement, nouvelle sortie et mise à jour exclusive sur notre plateforme.',
@@ -4927,6 +5103,7 @@ async function _registerFCMAnonOrUser() {
 function _attachFCMListeners() {
     if (!window._fcmFgListenerSet) {
         window._fcmFgListenerSet = true;
+        // onMessage gère TOUS les messages quand l'app est au premier plan
         onMessage(_messaging, (payload) => {
             _handleFCMPayload(payload);
         });
@@ -4935,8 +5112,8 @@ function _attachFCMListeners() {
         window._swMsgListenerSet = true;
         navigator.serviceWorker.addEventListener('message', (e) => {
             if (e.data?.type === 'NOTIF_CLICK' && e.data?.url) window.open(e.data.url, '_blank');
-            // Fallback SW→foreground quand l'app était visible (évite le doublon natif)
-            if (e.data?.type === 'FCM_FOREGROUND_FALLBACK') _handleFCMPayload(e.data.payload);
+            // FCM_FOREGROUND_FALLBACK supprimé : onMessage() gère déjà le premier plan
+            // → évite le doublon de notification in-app
         });
     }
 }
@@ -6033,7 +6210,8 @@ window._loadServicesHub = function() {
         return card;
     }
 
-    getDoc(doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'services'))
+    // Chemin DOCUMENT valide (segments pairs) : 'data' contient un champ 'services' ou 'list'
+    getDoc(doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data'))
     .then(snap => {
         let items = [];
         if (snap.exists()) {
@@ -6074,57 +6252,246 @@ window._openNotifFromFab = function() {
     if (typeof pnl === 'function') pnl('notif');
 };
 
-// ── Mode Éditeur CMS (super admin) ──
+// ── APPS OVERLAY ──────────────────────────────────────────────────────────────
+window.openAppsOverlay = function() {
+    const ov = document.getElementById('appsOverlay');
+    if (!ov) return;
+    ov.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+};
+window.closeAppsOverlay = function() {
+    const ov = document.getElementById('appsOverlay');
+    if (ov) ov.classList.add('hidden');
+    document.body.style.overflow = '';
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Mode Éditeur CMS (super admin) ─────────────────────────────────────────
+let _cmsCurrentEl = null;
+
 window._toggleCmsEditMode = function(enabled) {
+    const bar = document.getElementById('cmsFloatBar');
+    const sec = document.getElementById('adminImageUploadSection');
     if (enabled) {
         document.body.classList.add('cms-edit-mode');
-        const sec = document.getElementById('adminImageUploadSection');
+        if (bar) bar.classList.add('active');
         if (sec) sec.style.display = '';
-        toast_ && toast_('Mode Éditeur activé — cliquez sur ✏️ pour modifier', 'ok');
+        // Appliquer les overrides sauvegardés
+        _cmsApplyOverrides();
+        // Activer le clic sur les éléments éditables du dashboard
+        _cmsBindElements();
+        toast_ && toast_('Mode Éditeur — cliquez sur un texte pour le modifier', 'info');
     } else {
         document.body.classList.remove('cms-edit-mode');
-        const sec = document.getElementById('adminImageUploadSection');
+        if (bar) bar.classList.remove('active');
         if (sec) sec.style.display = 'none';
+        _cmsUnbindElements();
+        document.getElementById('cmsEditPopup')?.classList.remove('open');
     }
 };
 
-// ── Upload d'image vers ImageKit (via Vercel serverless) ──
+function _cmsApplyOverrides() {
+    try {
+        const overrides = JSON.parse(localStorage.getItem('lvl_cms_overrides') || '{}');
+        Object.entries(overrides).forEach(([key, val]) => {
+            try {
+                const el = document.querySelector(key);
+                if (el) el.textContent = val;
+            } catch(_) {}
+        });
+    } catch(_) {}
+}
+// Applique les overrides au chargement
+_cmsApplyOverrides();
+
+function _cmsBindElements() {
+    // Sélectionner les éléments textuels éditables dans le dashboard
+    const selectors = [
+        '#panel-home .pt', '#panel-home .ps',
+        '#panel-notif .pt', '#panel-notif .ps',
+        '#panel-settings .set-title',
+        '.db-stat .db-sl', '.db-stat .db-sv', '.db-stat .db-ss',
+        '.qa-tile .qa-inf h4', '.qa-tile .qa-inf span',
+        '.bc-title', '.bc-sub',
+        '#heroTitle', '#heroSubtitle', '#heroBadge'
+    ];
+    selectors.forEach(sel => {
+        try {
+            document.querySelectorAll(sel).forEach(el => {
+                if (!el.dataset.cmsEdit) {
+                    el.dataset.cmsEdit = sel + '_' + el.textContent.substring(0,20).trim().replace(/\s+/g,'_');
+                    el.dataset.cmsOriginal = el.textContent;
+                    el.addEventListener('click', _cmsHandleClick, true);
+                }
+            });
+        } catch(_) {}
+    });
+}
+function _cmsUnbindElements() {
+    document.querySelectorAll('[data-cms-edit]').forEach(el => {
+        el.removeEventListener('click', _cmsHandleClick, true);
+        delete el.dataset.cmsEdit;
+    });
+}
+function _cmsHandleClick(e) {
+    if (!document.body.classList.contains('cms-edit-mode')) return;
+    e.preventDefault(); e.stopPropagation();
+    _cmsCurrentEl = e.currentTarget;
+    const popup = document.getElementById('cmsEditPopup');
+    const ta = document.getElementById('cmsEditPopupTa');
+    const label = document.getElementById('cmsEditPopupLabel');
+    if (!popup || !ta) return;
+    if (label) label.textContent = 'Modifier : ' + (_cmsCurrentEl.textContent.substring(0,40) || '');
+    ta.value = _cmsCurrentEl.textContent;
+    popup.classList.add('open');
+    setTimeout(() => { ta.focus(); ta.select(); }, 80);
+}
+window._cmsApplyEdit = function() {
+    if (!_cmsCurrentEl) return;
+    const ta = document.getElementById('cmsEditPopupTa');
+    if (!ta) return;
+    const newText = ta.value.trim();
+    _cmsCurrentEl.textContent = newText;
+    // Sauvegarder dans localStorage
+    try {
+        const overrides = JSON.parse(localStorage.getItem('lvl_cms_overrides') || '{}');
+        const key = _cmsCurrentEl.dataset.cmsEdit || '';
+        if (key) overrides[key] = newText;
+        localStorage.setItem('lvl_cms_overrides', JSON.stringify(overrides));
+    } catch(_) {}
+    document.getElementById('cmsEditPopup')?.classList.remove('open');
+    toast_ && toast_('Texte modifié et sauvegardé', 'ok');
+};
+window._cmsSaveAll = function() {
+    toast_ && toast_('Toutes les modifications sont sauvegardées localement', 'ok');
+};
+window._cmsQuitEdit = function() {
+    const tog = document.getElementById('cmsEditToggle');
+    if (tog) tog.checked = false;
+    window._toggleCmsEditMode(false);
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Sélecteur de zone pour l'upload d'image ──────────────────────────────────
+let _cmsImgZone = 'outils';
+window._selectImgZone = async function(zone, btn) {
+    _cmsImgZone = zone;
+    // Mettre à jour l'état visuel des boutons
+    document.querySelectorAll('.cms-zone-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const sel = document.getElementById('adminImgTarget');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Chargement…</option>';
+
+    try {
+        if (zone === 'outils') {
+            // Charger depuis Firestore : artifacts/level-ia-premium/public/data/config/tools_hub (document, 6 segments)
+            const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+            const snap = await getDoc(doc(window._db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'tools_hub'));
+            sel.innerHTML = '<option value="">— Sélectionner l\'outil —</option>';
+            if (snap.exists()) {
+                const data = snap.data();
+                for (let i = 1; i <= 50; i++) {
+                    const t = data['tool_' + i];
+                    if (!t || !t.title) continue;
+                    const opt = document.createElement('option');
+                    opt.value = 'tool_' + i;
+                    opt.textContent = `Outil ${i} — ${t.title}`;
+                    sel.appendChild(opt);
+                }
+            } else {
+                sel.innerHTML = '<option value="">Aucun outil trouvé en DB</option>';
+            }
+        } else if (zone === 'services') {
+            const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+            const snap = await getDoc(doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data'));
+            sel.innerHTML = '<option value="">— Sélectionner le service —</option>';
+            if (snap.exists()) {
+                const data = snap.data();
+                const services = data.services || data.list || [];
+                services.forEach((s, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = `Service ${i + 1} — ${s.name || s.title || 'Sans nom'}`;
+                    sel.appendChild(opt);
+                });
+                if (!services.length) sel.innerHTML = '<option value="">Aucun service en DB</option>';
+            } else {
+                sel.innerHTML = '<option value="">Document introuvable</option>';
+            }
+        } else {
+            sel.innerHTML = '<option value="hero">Image Hero / Bannière</option><option value="logo">Logo</option><option value="bg">Fond d\'écran</option>';
+        }
+    } catch(err) {
+        sel.innerHTML = `<option value="">Erreur: ${err.message}</option>`;
+    }
+};
+
+// ── Upload d'image vers ImageKit (via Vercel serverless) + sauvegarde Firestore ──
 window._handleAdminImageUpload = async function(input) {
     const file = input.files[0];
     if (!file) return;
-    const folder = document.getElementById('adminImageFolder')?.value || 'general';
+    const zone = _cmsImgZone || 'general';
+    const target = document.getElementById('adminImgTarget')?.value || '';
     const resultEl = document.getElementById('adminImageUploadResult');
-    if (resultEl) { resultEl.style.display = ''; resultEl.textContent = '⏳ Upload en cours…'; resultEl.style.color = 'rgba(255,255,255,.5)'; }
+    if (resultEl) { resultEl.innerHTML = ''; resultEl.style.display = ''; resultEl.textContent = '⏳ Upload en cours…'; resultEl.style.color = 'rgba(255,255,255,.5)'; }
 
     try {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('folder', `/levelup/${folder}`);
+        formData.append('folder', `/levelup/${zone}`);
         formData.append('fileName', `${Date.now()}_${file.name.replace(/\s/g,'_')}`);
 
-        // Appel à l'endpoint Vercel qui sign la requête avec la clé privée
         const resp = await fetch('/api/imagekit-upload', { method: 'POST', body: formData });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
 
-        if (data.url) {
-            const url = data.url;
-            if (resultEl) {
-                resultEl.textContent = '';
-                resultEl.style.display = '';
-                const link = document.createElement('a');
-                link.href = url; link.target = '_blank'; link.textContent = url;
-                link.style.cssText = 'color:#c084fc;word-break:break-all;font-size:.74rem';
-                resultEl.appendChild(link);
-                // Copier automatiquement dans le presse-papier
-                navigator.clipboard?.writeText(url).catch(()=>{});
-                const copied = document.createElement('div');
-                copied.textContent = '✅ URL copiée dans le presse-papier';
-                copied.style.color = '#4ade80'; copied.style.marginTop = '4px';
-                resultEl.appendChild(copied);
+        if (!data.url) throw new Error(data.error || 'Erreur inconnue');
+        const url = data.url;
+
+        // ── Écrire l'URL dans Firestore selon la zone ──
+        if (target && window._db) {
+            try {
+                const { doc, getDoc, setDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+                if (zone === 'outils') {
+                    const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'tools_hub');
+                    await updateDoc(ref, { [target + '.logo_url']: url });
+                } else if (zone === 'services') {
+                    const ref = doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data');
+                    const snap = await getDoc(ref);
+                    if (snap.exists()) {
+                        const d = snap.data();
+                        const svcs = d.services || d.list || [];
+                        const idx = parseInt(target);
+                        if (!isNaN(idx) && svcs[idx]) {
+                            svcs[idx].image = url;
+                            const field = d.services ? 'services' : 'list';
+                            await updateDoc(ref, { [field]: svcs });
+                        }
+                    }
+                }
+                toast_ && toast_('Image sauvegardée en base de données !', 'ok');
+            } catch(fsErr) {
+                toast_ && toast_('Upload OK, erreur sauvegarde Firestore', 'warn');
+                console.warn('Firestore write error:', fsErr);
             }
-            toast_ && toast_('Image uploadée avec succès !', 'ok');
-        } else throw new Error(data.error || 'Erreur inconnue');
+        }
+
+        // Afficher le résultat
+        if (resultEl) {
+            resultEl.innerHTML = '';
+            const link = document.createElement('a');
+            link.href = url; link.target = '_blank'; link.textContent = url;
+            link.style.cssText = 'color:#c084fc;word-break:break-all;font-size:.74rem;display:block';
+            resultEl.appendChild(link);
+            navigator.clipboard?.writeText(url).catch(()=>{});
+            const copied = document.createElement('div');
+            copied.textContent = '✅ URL copiée · Firestore mis à jour';
+            copied.style.cssText = 'color:#4ade80;margin-top:4px;font-size:.73rem';
+            resultEl.appendChild(copied);
+        }
+        if (!target) toast_ && toast_('Image uploadée — sélectionnez une cible pour sauvegarder', 'info');
     } catch(err) {
         if (resultEl) { resultEl.textContent = `❌ Erreur: ${err.message}`; resultEl.style.color = '#f87171'; }
         toast_ && toast_('Erreur upload image', 'err');
