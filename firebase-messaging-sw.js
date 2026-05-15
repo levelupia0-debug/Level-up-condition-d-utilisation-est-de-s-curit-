@@ -45,21 +45,24 @@ messaging.onBackgroundMessage(async (payload) => {
     _shownKeys.add(key);
     setTimeout(() => _shownKeys.delete(key), 30000);
 
-    // 2. FIX iOS DOUBLE NOTIF :
-    //    Sur Android, `visibilityState` fonctionne.
-    //    Sur iOS, `focused` est plus fiable.
-    //    On attend 300ms pour laisser la page envoyer PAGE_HANDLED_NOTIF.
+    // 2. Vérification de l'état de l'application
     const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const appIsOpen  = allClients.some(c => c.focused === true || c.visibilityState === 'visible');
 
     if (appIsOpen) {
         // Attendre que onMessage() de la page nous signale s'il a géré le message
         await new Promise(r => setTimeout(r, 300));
-        if (_handledByPage.has(key)) return; // page l'a géré → pas de doublon
-        return; // app ouverte même sans signal → onMessage() gère le toast
+        
+        // Si la page l'a géré et affiche le toast, on bloque la notification native pour éviter le doublon
+        if (_handledByPage.has(key)) return; 
+        
+        // CORRECTION ANDROID : On a supprimé le `return;` ici.
+        // Si l'app est en arrière-plan/veille, Chrome la voit parfois comme "ouverte" mais la page
+        // est gelée et n'envoie pas le signal dans les 300ms. 
+        // En laissant passer, on force l'affichage de la notification native !
     }
 
-    // 3. App en arrière-plan ou fermée → notification système unique
+    // 3. App en arrière-plan, fermée, ou ne répondant pas → notification système unique
     const tag = `lvlup-${btoa(unescape(encodeURIComponent(title + body))).slice(0, 20)}`;
     const options = {
         body,
