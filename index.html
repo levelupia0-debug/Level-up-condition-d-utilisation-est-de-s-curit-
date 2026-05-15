@@ -685,6 +685,39 @@ LOGOUT ANIMATION OVERLAY
 }
 
 
+/* LANDING MOBILE NAV */
+@media(max-width:820px){
+  #landingMobileNav.vis { display: block; }
+  #landing { padding-bottom: 72px; }
+}
+
+/* LIVE CHAT */
+#chatFab { display:none; position:fixed; bottom:86px; left:20px; z-index:980; width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg,#7c3aed,#a855f7); border:none; cursor:pointer; color:#fff; font-size:1.1rem; box-shadow:0 4px 18px rgba(168,85,247,.45); transition:transform .2s,box-shadow .2s; pointer-events:all; }
+#chatFab:hover { transform:scale(1.08); box-shadow:0 6px 24px rgba(168,85,247,.6); }
+#chatFab .chat-badge { position:absolute; top:-3px; right:-3px; background:#ef4444; color:#fff; font-size:.6rem; font-weight:700; min-width:16px; height:16px; border-radius:8px; display:none; align-items:center; justify-content:center; padding:0 3px; }
+@media(max-width:820px){ #chatFab { display:flex; align-items:center; justify-content:center; } }
+#chatOverlay { display:none; position:fixed; inset:0; z-index:970; background:rgba(6,2,10,.6); backdrop-filter:blur(6px); }
+#chatPanel { position:fixed; bottom:0; left:0; right:0; height:72vh; max-height:520px; background:var(--surf); border-top:1px solid var(--bdr); border-radius:20px 20px 0 0; z-index:975; display:none; flex-direction:column; overflow:hidden; }
+@media(min-width:821px){ #chatPanel { left:auto; right:24px; bottom:24px; width:360px; height:500px; border-radius:16px; border:1px solid var(--bdr); } }
+.chat-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; border-bottom:1px solid var(--bdr); }
+.chat-head-title { font-weight:700; font-size:.95rem; display:flex; align-items:center; gap:8px; }
+.chat-head-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 6px #22c55e; animation:pulse 2s infinite; }
+.chat-close-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem; padding:4px; }
+.chat-msgs { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:8px; scroll-behavior:smooth; }
+.chat-msgs::-webkit-scrollbar { width:3px; }
+.chat-msgs::-webkit-scrollbar-thumb { background:rgba(168,85,247,.3); border-radius:3px; }
+.chat-msg { max-width:82%; padding:8px 11px; border-radius:12px; font-size:.82rem; line-height:1.4; }
+.chat-msg.mine { background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; align-self:flex-end; border-bottom-right-radius:3px; }
+.chat-msg.theirs { background:rgba(255,255,255,.06); color:var(--text); align-self:flex-start; border-bottom-left-radius:3px; }
+.chat-msg-name { font-size:.68rem; font-weight:600; opacity:.7; margin-bottom:2px; }
+.chat-msg-time { font-size:.62rem; opacity:.5; margin-top:3px; text-align:right; }
+.chat-empty { text-align:center; color:var(--muted); font-size:.82rem; padding:30px 0; }
+.chat-input-row { display:flex; align-items:center; gap:8px; padding:10px 12px; border-top:1px solid var(--bdr); }
+.chat-input { flex:1; background:rgba(255,255,255,.05); border:1px solid var(--bdr); border-radius:20px; padding:8px 14px; color:var(--text); font-size:.85rem; outline:none; }
+.chat-input:focus { border-color:var(--purple); }
+.chat-send-btn { background:var(--purple); border:none; color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:opacity .2s; }
+.chat-send-btn:disabled { opacity:.4; cursor:default; }
+
 /* ── BADGE NAVIGATION OUTILS ── */
 .lvl-nav-badge { position:absolute; top:2px; right:4px; width:8px; height:8px; border-radius:50%; background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 0 6px rgba(239,68,68,.7); animation:badgePulse 1.8s ease infinite; pointer-events:none; }
 .lvl-nav-badge.hidden { display:none !important; }
@@ -1058,10 +1091,10 @@ LANDING PAGE
 <p class="hero-sub" id="heroSubtitle">Connectez-vous une seule fois avec Google et accédez instantanément à LevelMovie, LevelMusic et Level IA. Votre identité numérique centralisée, sécurisée par PIN, synchronisée sur tous vos appareils en temps réel.</p>
 <div class="hero-cta" id="heroCta">
 <button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">
-Créer un compte gratuit
+Create a free account
 </button>
 <button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="sTo('apps-sec')">
-<i class="fa-solid fa-grid-2"></i> Explorer les apps
+<i class="fa-solid fa-grid-2"></i> Explore apps
 </button>
 </div>
 <!-- NOUVEAU : Zone d'annonce dynamique sous le Hero -->
@@ -1716,9 +1749,7 @@ Créer un compte gratuit
 </div>
 <div class="tech-grid" style="display:flex; justify-content:center; flex-wrap:wrap; gap:14px;">
 <div class="tech-card reveal" style="flex:1; min-width:160px; max-width:220px;">
-<span class="tech-ico">
-<svg width="32" height="32" viewBox="0 0 32 32"><path fill="#FFC107" d="M24.237 26.331l-7.391 4.148c-.522.293-1.168.293-1.691 0l-7.391-4.148c-.689-.387-.872-1.272-.361-1.874L20.407 9.539l4.192 14.919c.195.694-.055 1.458-.362 1.873z"/><path fill="#FFA000" d="M16 4.606l-9.141 19.349L18.423 3.513c.319-.624 1.205-.624 1.523 0l3.053 5.96L16 4.606z"/><path fill="#F57C00" d="M22.999 9.473l-3.328-6.495c-.319-.624-1.205-.624-1.523 0l-6.91 13.488 11.761-6.993z"/></svg>
-</span>
+<span class="tech-ico" style="font-size:1.6rem;font-weight:900;color:#FFC107;font-family:var(--display);letter-spacing:-.04em;line-height:1">F</span>
 <h4>Firebase</h4>
 <p>Base de données Firestore, authentification, et synchronisation.</p>
 </div>
@@ -2098,7 +2129,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- SETTINGS PANEL -->
 <div class="panel" id="panel-settings">
-<h1 class="pt">Paramètres</h1>
+<h1 class="pt"><i class="fa-solid fa-gear" style="color:var(--purple);font-size:1.15rem;margin-right:6px"></i><span id="settingsPanelTitle">Paramètres</span></h1>
 <p class="ps">Gérez votre compte et vos préférences de sécurité.</p>
 <div class="set-sec">
 <div class="set-title">Informations Compte</div>
@@ -2354,6 +2385,42 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 </div>
 
+<!-- LANDING PAGE MOBILE BOTTOM NAV -->
+<nav id="landingMobileNav" class="mobile-nav">
+<div class="mn-in">
+<div class="mn-item on" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fa-solid fa-house"></i><span data-i18n="nav.home">Home</span></div>
+<div class="mn-item" onclick="sTo('apps-sec')"><i class="fa-solid fa-grid-2"></i><span data-i18n="nav.applications">Apps</span></div>
+<div class="mn-item" onclick="sTo('how-sec')"><i class="fa-solid fa-circle-question"></i><span data-i18n="nav.howItWorks">How</span></div>
+<div class="mn-item" onclick="sTo('faq-sec')"><i class="fa-solid fa-comments"></i><span data-i18n="nav.faq">FAQ</span></div>
+<div class="mn-item" onclick="openAuth('login')"><i class="fa-solid fa-arrow-right-to-bracket" style="color:var(--purple)"></i><span data-i18n="nav.signIn">Sign In</span></div>
+</div>
+</nav>
+
+<!-- LIVE CHAT FAB BUTTON (mobile) -->
+<button id="chatFab" onclick="window.openChat()" title="Live Chat">
+  <i class="fa-solid fa-comments"></i>
+  <span class="chat-badge" id="chatBadge"></span>
+</button>
+
+<!-- LIVE CHAT PANEL -->
+<div id="chatOverlay" onclick="window.closeChat()"></div>
+<div id="chatPanel" style="display:none">
+  <div class="chat-head">
+    <div class="chat-head-title">
+      <span class="chat-head-dot"></span>
+      <span id="chatPanelTitle">LevelUp Live Chat</span>
+    </div>
+    <button class="chat-close-btn" onclick="window.closeChat()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="chat-msgs" id="chatMsgs">
+    <div class="chat-empty" id="chatEmpty">No messages yet. Say hi!</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chatInput" placeholder="Message..." maxlength="300" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.sendChatMsg();}">
+    <button class="chat-send-btn" id="chatSendBtn" onclick="window.sendChatMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════════
 AUTH OVERLAY
 ═══════════════════════════════════════ -->
@@ -2552,6 +2619,91 @@ SERVICES HUB OVERLAY
         <span class="tcs-feat"><i class="fa-solid fa-bolt" style="color:#f97316"></i> <span id="servicesFeat3">Accès instantané</span></span>
         <span class="tcs-feat"><i class="fa-solid fa-lock-open" style="color:#22c55e"></i> <span id="servicesFeat4">Gratuit</span></span>
       </div>
+    </div>
+  </div>
+
+  <!-- PARTNER CARDS — always visible, Firebase-independent -->
+  <div style="padding:16px 18px 0;border-top:1px solid rgba(249,115,22,.12);margin-top:12px">
+    <p style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:12px" id="svcPartnersLabel">Technologies &amp; Partenaires</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px" id="svcPartnerGrid">
+      <!-- GitHub -->
+      <div class="svc-partner-card" onclick="openSvcPartner('github')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#fff"><i class="fa-brands fa-github"></i></span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">GitHub</span>
+      </div>
+      <!-- Google -->
+      <div class="svc-partner-card" onclick="openSvcPartner('google')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(66,133,244,.4)';this.style.background='rgba(66,133,244,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(66,133,244,.12);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#4285F4"><i class="fa-brands fa-google"></i></span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">Google</span>
+      </div>
+      <!-- Firebase -->
+      <div class="svc-partner-card" onclick="openSvcPartner('firebase')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(255,193,7,.4)';this.style.background='rgba(255,193,7,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(255,193,7,.12);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:#FFC107;font-family:var(--display)">F</span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">Firebase</span>
+      </div>
+      <!-- Vercel -->
+      <div class="svc-partner-card" onclick="openSvcPartner('vercel')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:#fff;font-family:var(--display)">▲</span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">Vercel</span>
+      </div>
+      <!-- Gemini -->
+      <div class="svc-partner-card" onclick="openSvcPartner('gemini')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(168,85,247,.4)';this.style.background='rgba(168,85,247,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(168,85,247,.12);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#a855f7"><i class="fa-solid fa-star"></i></span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">Gemini</span>
+      </div>
+    </div>
+    <!-- Contact button -->
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <p style="font-size:.74rem;color:var(--muted);margin:0" id="svcContactLabel">Un projet ? Travaillons ensemble.</p>
+      <button onclick="openSvcContact()" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);color:#fb923c;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(249,115,22,.2)'" onmouseout="this.style.background='rgba(249,115,22,.12)'">
+        <i class="fa-solid fa-envelope"></i> <span id="svcContactBtn">Nous contacter</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PARTNER CARD POPUP -->
+<div id="svcPartnerPopup" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(6,2,10,.82);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:linear-gradient(145deg,#0d0618,#06020a);border:1px solid rgba(168,85,247,.2);border-radius:20px;max-width:420px;width:100%;padding:28px;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <div id="svcPopupIco" style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem"></div>
+      <div>
+        <h3 id="svcPopupTitle" style="font-size:1.05rem;font-weight:800;font-family:var(--display);margin:0 0 4px"></h3>
+        <p id="svcPopupSub" style="font-size:.72rem;color:var(--muted);margin:0"></p>
+      </div>
+    </div>
+    <p id="svcPopupDesc" style="font-size:.82rem;line-height:1.7;color:rgba(255,255,255,.75);margin-bottom:18px"></p>
+    <div id="svcPopupTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <a id="svcPopupLink" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:var(--purple);font-size:.8rem;font-weight:700;text-decoration:none;transition:all .2s" onmouseover="this.style.background='rgba(168,85,247,.25)'" onmouseout="this.style.background='rgba(168,85,247,.15)'"><i class="fa-solid fa-arrow-up-right-from-square"></i> <span id="svcPopupLinkTxt">Visiter</span></a>
+      <button onclick="closeSvcPartner()" style="padding:9px 18px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'"><span id="svcPopupClose">Fermer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICES CONTACT POPUP -->
+<div id="svcContactPopup" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(6,2,10,.82);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:linear-gradient(145deg,#0d0618,#06020a);border:1px solid rgba(249,115,22,.2);border-radius:20px;max-width:400px;width:100%;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);display:flex;align-items:center;justify-content:center;color:#fb923c"><i class="fa-solid fa-briefcase"></i></div>
+      <div>
+        <h3 id="svcContactTitle" style="font-size:1rem;font-weight:800;font-family:var(--display);margin:0 0 3px">Travailler avec nous</h3>
+        <p id="svcContactSubtitle" style="font-size:.72rem;color:var(--muted);margin:0">Sites web, auth, domaine personnalisé &amp; plus</p>
+      </div>
+    </div>
+    <p id="svcContactDesc" style="font-size:.8rem;line-height:1.7;color:rgba(255,255,255,.7);margin-bottom:20px">Nous créons pour vous des sites web professionnels, mettons en place l'authentification Firebase, configurons un domaine personnalisé et bien plus — à des prix bien inférieurs au marché.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      <a href="mailto:levelup.ia0@gmail.com" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);text-decoration:none;color:var(--txt);font-size:.82rem;font-weight:600;transition:all .2s" onmouseover="this.style.background='rgba(249,115,22,.14)'" onmouseout="this.style.background='rgba(249,115,22,.08)'">
+        <i class="fa-solid fa-envelope" style="color:#fb923c;font-size:.9rem"></i>
+        <div><div style="font-size:.76rem;color:var(--muted);margin-bottom:1px">Gmail principal</div>levelup.ia0@gmail.com</div>
+      </a>
+      <a href="mailto:richelieubonte@gmail.com" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);text-decoration:none;color:var(--txt);font-size:.82rem;font-weight:600;transition:all .2s" onmouseover="this.style.background='rgba(249,115,22,.14)'" onmouseout="this.style.background='rgba(249,115,22,.08)'">
+        <i class="fa-solid fa-envelope" style="color:#fb923c;font-size:.9rem"></i>
+        <div><div style="font-size:.76rem;color:var(--muted);margin-bottom:1px">Gmail secondaire</div>richelieubonte@gmail.com</div>
+      </a>
+    </div>
+    <div style="text-align:right">
+      <button onclick="closeSvcContact()" style="padding:9px 20px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'"><span id="svcContactClose">Fermer</span></button>
     </div>
   </div>
 </div>
@@ -2997,7 +3149,7 @@ try { _messaging = getMessaging(fbApp); } catch(e) {}
 gProv.setCustomParameters({ prompt: 'select_account' });
 
 window._auth = auth; window._db = db;
-window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collection, query, where };
+window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collection, query, where, addDoc, onSnapshot, orderBy, limit, serverTimestamp };
 
 // Persistance locale explicite — évite les déconnexions au retour sur le site
 try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) {}
@@ -4156,6 +4308,8 @@ dashboard.style.display = 'flex';
 if (mobileNav) {
 mobileNav.classList.add('vis');
 }
+const landingMobNav2 = document.getElementById('landingMobileNav');
+if (landingMobNav2) landingMobNav2.classList.remove('vis');
 
 window._hideLoadingScreen();
 renderNavLogged(u);
@@ -4178,6 +4332,8 @@ dashboard.style.display = 'none';
 if (mobileNav) {
 mobileNav.classList.remove('vis');
 }
+const landingMobNav = document.getElementById('landingMobileNav');
+if (landingMobNav) landingMobNav.classList.add('vis');
 if (landing) {
 landing.classList.remove('hidden');
 landing.style.display = 'block';
@@ -4853,11 +5009,13 @@ window.smartBind(heroCta, [
 () => window.openTerms()
 ]);
 } else {
-heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard()">Mon tableau de bord</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">Conditions</button>`;
+const _hLang = localStorage.getItem('lvl_lang') || 'en';
+heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard()">${_hLang === 'fr' ? 'Mon tableau de bord' : 'My Dashboard'}</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">${_hLang === 'fr' ? 'Conditions' : 'Terms'}</button>`;
 }
 }
 const ctaSec = document.getElementById('ctaSection');
-if (ctaSec) ctaSec.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard(); pnl('keys')">Gérer mes clés</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">Conditions</button>`;
+const _cLang = localStorage.getItem('lvl_lang') || 'en';
+if (ctaSec) ctaSec.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard(); pnl('keys')">${_cLang === 'fr' ? 'Gérer mes clés' : 'Manage my keys'}</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">Conditions</button>`;
 }
 
 function updateGuestUI() {
@@ -4871,7 +5029,8 @@ window.smartBind(heroCta, [
 () => window.sTo('apps-sec')
 ]);
 } else {
-heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">Créer un compte gratuit</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="window.sTo('apps-sec')">Explorer les apps</button>`;
+const _gLang = localStorage.getItem('lvl_lang') || 'en';
+heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">${_gLang === 'fr' ? 'Créer un compte gratuit' : 'Create a free account'}</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="window.sTo('apps-sec')"><i class="fa-solid fa-grid-2"></i> ${_gLang === 'fr' ? 'Explorer les apps' : 'Explore apps'}</button>`;
 }
 }
 }
@@ -5903,6 +6062,228 @@ window.openToolFullscreen = function(url, title) {
     fs.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 };
+// ─── PARTNER CARDS POPUP ─────────────────────────────────────────────────────
+var _SVC_PARTNERS = {
+    github: {
+        title:'GitHub', sub:'H\u00e9bergement de code source',
+        ico:'<i class="fa-brands fa-github" style="color:#fff"></i>', icoBg:'rgba(255,255,255,.1)',
+        desc:'GitHub est la plateforme de r\u00e9f\u00e9rence mondiale pour h\u00e9berger, versionner et collaborer sur du code. Chaque projet LevelUp est versionn\u00e9 sur GitHub pour une tra\u00e7abilit\u00e9 compl\u00e8te et un d\u00e9ploiement rapide.',
+        tags:['Versioning','Open Source','CI/CD','Pull Requests'],
+        color:'#fff', link:'https://github.com'
+    },
+    google: {
+        title:'Google', sub:'Authentification & services cloud',
+        ico:'<i class="fa-brands fa-google" style="color:#4285F4"></i>', icoBg:'rgba(66,133,244,.12)',
+        desc:'Google OAuth 2.0 est au c\u0153ur de l\u2019authentification LevelUp. Z\u00e9ro mot de passe \u2014 votre identit\u00e9 Google est le seul pass n\u00e9cessaire. Google Cloud fournit \u00e9galement l\u2019infrastructure sous-jacente.',
+        tags:['OAuth 2.0','Cloud','Identity','APIs'],
+        color:'#4285F4', link:'https://cloud.google.com'
+    },
+    firebase: {
+        title:'Firebase', sub:'Base de donn\u00e9es & temps r\u00e9el',
+        ico:'<span style="font-size:1.3rem;font-weight:900;color:#FFC107;font-family:var(--display)">F</span>', icoBg:'rgba(255,193,7,.12)',
+        desc:'Firebase Firestore est la colonne vert\u00e9brale de LevelUp. Vos cl\u00e9s, profils, notifications et donn\u00e9es d\u2019applications sont synchronis\u00e9s en temps r\u00e9el sur tous vos appareils gr\u00e2ce \u00e0 la base de donn\u00e9es NoSQL de Firebase.',
+        tags:['Firestore','Realtime DB','Auth','Cloud Messaging'],
+        color:'#FFC107', link:'https://firebase.google.com'
+    },
+    vercel: {
+        title:'Vercel', sub:'D\u00e9ploiement & CDN mondial',
+        ico:'<span style="font-size:1.1rem;font-weight:900;color:#fff;font-family:var(--display)">\u25b2</span>', icoBg:'rgba(255,255,255,.08)',
+        desc:'Vercel h\u00e9berge les fonctions serverless de LevelUp (dont l\u2019API push) sur un r\u00e9seau edge mondial. R\u00e9sultat\u00a0: latence minimale, disponibilit\u00e9 maximale et d\u00e9ploiements instantan\u00e9s \u00e0 chaque mise \u00e0 jour.',
+        tags:['Edge Functions','CDN','Serverless','CI/CD'],
+        color:'#fff', link:'https://vercel.com'
+    },
+    gemini: {
+        title:'Gemini 2.5 Flash', sub:'Moteur IA de Level IA',
+        ico:'<i class="fa-solid fa-star" style="color:#a855f7"></i>', icoBg:'rgba(168,85,247,.12)',
+        desc:'Gemini 2.5 Flash de Google DeepMind propulse Level IA. C\u2019est le mod\u00e8le d\u2019IA le plus avanc\u00e9 accessible au grand public\u00a0: analyse de PDF, lecture d\u2019URLs, compr\u00e9hension d\u2019images et m\u00e9moire cloud persistante.',
+        tags:['Gemini 2.5','IA g\u00e9n\u00e9rative','Multimodal','Cloud Memory'],
+        color:'#a855f7', link:'https://deepmind.google/technologies/gemini/'
+    }
+};
+
+
+window.openSvcPartner = function(key) {
+    var d = _SVC_PARTNERS[key]; if (!d) return;
+    var lang = localStorage.getItem('lvl_lang') || 'en';
+    var popup = document.getElementById('svcPartnerPopup');
+    document.getElementById('svcPopupIco').innerHTML = d.ico;
+    document.getElementById('svcPopupIco').style.background = d.icoBg;
+    document.getElementById('svcPopupTitle').textContent = d.title;
+    document.getElementById('svcPopupSub').textContent = d.sub;
+    document.getElementById('svcPopupDesc').textContent = d.desc;
+    document.getElementById('svcPopupLink').href = d.link;
+    var linkTxt = document.getElementById('svcPopupLinkTxt');
+    var closeTxt = document.getElementById('svcPopupClose');
+    if (lang === 'en') { if (linkTxt) linkTxt.textContent = 'Visit'; if (closeTxt) closeTxt.textContent = 'Close'; }
+    else { if (linkTxt) linkTxt.textContent = 'Visiter'; if (closeTxt) closeTxt.textContent = 'Fermer'; }
+    var tagsEl = document.getElementById('svcPopupTags');
+    if (tagsEl) {
+        tagsEl.innerHTML = '';
+        (d.tags || []).forEach(t => {
+            var s = document.createElement('span');
+            s.style.cssText = 'font-size:.68rem;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6)';
+            s.textContent = t;
+            tagsEl.appendChild(s);
+        });
+    }
+    popup.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    popup.onclick = function(e) { if (e.target === popup) window.closeSvcPartner(); };
+};
+window.closeSvcPartner = function() {
+    var p = document.getElementById('svcPartnerPopup');
+    if (p) p.style.display = 'none';
+    document.body.style.overflow = '';
+};
+window.openSvcContact = function() {
+    var p = document.getElementById('svcContactPopup');
+    if (!p) return;
+    var lang = localStorage.getItem('lvl_lang') || 'en';
+    if (lang === 'en') {
+        var t = document.getElementById('svcContactTitle');
+        var s = document.getElementById('svcContactSubtitle');
+        var d = document.getElementById('svcContactDesc');
+        var cl = document.getElementById('svcContactClose');
+        if (t) t.textContent = 'Work with us';
+        if (s) s.textContent = 'Websites, auth, custom domain & more';
+        if (d) d.textContent = 'We build professional websites, set up Firebase authentication, configure a custom domain and more — at prices far below the market rate.';
+        if (cl) cl.textContent = 'Close';
+    }
+    p.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    p.onclick = function(e) { if (e.target === p) window.closeSvcContact(); };
+};
+window.closeSvcContact = function() {
+    var p = document.getElementById('svcContactPopup');
+    if (p) p.style.display = 'none';
+    document.body.style.overflow = '';
+};
+
+// ─── LIVE CHAT (Task 8 — Real-time via Firestore onSnapshot) ───────────────
+(function() {
+var _chatUnsub = null;
+var _chatOpen = false;
+var _chatUnread = 0;
+
+function _chatName() {
+    if (window._user && window._user.displayName) return window._user.displayName;
+    return 'Guest';
+}
+function _chatUid() {
+    if (window._user) return window._user.uid;
+    return 'guest_' + (localStorage.getItem('_cgid') || (function(){var id='g'+Math.random().toString(36).slice(2,9);localStorage.setItem('_cgid',id);return id;})());
+}
+function _fmtTime(ts) {
+    if (!ts) return '';
+    var d = (ts.toDate ? ts.toDate() : new Date(ts));
+    return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+function _renderMsg(data, myUid) {
+    var mine = data.uid === myUid;
+    var div = document.createElement('div');
+    div.className = 'chat-msg ' + (mine ? 'mine' : 'theirs');
+    var nameHtml = !mine ? '<div class="chat-msg-name">' + _esc2(data.name || 'Guest') + '</div>' : '';
+    var timeHtml = '<div class="chat-msg-time">' + _fmtTime(data.createdAt) + '</div>';
+    div.innerHTML = nameHtml + _esc2(data.text) + timeHtml;
+    return div;
+}
+
+function _esc2(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function _initChat() {
+    if (_chatUnsub) return;
+    if (!window._fb || !window._fb.onSnapshot) return;
+    var appId = (typeof __app_id !== 'undefined') ? __app_id : 'level-ia-premium';
+    var col = window._fb.collection(window._db, 'artifacts/'+appId+'/public/chat/messages');
+    var q = window._fb.query(col, window._fb.orderBy('createdAt','asc'), window._fb.limit(60));
+    _chatUnsub = window._fb.onSnapshot(q, function(snap) {
+        var msgs = document.getElementById('chatMsgs');
+        var empty = document.getElementById('chatEmpty');
+        if (!msgs) return;
+        var myUid = _chatUid();
+        var wasAtBottom = msgs.scrollHeight - msgs.clientHeight - msgs.scrollTop < 50;
+        msgs.innerHTML = '';
+        if (snap.empty) {
+            msgs.appendChild((function(){var d=document.createElement('div');d.className='chat-empty';d.textContent=(localStorage.getItem('lvl_lang')==='fr'?'Aucun message. Dites bonjour !':'No messages yet. Say hi!');return d;})());
+        } else {
+            var newCount = 0;
+            snap.forEach(function(doc) {
+                var data = doc.data();
+                msgs.appendChild(_renderMsg(data, myUid));
+                newCount++;
+            });
+            if (!_chatOpen && newCount > 0) {
+                _chatUnread = Math.max(0, snap.size - (parseInt(localStorage.getItem('_chatSeen')||0)));
+                var badge = document.getElementById('chatBadge');
+                if (badge && _chatUnread > 0) {
+                    badge.textContent = _chatUnread > 9 ? '9+' : _chatUnread;
+                    badge.style.display = 'flex';
+                }
+            }
+        }
+        if (wasAtBottom || _chatOpen) msgs.scrollTop = msgs.scrollHeight;
+    });
+}
+
+window.openChat = function() {
+    _chatOpen = true;
+    _chatUnread = 0;
+    var badge = document.getElementById('chatBadge');
+    if (badge) badge.style.display = 'none';
+    localStorage.setItem('_chatSeen', Date.now());
+    var panel = document.getElementById('chatPanel');
+    var overlay = document.getElementById('chatOverlay');
+    if (panel) panel.style.display = 'flex';
+    if (overlay) overlay.style.display = 'block';
+    _initChat();
+    var msgs = document.getElementById('chatMsgs');
+    if (msgs) setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;},100);
+    var inp = document.getElementById('chatInput');
+    if (inp) inp.focus();
+};
+
+window.closeChat = function() {
+    _chatOpen = false;
+    var panel = document.getElementById('chatPanel');
+    var overlay = document.getElementById('chatOverlay');
+    if (panel) panel.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+};
+
+window.sendChatMsg = function() {
+    var inp = document.getElementById('chatInput');
+    if (!inp) return;
+    var text = inp.value.trim();
+    if (!text || text.length > 300) return;
+    if (!window._fb || !window._fb.addDoc) { alert('Firebase non disponible'); return; }
+    var btn = document.getElementById('chatSendBtn');
+    if (btn) btn.disabled = true;
+    inp.value = '';
+    var appId = (typeof __app_id !== 'undefined') ? __app_id : 'level-ia-premium';
+    var col = window._fb.collection(window._db, 'artifacts/'+appId+'/public/chat/messages');
+    window._fb.addDoc(col, {
+        text: text,
+        name: _chatName(),
+        uid: _chatUid(),
+        createdAt: window._fb.serverTimestamp()
+    }).then(function() {
+        if (btn) btn.disabled = false;
+    }).catch(function(e) {
+        if (btn) btn.disabled = false;
+        console.error('Chat send error:', e);
+    });
+};
+
+// Start listening once Firebase is ready
+document.addEventListener('lvl_auth_ready', function() {
+    setTimeout(_initChat, 1500);
+});
+})();
+
+
 window.closeToolFullscreen = function() {
     const fs = document.getElementById('toolFullscreen');
     if (!fs) return;
@@ -6599,11 +6980,6 @@ document.addEventListener('keydown', function(e) {
 // ─── MOVIE POSTER SCROLLER (TMDB Trending) ────────────────────────────────────
 (async function _initPosterScroller() {
     try {
-        const r     = await fetch(`${TMDB_BASE}/trending/movie/week?api_key=${TMDB_KEY}&language=en-US`);
-        const data  = await r.json();
-        const movies = (data.results || []).filter(m => m.poster_path).slice(0, 20);
-        if (!movies.length) return;
-
         const track = document.getElementById('posterTrack');
         const sec   = document.getElementById('posterScrollerSection');
         if (!track || !sec) return;
@@ -6624,8 +7000,36 @@ document.addEventListener('keydown', function(e) {
             return div;
         };
 
-        movies.forEach(m => track.appendChild(makeCard(m)));
-        movies.forEach(m => track.appendChild(makeCard(m))); // Duplicate for seamless loop
+        // Fetch from multiple sources in parallel: trending movies p1+p2, trending TV, anime
+        const [r1, r2, r3, r4] = await Promise.allSettled([
+            fetch(`${TMDB_BASE}/trending/movie/week?api_key=${TMDB_KEY}&language=en-US&page=1`),
+            fetch(`${TMDB_BASE}/trending/movie/week?api_key=${TMDB_KEY}&language=en-US&page=2`),
+            fetch(`${TMDB_BASE}/trending/tv/week?api_key=${TMDB_KEY}&language=en-US`),
+            fetch(`${TMDB_BASE}/discover/tv?api_key=${TMDB_KEY}&with_genres=16&sort_by=popularity.desc&language=en-US`)
+        ]);
+
+        const seen = new Set();
+        const all  = [];
+        for (const res of [r1, r2, r3, r4]) {
+            if (res.status !== 'fulfilled') continue;
+            try {
+                const data = await res.value.json();
+                (data.results || []).forEach(m => {
+                    if (m.poster_path && !seen.has(m.id)) { seen.add(m.id); all.push(m); }
+                });
+            } catch(_) {}
+        }
+        if (!all.length) return;
+
+        // Shuffle for variety
+        for (let i = all.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [all[i], all[j]] = [all[j], all[i]];
+        }
+
+        // Fill track — duplicate only if fewer than 30 unique items
+        all.forEach(m => track.appendChild(makeCard(m)));
+        if (all.length < 30) all.forEach(m => track.appendChild(makeCard(m)));
 
         sec.style.display = '';
     } catch(_) {}
@@ -6684,6 +7088,7 @@ document.addEventListener('keydown', function(e) {
 var T = {
   en: {
     /* Navigation */
+    'nav.signIn':'Sign In',
     'nav.applications':'Applications',
     'nav.howItWorks':'How it works',
     'nav.features':'Features',
@@ -6713,6 +7118,8 @@ var T = {
   },
   fr: {
     /* Navigation */
+    'nav.signIn':'Sign In',
+    'nav.signIn':'Connexion',
     'nav.applications':'Applications',
     'nav.howItWorks':'Comment \u00e7a marche',
     'nav.features':'Fonctionnalit\u00e9s',
@@ -7003,6 +7410,138 @@ var SEL_MAP = {
     ['.foot-col:nth-child(4) a:nth-child(5)','text','Contact support'],
     ['.foot-bot span:nth-child(1)','text','\u00a9 2026 LevelUp Ecosystem. All rights reserved.'],
     ['.foot-bot span:nth-child(2)','text','Powered by Google & Firebase'],
+    /* Marquee scrolling items */
+    ['.mq-track .mq-i:nth-child(4)','html','<i class=\"fa-solid fa-key\" style=\"color:#a855f7\"></i> Unique access key'],
+    ['.mq-track .mq-i:nth-child(5)','html','<i class=\"fa-solid fa-lock\" style=\"color:#a855f7\"></i> PIN Protection'],
+    ['.mq-track .mq-i:nth-child(6)','html','<i class=\"fa-solid fa-cloud\" style=\"color:#3b82f6\"></i> Firebase Sync'],
+    ['.mq-track .mq-i:nth-child(7)','html','<i class=\"fa-solid fa-gift\" style=\"color:#22c55e\"></i> 100% Free'],
+    ['.mq-track .mq-i:nth-child(8)','html','<i class=\"fa-solid fa-shield-halved\" style=\"color:#22c55e\"></i> Secure & Private'],
+    ['.mq-track .mq-i:nth-child(9)','html','<i class=\"fa-solid fa-mobile-alt\" style=\"color:#a855f7\"></i> Mobile First'],
+    ['.mq-track .mq-i:nth-child(10)','html','<i class=\"fa-solid fa-infinity\" style=\"color:#f97316\"></i> Unlimited Access'],
+    ['.mq-track .mq-i:nth-child(14)','html','<i class=\"fa-solid fa-key\" style=\"color:#a855f7\"></i> Unique access key'],
+    ['.mq-track .mq-i:nth-child(15)','html','<i class=\"fa-solid fa-lock\" style=\"color:#a855f7\"></i> PIN Protection'],
+    ['.mq-track .mq-i:nth-child(16)','html','<i class=\"fa-solid fa-cloud\" style=\"color:#3b82f6\"></i> Firebase Sync'],
+    ['.mq-track .mq-i:nth-child(17)','html','<i class=\"fa-solid fa-gift\" style=\"color:#22c55e\"></i> 100% Free'],
+    ['.mq-track .mq-i:nth-child(18)','html','<i class=\"fa-solid fa-shield-halved\" style=\"color:#22c55e\"></i> Secure & Private'],
+    ['.mq-track .mq-i:nth-child(19)','html','<i class=\"fa-solid fa-mobile-alt\" style=\"color:#a855f7\"></i> Mobile First'],
+    ['.mq-track .mq-i:nth-child(20)','html','<i class=\"fa-solid fa-infinity\" style=\"color:#f97316\"></i> Unlimited Access'],
+    /* How it works section */
+    ['#how-sec .sec-label','html','<i class=\"fa-solid fa-list-check\"></i>&nbsp; How it works'],
+    ['#how-sec .sec-head h2','text','Ready in four steps'],
+    ['#how-sec .sec-head p','text','LevelUp Ecosystem has been designed to be as simple as possible. Zero passwords, zero friction, zero complex setup. Just your Google account and you\u2019re in.'],
+    ['#how-sec .step:nth-child(1) h4','text','Google Login'],
+    ['#how-sec .step:nth-child(1) p','text','Press \u201cContinue with Google\u201d. A Google popup opens, choose your account, that\u2019s it. No form, no password, no email verification. Your Google identity becomes your LevelUp identity.'],
+    ['#how-sec .step:nth-child(2) h4','text','Generate your key'],
+    ['#how-sec .step:nth-child(2) p','text','From your dashboard, in the \u201cAccess Keys\u201d section, click \u201cGenerate my key\u201d. A unique key in LVL-XXXXX-XXXXX format is instantly created and saved to your cloud account.'],
+    ['#how-sec .step:nth-child(3) h4','text','Secure with a PIN'],
+    ['#how-sec .step:nth-child(3) p','text','Set up a 4-digit PIN code in the \u201cAccess Keys\u201d section. Your key will be hidden by default and will only appear after the correct PIN is entered. Maximum protection.'],
+    ['#how-sec .step:nth-child(4) h4','text','Access the apps'],
+    ['#how-sec .step:nth-child(4) p','text','Copy your key, open LevelMovie or Level IA. The dashboard will automatically and securely transmit your profile information to the application. Your access is immediately unlocked.'],
+    /* Deep dive LevelMovie */
+    ['#how-sec + section .sec-label','html','<i class=\"fa-solid fa-clapperboard\" style=\"color:var(--blue)\"></i>&nbsp; LevelMovie in detail'],
+    ['#how-sec + section .sec-head h2','html','World cinema,<br>reimagined for you'],
+    ['#how-sec + section .dd-info h2','html','A video player designed<br>for the ultimate experience'],
+    ['#how-sec + section .dd-info p:nth-child(2)','text','LevelMovie is not just a link aggregator. It\u2019s a streaming platform designed to deliver the best possible viewing experience. Minimalist interface, full-screen immersive player, automatic multi-server support \u2014 if one server goes down, the next one takes over in seconds.'],
+    ['#how-sec + section .dd-info p:nth-child(3)','text','The catalog covers thousands of titles from around the world: American blockbusters, European series, Korean K-Dramas, Japanese anime, Bollywood productions and more. Regularly updated by the LevelUp team.'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(1)','html','<i class=\"fa-solid fa-film\" style=\"color:var(--blue)\"></i> HD Films'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(2)','html','<i class=\"fa-solid fa-tv\" style=\"color:var(--blue)\"></i> Series'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(3)','html','<i class=\"fa-solid fa-dragon\" style=\"color:var(--blue)\"></i> Anime'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(4)','html','<i class=\"fa-solid fa-star\" style=\"color:var(--yellow)\"></i> K-Dramas'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(5)','html','<i class=\"fa-solid fa-server\" style=\"color:var(--green)\"></i> Multi-server'],
+    ['#how-sec + section .dd-info .btn','html','<i class=\"fa-solid fa-lock\"></i> Unlock LevelMovie'],
+    /* Deep dive LevelMusic */
+    ['#how-sec + section + section .sec-label','html','<i class=\"fa-solid fa-headphones\" style=\"color:var(--blue)\"></i>&nbsp; LevelMusic in detail'],
+    ['#how-sec + section + section .sec-head h2','html','Musical discovery,<br>without limits'],
+    ['#how-sec + section + section .dd-info p:nth-child(2)','text','LevelMusic reinvents the way you explore music. Designed as a premium discovery platform, it lets you listen to 30-second HD previews of the entire world catalog.'],
+    ['#how-sec + section + section .dd-info p:nth-child(3)','text','Why 30 seconds? To let you skip quickly, find the perfect vibe, and build your playlists without wasting time. Whether it\u2019s Amapiano, Drill or K-Pop, the interface is designed for lightning-fast exploration while awaiting the full version.'],
+    ['#how-sec + section + section .dd-info .dd-tag:nth-child(1)','html','<i class=\"fa-solid fa-headphones\" style=\"color:var(--blue)\"></i> HD Audio'],
+    ['#how-sec + section + section .dd-info .dd-tag:nth-child(2)','html','<i class=\"fa-solid fa-bolt\" style=\"color:var(--blue)\"></i> 30s previews'],
+    ['#how-sec + section + section .dd-info .dd-tag:nth-child(3)','html','<i class=\"fa-solid fa-list-music\" style=\"color:var(--blue)\"></i> Playlists'],
+    ['#how-sec + section + section .dd-info .dd-tag:nth-child(4)','html','<i class=\"fa-solid fa-globe\" style=\"color:var(--blue)\"></i> 100+ Genres'],
+    ['#how-sec + section + section .dd-info .btn','html','<i class=\"fa-solid fa-lock\"></i> Unlock LevelMusic'],
+    /* Deep dive Level IA */
+    ['#how-sec + section + section + section .dd-info h2','html','The AI that adapts<br>to your DNA'],
+    ['#how-sec + section + section + section .dd-info p:nth-child(2)','text','Level IA is far more than a simple chatbot. It\u2019s a complete artificial intelligence ecosystem, powered by Gemini 2.5 Flash, Google\u2019s most advanced model. It analyzes PDF documents, reads URLs in real time, understands images and builds a deep memory of your personality.'],
+    ['#how-sec + section + section + section .dd-info p:nth-child(3)','text','Four distinct personality modes let Level IA adapt exactly to your current needs: Auto mode for daily productivity, Expert mode for in-depth analysis, Work mode for professional assistance, and Marco mode for creativity and pop culture.'],
+    ['#how-sec + section + section + section .dd-info .btn','html','<i class=\"fa-solid fa-lock\"></i> Unlock Level IA'],
+    /* Roadmap section */
+    ['#how-sec + section + section + section + section .sec-label','html','<i class=\"fa-solid fa-map\" style=\"color:var(--purple)\"></i>&nbsp; Roadmap 2026\u20132027'],
+    ['#how-sec + section + section + section + section h2','html','The Ecosystem<br>roadmap'],
+    ['#how-sec + section + section + section + section > div > div > p','text','LevelUp is not a static project. It\u2019s a living platform in constant evolution. Discover what our technical team is preparing for the coming months.'],
+    ['.rm-item:nth-child(1) .rm-date','text','Phase 1 (Current)'],
+    ['.rm-item:nth-child(1) .rm-title','text','Ecosystem Foundations'],
+    ['.rm-item:nth-child(1) .rm-desc','text','Launch of the central platform, SSO bridge integration, release of LevelMovie and Level IA. Setting up LevelMusic in Preview.'],
+    ['.rm-item:nth-child(2) .rm-date','text','Phase 2 (In development)'],
+    ['.rm-item:nth-child(2) .rm-title','text','Full LevelMusic Deployment'],
+    ['.rm-item:nth-child(2) .rm-desc','text','Opening of the full music catalog, unlimited listening time, offline mode and global collaborative playlists.'],
+    ['.rm-item:nth-child(3) .rm-date','text','Phase 3 (Future)'],
+    ['.rm-item:nth-child(3) .rm-title','text','Native Mobile Apps'],
+    ['.rm-item:nth-child(3) .rm-desc','text','Development of iOS and Android applications for an even faster experience and perfect integration with the phone system.'],
+    /* Features bento */
+    ['#features-sec .sec-label','html','<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"/></svg>&nbsp; Key Features'],
+    ['#features-sec .sec-head h2','html','Security, performance<br>and simplicity combined'],
+    ['#features-sec .sec-head p','text','Every feature of the LevelUp ecosystem has been designed to provide the best possible experience, without compromising on security or ease of use.'],
+    ['.bento .bc:nth-child(1) h3','text','Google OAuth 2.0 Authentication'],
+    ['.bento .bc:nth-child(1) p:nth-child(3)','text','LevelUp Ecosystem uses Google OAuth 2.0 exclusively as its authentication method. Zero passwords to create, memorize or reset. Your Google account becomes your digital identity across the entire platform.'],
+    ['.bento .bc:nth-child(1) p.detail','text','When you click \u201cContinue with Google\u201d, a secure Google popup opens. You select your account, Google verifies your identity, and LevelUp receives only your name, email and profile photo \u2014 never your password.'],
+    ['.bento .bc:nth-child(2) h3','text','Universal access key'],
+    ['.bento .bc:nth-child(2) p:first-of-type','text','A single key in LVL-XXXXX-XXXXX format unlocks all LevelUp ecosystem applications.'],
+    ['.bento .bc:nth-child(2) p.detail','text','The key is randomly generated, unique per account and securely stored in our Firebase database. You can regenerate it at any time \u2014 the old one is immediately invalidated.'],
+    ['.bento .bc:nth-child(3) h3','text','4-digit PIN protection'],
+    ['.bento .bc:nth-child(3) p:first-of-type','html','Your key is hidden by default behind <code style=\"font-size:.78rem;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:5px\">LVL-\u2022\u2022\u2022\u2022\u2022-\u2022\u2022\u2022\u2022\u2022</code>. A 4-digit PIN is required to display it.'],
+    ['.bento .bc:nth-child(3) p.detail','text','The PIN is hashed (never stored in plaintext) in Firestore. If someone accesses your session, they cannot see your key without the PIN.'],
+    ['.bento .bc:nth-child(4) h3','text','Real-time synchronization'],
+    ['.bento .bc:nth-child(4) p:first-of-type','text','Your profile, preferences and key are instantly synchronized across all your devices via Firebase Firestore.'],
+    ['.bento .bc:nth-child(4) p.detail','text','Switch devices, open your dashboard \u2014 everything is there. Your key, your configured PIN, your Google photo, all synced in real time.'],
+    ['.bento .bc:nth-child(5) h3','text','Mobile First Design'],
+    ['.bento .bc:nth-child(5) p:first-of-type','text','The LevelUp Ecosystem interface is built Mobile First. Every pixel is designed to work perfectly on smartphone before being adapted to desktop screens.'],
+    ['.bento .bc:nth-child(5) p.detail','text','Optimized touch targets, smooth 60fps animations, fast loading, no heavy dependencies \u2014 LevelUp loads in under a second on any 4G connection.'],
+    ['.bento .bc:nth-child(6) h3','text','Ecosystem Bridge (SSO)'],
+    ['.bento .bc:nth-child(6) p:first-of-type','text','Once logged into the dashboard, you no longer need to reconnect. The hub acts as a secure bridge (Single Sign-On) to all other applications.'],
+    ['.bento .bc:nth-child(6) p.detail','text','By clicking an application, LevelUp automatically transmits your key, profile photo and Google name to the target application. Access is instant and seamless.'],
+    ['.bento .bc:nth-child(7) h3','text','Centralized terms of use'],
+    ['.bento .bc:nth-child(7) p:first-of-type','text','Accept once when creating your LevelUp account \u2014 your terms automatically apply to LevelMovie, LevelMusic and Level IA.'],
+    /* Values section */
+    ['#features-sec ~ section .sec-label','html','<i class=\"fa-solid fa-users\"></i>&nbsp; Our Values'],
+    ['#features-sec ~ section .sec-head h2','text','What defines us'],
+    ['#features-sec ~ section .sec-head p','text','The LevelUp ecosystem is built around core values that guide every technical and editorial decision.'],
+    ['.values-grid .val-card:nth-child(1) h4','text','Privacy first'],
+    ['.values-grid .val-card:nth-child(2) h4','text','Permanent free access'],
+    ['.values-grid .val-card:nth-child(3) h4','text','Continuous innovation'],
+    /* Tech stack section */
+    ['.tech-grid ~ section .sec-label, #features-sec ~ section ~ section .sec-label','html','<i class=\"fa-solid fa-microchip\"></i>&nbsp; Tech Stack'],
+    ['#features-sec ~ section ~ section ~ section .sec-label','html','<i class=\"fa-solid fa-microchip\"></i>&nbsp; Tech Stack'],
+    ['.tech-grid .tech-card:nth-child(1) h4','text','Firebase'],
+    /* Settings panel */
+    ['#settingsPanelTitle','text','Settings'],
+    ['#panel-settings .ps','text','Manage your account and security preferences.'],
+    ['#panel-settings .set-sec:nth-child(1) .set-title','text','Account Information'],
+    ['#panel-settings .set-sec:nth-child(2) .set-title','text','Key Security'],
+    ['#panel-settings .set-sec:nth-child(3) .set-title','text','Email Notifications'],
+    ['#panel-settings .set-sec:nth-child(4) .set-title','text','Push Notifications'],
+    ['#panel-settings .set-sec:nth-child(6) .set-title','text','Search'],
+    ['#panel-settings .set-sec:nth-child(7) .set-title','text','Terms & Legal'],
+    ['#nameDisplayRow .set-info h5','text','Display name'],
+    ['#panel-settings .set-row:nth-child(3) .set-info h5','text','Email address'],
+    ['#panel-settings .set-row:nth-child(4) .set-info h5','text','Member since'],
+    ['#panel-settings .set-row:nth-child(5) .set-info h5','text','Identity provider'],
+    ['#panel-settings #setPinStatus','text','Protects the display of your access keys'],
+    ['#panel-settings .set-sec:nth-child(3) .set-row:nth-child(1) .set-info h5','text','Suspicious new login'],
+    ['#panel-settings .set-sec:nth-child(3) .set-row:nth-child(1) .set-info p','text','Receive an email if a login is detected from a new device or IP address'],
+    ['#panel-settings .set-sec:nth-child(3) .set-row:nth-child(2) .set-info h5','text','New tools available'],
+    ['#panel-settings .set-sec:nth-child(3) .set-row:nth-child(2) .set-info p','text','Receive an email when a new tool is added to the ecosystem'],
+    ['#panel-settings .set-sec:nth-child(4) .set-row h5','text','Real-time notifications'],
+    ['#panel-settings .set-sec:nth-child(4) .set-row p','text','Receive alerts even when the app is closed \u2014 new film releases, music, AI tools and more'],
+    ['#panel-settings .set-sec:nth-child(6) .set-row .set-info h5','text','Search for a film or series'],
+    ['#panel-settings .set-sec:nth-child(6) .set-row .set-info p','text','Films, series, music \u2014 available from any screen'],
+    ['#panel-settings .set-sec:nth-child(7) .set-row .set-info h5','text','Terms (In-app)'],
+    ['#panel-settings .set-sec:nth-child(7) .set-row .set-info p','text','Read the terms summary directly in the application'],
+    /* Services partner labels */
+    ['#svcPartnersLabel','text','Technologies & Partners'],
+    ['#svcContactLabel','text','Got a project? Let\u2019s work together.'],
+    ['#svcContactBtn','text','Contact us'],
+    /* SSO / Omniprésence sections */
+    ['.omni-sec .sec-label','html','<i class=\"fa-solid fa-globe\"></i>&nbsp; Everywhere, always'],
     /* Search modal */
     ['.search-close-btn','html','<i class="fa-solid fa-arrow-left"></i> Exit search'],
     ['.search-empty','text','Search for a movie, series or music\u2026'],
@@ -7419,6 +7958,12 @@ var SEL_MAP = {
     /* Services overlay */
     ['#servicesOverlayTitle','text','Services'],
     ['#servicesOverlayDesc','text','Sites partenaires de l\u2019\u00e9cosyst\u00e8me LevelUp'],
+    /* Services partner cards labels */
+    ['#svcPartnersLabel','text','Technologies & Partenaires'],
+    ['#svcContactLabel','text','Un projet\u00a0? Travaillons ensemble.'],
+    ['#svcContactBtn','text','Nous contacter'],
+    /* Settings panel title */
+    ['#settingsPanelTitle','text','R\u00e9glages'],
     /* Logout modal */
     ['#logoutOv .conf-card h3','text','Se d\u00e9connecter ?'],
     ['#logoutOv .conf-card p','text','Vous devrez vous reconnecter pour acc\u00e9der \u00e0 vos cl\u00e9s et applications.'],
