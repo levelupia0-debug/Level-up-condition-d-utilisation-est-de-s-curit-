@@ -599,8 +599,8 @@ LOGOUT ANIMATION OVERLAY
 /* Card body */
 .tool-card-body { padding:13px 14px 14px; display:flex; flex-direction:column; gap:8px; flex:1; }
 .tool-card-header { display:flex; align-items:center; gap:10px; }
-.tool-card-ico { width:36px; height:36px; border-radius:10px; background:rgba(168,85,247,.12); border:1px solid rgba(168,85,247,.22); display:flex; align-items:center; justify-content:center; font-size:.95rem; color:var(--purple); flex-shrink:0; overflow:hidden; }
-.tool-card-ico svg,.tool-card-ico img { max-width:22px; max-height:22px; width:22px; height:22px; object-fit:contain; }
+.tool-card-ico { width:48px; height:48px; border-radius:12px; background:rgba(168,85,247,.12); border:1px solid rgba(168,85,247,.22); display:flex; align-items:center; justify-content:center; font-size:1.15rem; color:var(--purple); flex-shrink:0; overflow:hidden; }
+.tool-card-ico svg,.tool-card-ico img { max-width:30px; max-height:30px; width:30px; height:30px; object-fit:contain; }
 .tool-card-name { font-size:.84rem; font-weight:700; color:var(--txt); line-height:1.3; flex:1; }
 .tool-card-desc { font-size:.72rem; color:rgba(255,255,255,.42); line-height:1.6; }
 .tool-card-see-more { font-size:.69rem; color:#a855f7; cursor:pointer; font-weight:700; background:none; border:none; padding:0; outline:none; text-align:left; font-family:var(--sans); opacity:.85; transition:opacity .15s; }
@@ -1105,9 +1105,9 @@ Create Account
 </div>
 </nav>
 
-<!-- NOTIFICATION DRAWER — hidden (push-only mode, in-app panel disabled) -->
-<div id="notifBackdrop" style="display:none!important"></div>
-<div class="notif-panel" id="notifPanel" style="display:none!important"></div>
+<!-- NOTIFICATION DRAWER -->
+<div id="notifBackdrop"></div>
+<div class="notif-panel" id="notifPanel"></div>
 
 <!-- MINI APPS MENU — popup bottom nav Applications button -->
 <div id="appsMiniMenu" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(18,18,26,.98);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:16px;box-shadow:0 -8px 40px rgba(0,0,0,.7);width:calc(100% - 32px);max-width:380px;backdrop-filter:blur(20px)">
@@ -2107,7 +2107,13 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- HOME PANEL -->
 <div class="panel on" id="panel-home">
-<h1 class="pt" id="dbWelcome">Bonjour 👋</h1>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px">
+  <h1 class="pt" id="dbWelcome" style="margin-bottom:0">Bonjour 👋</h1>
+  <button class="notif-bell-btn" id="notifBellBtn" onclick="pnl('notif')" title="Notifications" style="margin-top:4px;flex-shrink:0">
+    <i class="fa-solid fa-bell"></i>
+    <span class="notif-bell-count hidden" id="notifCount">0</span>
+  </button>
+</div>
 <p class="ps">Bienvenue dans votre tableau de bord LevelUp Ecosystem.</p>
 <div class="db-stats">
 <div class="db-stat"><div class="db-sl">Statut</div><div class="db-sv" style="color:var(--green);font-size:1.1rem;padding-top:2px">Actif ✓</div><div class="db-ss">Connecté</div></div>
@@ -2220,6 +2226,19 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 <div class="set-row"><div class="set-info"><h5>Adresse email</h5><p id="setEmail">—</p></div></div>
 <div class="set-row"><div class="set-info"><h5>Membre depuis</h5><p id="setJoined">—</p></div></div>
+<div class="set-row" id="ageDisplayRow" style="display:none"><div class="set-info"><h5 data-i18n="set.age.label">Tranche d'âge</h5><p id="setAge">—</p></div><button class="btn btn-g btn-xs" onclick="window.openAgeChange()"><i class="fa-solid fa-pen-to-square"></i> Modifier</button></div>
+<div id="ageChangeBox" class="hidden" style="background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:12px;padding:14px 16px;margin-bottom:4px;display:flex;flex-direction:column;gap:10px">
+  <div style="font-size:.78rem;color:var(--muted)">Sélectionnez votre nouvelle tranche d'âge</div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="ageChangeBtns">
+    <button class="ob-age-btn" onclick="window._selectNewAge(this,'16-17')">16 – 17 ans</button>
+    <button class="ob-age-btn" onclick="window._selectNewAge(this,'18-24')">18 – 24 ans</button>
+    <button class="ob-age-btn" onclick="window._selectNewAge(this,'25+')">25 ans et plus</button>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-g btn-xs" onclick="window.cancelAgeChange()" style="flex:1">Annuler</button>
+    <button class="btn btn-p btn-xs" id="saveAgeBtn" onclick="window.saveAgeChange()" style="flex:1" disabled><i class="fa-solid fa-check"></i> Sauvegarder</button>
+  </div>
+</div>
 <div class="set-row"><div class="set-info"><h5>Fournisseur d'identité</h5><p>Google OAuth 2.0</p></div><div style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--green);font-weight:600;white-space:nowrap"><i class="fa-solid fa-check-circle"></i> Vérifié</div></div>
 </div>
 <div class="set-sec">
@@ -4129,8 +4148,8 @@ return null;
 window._emailQuota = {
     LIMITS: {
         WELCOME:   { max: 1,  windowH: 720  },
-        NEW_LOGIN: { max: 2,  windowH: 24   },
-        NEW_TOOL:  { max: 3,  windowH: 24   },
+        NEW_LOGIN: { max: 1,  windowH: 168  },
+        NEW_TOOL:  { max: 1,  windowH: 720  },
         SUSPENDED: { max: 1,  windowH: 168  },
         DELETED:   { max: 1,  windowH: 168  }
     },
@@ -4970,31 +4989,12 @@ function showPushPermPopup() {
     if (Notification.permission === 'denied')  { _setPushPref('denied');  return; }
     window._pushPopupShown = true;
 
-    if (_isIOS()) {
-        // iPhone/iPad: petite popup propre
-        const m = document.getElementById('pushPermModal');
-        if (m) setTimeout(() => m.classList.add('show'), 400);
-    } else if (_isAndroidOrPWA()) {
-        // Android/PWA: petit banner horizontal en bas
+    if (_isIOS() || _isAndroidOrPWA()) {
+        // Mobile (iOS + Android) — bannière horizontale pro en bas
         const b = document.getElementById('pushNotifBanner');
-        if (b) setTimeout(() => b.classList.add('show'), 600);
-    } else {
-        // Desktop browser: demande native directement après un délai
-        setTimeout(async () => {
-            try {
-                const perm = await Notification.requestPermission();
-                if (perm === 'granted') {
-                    _setPushPref('granted');
-                    await _registerFCMAnonOrUser();
-                    _updatePushToggleUI();
-                    _sendWelcomeNotification();
-                } else {
-                    _setPushPref('denied');
-                    _updatePushToggleUI();
-                }
-            } catch(_) {}
-        }, 1500);
+        if (b) setTimeout(() => b.classList.add('show'), 500);
     }
+    // Desktop : pas de popup automatique, l'utilisateur active depuis Paramètres
 }
 window.showPushPermPopup = showPushPermPopup;
 
@@ -5358,6 +5358,72 @@ window.saveNameChange = async function() {
     } catch(e) { toast_('Erreur : ' + e.message, 'err'); }
 };
 
+// ══ GESTION DE L'ÂGE EN PARAMÈTRES ══
+let _newAgeSelected = null;
+
+window._loadAgeForSettings = async function() {
+    const u = window._user;
+    if (!u || !window._db) return;
+    try {
+        const { doc, getDoc } = window._fb;
+        const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        const age = snap.data().ageRange || null;
+        if (!age) return;
+        const labels = { 'under16': '< 16 ans', '16-17': '16 – 17 ans', '18-24': '18 – 24 ans', '25+': '25 ans et plus' };
+        const el = document.getElementById('setAge');
+        const row = document.getElementById('ageDisplayRow');
+        if (el) el.textContent = labels[age] || age;
+        if (row) row.style.display = '';
+    } catch(_) {}
+};
+
+window.openAgeChange = function() {
+    const box = document.getElementById('ageChangeBox');
+    if (!box) return;
+    box.classList.remove('hidden');
+    _newAgeSelected = null;
+    document.querySelectorAll('#ageChangeBtns .ob-age-btn').forEach(b => b.classList.remove('selected'));
+    const saveBtn = document.getElementById('saveAgeBtn');
+    if (saveBtn) saveBtn.disabled = true;
+};
+
+window.cancelAgeChange = function() {
+    const box = document.getElementById('ageChangeBox');
+    if (box) box.classList.add('hidden');
+    _newAgeSelected = null;
+};
+
+window._selectNewAge = function(btn, age) {
+    document.querySelectorAll('#ageChangeBtns .ob-age-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    _newAgeSelected = age;
+    const saveBtn = document.getElementById('saveAgeBtn');
+    if (saveBtn) saveBtn.disabled = false;
+};
+
+window.saveAgeChange = async function() {
+    if (!_newAgeSelected) return;
+    const u = window._user;
+    if (!u || !window._db) { toast_('Non connecté', 'err'); return; }
+    const saveBtn = document.getElementById('saveAgeBtn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+    try {
+        const { doc, setDoc } = window._fb;
+        const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
+        await setDoc(ref, { ageRange: _newAgeSelected }, { merge: true });
+        const labels = { '16-17': '16 – 17 ans', '18-24': '18 – 24 ans', '25+': '25 ans et plus' };
+        const el = document.getElementById('setAge');
+        if (el) el.textContent = labels[_newAgeSelected] || _newAgeSelected;
+        window.cancelAgeChange();
+        toast_('Tranche d\'âge mise à jour !', 'ok');
+    } catch(e) {
+        toast_('Erreur : ' + e.message, 'err');
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Sauvegarder'; }
+    }
+};
+
 // ══ POPUP "VOIR PLUS" POUR LES OUTILS ══
 window._showToolDesc = function(name, fullDesc, url) {
     let modal = document.getElementById('toolDescModal');
@@ -5540,6 +5606,12 @@ if (id === 'tools') {
 if (id === 'settings') {
     if (window.loadNotifPrefs) window.loadNotifPrefs();
     try { _updatePushToggleUI(); } catch(_) {}
+    if (window._loadAgeForSettings) window._loadAgeForSettings();
+}
+
+// ── CHARGER LES SERVICES ──
+if (id === 'services') {
+    if (window._loadServicesHub) window._loadServicesHub();
 }
 }
 
@@ -6868,6 +6940,7 @@ MODALE ALERTE SÉCURITÉ
     }
     // Déclencher uniquement quand l'auth est prête (après login)
     document.addEventListener('lvl_auth_ready', function() {
+        window._pushPopupShown = false; // Reset à chaque login
         setTimeout(_triggerPushPopupOnce, 2000);
     });
     // Fallback si l'événement n'est pas déclenché : attendre 5s
