@@ -1073,37 +1073,37 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
     display: none !important;
 }
 
-/* 1. POSITIONNEMENT DE LA SIGNATURE (Cachée par défaut) */
-.pwa-footer-signature {
-    position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.6rem;
-    color: rgba(255, 255, 255, 0.15);
-    font-family: monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    pointer-events: none;
-    user-select: none;
-    z-index: 9999;
-    display: none;
-}
-
-/* 2. ARRÊT DE L'ANIMATION DE L'ÉTOILE PAR DÉFAUT */
-.fab-hint {
+/* 1. ON TUE L'ANIMATION DE L'ÉTOILE PAR DÉFAUT PARTOUT (Safari, Android, PC) */
+.fab-hint, .fab-main i {
     animation: none !important;
 }
 
-/* 3. ACTIVATION PENDANT LE CHARGEMENT SUR IPHONE PWA */
-.lvl-iphone-star-anim .pwa-footer-signature {
-    display: block !important; /* Affiche le texte */
+/* 2. LE TEXTE POWERED (Caché par défaut) */
+.pwa-footer-signature {
+    position: fixed;
+    bottom: calc(25px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: #ffffff;
+    font-family: 'Syne', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    pointer-events: none;
+    user-select: none;
+    z-index: 99999;
+    display: none;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.9), 0 0 20px rgba(168,85,247,0.8);
 }
-.lvl-iphone-star-anim .fab-hint {
-    animation: fabBounceUp 2s infinite ease-in-out !important;
+
+/* 3. L'ACTIVATION STRICTE SUR IPHONE PWA */
+body.lvl-iphone-pwa-active .pwa-footer-signature {
+    display: block !important;
 }
-.lvl-iphone-star-anim .fab-main i {
-    animation: fabBounceUp 2s infinite ease-in-out !important; /* Fait bouger l'étoile */
+body.lvl-iphone-pwa-active .fab-hint,
+body.lvl-iphone-pwa-active .fab-main i {
+    animation: fabBounceUp 1.5s infinite ease-in-out !important;
 }
 </style>
 
@@ -8401,26 +8401,37 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch(_) {}
     }
 
-    // 1. ANALYSE DU SMARTPHONE
+    // 1. DÉTECTION EXTRÊMEMENT STRICTE : IPHONE + PWA (Standalone) UNIQUEMENT
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    // 2. DÉMARRAGE : Si c'est un iPhone en PWA, on active l'animation de l'étoile et le texte
-    if (isIOS && isPWA) {
-        document.body.classList.add('lvl-iphone-star-anim');
+    // Si on est strictement sur iOS (Pas Android) ET que l'app est installée sur l'écran d'accueil
+    if (isIOS && !isAndroid && isStandalone) {
+        document.body.classList.add('lvl-iphone-pwa-active');
     }
 
-    // 3. APRÈS 5 SECONDES : On coupe l'animation et on lance les notifs
-    setTimeout(function() {
-        // A) On supprime la classe : l'étoile s'arrête de bouger et le texte disparaît !
-        document.body.classList.remove('lvl-iphone-star-anim');
+    // 2. SYNCHRONISATION AVEC LE CHARGEMENT DE LA BASE DE DONNÉES
+    const oldHideLoading = window._hideLoadingScreen;
+    window._hideLoadingScreen = function() {
+        // A. Exécuter la fonction d'origine pour enlever l'écran noir de Firebase
+        if (oldHideLoading) oldHideLoading();
 
-        // B) On lance le popup de notification pour TOUTES les PWA (iPhone et Android)
-        if (isPWA) {
-            _triggerPushPopupOnce();
+        // B. Couper l'animation de l'étoile et le "Powered by" INSTANTANÉMENT
+        document.body.classList.remove('lvl-iphone-pwa-active');
+
+        // C. Afficher la popup de notification 1.5s après pour toutes les PWA (iPhone et Android)
+        if (isStandalone) {
+            setTimeout(_triggerPushPopupOnce, 1500);
         }
-    }, 5000);
+    };
+
+    // Sécurité de secours : si la base de données bug et ne charge pas, on coupe l'animation après 8s
+    setTimeout(function() {
+        document.body.classList.remove('lvl-iphone-pwa-active');
+    }, 8000);
 })();
+</script>
 </script>
 <div class="pwa-footer-signature">Powered by LevelUp</div>
 </body>
