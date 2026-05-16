@@ -2944,11 +2944,12 @@ SMART FAB & IA ASSISTANT
 ═══════════════════════════════════════ -->
 <div class="fab-wrap" id="fabWrap">
     <div class="fab-menu" id="fabMenu">
-        <button type="button" class="fab-item" id="fabNotifBtn" onclick="event.preventDefault(); window._openNotifFromFab(); document.getElementById('fabWrap').classList.remove('open');">
+        <button class="fab-item" id="fabNotifBtn" onclick="window._openNotifFromFab(); document.getElementById('fabWrap').classList.remove('open');">
             <i class="fa-solid fa-bell" style="color:#a855f7;"></i>
             <span class="fab-badge hidden" id="fabNotifBadge">!</span>
             <span class="tooltip">Notification</span>
         </button>
+        
         <button class="fab-item" onclick="toggleIA(event)">
             <i class="fa-solid fa-star" style="color: var(--purple);"></i>
             <span class="fab-badge hidden" id="fabIaBadge">NEW</span>
@@ -3702,7 +3703,8 @@ if(s.image_ou_video_fond) {
                         }
                     } else {
                         // LA SÉCURITÉ EST AJOUTÉE ICI :
-                            bgCont.insertAdjacentHTML('beforeend', `<img src="${bgStr}" class="hero-dynamic-img hero-slide ${activeClass}" alt="" onerror="this.style.display='none'">`);                }
+                            bgCont.insertAdjacentHTML('beforeend', `<img src="${bgStr}" class="hero-dynamic-img hero-slide ${activeClass}" alt="" onerror="this.style.display='none'">`);                    }
+                }
             });
 
             // 3. Rotation toutes les 4 secondes (si on a plus d'une image)
@@ -8519,49 +8521,6 @@ window.addEventListener('scroll', function() {
         }, 300);
     }
 });
-</script>
-<script>
-// ══════════════════════════════════════════════════
-// GESTIONNAIRE INTELLIGENT DE L'ÉTOILE (FAB)
-// ══════════════════════════════════════════════════
-(function() {
-    // 1. CORRECTION DU SAUT DE PAGE POUR LA NOTIFICATION
-    const notifBtn = document.getElementById('fabNotifBtn');
-    if (notifBtn) {
-        notifBtn.addEventListener('click', function(e) {
-            // Sauvegarde de ta position actuelle au millimètre près
-            const currentY = window.scrollY; 
-            
-            // Force le navigateur à rester exactement à cette position (contre le bug du saut)
-            setTimeout(() => window.scrollTo(0, currentY), 10);
-            setTimeout(() => window.scrollTo(0, currentY), 50);
-        });
-    }
-
-    // 2. CACHER L'ÉTOILE SUR LES AUTRES PAGES (Outils, Recherche, etc.)
-    // Le script vérifie toutes les demi-secondes si un panneau plein écran est ouvert
-    setInterval(function() {
-        const fab = document.getElementById('fabWrap');
-        if (!fab) return;
-
-        // On détecte si les grands panneaux (Recherche ou Outils) sont ouverts
-        // (Le script cherche les conteneurs habituels. Si le display n'est pas "none", ça veut dire qu'ils sont ouverts)
-        const isSearchOpen = document.getElementById('searchUI') && window.getComputedStyle(document.getElementById('searchUI')).display !== 'none';
-        const isToolsOpen = document.getElementById('toolsUI') && window.getComputedStyle(document.getElementById('toolsUI')).display !== 'none';
-        
-        // Gère aussi les IDs alternatifs selon comment ils sont nommés dans ton code
-        const isSearchModalOpen = document.querySelector('.search-modal') && window.getComputedStyle(document.querySelector('.search-modal')).display !== 'none';
-        const isToolsModalOpen = document.querySelector('.tools-hub-container') && window.getComputedStyle(document.querySelector('.tools-hub-container')).display !== 'none';
-
-        // Si n'importe lequel de ces panneaux est actif, on fait disparaître l'étoile
-        if (isSearchOpen || isToolsOpen || isSearchModalOpen || isToolsModalOpen) {
-            fab.style.display = 'none';
-        } else {
-            // Sinon (donc on est sur Accueil ou Paramètres), on l'affiche
-            fab.style.display = 'block';
-        }
-    }, 400); // Vérification douce et invisible en arrière-plan
-})();
 </script>
 </body>
 </html>
