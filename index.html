@@ -1105,8 +1105,36 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 .lvl-iphone-star-anim .fab-main i {
     animation: fabBounceUp 2s infinite ease-in-out !important; /* Fait bouger l'étoile */
 }
-</style>
+/* ══════════════════════════════════════════════════
+   DIAPORAMA / CAROUSEL PREMIUM
+═══════════════════════════════════════════════════ */
+.lvl-carousel {
+    position: relative;
+    width: 100%;
+    height: 220px; /* Tu peux ajuster la hauteur selon tes goûts */
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    background-color: #1a1a24;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: none; /* Caché par défaut, on l'affiche s'il y a des images */
+}
 
+.lvl-carousel img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s ease-in-out; /* Effet de fondu très fluide */
+}
+
+.lvl-carousel img.active {
+    opacity: 1;
+}
+</style>
 </head>
 <body>
 
@@ -8422,6 +8450,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 5000);
 })();
 </script>
-<div class="pwa-footer-signature">Powered by LevelUp</div>
+<script>
+async function chargerCarouselLevelUp() {
+    try {
+        // 1. Connexion à ton document "data" (dans public)
+        const docRef = window._fb.doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data');
+        const docSnap = await window._fb.getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            
+            // 2. TON CHEMIN EXACT ICI ! 
+            // data -> config -> app -> image_ou_video_fond
+            const imagesArray = data.config?.app?.image_ou_video_fond; 
+            
+            const carouselBox = document.getElementById('mainCarousel');
+            
+            // Vérifie si le chemin existe, si c'est un tableau, et s'il contient des liens
+            if (Array.isArray(imagesArray) && imagesArray.length > 0 && carouselBox) {
+                
+                // On affiche la boîte du diaporama
+                carouselBox.style.display = 'block';
+                
+                // On crée les images à l'intérieur
+                imagesArray.forEach((imgUrl, index) => {
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    if (index === 0) img.classList.add('active'); // On affiche la première par défaut
+                    carouselBox.appendChild(img);
+                });
+
+                // 3. On lance l'animation (Toutes les 4 secondes)
+                const imagesHTML = carouselBox.querySelectorAll('img');
+                let currentIndex = 0;
+                
+                if (imagesHTML.length > 1) {
+                    setInterval(() => {
+                        imagesHTML[currentIndex].classList.remove('active');
+                        currentIndex = (currentIndex + 1) % imagesHTML.length;
+                        imagesHTML[currentIndex].classList.add('active');
+                    }, 4000);
+                }
+            }
+        }
+    } catch(e) {
+        console.error("Erreur de chargement du diaporama :", e);
+    }
+}
+
+// Lancement automatique du script 1.5 secondes après l'ouverture
+setTimeout(chargerCarouselLevelUp, 1500);
+</script>
 </body>
 </html>
