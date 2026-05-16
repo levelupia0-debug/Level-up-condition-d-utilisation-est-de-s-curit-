@@ -1068,42 +1068,51 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 .tool-fs-head {
     padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
 } 
-/* MASQUER LA CLOCHE DU HAUT */
+/* MASQUER LA CLOCHE DU HAUT (POUR TOUT LE MONDE) */
 .notif-bell-btn, #notifBellBtn, #sbn-notif {
     display: none !important;
 }
 
-/* 1. POSITIONNEMENT DE LA SIGNATURE (Cachée par défaut) */
-.pwa-footer-signature {
-    position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+/* ══════════════════════════════════════════════════
+   VERROUILLAGE DE L'ÉCRAN DE CHARGEMENT
+═══════════════════════════════════════════════════ */
+
+/* 1. ON DÉTRUIT L'ÉTOILE ET LE TEXTE PAR DÉFAUT (Nulle part ailleurs !) */
+#appLoadingScreen .als-star, 
+#appLoadingScreen .pwa-loading-signature {
+    display: none !important; 
+}
+
+/* 2. ON LES AFFICHE STRICTEMENT SUR IPHONE PWA */
+body.lvl-iphone-pwa-active #appLoadingScreen .als-star {
+    display: block !important;
+    animation: levelUpPulse 1.2s infinite ease-in-out !important;
+    fill: url(#pg2);
+}
+body.lvl-iphone-pwa-active #appLoadingScreen .pwa-loading-signature {
+    display: block !important;
+}
+
+/* 3. L'animation "Pulse" néon violet */
+@keyframes levelUpPulse {
+    0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.4)); }
+    50% { transform: scale(1.3); filter: drop-shadow(0 0 25px rgba(168, 85, 247, 1)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.4)); }
+}
+
+/* 4. Le style du texte Powered by LevelUp */
+.pwa-loading-signature {
+    position: absolute;
+    bottom: calc(30px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.6rem;
-    color: rgba(255, 255, 255, 0.15);
-    font-family: monospace;
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: #ffffff;
+    font-family: 'Syne', sans-serif;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    pointer-events: none;
-    user-select: none;
-    z-index: 9999;
-    display: none;
-}
-
-/* 2. ARRÊT DE L'ANIMATION DE L'ÉTOILE PAR DÉFAUT */
-.fab-hint {
-    animation: none !important;
-}
-
-/* 3. ACTIVATION PENDANT LE CHARGEMENT SUR IPHONE PWA */
-.lvl-iphone-star-anim .pwa-footer-signature {
-    display: block !important; /* Affiche le texte */
-}
-.lvl-iphone-star-anim .fab-hint {
-    animation: fabBounceUp 2s infinite ease-in-out !important;
-}
-.lvl-iphone-star-anim .fab-main i {
-    animation: fabBounceUp 2s infinite ease-in-out !important; /* Fait bouger l'étoile */
+    letter-spacing: 0.15em;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.9), 0 0 20px rgba(168,85,247,0.8);
 }
 </style>
 
@@ -8401,27 +8410,33 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch(_) {}
     }
 
-    // 1. ANALYSE DU SMARTPHONE
+    // 1. DÉTECTION STRICTE : IPHONE ET PWA
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    // 2. DÉMARRAGE : Si c'est un iPhone en PWA, on active l'animation de l'étoile et le texte
-    if (isIOS && isPWA) {
-        document.body.classList.add('lvl-iphone-star-anim');
+    // Si iPhone PWA -> On allume l'étoile et la signature
+    if (isIOS && !isAndroid && isStandalone) {
+        document.body.classList.add('lvl-iphone-pwa-active');
     }
 
-    // 3. APRÈS 5 SECONDES : On coupe l'animation et on lance les notifs
-    setTimeout(function() {
-        // A) On supprime la classe : l'étoile s'arrête de bouger et le texte disparaît !
-        document.body.classList.remove('lvl-iphone-star-anim');
+    // 2. LA MAGIE DE LA SYNCHRONISATION
+    // On écoute la commande officielle qui fait disparaître l'écran de chargement
+    const oldHideLoading = window._hideLoadingScreen;
+    window._hideLoadingScreen = function() {
+        
+        // A) Fait disparaître l'écran noir (L'étoile et le texte s'effacent instantanément en même temps !)
+        if (oldHideLoading) oldHideLoading();
 
-        // B) On lance le popup de notification pour TOUTES les PWA (iPhone et Android)
-        if (isPWA) {
-            _triggerPushPopupOnce();
+        // B) Nettoyage propre
+        document.body.classList.remove('lvl-iphone-pwa-active');
+
+        // C) Afficher la popup de notification 1.5s après pour TOUTES les PWA
+        if (isStandalone) {
+            setTimeout(_triggerPushPopupOnce, 1500);
         }
-    }, 5000);
+    };
 })();
 </script>
-<div class="pwa-footer-signature">Powered by LevelUp</div>
 </body>
 </html>
