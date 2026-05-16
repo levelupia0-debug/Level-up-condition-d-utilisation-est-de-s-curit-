@@ -8502,113 +8502,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 5000);
 })();
 </script>
-// 3. APRÈS 5 SECONDES : On coupe l'animation et on lance les notifs
-    setTimeout(function() {
-        // A) On supprime la classe : l'étoile s'arrête de bouger et le texte disparaît !
-        document.body.classList.remove('lvl-iphone-star-anim');
-
-        // B) On lance le popup de notification pour TOUTES les PWA (iPhone et Android)
-        if (isPWA) {
-            _triggerPushPopupOnce();
-        }
-    }, 5000);
-})();
+<script>
+// EFFACER LA BULLE "ASSISTANT" AU SCROLL
+window.addEventListener('scroll', function() {
+    const hintBubble = document.getElementById('fabHintBubble'); 
+    
+    if (hintBubble && window.scrollY > 15) { // S'active dès qu'on descend un peu
+        hintBubble.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        hintBubble.style.opacity = '0';
+        hintBubble.style.transform = 'translateY(10px) translateX(-50%)'; // Animation douce vers le bas
+        hintBubble.style.pointerEvents = 'none';
+        
+        // Cache complètement l'élément après l'animation
+        setTimeout(() => {
+            hintBubble.style.display = 'none';
+        }, 300);
+    }
+});
 </script>
 <script>
+// ══════════════════════════════════════════════════
+// GESTIONNAIRE INTELLIGENT DE L'ÉTOILE (FAB)
+// ══════════════════════════════════════════════════
 (function() {
-    // 0. SÉCURITÉ : DÉBLOQUER L'ÉCRAN DE CHARGEMENT DE FORCE
-    // Cela empêche le chargement infini quoiqu'il arrive
-    setTimeout(function() {
-        const loader = document.getElementById('appLoadingScreen');
-        if (loader) loader.style.display = 'none';
-    }, 2000); 
-
-    const dbMain = document.querySelector('.db-main');
-    const hintBubble = document.getElementById('fabHintBubble');
-    const sBar = document.getElementById('fabSvgBar');
-    const scrollIco = document.getElementById('smartScrollIco');
+    // 1. CORRECTION DU SAUT DE PAGE POUR LA NOTIFICATION
     const notifBtn = document.getElementById('fabNotifBtn');
-
-    // 1. GESTION DU SCROLL (Bulle "Assistant" + Anneau de progression)
-    function handleUniversalScroll(scrollTop, scrollHeight, clientHeight) {
-        if (scrollTop > 10 && hintBubble && hintBubble.style.display !== 'none') {
-            hintBubble.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            hintBubble.style.opacity = '0';
-            hintBubble.style.transform = 'translateY(10px) translateX(-50%)';
-            hintBubble.style.pointerEvents = 'none';
-            setTimeout(() => { hintBubble.style.display = 'none'; }, 300);
-        }
-
-        if (sBar) {
-            const maxScroll = scrollHeight - clientHeight;
-            if (maxScroll > 0) {
-                const progress = scrollTop / maxScroll;
-                sBar.style.strokeDashoffset = 163 - (163 * progress);
-                if (scrollIco) {
-                    scrollIco.className = scrollTop < maxScroll / 2 ? 'fa-solid fa-arrow-down' : 'fa-solid fa-arrow-up';
-                }
-            }
-        }
-    }
-
-    window.addEventListener('scroll', () => {
-        handleUniversalScroll(window.scrollY, document.documentElement.scrollHeight, window.innerHeight);
-    });
-
-    if (dbMain) {
-        dbMain.addEventListener('scroll', () => {
-            handleUniversalScroll(dbMain.scrollTop, dbMain.scrollHeight, dbMain.clientHeight);
-        });
-    }
-
-    // 2. CORRECTION DU SAUT DE PAGE POUR LA NOTIFICATION
     if (notifBtn) {
         notifBtn.addEventListener('click', function(e) {
+            // Sauvegarde de ta position actuelle au millimètre près
             const currentY = window.scrollY; 
-            const currentDbY = dbMain ? dbMain.scrollTop : 0;
-            setTimeout(() => {
-                window.scrollTo(0, currentY);
-                if (dbMain) dbMain.scrollTop = currentDbY;
-            }, 10);
-            setTimeout(() => {
-                window.scrollTo(0, currentY);
-                if (dbMain) dbMain.scrollTop = currentDbY;
-            }, 50);
+            
+            // Force le navigateur à rester exactement à cette position (contre le bug du saut)
+            setTimeout(() => window.scrollTo(0, currentY), 10);
+            setTimeout(() => window.scrollTo(0, currentY), 50);
         });
     }
 
-    // 3. CACHER L'ÉTOILE PARTOUT SAUF ACCUEIL ET PARAMÈTRES
+    // 2. CACHER L'ÉTOILE SUR LES AUTRES PAGES (Outils, Recherche, etc.)
+    // Le script vérifie toutes les demi-secondes si un panneau plein écran est ouvert
     setInterval(function() {
         const fab = document.getElementById('fabWrap');
         if (!fab) return;
 
-        const searchOv = document.getElementById('searchOverlay');
-        const toolsOv = document.getElementById('toolsOverlay');
-        const servicesOv = document.getElementById('servicesOverlay');
-        const mediaOv = document.getElementById('mediaHubOverlay');
-
-        const isOverlayOpen = 
-            (searchOv && !searchOv.classList.contains('hidden')) ||
-            (toolsOv && !toolsOv.classList.contains('hidden')) ||
-            (servicesOv && !servicesOv.classList.contains('hidden')) ||
-            (mediaOv && !mediaOv.classList.contains('hidden'));
-
-        const landing = document.getElementById('landing');
-        const pHome = document.getElementById('panel-home');
-        const pSettings = document.getElementById('panel-settings');
+        // On détecte si les grands panneaux (Recherche ou Outils) sont ouverts
+        // (Le script cherche les conteneurs habituels. Si le display n'est pas "none", ça veut dire qu'ils sont ouverts)
+        const isSearchOpen = document.getElementById('searchUI') && window.getComputedStyle(document.getElementById('searchUI')).display !== 'none';
+        const isToolsOpen = document.getElementById('toolsUI') && window.getComputedStyle(document.getElementById('toolsUI')).display !== 'none';
         
-        const isLanding = landing && !landing.classList.contains('hidden') && landing.style.display !== 'none';
-        const isHomeActive = pHome && pHome.classList.contains('on');
-        const isSettingsActive = pSettings && pSettings.classList.contains('on');
+        // Gère aussi les IDs alternatifs selon comment ils sont nommés dans ton code
+        const isSearchModalOpen = document.querySelector('.search-modal') && window.getComputedStyle(document.querySelector('.search-modal')).display !== 'none';
+        const isToolsModalOpen = document.querySelector('.tools-hub-container') && window.getComputedStyle(document.querySelector('.tools-hub-container')).display !== 'none';
 
-        if (isOverlayOpen) {
+        // Si n'importe lequel de ces panneaux est actif, on fait disparaître l'étoile
+        if (isSearchOpen || isToolsOpen || isSearchModalOpen || isToolsModalOpen) {
             fab.style.display = 'none';
-        } else if (isLanding || isHomeActive || isSettingsActive) {
-            fab.style.display = ''; 
         } else {
-            fab.style.display = 'none'; 
+            // Sinon (donc on est sur Accueil ou Paramètres), on l'affiche
+            fab.style.display = 'block';
         }
-    }, 300);
+    }, 400); // Vérification douce et invisible en arrière-plan
 })();
 </script>
 </body>
