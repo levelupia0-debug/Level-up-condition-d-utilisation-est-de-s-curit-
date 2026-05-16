@@ -1114,6 +1114,33 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 .hero-slide.active {
     opacity: 0.65 !important;   /* Visible ! */
 }
+/* ══════════════════════════════════════════════════
+   CORRECTION ANIMATION : ÉTOILE FIXE, BULLE MOBILE
+═══════════════════════════════════════════════════ */
+/* 1. On fige l'étoile principale (aucun mouvement) */
+.fab-main, .fab-main i {
+    animation: none !important;
+    transform: none !important;
+}
+
+/* 2. On fait bouger UNIQUEMENT la bulle "Assistant" */
+.fab-hint {
+    animation: fabBounceUp 1.5s infinite ease-in-out !important;
+    display: flex; /* S'assure qu'elle est bien visible au départ */
+}
+/* ══════════════════════════════════════════════════
+   SÉCURITÉ IMAGES (Évite les points d'interrogation)
+═══════════════════════════════════════════════════ */
+img {
+    color: transparent !important; /* Cache le texte alternatif et l'icône d'erreur */
+}
+img::before {
+    content: "";
+    display: block;
+    background: #030303; /* Met un fond noir propre le temps du chargement */
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+}
 </style>
 
 </head>
@@ -2936,7 +2963,7 @@ SMART FAB & IA ASSISTANT
         </button>
     </div>
     
-    <div class="fab-hint" id="fabHintBubble" style="display:none">
+    <div class="fab-hint" id="fabHintBubble">
         Assistant
     </div>
     
@@ -3660,7 +3687,8 @@ if(s.image_ou_video_fond) {
                             bgCont.insertAdjacentHTML('beforeend', `<video src="${bgStr}" class="hero-dynamic-img hero-slide ${activeClass}" autoplay loop muted playsinline></video>`);
                         }
                     } else {
-                        bgCont.insertAdjacentHTML('beforeend', `<img src="${bgStr}" class="hero-dynamic-img hero-slide ${activeClass}" alt="">`);
+                        // LA SÉCURITÉ EST AJOUTÉE ICI :
+                        bgCont.insertAdjacentHTML('beforeend', `<img src="${bgStr}" class="hero-dynamic-img hero-slide ${activeClass}" alt="" onerror="this.style.display='none'">`);
                     }
                 }
             });
