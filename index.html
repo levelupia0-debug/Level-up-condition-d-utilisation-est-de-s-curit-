@@ -1141,6 +1141,21 @@ img::before {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
 }
+/* ══════════════════════════════════════════════════
+   CORRECTION : ÉTOILE FIXE QUI TOURNE AU CLIC
+═══════════════════════════════════════════════════ */
+.fab-main, .fab-main i {
+    animation: none !important; /* Arrête le rebond */
+}
+.fab-wrap.open .fab-main {
+    transform: rotate(135deg) !important; /* Force la rotation au clic */
+}
+/* On laisse uniquement le texte "Assistant" rebondir */
+.fab-hint {
+    animation: fabBounceUp 1.5s infinite ease-in-out !important; 
+}
+/* FIX SAFARI : Cacher l'icône image cassée le temps du chargement */
+img { text-indent: -10000px; }
 </style>
 
 </head>
@@ -3688,8 +3703,7 @@ if(s.image_ou_video_fond) {
                         }
                     } else {
                         // LA SÉCURITÉ EST AJOUTÉE ICI :
-                        bgCont.insertAdjacentHTML('beforeend', `<img src="${bgStr}" class="hero-dynamic-img hero-slide ${activeClass}" alt="" onerror="this.style.display='none'">`);
-                    }
+                            bgCont.insertAdjacentHTML('beforeend', `<img src="${bgStr}" class="hero-dynamic-img hero-slide ${activeClass}" alt="" onerror="this.style.display='none'">`);                    }
                 }
             });
 
@@ -7804,10 +7818,11 @@ var SEL_MAP = {
     ['#mediaHubOverlay h3','text','Media Hub'],
     ['#mediaHubOverlay p[style*="muted"]','text','Music & Videos integrated'],
     /* FAB tooltips */
-    ['#fabWrap .fab-item:nth-child(1) .tooltip','text','Open AI Assistant'],
-    ['#fabWrap .fab-item:nth-child(3) .tooltip','text','Quick scroll'],
-    ['#fabWrap .fab-item:nth-child(4) .tooltip','text','Tools'],
-    ['#fabWrap .fab-item:nth-child(5) .tooltip','text','Search movies & music'],
+    ['#fabWrap .fab-item:nth-child(1) .tooltip','text','Notification'],
+    ['#fabWrap .fab-item:nth-child(2) .tooltip','text','Open AI Assistant'],
+    ['#fabWrap .fab-item:nth-child(4) .tooltip','text','Quick scroll'],
+    ['#fabWrap .fab-item:nth-child(5) .tooltip','text','Tools'],
+    ['#fabWrap .fab-item:nth-child(6) .tooltip','text','Search movies & music'],
     ['#fabNavTip','text','Sign in'],
     /* Tool fullscreen */
     ['[title="Quitter l\'outil"], [title="Exit tool"]','attr-title','Exit tool'],
@@ -8108,10 +8123,11 @@ var SEL_MAP = {
     ['#mediaHubOverlay h3','text','M\u00e9dia Hub'],
     ['#mediaHubOverlay p[style*="muted"]','text','Musique & Vid\u00e9os int\u00e9gr\u00e9es'],
     /* FAB */
-    ['#fabWrap .fab-item:nth-child(1) .tooltip','text','Ouvrir l\u2019Assistant IA'],
-    ['#fabWrap .fab-item:nth-child(3) .tooltip','text','D\u00e9filement rapide'],
-    ['#fabWrap .fab-item:nth-child(4) .tooltip','text','Outils'],
-    ['#fabWrap .fab-item:nth-child(5) .tooltip','text','Rechercher films & musique'],
+    ['#fabWrap .fab-item:nth-child(1) .tooltip','text','Notification'],
+    ['#fabWrap .fab-item:nth-child(2) .tooltip','text','Ouvrir l\u2019Assistant IA'],
+    ['#fabWrap .fab-item:nth-child(4) .tooltip','text','D\u00e9filement rapide'],
+    ['#fabWrap .fab-item:nth-child(5) .tooltip','text','Outils'],
+    ['#fabWrap .fab-item:nth-child(6) .tooltip','text','Rechercher films & musique'],
     ['#fabNavTip','text','Se connecter'],
     /* Auth */
     ['#authDevSection .btn.btn-g','html','<i class="fa-solid fa-key" style="color:var(--purple)"></i> Se connecter avec une cl\u00e9 LVL'],
