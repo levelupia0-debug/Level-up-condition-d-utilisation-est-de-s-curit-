@@ -1067,6 +1067,10 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 
 .tool-fs-head {
     padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
+} 
+/* MASQUER LA CLOCHE DE NOTIFICATION EN HAUT */
+.notif-bell-btn, #notifBellBtn, #sbn-notif {
+    display: none !important;
 }
 </style>
 
@@ -8344,6 +8348,37 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch(_) {}
     };
+})();
+</script> 
+<script>
+(function() {
+    // Fonction qui lance l'affichage du popup
+    function _triggerPushPopupOnce() {
+        try {
+            if (typeof showPushPermPopup === 'function') {
+                showPushPermPopup();
+            } else {
+                const t = setInterval(function() {
+                    if (typeof showPushPermPopup === 'function') {
+                        clearInterval(t);
+                        showPushPermPopup();
+                    }
+                }, 300);
+                setTimeout(function() { clearInterval(t); }, 15000);
+            }
+        } catch(_) {}
+    }
+
+    // Déclencher après 3 secondes (3000 ms) UNIQUEMENT sur la PWA
+    setTimeout(function() {
+        // Détecte si l'app est installée sur le téléphone (standalone/PWA)
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        
+        // Si c'est bien la PWA (et pas juste le navigateur Safari/Chrome), on lance le popup
+        if (isPWA) {
+            _triggerPushPopupOnce();
+        }
+    }, 3000);
 })();
 </script>
 </body>
