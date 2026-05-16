@@ -2907,32 +2907,39 @@ SMART FAB & IA ASSISTANT
             <span class="fab-badge hidden" id="fabNotifBadge">!</span>
             <span class="tooltip">Notification</span>
         </button>
+        
         <button class="fab-item" onclick="toggleIA(event)">
             <i class="fa-solid fa-star" style="color: var(--purple);"></i>
             <span class="fab-badge hidden" id="fabIaBadge">NEW</span>
             <span class="tooltip">Ouvrir l'Assistant IA</span>
         </button>
+        
         <button class="fab-item" id="fabNavBtn" onclick="fabNavAction(); document.getElementById('fabWrap').classList.remove('open');">
             <i class="fa-solid fa-user" id="fabNavIco"></i>
             <span class="tooltip" id="fabNavTip">Se connecter</span>
         </button>
+        
         <button class="fab-item" onclick="smartScroll()">
             <i class="fa-solid fa-arrow-down" id="smartScrollIco"></i>
-            <span class="tooltip">Défilement rapide</span>
+            <span class="tooltip">Descendre</span>
         </button>
+        
         <button class="fab-item" id="fabToolsBtn" onclick="openToolsHub(); document.getElementById('fabWrap').classList.remove('open');">
             <i class="fa-solid fa-wrench" style="color: #22c55e;"></i>
             <span class="fab-badge hidden" id="fabToolsBadge">NEW</span>
-            <span class="tooltip">Outils</span>
+            <span class="tooltip">Tools</span>
         </button>
+        
         <button class="fab-item" onclick="window.openSearch(); document.getElementById('fabWrap').classList.remove('open');">
             <i class="fa-solid fa-magnifying-glass" style="color:#f97316;"></i>
-            <span class="tooltip">Rechercher films &amp; musique</span>
+            <span class="tooltip">Rechercher films & musique</span>
         </button>
     </div>
+    
     <div class="fab-hint" id="fabHintBubble" style="display:none">
-      <i class="fa-solid fa-bell" style="color:#a855f7;font-size:.75rem"></i> Clique moi
+        Assistant
     </div>
+    
     <button class="fab-main" onclick="toggleFab(event)">
         <svg class="scroll-svg" viewBox="0 0 56 56">
             <circle class="scroll-svg-bg" cx="28" cy="28" r="26"></circle>
@@ -2941,7 +2948,6 @@ SMART FAB & IA ASSISTANT
         <i class="fa-solid fa-star"></i>
     </button>
 </div>
-
 <!-- IA ASSISTANT IFRAME -->
 <div id="iaOverlay" class="ia-overlay">
     <div id="iaAppsBar" class="ia-apps-bar hidden"></div>
@@ -8454,6 +8460,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 5000);
 })();
 </script>
-<div class="pwa-footer-signature">Powered by LevelUp</div>
+// EFFACER LA BULLE "ASSISTANT" AU SCROLL
+window.addEventListener('scroll', function() {
+    const hintBubble = document.getElementById('fabHintBubble'); 
+    
+    if (hintBubble && window.scrollY > 15) { // S'active dès qu'on descend un peu
+        hintBubble.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        hintBubble.style.opacity = '0';
+        hintBubble.style.transform = 'translateY(10px) translateX(-50%)'; // Animation douce vers le bas
+        hintBubble.style.pointerEvents = 'none';
+        
+        // Cache complètement l'élément après l'animation
+        setTimeout(() => {
+            hintBubble.style.display = 'none';
+        }, 300);
+    }
+});
+</script>
 </body>
 </html>
