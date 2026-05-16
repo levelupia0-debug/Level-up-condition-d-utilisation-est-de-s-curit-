@@ -48,12 +48,10 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <div id="appLoadingScreen">
-    <div class="loading-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; position: relative;">
-        <svg class="als-star" width="64" height="64" viewBox="0 0 576 512" fill="currentColor"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-        <svg style="width:0;height:0;position:absolute"><defs><linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs></svg>
-        
-        <div class="pwa-loading-signature">Powered by LevelUp</div>
-    </div>
+    <svg class="als-star" width="64" height="64" viewBox="0 0 576 512" fill="currentColor"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
+    <svg style="width:0;height:0;position:absolute"><defs><linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d8b4fe"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs></svg>
+    
+    <div class="pwa-loading-signature">Powered by LevelUp</div>
 </div>
 <style>
 /* ═══════════════════════════════════════
@@ -1075,22 +1073,22 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 .tool-fs-head {
     padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
 } 
-/* MASQUER LA CLOCHE DU HAUT (POUR TOUT LE MONDE) */
+/* MASQUER LA CLOCHE DU HAUT */
 .notif-bell-btn, #notifBellBtn, #sbn-notif {
     display: none !important;
 }
 
 /* ══════════════════════════════════════════════════
-   VERROUILLAGE DE L'ÉCRAN DE CHARGEMENT
+   VERROUILLAGE SÉCURISÉ DE L'ÉCRAN DE CHARGEMENT
 ═══════════════════════════════════════════════════ */
 
-/* 1. ON DÉTRUIT L'ÉTOILE ET LE TEXTE PAR DÉFAUT (Nulle part ailleurs !) */
+/* 1. CACHÉ PAR DÉFAUT PARTOUT (Navigateurs, Android, PC -> Écran noir fluide uniquement) */
 #appLoadingScreen .als-star, 
 #appLoadingScreen .pwa-loading-signature {
     display: none !important; 
 }
 
-/* 2. ON LES AFFICHE STRICTEMENT SUR IPHONE PWA */
+/* 2. AFFICHAGE EXCLUSIF SUR IPHONE PWA */
 body.lvl-iphone-pwa-active #appLoadingScreen .als-star {
     display: block !important;
     animation: levelUpPulse 1.2s infinite ease-in-out !important;
@@ -1100,17 +1098,17 @@ body.lvl-iphone-pwa-active #appLoadingScreen .pwa-loading-signature {
     display: block !important;
 }
 
-/* 3. L'animation "Pulse" néon violet */
+/* 3. L'animation Pulse exclusive */
 @keyframes levelUpPulse {
     0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.4)); }
-    50% { transform: scale(1.3); filter: drop-shadow(0 0 25px rgba(168, 85, 247, 1)); }
+    50% { transform: scale(1.25); filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.8)); }
     100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.4)); }
 }
 
-/* 4. Le style du texte Powered by LevelUp */
+/* 4. Style du texte Powered by LevelUp */
 .pwa-loading-signature {
     position: absolute;
-    bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(40px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     font-size: 0.95rem;
@@ -1119,7 +1117,7 @@ body.lvl-iphone-pwa-active #appLoadingScreen .pwa-loading-signature {
     font-family: 'Syne', sans-serif;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    text-shadow: 0 4px 15px rgba(0,0,0,0.9), 0 0 20px rgba(168,85,247,0.8);
+    text-shadow: 0 4px 15px rgba(0,0,0,0.9), 0 0 20px rgba(168,85,247,0.7);
 }
 </style>
 
@@ -8417,32 +8415,34 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch(_) {}
     }
 
-    // 1. DÉTECTION STRICTE : IPHONE ET PWA
+    // 1. DÉTECTION ULTRA STRATEGIQUE
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isAndroid = /Android/.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    // Si iPhone PWA -> On allume l'étoile et la signature
+    // Uniquement iPhone + Application installée (PWA)
     if (isIOS && !isAndroid && isStandalone) {
         document.body.classList.add('lvl-iphone-pwa-active');
     }
 
-    // 2. LA MAGIE DE LA SYNCHRONISATION
-    // On écoute la commande officielle qui fait disparaître l'écran de chargement
-    const oldHideLoading = window._hideLoadingScreen;
-    window._hideLoadingScreen = function() {
-        
-        // A) Fait disparaître l'écran noir (L'étoile et le texte s'effacent instantanément en même temps !)
-        if (oldHideLoading) oldHideLoading();
-
-        // B) Nettoyage propre
-        document.body.classList.remove('lvl-iphone-pwa-active');
-
-        // C) Afficher la popup de notification 1.5s après pour TOUTES les PWA
-        if (isStandalone) {
-            setTimeout(_triggerPushPopupOnce, 1500);
-        }
-    };
+    // 2. OBSERVATEUR DU LOADER (Ne casse aucun code d'origine)
+    const loader = document.getElementById('appLoadingScreen');
+    if (loader) {
+        const observer = new MutationObserver(function() {
+            // Détecter quand le loader passe en display: none (Firebase a fini son travail)
+            const isHidden = window.getComputedStyle(loader).display === 'none' || loader.style.display === 'none';
+            if (isHidden) {
+                observer.disconnect(); // Déconnexion de l'observateur pour libérer la mémoire
+                
+                // Déclenchement automatique de la popup après 5 secondes pour toutes les PWA (Android et iOS)
+                if (isStandalone) {
+                    setTimeout(_triggerPushPopupOnce, 5000);
+                }
+            }
+        });
+        // Lancer l'écoute sur les changements de style du loader
+        observer.observe(loader, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
 })();
 </script>
 </body>
