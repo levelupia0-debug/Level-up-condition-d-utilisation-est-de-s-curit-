@@ -674,7 +674,8 @@ LOGOUT ANIMATION OVERLAY
 
 /* MOBILE NAV (DASHBOARD) */
 .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surf); border-top: 1px solid var(--bdr); z-index: 900; padding-bottom: env(safe-area-inset-bottom); }
-.mn-in { display: flex; justify-content: space-around; padding: 10px 5px; }
+.mn-in { display: flex; justify-content: space-around; padding: 10px 5px; overflow-x: auto; gap: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.mn-in::-webkit-scrollbar { display: none; }
 .mn-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); font-size: .65rem; font-weight: 600; cursor: pointer; transition: all .2s; }
 .mn-item.on { color: var(--purple); }
 .mn-item i { font-size: 1.15rem; transition: transform .2s; }
@@ -683,6 +684,39 @@ LOGOUT ANIMATION OVERLAY
 .mobile-nav.vis { display: block; }
 }
 
+
+/* LANDING MOBILE NAV */
+@media(max-width:820px){
+  #landingMobileNav.vis { display: block; }
+  #landing { padding-bottom: 72px; }
+}
+
+/* LIVE CHAT */
+#chatFab { display:none; position:fixed; bottom:86px; left:20px; z-index:980; width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg,#7c3aed,#a855f7); border:none; cursor:pointer; color:#fff; font-size:1.1rem; box-shadow:0 4px 18px rgba(168,85,247,.45); transition:transform .2s,box-shadow .2s; pointer-events:all; }
+#chatFab:hover { transform:scale(1.08); box-shadow:0 6px 24px rgba(168,85,247,.6); }
+#chatFab .chat-badge { position:absolute; top:-3px; right:-3px; background:#ef4444; color:#fff; font-size:.6rem; font-weight:700; min-width:16px; height:16px; border-radius:8px; display:none; align-items:center; justify-content:center; padding:0 3px; }
+@media(max-width:820px){ #chatFab { display:flex; align-items:center; justify-content:center; } }
+#chatOverlay { display:none; position:fixed; inset:0; z-index:970; background:rgba(6,2,10,.6); backdrop-filter:blur(6px); }
+#chatPanel { position:fixed; bottom:0; left:0; right:0; height:72vh; max-height:520px; background:var(--surf); border-top:1px solid var(--bdr); border-radius:20px 20px 0 0; z-index:975; display:none; flex-direction:column; overflow:hidden; }
+@media(min-width:821px){ #chatPanel { left:auto; right:24px; bottom:24px; width:360px; height:500px; border-radius:16px; border:1px solid var(--bdr); } }
+.chat-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; border-bottom:1px solid var(--bdr); }
+.chat-head-title { font-weight:700; font-size:.95rem; display:flex; align-items:center; gap:8px; }
+.chat-head-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 6px #22c55e; animation:pulse 2s infinite; }
+.chat-close-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem; padding:4px; }
+.chat-msgs { flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:8px; scroll-behavior:smooth; }
+.chat-msgs::-webkit-scrollbar { width:3px; }
+.chat-msgs::-webkit-scrollbar-thumb { background:rgba(168,85,247,.3); border-radius:3px; }
+.chat-msg { max-width:82%; padding:8px 11px; border-radius:12px; font-size:.82rem; line-height:1.4; }
+.chat-msg.mine { background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; align-self:flex-end; border-bottom-right-radius:3px; }
+.chat-msg.theirs { background:rgba(255,255,255,.06); color:var(--text); align-self:flex-start; border-bottom-left-radius:3px; }
+.chat-msg-name { font-size:.68rem; font-weight:600; opacity:.7; margin-bottom:2px; }
+.chat-msg-time { font-size:.62rem; opacity:.5; margin-top:3px; text-align:right; }
+.chat-empty { text-align:center; color:var(--muted); font-size:.82rem; padding:30px 0; }
+.chat-input-row { display:flex; align-items:center; gap:8px; padding:10px 12px; border-top:1px solid var(--bdr); }
+.chat-input { flex:1; background:rgba(255,255,255,.05); border:1px solid var(--bdr); border-radius:20px; padding:8px 14px; color:var(--text); font-size:.85rem; outline:none; }
+.chat-input:focus { border-color:var(--purple); }
+.chat-send-btn { background:var(--purple); border:none; color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:opacity .2s; }
+.chat-send-btn:disabled { opacity:.4; cursor:default; }
 
 /* ── BADGE NAVIGATION OUTILS ── */
 .lvl-nav-badge { position:absolute; top:2px; right:4px; width:8px; height:8px; border-radius:50%; background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 0 6px rgba(239,68,68,.7); animation:badgePulse 1.8s ease infinite; pointer-events:none; }
@@ -1000,60 +1034,37 @@ Create Account
 
 <!-- NOTIFICATION DRAWER — hidden (push-only mode, in-app panel disabled) -->
 <div id="notifBackdrop" style="display:none!important"></div>
-<div class="notif-panel" id="notifPanel" style="display:none!important">
-  <div class="notif-panel-head">
-    <h4><i class="fa-solid fa-bell" style="color:var(--purple)"></i>Notifications</h4>
-    <div class="notif-panel-head-actions">
-      <button class="notif-head-btn" onclick="window.notifMarkAllRead()">Tout lu</button>
-      <button class="notif-head-close" onclick="window.toggleNotifPanel()"><i class="fa-solid fa-xmark"></i></button>
+<div class="notif-panel" id="notifPanel" style="display:none!important"></div>
+
+<!-- MINI APPS MENU — popup bottom nav Applications button -->
+<div id="appsMiniMenu" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(18,18,26,.98);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:16px;box-shadow:0 -8px 40px rgba(0,0,0,.7);width:calc(100% - 32px);max-width:380px;backdrop-filter:blur(20px)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <span style="font-size:.8rem;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em">Applications</span>
+    <button onclick="closeAppsMiniMenu()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:.9rem;padding:4px"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+    <div onclick="window.openApp('movie');closeAppsMiniMenu()" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:10px 4px;border-radius:14px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);transition:all .2s" onmouseover="this.style.background='rgba(59,130,246,.18)'" onmouseout="this.style.background='rgba(59,130,246,.08)'">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;color:var(--blue)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill="currentColor"/></svg></div>
+      <span style="font-size:.58rem;font-weight:700;color:rgba(255,255,255,.7);text-align:center;line-height:1.2">Movie</span>
+    </div>
+    <div onclick="window.openApp('music');closeAppsMiniMenu()" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:10px 4px;border-radius:14px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);transition:all .2s" onmouseover="this.style.background='rgba(59,130,246,.18)'" onmouseout="this.style.background='rgba(59,130,246,.08)'">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;color:var(--blue)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="18" cy="16" r="3" fill="currentColor"/></svg></div>
+      <span style="font-size:.58rem;font-weight:700;color:rgba(255,255,255,.7);text-align:center;line-height:1.2">Music</span>
+    </div>
+    <div onclick="window.openApp('ia');closeAppsMiniMenu()" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:10px 4px;border-radius:14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.15);transition:all .2s" onmouseover="this.style.background='rgba(168,85,247,.18)'" onmouseout="this.style.background='rgba(168,85,247,.08)'">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(168,85,247,.15);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 576 512" fill="#a855f7"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg></div>
+      <span style="font-size:.58rem;font-weight:700;color:rgba(255,255,255,.7);text-align:center;line-height:1.2">Level IA</span>
+    </div>
+    <div onclick="window.openToolsHub();closeAppsMiniMenu()" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:10px 4px;border-radius:14px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15);transition:all .2s" onmouseover="this.style.background='rgba(34,197,94,.18)'" onmouseout="this.style.background='rgba(34,197,94,.08)'">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(34,197,94,.15);display:flex;align-items:center;justify-content:center;color:#22c55e"><i class="fa-solid fa-wrench" style="font-size:1rem"></i></div>
+      <span style="font-size:.58rem;font-weight:700;color:rgba(255,255,255,.7);text-align:center;line-height:1.2">Outils</span>
+    </div>
+    <div onclick="window.openServicesHub();closeAppsMiniMenu()" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:10px 4px;border-radius:14px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.15);transition:all .2s" onmouseover="this.style.background='rgba(249,115,22,.18)'" onmouseout="this.style.background='rgba(249,115,22,.08)'">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(249,115,22,.15);display:flex;align-items:center;justify-content:center;color:#f97316"><i class="fa-solid fa-layer-group" style="font-size:1rem"></i></div>
+      <span style="font-size:.58rem;font-weight:700;color:rgba(255,255,255,.7);text-align:center;line-height:1.2">Services</span>
     </div>
   </div>
-  <!-- Notice Apple iOS double notification -->
-  <div class="lvl-apple-notice" id="appleNotifNotice" style="display:none">
-    <i class="fa-brands fa-apple"></i>
-    <span data-i18n="apple.notice">Utilisateurs iPhone : vous pourriez recevoir certaines notifications en double. Nous travaillons sur ce problème — veuillez nous en excuser.</span>
-    <button class="lvl-apple-notice-close" onclick="document.getElementById('appleNotifNotice').style.display='none';localStorage.setItem('lvl_apple_notice_dismissed','1')" title="Fermer"><i class="fa-solid fa-xmark"></i></button>
-  </div>
-  <div class="notif-list" id="notifList">
-    <div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p data-i18n="notif.empty">Aucune notification pour le moment</p></div>
-  </div>
-  <!-- Section admin (super admins uniquement) -->
-  <div class="notif-admin-section" id="notifAdminSection" style="display:none">
-    <div class="notif-admin-toggle" id="notifAdminToggle" onclick="window._toggleAdminPanel()">
-      <i class="fa-solid fa-paper-plane"></i> Envoyer une notification
-      <i class="fa-solid fa-chevron-down chev"></i>
-    </div>
-    <div class="notif-admin-body" id="notifAdminBody">
-      <input type="text" id="notifSendTitle" placeholder="Titre de la notification" maxlength="80">
-      <textarea id="notifSendBody" placeholder="Message (corps de la notification)" maxlength="300"></textarea>
-      <input type="text" id="notifSendImage" placeholder="🖼️ URL image (ex: https://levelup-ecosystem.com/icon.svg)">
-      <select id="notifSendDest">
-        <option value="">→ Destination au clic (optionnel)</option>
-        <option value="https://levelup-ecosystem.com">🏠 Accueil / Landing</option>
-        <option value="https://levelup-ecosystem.com/#dashboard">📊 Tableau de bord</option>
-        <option value="https://ia.levelup-ecosystem.com">🤖 Level IA</option>
-        <option value="https://levelup-ecosystem.com/#outils">🛠️ Outils</option>
-        <option value="https://movie.levelup-ecosystem.com">🎬 LevelMovie</option>
-        <option value="https://music.levelup-ecosystem.com">🎵 LevelMusic</option>
-        <option value="https://levelup-ecosystem.com/#parametres">⚙️ Paramètres</option>
-        <option value="custom">✏️ URL personnalisée…</option>
-      </select>
-      <input type="text" id="notifSendCustomUrl" placeholder="🔗 ex: https://ton-site.com/page ou https://levelup-ecosystem.com/#outils" style="display:none">
-      <div class="notif-type-group" id="notifTypeGroup">
-        <button class="notif-type-btn active" data-type="both" onclick="window._setNotifType('both',this)">📣 Push+App</button>
-        <button class="notif-type-btn" data-type="push" onclick="window._setNotifType('push',this)">📲 Push seul</button>
-        <button class="notif-type-btn" data-type="inapp" onclick="window._setNotifType('inapp',this)">🔔 In-app</button>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button onclick="window.sendPushNotif()" class="btn btn-p" style="flex:1;font-size:.78rem;padding:9px 12px">
-          <i class="fa-solid fa-rocket"></i> Envoyer à tous
-        </button>
-        <button onclick="window.deleteAllNotifs()" style="padding:9px 12px;border-radius:var(--r8);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#f87171;font-size:.72rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;white-space:nowrap;outline:none" title="Supprimer toutes les notifications" onmouseover="this.style.background='rgba(239,68,68,.18)'" onmouseout="this.style.background='rgba(239,68,68,.08)'">
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
-      </div>
-    </div>
-  </div>
+  <div onclick="sTo('apps-sec');closeAppsMiniMenu()" style="margin-top:12px;text-align:center;font-size:.72rem;color:rgba(255,255,255,.35);cursor:pointer;padding:6px;border-radius:8px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">Voir toutes les applications <i class="fa-solid fa-chevron-right" style="font-size:.6rem"></i></div>
 </div>
 
 <!-- BANNIÈRE MAINTENANCE GLOBALE -->
@@ -1080,10 +1091,10 @@ LANDING PAGE
 <p class="hero-sub" id="heroSubtitle">Connectez-vous une seule fois avec Google et accédez instantanément à LevelMovie, LevelMusic et Level IA. Votre identité numérique centralisée, sécurisée par PIN, synchronisée sur tous vos appareils en temps réel.</p>
 <div class="hero-cta" id="heroCta">
 <button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">
-Créer un compte gratuit
+Create a free account
 </button>
 <button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="sTo('apps-sec')">
-<i class="fa-solid fa-grid-2"></i> Explorer les apps
+<i class="fa-solid fa-grid-2"></i> Explore apps
 </button>
 </div>
 <!-- NOUVEAU : Zone d'annonce dynamique sous le Hero -->
@@ -1285,6 +1296,36 @@ Créer un compte gratuit
   <div class="app-foot" id="outilsFoot">
     <button onclick="window.openToolsHub()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.1));border:1px solid rgba(34,197,94,.4);color:#4ade80;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .25s;outline:none" onmouseover="this.style.background='linear-gradient(135deg,rgba(34,197,94,.35),rgba(34,197,94,.2))';this.style.borderColor='rgba(34,197,94,.7)';this.style.color='#fff'" onmouseout="this.style.background='linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.1))';this.style.borderColor='rgba(34,197,94,.4)';this.style.color='#4ade80'">
       <i class="fa-solid fa-wrench" style="font-size:.78rem"></i> Ouvrir les outils
+    </button>
+  </div>
+</div>
+</div>
+
+<!-- CARTE SERVICES -->
+<div id="carte5Container" style="display:contents;">
+<div class="app-card reveal d4" id="servicesCard" style="position:relative;overflow:hidden">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#f97316,#fb923c,#f97316);opacity:.7;z-index:1"></div>
+  <div class="app-head">
+    <div class="app-ico" style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);color:#f97316">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+    </div>
+    <h3 id="app5Title">LevelUp Services</h3>
+    <p class="desc" id="app5Desc">Découvrez notre sélection de services et sites partenaires. Interfaces directement intégrées à l'écosystème pour une expérience unifiée et fluide.</p>
+  </div>
+  <div class="app-body">
+    <div class="feat-list" id="app5Feat">
+      <div class="feat-item"><span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Services sélectionnés par LevelUp</div>
+      <div class="feat-item"><span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Interfaces iframe intégrées</div>
+      <div class="feat-item"><span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Mis à jour depuis Firebase</div>
+      <div class="feat-item"><span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Accès rapide, sans redirection</div>
+      <div class="feat-item"><span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Toujours gratuits</div>
+    </div>
+  </div>
+  <div class="app-foot" id="servicesFoot">
+    <button onclick="window.openServicesHub()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:12px;background:linear-gradient(135deg,rgba(249,115,22,.2),rgba(249,115,22,.1));border:1px solid rgba(249,115,22,.4);color:#fb923c;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .25s;outline:none" onmouseover="this.style.background='linear-gradient(135deg,rgba(249,115,22,.35),rgba(249,115,22,.2))';this.style.borderColor='rgba(249,115,22,.7)';this.style.color='#fff'" onmouseout="this.style.background='linear-gradient(135deg,rgba(249,115,22,.2),rgba(249,115,22,.1))';this.style.borderColor='rgba(249,115,22,.4)';this.style.color='#fb923c'">
+      <i class="fa-solid fa-layer-group" style="font-size:.78rem"></i> Explorer les services
     </button>
   </div>
 </div>
@@ -1708,9 +1749,7 @@ Créer un compte gratuit
 </div>
 <div class="tech-grid" style="display:flex; justify-content:center; flex-wrap:wrap; gap:14px;">
 <div class="tech-card reveal" style="flex:1; min-width:160px; max-width:220px;">
-<span class="tech-ico">
-<svg width="32" height="32" viewBox="0 0 32 32"><path fill="#FFC107" d="M24.237 26.331l-7.391 4.148c-.522.293-1.168.293-1.691 0l-7.391-4.148c-.689-.387-.872-1.272-.361-1.874L20.407 9.539l4.192 14.919c.195.694-.055 1.458-.362 1.873z"/><path fill="#FFA000" d="M16 4.606l-9.141 19.349L18.423 3.513c.319-.624 1.205-.624 1.523 0l3.053 5.96L16 4.606z"/><path fill="#F57C00" d="M22.999 9.473l-3.328-6.495c-.319-.624-1.205-.624-1.523 0l-6.91 13.488 11.761-6.993z"/></svg>
-</span>
+<span class="tech-ico" style="font-size:1.6rem;font-weight:900;color:#FFC107;font-family:var(--display);letter-spacing:-.04em;line-height:1">F</span>
 <h4>Firebase</h4>
 <p>Base de données Firestore, authentification, et synchronisation.</p>
 </div>
@@ -1856,6 +1895,7 @@ Créer un compte
   <a onclick="window.openApp('music')">LevelMusic</a>
   <a onclick="window.openApp('ia')">Level IA</a>
   <a onclick="openToolsHub()" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-wrench" style="color:#22c55e;font-size:.8rem"></i> LevelUp Tools</a>
+  <a onclick="openServicesHub()" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-layer-group" style="color:#f97316;font-size:.8rem"></i> LevelUp Services</a>
 </div>
 
 <div class="foot-col">
@@ -1975,6 +2015,8 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="sbi on" onclick="pnl('home')" id="sbn-home"><i class="fa-solid fa-house"></i> Accueil</div>
 <div class="sbi" onclick="pnl('keys')" id="sbn-keys"><i class="fa-solid fa-key"></i> Clés d'accès</div>
 <div class="sbi" onclick="pnl('tools')" id="sbn-tools" style="position:relative"><i class="fa-solid fa-wrench" style="color:#22c55e"></i> Outils<span id="toolsNavBadge" class="lvl-nav-badge hidden"></span></div>
+<div class="sbi" onclick="pnl('services')" id="sbn-services"><i class="fa-solid fa-layer-group" style="color:#f97316"></i> Services</div>
+<div class="sbi hidden" onclick="pnl('notif')" id="sbn-notif"><i class="fa-solid fa-bell" style="color:var(--purple)"></i> Notifications</div>
 <div class="sb-sep"></div>
 <div class="sbi" onclick="pnl('settings')" id="sbn-settings"><i class="fa-solid fa-gear"></i> Paramètres</div>
 <div class="sbi" onclick="openTerms()" id="sbn-terms"><i class="fa-solid fa-file-lines"></i> Conditions</div>
@@ -1995,7 +2037,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="db-stats">
 <div class="db-stat"><div class="db-sl">Statut</div><div class="db-sv" style="color:var(--green);font-size:1.1rem;padding-top:2px">Actif ✓</div><div class="db-ss">Connecté</div></div>
 <div class="db-stat" style="cursor:pointer" onclick="pnl('keys')"><div class="db-sl">Clé d'accès</div><div class="db-sv" id="hKV" style="font-size:1rem">—</div><div class="db-ss" id="hKS">Aucune clé générée</div></div>
-<div class="db-stat" style="cursor:pointer" onclick="pnl('tools')"><div class="db-sl">Applications</div><div class="db-sv">4</div><div class="db-ss">Dans l'écosystème</div></div>
+<div class="db-stat" style="cursor:pointer" onclick="pnl('services')"><div class="db-sl">Applications</div><div class="db-sv">5</div><div class="db-ss">Dans l'écosystème</div></div>
 </div>
 <div style="font-size:.72rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Accès rapide</div>
 <div class="qa">
@@ -2028,6 +2070,11 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="qa-tile" onclick="pnl('tools')">
 <div class="qa-ico" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#22c55e"><i class="fa-solid fa-wrench" style="font-size:.9rem"></i></div>
 <div class="qa-inf"><h4>Outils</h4><span>Boîte à outils</span></div>
+<i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
+</div>
+<div class="qa-tile" onclick="pnl('services')">
+<div class="qa-ico" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);color:#f97316"><i class="fa-solid fa-layer-group" style="font-size:.9rem"></i></div>
+<div class="qa-inf"><h4 id="qaServicesTitle">Services</h4><span id="qaServicesDesc">Sites partenaires</span></div>
 <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
 </div>
 </div>
@@ -2082,7 +2129,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- SETTINGS PANEL -->
 <div class="panel" id="panel-settings">
-<h1 class="pt">Paramètres</h1>
+<h1 class="pt"><i class="fa-solid fa-gear" style="color:var(--purple);font-size:1.15rem;margin-right:6px"></i><span id="settingsPanelTitle">Paramètres</span></h1>
 <p class="ps">Gérez votre compte et vos préférences de sécurité.</p>
 <div class="set-sec">
 <div class="set-title">Informations Compte</div>
@@ -2181,6 +2228,89 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 </div>
 
+<!-- SERVICES PANEL -->
+<div class="panel" id="panel-services">
+<h1 class="pt"><i class="fa-solid fa-layer-group" style="color:#f97316;font-size:1.15rem;margin-right:6px"></i><span id="servicesPanelTitle">LevelUp Services</span></h1>
+<p class="ps" id="servicesPanelDesc">Sites et services partenaires directement intégrés à l'écosystème.</p>
+<div style="background:rgba(249,115,22,.04);border:1px solid rgba(249,115,22,.14);border-radius:16px;padding:18px;margin-bottom:22px;display:flex;align-items:flex-start;gap:14px">
+  <div style="width:42px;height:42px;border-radius:10px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <i class="fa-solid fa-layer-group" style="color:#fb923c;font-size:1rem"></i>
+  </div>
+  <div>
+    <h4 id="servicesPanelInfoTitle" style="font-size:.88rem;font-weight:700;margin-bottom:4px;font-family:var(--sans);color:var(--txt)">Accès direct aux services</h4>
+    <p id="servicesPanelInfoDesc" style="font-size:.78rem;margin:0;line-height:1.65">Sites partenaires et services sélectionnés par LevelUp, directement intégrés en iframe pour une expérience unifiée. Gratuit, sans installation — utilisable instantanément.</p>
+  </div>
+</div>
+<div class="tools-grid-wrap" id="servicesPanelGrid" style="padding:0;background:transparent;border:none;box-shadow:none">
+  <div class="tools-coming-soon" id="servicesPanelEmpty">
+    <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-layer-group"></i></div></div>
+    <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#fb923c;flex-shrink:0"></span> <span id="servicesPanelBadge">Bientôt disponible</span></div>
+    <div class="tcs-title" id="servicesPanelEmptyTitle">LevelUp Services</div>
+    <p class="tcs-sub" id="servicesPanelEmptySub">Notre catalogue de services partenaires arrive bientôt. Des sites et outils de qualité, directement intégrés à votre écosystème.</p>
+  </div>
+</div>
+<div style="margin-top:18px;text-align:center">
+  <button onclick="openServicesHub()" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:12px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.28);color:#fb923c;font-size:.84rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .25s;outline:none" onmouseover="this.style.background='rgba(249,115,22,.18)';this.style.borderColor='rgba(249,115,22,.55)'" onmouseout="this.style.background='rgba(249,115,22,.08)';this.style.borderColor='rgba(249,115,22,.28)'">
+    <i class="fa-solid fa-expand" style="font-size:.78rem"></i> <span id="servicesPanelFullBtn">Vue plein écran</span>
+  </button>
+</div>
+</div>
+
+<!-- NOTIFICATIONS PANEL (dashboard) -->
+<div class="panel" id="panel-notif">
+<h1 class="pt"><i class="fa-solid fa-bell" style="color:var(--purple);font-size:1.15rem;margin-right:6px"></i><span id="notifPanelTitle">Notifications</span></h1>
+<p class="ps" id="notifPanelDesc">Vos alertes et messages de l'écosystème LevelUp.</p>
+<!-- Notice Apple iOS -->
+<div class="lvl-apple-notice" id="appleNotifNotice" style="display:none">
+  <i class="fa-brands fa-apple"></i>
+  <span data-i18n="apple.notice">Utilisateurs iPhone : vous pourriez recevoir certaines notifications en double. Nous travaillons sur ce problème — veuillez nous en excuser.</span>
+  <button class="lvl-apple-notice-close" onclick="document.getElementById('appleNotifNotice').style.display='none';localStorage.setItem('lvl_apple_notice_dismissed','1')" title="Fermer"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+  <button class="notif-head-btn btn btn-g btn-xs" onclick="window.notifMarkAllRead()"><i class="fa-solid fa-check-double"></i> <span id="notifMarkAllBtn">Tout marquer lu</span></button>
+</div>
+<div class="notif-list" id="notifList">
+  <div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p data-i18n="notif.empty">Aucune notification pour le moment</p></div>
+</div>
+<!-- Section admin (super admins uniquement) -->
+<div class="notif-admin-section" id="notifAdminSection" style="display:none;margin-top:24px">
+  <div class="notif-admin-toggle" id="notifAdminToggle" onclick="window._toggleAdminPanel()">
+    <i class="fa-solid fa-paper-plane"></i> Envoyer une notification
+    <i class="fa-solid fa-chevron-down chev"></i>
+  </div>
+  <div class="notif-admin-body" id="notifAdminBody">
+    <input type="text" id="notifSendTitle" placeholder="Titre de la notification" maxlength="80">
+    <textarea id="notifSendBody" placeholder="Message (corps de la notification)" maxlength="300"></textarea>
+    <input type="text" id="notifSendImage" placeholder="🖼️ URL image (ex: https://levelup-ecosystem.com/icon.svg)">
+    <select id="notifSendDest">
+      <option value="">→ Destination au clic (optionnel)</option>
+      <option value="https://levelup-ecosystem.com">🏠 Accueil / Landing</option>
+      <option value="https://levelup-ecosystem.com/#dashboard">📊 Tableau de bord</option>
+      <option value="https://ia.levelup-ecosystem.com">🤖 Level IA</option>
+      <option value="https://levelup-ecosystem.com/#outils">🛠️ Outils</option>
+      <option value="https://movie.levelup-ecosystem.com">🎬 LevelMovie</option>
+      <option value="https://music.levelup-ecosystem.com">🎵 LevelMusic</option>
+      <option value="https://levelup-ecosystem.com/#parametres">⚙️ Paramètres</option>
+      <option value="custom">✏️ URL personnalisée…</option>
+    </select>
+    <input type="text" id="notifSendCustomUrl" placeholder="🔗 ex: https://ton-site.com/page" style="display:none">
+    <div class="notif-type-group" id="notifTypeGroup">
+      <button class="notif-type-btn active" data-type="both" onclick="window._setNotifType('both',this)">📣 Push+App</button>
+      <button class="notif-type-btn" data-type="push" onclick="window._setNotifType('push',this)">📲 Push seul</button>
+      <button class="notif-type-btn" data-type="inapp" onclick="window._setNotifType('inapp',this)">🔔 In-app</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button onclick="window.sendPushNotif()" class="btn btn-p" style="flex:1;font-size:.78rem;padding:9px 12px">
+        <i class="fa-solid fa-rocket"></i> Envoyer à tous
+      </button>
+      <button onclick="window.deleteAllNotifs()" style="padding:9px 12px;border-radius:var(--r8);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#f87171;font-size:.72rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;white-space:nowrap;outline:none" title="Supprimer toutes les notifications" onmouseover="this.style.background='rgba(239,68,68,.18)'" onmouseout="this.style.background='rgba(239,68,68,.08)'">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+
 <!-- TOOLS PANEL -->
 <div class="panel" id="panel-tools">
 <h1 class="pt"><i class="fa-solid fa-wrench" style="color:#22c55e;font-size:1.15rem;margin-right:6px"></i>Outils LevelUp</h1>
@@ -2211,13 +2341,33 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- HELP PANEL -->
 <div class="panel" id="panel-help">
-<h1 class="pt">Aide &amp; Support</h1>
-<p class="ps">Réponses aux questions fréquentes et moyens de nous contacter.</p>
-<div class="help-card"><h4>🔑 Comment obtenir ma clé d'accès ?</h4><p>Allez dans "Clés d'accès" et cliquez "Générer ma clé". C'est instantané et gratuit. Configurez ensuite un PIN pour sécuriser l'affichage de votre clé.</p></div>
-<div class="help-card"><h4>🎬 Ma clé ne fonctionne pas dans LevelMovie</h4><p>Copiez la clé complète depuis "Clés d'accès" (utilisez le bouton "Copier"). Vérifiez qu'elle respecte le format "LVL-XXXXX-XXXXX". Si le problème persiste, régénérez-la.</p></div>
-<div class="help-card"><h4>🔒 J'ai oublié mon PIN</h4><p>Allez dans Paramètres → Sécurité → cliquez "Modifier". Vous pouvez définir un nouveau PIN sans connaître l'ancien. Votre clé ne change pas.</p></div>
-<div class="help-card"><h4>🎵 LevelMusic est-il complet ?</h4><p>LevelMusic est actuellement en version "Découverte". Vous pouvez écouter des extraits premium de 30 secondes pour explorer le catalogue mondial. La version complète est en développement.</p></div>
-<div class="help-card"><h4>📧 Contacter le support</h4><p>Pour toute autre question : <a href="mailto:support@levelup-ecosystem.com?subject=Support%20LevelUp%20Ecosystem" style="color:var(--purple)">support@levelup-ecosystem.com</a> — L'équipe répond sous 24-48h.</p></div>
+<h1 class="pt" id="helpPanelTitle">Aide &amp; Support</h1>
+<p class="ps" id="helpPanelDesc">Réponses aux questions fréquentes et moyens de nous contacter.</p>
+
+<div class="help-card" id="helpCard1"><h4 id="helpCard1Title">🔑 Gérer mes clés d'accès</h4><p id="helpCard1Body">Allez dans "Clés d'accès" et cliquez "Générer ma clé". C'est instantané et gratuit. Copiez la clé depuis cette page puis collez-la dans LevelMovie, LevelMusic ou Level IA pour débloquer toutes les fonctionnalités. Configurez un PIN pour sécuriser l'affichage.</p></div>
+<div class="help-card" id="helpCard2"><h4 id="helpCard2Title">🎬 Ma clé ne fonctionne pas dans LevelMovie</h4><p id="helpCard2Body">Copiez la clé complète depuis "Clés d'accès" (bouton "Copier"). Vérifiez le format "LVL-XXXXX-XXXXX". Si le problème persiste, régénérez-la depuis le tableau de bord.</p></div>
+<div class="help-card" id="helpCard3"><h4 id="helpCard3Title">🔒 J'ai oublié mon PIN</h4><p id="helpCard3Body">Allez dans Paramètres → Sécurité → cliquez "Modifier". Vous pouvez définir un nouveau PIN sans connaître l'ancien. Votre clé ne change pas.</p></div>
+<div class="help-card" id="helpCard4"><h4 id="helpCard4Title">🎵 LevelMusic est-il complet ?</h4><p id="helpCard4Body">LevelMusic est actuellement en version "Découverte". Vous pouvez écouter des extraits premium de 30 secondes pour explorer le catalogue mondial. La version complète est en développement.</p></div>
+
+<div class="help-card" id="helpCard5">
+  <h4 id="helpCard5Title">📋 Conditions d'utilisation centralisées</h4>
+  <p id="helpCard5Body" style="margin-bottom:14px">LevelUp Ecosystem regroupe toutes ses conditions dans un document unique. En utilisant nos applications, vous acceptez nos conditions d'accès à distance, notre politique de confidentialité et nos règles d'utilisation des clés LVL.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="/terms.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:700;color:var(--purple);text-decoration:none;border:1px solid rgba(168,85,247,.25);border-radius:8px;padding:7px 12px;transition:all .2s;background:rgba(168,85,247,.05)" onmouseover="this.style.background='rgba(168,85,247,.12)'" onmouseout="this.style.background='rgba(168,85,247,.05)'"><i class="fa-solid fa-file-contract" style="font-size:.7rem"></i> <span id="helpTermsLink">Conditions complètes</span></a>
+    <a href="/privacy.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:700;color:var(--blue);text-decoration:none;border:1px solid rgba(59,130,246,.25);border-radius:8px;padding:7px 12px;transition:all .2s;background:rgba(59,130,246,.05)" onmouseover="this.style.background='rgba(59,130,246,.12)'" onmouseout="this.style.background='rgba(59,130,246,.05)'"><i class="fa-solid fa-shield-halved" style="font-size:.7rem"></i> <span id="helpPrivacyLink">Confidentialité</span></a>
+    <button onclick="openTerms()" style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:700;color:rgba(255,255,255,.6);text-decoration:none;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;transition:all .2s;background:rgba(255,255,255,.03);cursor:pointer;font-family:var(--sans);outline:none" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.03)'"><i class="fa-solid fa-file-lines" style="font-size:.7rem"></i> <span id="helpTermsInApp">Résumé in-app</span></button>
+  </div>
+</div>
+
+<div class="help-card" id="helpCard6">
+  <h4 id="helpCard6Title">📧 Nous contacter</h4>
+  <p id="helpCard6Body" style="margin-bottom:14px">Pour toute autre question, l'équipe LevelUp est à votre disposition. Nous répondons sous 24-48h.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="mailto:support@levelup-ecosystem.com?subject=Support%20LevelUp%20Ecosystem" style="display:inline-flex;align-items:center;gap:7px;font-size:.78rem;font-weight:700;color:white;text-decoration:none;border:1px solid rgba(168,85,247,.4);border-radius:10px;padding:10px 16px;transition:all .2s;background:rgba(168,85,247,.12)" onmouseover="this.style.background='rgba(168,85,247,.22)';this.style.borderColor='rgba(168,85,247,.6)'" onmouseout="this.style.background='rgba(168,85,247,.12)';this.style.borderColor='rgba(168,85,247,.4)'"><i class="fa-solid fa-envelope" style="color:#a855f7;font-size:.8rem"></i> <span id="helpEmailBtn">Email support</span></a>
+    <a href="https://www.instagram.com/levelup.rbg" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;font-size:.78rem;font-weight:700;color:rgba(255,255,255,.7);text-decoration:none;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 16px;transition:all .2s;background:rgba(255,255,255,.04)" onmouseover="this.style.background='rgba(225,48,108,.12)';this.style.borderColor='rgba(225,48,108,.35)';this.style.color='#f06292'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'"><i class="fa-brands fa-instagram"></i> <span id="helpInstagramBtn">Instagram</span></a>
+  </div>
+  <p style="font-size:.7rem;color:rgba(255,255,255,.3);margin-top:10px;margin-bottom:0">— <span id="helpTeamSignature">L'équipe LevelUp</span></p>
+</div>
 </div>
 
 </main>
@@ -2228,10 +2378,47 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="mn-item on" onclick="pnl('home')" id="mbn-home"><i class="fa-solid fa-house"></i><span data-i18n="nav.home">Accueil</span></div>
 <div class="mn-item" onclick="pnl('keys')" id="mbn-keys"><i class="fa-solid fa-key"></i><span data-i18n="nav.keys">Clés</span></div>
 <div class="mn-item" onclick="pnl('tools')" id="mbn-tools" style="position:relative"><i class="fa-solid fa-wrench" style="color:#22c55e"></i><span data-i18n="nav.tools">Outils</span><span id="toolsMobBadge" class="lvl-nav-badge hidden" style="top:-2px;right:-2px"></span></div>
-<div class="mn-item" style="position:relative" onclick="sTo('apps-sec')" id="mbn-notif"><i class="fa-solid fa-grid-2"></i><span data-i18n="nav.applications">Apps</span></div>
+<div class="mn-item" onclick="toggleAppsMiniMenu(event)" id="mbn-apps" style="position:relative"><i class="fa-solid fa-grid-2"></i><span data-i18n="nav.applications">Apps</span></div>
+<div class="mn-item" onclick="pnl('services')" id="mbn-services"><i class="fa-solid fa-layer-group" style="color:#f97316"></i><span data-i18n="nav.services">Services</span></div>
 <div class="mn-item" onclick="pnl('settings')" id="mbn-settings"><i class="fa-solid fa-gear"></i><span data-i18n="nav.settings">Réglages</span></div>
 </div>
 </div>
+</div>
+
+<!-- LANDING PAGE MOBILE BOTTOM NAV -->
+<nav id="landingMobileNav" class="mobile-nav">
+<div class="mn-in">
+<div class="mn-item on" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fa-solid fa-house"></i><span data-i18n="nav.home">Home</span></div>
+<div class="mn-item" onclick="sTo('apps-sec')"><i class="fa-solid fa-grid-2"></i><span data-i18n="nav.applications">Apps</span></div>
+<div class="mn-item" onclick="sTo('how-sec')"><i class="fa-solid fa-circle-question"></i><span data-i18n="nav.howItWorks">How</span></div>
+<div class="mn-item" onclick="sTo('faq-sec')"><i class="fa-solid fa-comments"></i><span data-i18n="nav.faq">FAQ</span></div>
+<div class="mn-item" onclick="openAuth('login')"><i class="fa-solid fa-arrow-right-to-bracket" style="color:var(--purple)"></i><span data-i18n="nav.signIn">Sign In</span></div>
+</div>
+</nav>
+
+<!-- LIVE CHAT FAB BUTTON (mobile) -->
+<button id="chatFab" onclick="window.openChat()" title="Live Chat">
+  <i class="fa-solid fa-comments"></i>
+  <span class="chat-badge" id="chatBadge"></span>
+</button>
+
+<!-- LIVE CHAT PANEL -->
+<div id="chatOverlay" onclick="window.closeChat()"></div>
+<div id="chatPanel" style="display:none">
+  <div class="chat-head">
+    <div class="chat-head-title">
+      <span class="chat-head-dot"></span>
+      <span id="chatPanelTitle">LevelUp Live Chat</span>
+    </div>
+    <button class="chat-close-btn" onclick="window.closeChat()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="chat-msgs" id="chatMsgs">
+    <div class="chat-empty" id="chatEmpty">No messages yet. Say hi!</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chatInput" placeholder="Message..." maxlength="300" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.sendChatMsg();}">
+    <button class="chat-send-btn" id="chatSendBtn" onclick="window.sendChatMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -2396,6 +2583,127 @@ TOOLS HUB OVERLAY
         <span class="tcs-feat"><i class="fa-solid fa-file-code" style="color:#22c55e"></i> Outils Dev</span>
         <span class="tcs-feat"><i class="fa-solid fa-music" style="color:#f97316"></i> Création</span>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+SERVICES HUB OVERLAY
+═══════════════════════════════════════ -->
+<div id="servicesOverlay" class="tools-overlay hidden">
+  <div class="tools-head">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);display:flex;align-items:center;justify-content:center;">
+        <i class="fa-solid fa-layer-group" style="color:#f97316;font-size:.9rem"></i>
+      </div>
+      <div>
+        <h3 id="servicesOverlayTitle" style="font-size:1rem;font-weight:800;font-family:var(--display);letter-spacing:-.02em;margin:0">Services</h3>
+        <p id="servicesOverlayDesc" style="font-size:.72rem;color:var(--muted);margin:0">Sites partenaires de l'écosystème LevelUp</p>
+      </div>
+    </div>
+    <button onclick="closeServicesHub()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .2s;outline:none" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.7)'">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <div class="tools-grid-wrap" id="servicesGrid">
+    <div class="tools-coming-soon" id="servicesEmpty">
+      <div class="tcs-glow">
+        <div class="tcs-glow-inner"><i class="fa-solid fa-layer-group"></i></div>
+      </div>
+      <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#fb923c;flex-shrink:0"></span> <span id="servicesEmptyBadge">Bientôt disponible</span></div>
+      <div class="tcs-title" id="servicesEmptyTitle">LevelUp Services</div>
+      <p class="tcs-sub" id="servicesEmptySub">Notre catalogue de services partenaires arrive bientôt. Des sites et outils de qualité, directement intégrés à votre écosystème.</p>
+      <div class="tcs-features">
+        <span class="tcs-feat"><i class="fa-solid fa-globe" style="color:#a855f7"></i> <span id="servicesFeat1">Sites partenaires</span></span>
+        <span class="tcs-feat"><i class="fa-solid fa-code" style="color:#3b82f6"></i> <span id="servicesFeat2">Outils en ligne</span></span>
+        <span class="tcs-feat"><i class="fa-solid fa-bolt" style="color:#f97316"></i> <span id="servicesFeat3">Accès instantané</span></span>
+        <span class="tcs-feat"><i class="fa-solid fa-lock-open" style="color:#22c55e"></i> <span id="servicesFeat4">Gratuit</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARTNER CARDS — always visible, Firebase-independent -->
+  <div style="padding:16px 18px 0;border-top:1px solid rgba(249,115,22,.12);margin-top:12px">
+    <p style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:12px" id="svcPartnersLabel">Technologies &amp; Partenaires</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px" id="svcPartnerGrid">
+      <!-- GitHub -->
+      <div class="svc-partner-card" onclick="openSvcPartner('github')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#fff"><i class="fa-brands fa-github"></i></span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">GitHub</span>
+      </div>
+      <!-- Google -->
+      <div class="svc-partner-card" onclick="openSvcPartner('google')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(66,133,244,.4)';this.style.background='rgba(66,133,244,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(66,133,244,.12);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#4285F4"><i class="fa-brands fa-google"></i></span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">Google</span>
+      </div>
+      <!-- Firebase -->
+      <div class="svc-partner-card" onclick="openSvcPartner('firebase')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(255,193,7,.4)';this.style.background='rgba(255,193,7,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(255,193,7,.12);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:#FFC107;font-family:var(--display)">F</span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">Firebase</span>
+      </div>
+      <!-- Vercel -->
+      <div class="svc-partner-card" onclick="openSvcPartner('vercel')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:#fff;font-family:var(--display)">▲</span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">Vercel</span>
+      </div>
+      <!-- Gemini -->
+      <div class="svc-partner-card" onclick="openSvcPartner('gemini')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;text-align:center" onmouseover="this.style.borderColor='rgba(168,85,247,.4)';this.style.background='rgba(168,85,247,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.background='rgba(255,255,255,.04)'">
+        <span style="width:36px;height:36px;border-radius:10px;background:rgba(168,85,247,.12);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#a855f7"><i class="fa-solid fa-star"></i></span>
+        <span style="font-size:.74rem;font-weight:600;color:var(--txt)">Gemini</span>
+      </div>
+    </div>
+    <!-- Contact button -->
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <p style="font-size:.74rem;color:var(--muted);margin:0" id="svcContactLabel">Un projet ? Travaillons ensemble.</p>
+      <button onclick="openSvcContact()" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);color:#fb923c;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(249,115,22,.2)'" onmouseout="this.style.background='rgba(249,115,22,.12)'">
+        <i class="fa-solid fa-envelope"></i> <span id="svcContactBtn">Nous contacter</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PARTNER CARD POPUP -->
+<div id="svcPartnerPopup" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(6,2,10,.82);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:linear-gradient(145deg,#0d0618,#06020a);border:1px solid rgba(168,85,247,.2);border-radius:20px;max-width:420px;width:100%;padding:28px;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <div id="svcPopupIco" style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem"></div>
+      <div>
+        <h3 id="svcPopupTitle" style="font-size:1.05rem;font-weight:800;font-family:var(--display);margin:0 0 4px"></h3>
+        <p id="svcPopupSub" style="font-size:.72rem;color:var(--muted);margin:0"></p>
+      </div>
+    </div>
+    <p id="svcPopupDesc" style="font-size:.82rem;line-height:1.7;color:rgba(255,255,255,.75);margin-bottom:18px"></p>
+    <div id="svcPopupTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <a id="svcPopupLink" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:var(--purple);font-size:.8rem;font-weight:700;text-decoration:none;transition:all .2s" onmouseover="this.style.background='rgba(168,85,247,.25)'" onmouseout="this.style.background='rgba(168,85,247,.15)'"><i class="fa-solid fa-arrow-up-right-from-square"></i> <span id="svcPopupLinkTxt">Visiter</span></a>
+      <button onclick="closeSvcPartner()" style="padding:9px 18px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'"><span id="svcPopupClose">Fermer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICES CONTACT POPUP -->
+<div id="svcContactPopup" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(6,2,10,.82);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:linear-gradient(145deg,#0d0618,#06020a);border:1px solid rgba(249,115,22,.2);border-radius:20px;max-width:400px;width:100%;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);display:flex;align-items:center;justify-content:center;color:#fb923c"><i class="fa-solid fa-briefcase"></i></div>
+      <div>
+        <h3 id="svcContactTitle" style="font-size:1rem;font-weight:800;font-family:var(--display);margin:0 0 3px">Travailler avec nous</h3>
+        <p id="svcContactSubtitle" style="font-size:.72rem;color:var(--muted);margin:0">Sites web, auth, domaine personnalisé &amp; plus</p>
+      </div>
+    </div>
+    <p id="svcContactDesc" style="font-size:.8rem;line-height:1.7;color:rgba(255,255,255,.7);margin-bottom:20px">Nous créons pour vous des sites web professionnels, mettons en place l'authentification Firebase, configurons un domaine personnalisé et bien plus — à des prix bien inférieurs au marché.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      <a href="mailto:levelup.ia0@gmail.com" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);text-decoration:none;color:var(--txt);font-size:.82rem;font-weight:600;transition:all .2s" onmouseover="this.style.background='rgba(249,115,22,.14)'" onmouseout="this.style.background='rgba(249,115,22,.08)'">
+        <i class="fa-solid fa-envelope" style="color:#fb923c;font-size:.9rem"></i>
+        <div><div style="font-size:.76rem;color:var(--muted);margin-bottom:1px">Gmail principal</div>levelup.ia0@gmail.com</div>
+      </a>
+      <a href="mailto:richelieubonte@gmail.com" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);text-decoration:none;color:var(--txt);font-size:.82rem;font-weight:600;transition:all .2s" onmouseover="this.style.background='rgba(249,115,22,.14)'" onmouseout="this.style.background='rgba(249,115,22,.08)'">
+        <i class="fa-solid fa-envelope" style="color:#fb923c;font-size:.9rem"></i>
+        <div><div style="font-size:.76rem;color:var(--muted);margin-bottom:1px">Gmail secondaire</div>richelieubonte@gmail.com</div>
+      </a>
+    </div>
+    <div style="text-align:right">
+      <button onclick="closeSvcContact()" style="padding:9px 20px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'"><span id="svcContactClose">Fermer</span></button>
     </div>
   </div>
 </div>
@@ -2841,7 +3149,7 @@ try { _messaging = getMessaging(fbApp); } catch(e) {}
 gProv.setCustomParameters({ prompt: 'select_account' });
 
 window._auth = auth; window._db = db;
-window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collection, query, where };
+window._fb = { doc, setDoc, getDoc, signOut, collectionGroup, getDocs, collection, query, where, addDoc, onSnapshot, orderBy, limit, serverTimestamp };
 
 // Persistance locale explicite — évite les déconnexions au retour sur le site
 try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) {}
@@ -4000,6 +4308,8 @@ dashboard.style.display = 'flex';
 if (mobileNav) {
 mobileNav.classList.add('vis');
 }
+const landingMobNav2 = document.getElementById('landingMobileNav');
+if (landingMobNav2) landingMobNav2.classList.remove('vis');
 
 window._hideLoadingScreen();
 renderNavLogged(u);
@@ -4022,6 +4332,8 @@ dashboard.style.display = 'none';
 if (mobileNav) {
 mobileNav.classList.remove('vis');
 }
+const landingMobNav = document.getElementById('landingMobileNav');
+if (landingMobNav) landingMobNav.classList.add('vis');
 if (landing) {
 landing.classList.remove('hidden');
 landing.style.display = 'block';
@@ -4062,6 +4374,10 @@ function initNotifPanel(u) {
     // Afficher la section admin si super admin
     const adminSection = document.getElementById('notifAdminSection');
     if (adminSection && isSuperAdmin) adminSection.style.display = '';
+    if (isSuperAdmin) {
+        const notifSbn = document.getElementById('sbn-notif');
+        if (notifSbn) notifSbn.classList.remove('hidden');
+    }
 
     // Écouter les 20 dernières notifications en temps réel
     // ── Notifications globales (Firestore public) ──
@@ -4693,11 +5009,13 @@ window.smartBind(heroCta, [
 () => window.openTerms()
 ]);
 } else {
-heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard()">Mon tableau de bord</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">Conditions</button>`;
+const _hLang = localStorage.getItem('lvl_lang') || 'en';
+heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard()">${_hLang === 'fr' ? 'Mon tableau de bord' : 'My Dashboard'}</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">${_hLang === 'fr' ? 'Conditions' : 'Terms'}</button>`;
 }
 }
 const ctaSec = document.getElementById('ctaSection');
-if (ctaSec) ctaSec.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard(); pnl('keys')">Gérer mes clés</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">Conditions</button>`;
+const _cLang = localStorage.getItem('lvl_lang') || 'en';
+if (ctaSec) ctaSec.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openDashboard(); pnl('keys')">${_cLang === 'fr' ? 'Gérer mes clés' : 'Manage my keys'}</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="openTerms()">Conditions</button>`;
 }
 
 function updateGuestUI() {
@@ -4711,7 +5029,8 @@ window.smartBind(heroCta, [
 () => window.sTo('apps-sec')
 ]);
 } else {
-heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">Créer un compte gratuit</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="window.sTo('apps-sec')">Explorer les apps</button>`;
+const _gLang = localStorage.getItem('lvl_lang') || 'en';
+heroCta.innerHTML = `<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">${_gLang === 'fr' ? 'Créer un compte gratuit' : 'Create a free account'}</button><button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="window.sTo('apps-sec')"><i class="fa-solid fa-grid-2"></i> ${_gLang === 'fr' ? 'Explorer les apps' : 'Explore apps'}</button>`;
 }
 }
 }
@@ -5052,15 +5371,6 @@ try {
         body: `Bienvenue ${firstName} ! Ta clé d'accès a été générée. Copie-la depuis Clés d'accès, puis colle-la dans LevelMovie, LevelMusic ou Level IA pour débloquer toutes les fonctionnalités. Ton accès est gratuit et illimité.`,
         url: 'https://levelup-ecosystem.com/#dashboard',
         createdAt: sts3()
-    });
-} catch(_) {}
-
-// ── EMAIL DE BIENVENUE ──
-try {
-    await fetch('/api/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'WELCOME', email: d.email || u.email, name: firstName })
     });
 } catch(_) {}
 
@@ -5642,6 +5952,96 @@ window.closeToolsHub = function() {
     }
     document.body.style.overflow = '';
 };
+
+// SERVICES HUB — OPEN / CLOSE
+window.openServicesHub = function() {
+    const ov = document.getElementById('servicesOverlay');
+    if (!ov) return;
+    ov.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    window._loadServicesHub && window._loadServicesHub();
+};
+window.closeServicesHub = function() {
+    const ov = document.getElementById('servicesOverlay');
+    if (ov) ov.classList.add('hidden');
+    document.body.style.overflow = '';
+};
+
+// APPS MINI MENU (mobile nav Applications button)
+window.toggleAppsMiniMenu = function(e) {
+    if (e) e.stopPropagation();
+    const m = document.getElementById('appsMiniMenu');
+    if (!m) return;
+    const isVisible = m.style.display !== 'none';
+    m.style.display = isVisible ? 'none' : 'block';
+    const btn = document.getElementById('mbn-apps');
+    if (btn) btn.classList.toggle('on', !isVisible);
+};
+window.closeAppsMiniMenu = function() {
+    const m = document.getElementById('appsMiniMenu');
+    if (m) m.style.display = 'none';
+    const btn = document.getElementById('mbn-apps');
+    if (btn) btn.classList.remove('on');
+};
+document.addEventListener('click', function(e) {
+    const m = document.getElementById('appsMiniMenu');
+    if (m && m.style.display !== 'none' && !m.contains(e.target)) {
+        window.closeAppsMiniMenu && window.closeAppsMiniMenu();
+    }
+});
+
+// SERVICES HUB LOADER — lit depuis Firebase config/services
+window._loadServicesHub = function() {
+    const grid = document.getElementById('servicesGrid');
+    const panelGrid = document.getElementById('servicesPanelGrid');
+    if (!grid || !window._db) return;
+    if (grid._loaded) return;
+    grid._loaded = true;
+    const { doc, getDoc } = window._fb || {};
+    if (!doc || !getDoc) return;
+    getDoc(doc(window._db, 'artifacts', 'level-ia-premium', 'config', 'services'))
+    .then(snap => {
+        if (!snap.exists()) return;
+        const data = snap.data() || {};
+        let items = [];
+        if (Array.isArray(data.services)) items = data.services;
+        else {
+            for (let i = 1; i <= 50; i++) {
+                const k = data['service_' + i] || data['service' + i];
+                if (!k) continue;
+                if (typeof k === 'object' && k !== null) items.push(k);
+            }
+        }
+        items = items.filter(s => s && s.url && (s.active !== false));
+        if (!items.length) return;
+        const emptyEl = document.getElementById('servicesEmpty');
+        if (emptyEl) emptyEl.style.display = 'none';
+        items.forEach(svc => {
+            const lang = localStorage.getItem('lvl_lang') || 'fr';
+            const title = (lang === 'en' && svc.title_en) ? svc.title_en : (svc.title || svc.name || 'Service');
+            const desc = (lang === 'en' && svc.desc_en) ? svc.desc_en : (svc.desc || svc.description || '');
+            const icon = svc.icon || 'fa-solid fa-globe';
+            const color = svc.color || '#f97316';
+            const card = document.createElement('div');
+            card.className = 'tool-card';
+            card.style.cssText = 'cursor:pointer;border-color:rgba(249,115,22,.2)';
+            card.innerHTML = `<div class="tc-ico" style="background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.2);color:${color}"><i class="${icon}"></i></div><div class="tc-inf"><h4>${title}</h4>${desc ? `<p>${desc}</p>` : ''}</div>`;
+            card.addEventListener('click', () => {
+                window.openToolFullscreen && window.openToolFullscreen(svc.url, title);
+            });
+            grid.insertBefore(card, grid.firstChild);
+            if (panelGrid) {
+                const pEmpty = document.getElementById('servicesPanelEmpty');
+                if (pEmpty) pEmpty.style.display = 'none';
+                const pc = card.cloneNode(true);
+                pc.addEventListener('click', () => {
+                    window.openToolFullscreen && window.openToolFullscreen(svc.url, title);
+                });
+                panelGrid.insertBefore(pc, panelGrid.firstChild);
+            }
+        });
+    }).catch(() => { grid._loaded = false; });
+};
 window.openToolFullscreen = function(url, title) {
     if (!url) return;
     const fs = document.getElementById('toolFullscreen');
@@ -5662,6 +6062,228 @@ window.openToolFullscreen = function(url, title) {
     fs.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 };
+// ─── PARTNER CARDS POPUP ─────────────────────────────────────────────────────
+var _SVC_PARTNERS = {
+    github: {
+        title:'GitHub', sub:'H\u00e9bergement de code source',
+        ico:'<i class="fa-brands fa-github" style="color:#fff"></i>', icoBg:'rgba(255,255,255,.1)',
+        desc:'GitHub est la plateforme de r\u00e9f\u00e9rence mondiale pour h\u00e9berger, versionner et collaborer sur du code. Chaque projet LevelUp est versionn\u00e9 sur GitHub pour une tra\u00e7abilit\u00e9 compl\u00e8te et un d\u00e9ploiement rapide.',
+        tags:['Versioning','Open Source','CI/CD','Pull Requests'],
+        color:'#fff', link:'https://github.com'
+    },
+    google: {
+        title:'Google', sub:'Authentification & services cloud',
+        ico:'<i class="fa-brands fa-google" style="color:#4285F4"></i>', icoBg:'rgba(66,133,244,.12)',
+        desc:'Google OAuth 2.0 est au c\u0153ur de l\u2019authentification LevelUp. Z\u00e9ro mot de passe \u2014 votre identit\u00e9 Google est le seul pass n\u00e9cessaire. Google Cloud fournit \u00e9galement l\u2019infrastructure sous-jacente.',
+        tags:['OAuth 2.0','Cloud','Identity','APIs'],
+        color:'#4285F4', link:'https://cloud.google.com'
+    },
+    firebase: {
+        title:'Firebase', sub:'Base de donn\u00e9es & temps r\u00e9el',
+        ico:'<span style="font-size:1.3rem;font-weight:900;color:#FFC107;font-family:var(--display)">F</span>', icoBg:'rgba(255,193,7,.12)',
+        desc:'Firebase Firestore est la colonne vert\u00e9brale de LevelUp. Vos cl\u00e9s, profils, notifications et donn\u00e9es d\u2019applications sont synchronis\u00e9s en temps r\u00e9el sur tous vos appareils gr\u00e2ce \u00e0 la base de donn\u00e9es NoSQL de Firebase.',
+        tags:['Firestore','Realtime DB','Auth','Cloud Messaging'],
+        color:'#FFC107', link:'https://firebase.google.com'
+    },
+    vercel: {
+        title:'Vercel', sub:'D\u00e9ploiement & CDN mondial',
+        ico:'<span style="font-size:1.1rem;font-weight:900;color:#fff;font-family:var(--display)">\u25b2</span>', icoBg:'rgba(255,255,255,.08)',
+        desc:'Vercel h\u00e9berge les fonctions serverless de LevelUp (dont l\u2019API push) sur un r\u00e9seau edge mondial. R\u00e9sultat\u00a0: latence minimale, disponibilit\u00e9 maximale et d\u00e9ploiements instantan\u00e9s \u00e0 chaque mise \u00e0 jour.',
+        tags:['Edge Functions','CDN','Serverless','CI/CD'],
+        color:'#fff', link:'https://vercel.com'
+    },
+    gemini: {
+        title:'Gemini 2.5 Flash', sub:'Moteur IA de Level IA',
+        ico:'<i class="fa-solid fa-star" style="color:#a855f7"></i>', icoBg:'rgba(168,85,247,.12)',
+        desc:'Gemini 2.5 Flash de Google DeepMind propulse Level IA. C\u2019est le mod\u00e8le d\u2019IA le plus avanc\u00e9 accessible au grand public\u00a0: analyse de PDF, lecture d\u2019URLs, compr\u00e9hension d\u2019images et m\u00e9moire cloud persistante.',
+        tags:['Gemini 2.5','IA g\u00e9n\u00e9rative','Multimodal','Cloud Memory'],
+        color:'#a855f7', link:'https://deepmind.google/technologies/gemini/'
+    }
+};
+
+
+window.openSvcPartner = function(key) {
+    var d = _SVC_PARTNERS[key]; if (!d) return;
+    var lang = localStorage.getItem('lvl_lang') || 'en';
+    var popup = document.getElementById('svcPartnerPopup');
+    document.getElementById('svcPopupIco').innerHTML = d.ico;
+    document.getElementById('svcPopupIco').style.background = d.icoBg;
+    document.getElementById('svcPopupTitle').textContent = d.title;
+    document.getElementById('svcPopupSub').textContent = d.sub;
+    document.getElementById('svcPopupDesc').textContent = d.desc;
+    document.getElementById('svcPopupLink').href = d.link;
+    var linkTxt = document.getElementById('svcPopupLinkTxt');
+    var closeTxt = document.getElementById('svcPopupClose');
+    if (lang === 'en') { if (linkTxt) linkTxt.textContent = 'Visit'; if (closeTxt) closeTxt.textContent = 'Close'; }
+    else { if (linkTxt) linkTxt.textContent = 'Visiter'; if (closeTxt) closeTxt.textContent = 'Fermer'; }
+    var tagsEl = document.getElementById('svcPopupTags');
+    if (tagsEl) {
+        tagsEl.innerHTML = '';
+        (d.tags || []).forEach(t => {
+            var s = document.createElement('span');
+            s.style.cssText = 'font-size:.68rem;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6)';
+            s.textContent = t;
+            tagsEl.appendChild(s);
+        });
+    }
+    popup.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    popup.onclick = function(e) { if (e.target === popup) window.closeSvcPartner(); };
+};
+window.closeSvcPartner = function() {
+    var p = document.getElementById('svcPartnerPopup');
+    if (p) p.style.display = 'none';
+    document.body.style.overflow = '';
+};
+window.openSvcContact = function() {
+    var p = document.getElementById('svcContactPopup');
+    if (!p) return;
+    var lang = localStorage.getItem('lvl_lang') || 'en';
+    if (lang === 'en') {
+        var t = document.getElementById('svcContactTitle');
+        var s = document.getElementById('svcContactSubtitle');
+        var d = document.getElementById('svcContactDesc');
+        var cl = document.getElementById('svcContactClose');
+        if (t) t.textContent = 'Work with us';
+        if (s) s.textContent = 'Websites, auth, custom domain & more';
+        if (d) d.textContent = 'We build professional websites, set up Firebase authentication, configure a custom domain and more — at prices far below the market rate.';
+        if (cl) cl.textContent = 'Close';
+    }
+    p.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    p.onclick = function(e) { if (e.target === p) window.closeSvcContact(); };
+};
+window.closeSvcContact = function() {
+    var p = document.getElementById('svcContactPopup');
+    if (p) p.style.display = 'none';
+    document.body.style.overflow = '';
+};
+
+// ─── LIVE CHAT (Task 8 — Real-time via Firestore onSnapshot) ───────────────
+(function() {
+var _chatUnsub = null;
+var _chatOpen = false;
+var _chatUnread = 0;
+
+function _chatName() {
+    if (window._user && window._user.displayName) return window._user.displayName;
+    return 'Guest';
+}
+function _chatUid() {
+    if (window._user) return window._user.uid;
+    return 'guest_' + (localStorage.getItem('_cgid') || (function(){var id='g'+Math.random().toString(36).slice(2,9);localStorage.setItem('_cgid',id);return id;})());
+}
+function _fmtTime(ts) {
+    if (!ts) return '';
+    var d = (ts.toDate ? ts.toDate() : new Date(ts));
+    return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+function _renderMsg(data, myUid) {
+    var mine = data.uid === myUid;
+    var div = document.createElement('div');
+    div.className = 'chat-msg ' + (mine ? 'mine' : 'theirs');
+    var nameHtml = !mine ? '<div class="chat-msg-name">' + _esc2(data.name || 'Guest') + '</div>' : '';
+    var timeHtml = '<div class="chat-msg-time">' + _fmtTime(data.createdAt) + '</div>';
+    div.innerHTML = nameHtml + _esc2(data.text) + timeHtml;
+    return div;
+}
+
+function _esc2(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function _initChat() {
+    if (_chatUnsub) return;
+    if (!window._fb || !window._fb.onSnapshot) return;
+    var appId = (typeof __app_id !== 'undefined') ? __app_id : 'level-ia-premium';
+    var col = window._fb.collection(window._db, 'artifacts/'+appId+'/public/chat/messages');
+    var q = window._fb.query(col, window._fb.orderBy('createdAt','asc'), window._fb.limit(60));
+    _chatUnsub = window._fb.onSnapshot(q, function(snap) {
+        var msgs = document.getElementById('chatMsgs');
+        var empty = document.getElementById('chatEmpty');
+        if (!msgs) return;
+        var myUid = _chatUid();
+        var wasAtBottom = msgs.scrollHeight - msgs.clientHeight - msgs.scrollTop < 50;
+        msgs.innerHTML = '';
+        if (snap.empty) {
+            msgs.appendChild((function(){var d=document.createElement('div');d.className='chat-empty';d.textContent=(localStorage.getItem('lvl_lang')==='fr'?'Aucun message. Dites bonjour !':'No messages yet. Say hi!');return d;})());
+        } else {
+            var newCount = 0;
+            snap.forEach(function(doc) {
+                var data = doc.data();
+                msgs.appendChild(_renderMsg(data, myUid));
+                newCount++;
+            });
+            if (!_chatOpen && newCount > 0) {
+                _chatUnread = Math.max(0, snap.size - (parseInt(localStorage.getItem('_chatSeen')||0)));
+                var badge = document.getElementById('chatBadge');
+                if (badge && _chatUnread > 0) {
+                    badge.textContent = _chatUnread > 9 ? '9+' : _chatUnread;
+                    badge.style.display = 'flex';
+                }
+            }
+        }
+        if (wasAtBottom || _chatOpen) msgs.scrollTop = msgs.scrollHeight;
+    });
+}
+
+window.openChat = function() {
+    _chatOpen = true;
+    _chatUnread = 0;
+    var badge = document.getElementById('chatBadge');
+    if (badge) badge.style.display = 'none';
+    localStorage.setItem('_chatSeen', Date.now());
+    var panel = document.getElementById('chatPanel');
+    var overlay = document.getElementById('chatOverlay');
+    if (panel) panel.style.display = 'flex';
+    if (overlay) overlay.style.display = 'block';
+    _initChat();
+    var msgs = document.getElementById('chatMsgs');
+    if (msgs) setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;},100);
+    var inp = document.getElementById('chatInput');
+    if (inp) inp.focus();
+};
+
+window.closeChat = function() {
+    _chatOpen = false;
+    var panel = document.getElementById('chatPanel');
+    var overlay = document.getElementById('chatOverlay');
+    if (panel) panel.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+};
+
+window.sendChatMsg = function() {
+    var inp = document.getElementById('chatInput');
+    if (!inp) return;
+    var text = inp.value.trim();
+    if (!text || text.length > 300) return;
+    if (!window._fb || !window._fb.addDoc) { alert('Firebase non disponible'); return; }
+    var btn = document.getElementById('chatSendBtn');
+    if (btn) btn.disabled = true;
+    inp.value = '';
+    var appId = (typeof __app_id !== 'undefined') ? __app_id : 'level-ia-premium';
+    var col = window._fb.collection(window._db, 'artifacts/'+appId+'/public/chat/messages');
+    window._fb.addDoc(col, {
+        text: text,
+        name: _chatName(),
+        uid: _chatUid(),
+        createdAt: window._fb.serverTimestamp()
+    }).then(function() {
+        if (btn) btn.disabled = false;
+    }).catch(function(e) {
+        if (btn) btn.disabled = false;
+        console.error('Chat send error:', e);
+    });
+};
+
+// Start listening once Firebase is ready
+document.addEventListener('lvl_auth_ready', function() {
+    setTimeout(_initChat, 1500);
+});
+})();
+
+
 window.closeToolFullscreen = function() {
     const fs = document.getElementById('toolFullscreen');
     if (!fs) return;
@@ -6358,11 +6980,6 @@ document.addEventListener('keydown', function(e) {
 // ─── MOVIE POSTER SCROLLER (TMDB Trending) ────────────────────────────────────
 (async function _initPosterScroller() {
     try {
-        const r     = await fetch(`${TMDB_BASE}/trending/movie/week?api_key=${TMDB_KEY}&language=en-US`);
-        const data  = await r.json();
-        const movies = (data.results || []).filter(m => m.poster_path).slice(0, 20);
-        if (!movies.length) return;
-
         const track = document.getElementById('posterTrack');
         const sec   = document.getElementById('posterScrollerSection');
         if (!track || !sec) return;
@@ -6383,8 +7000,36 @@ document.addEventListener('keydown', function(e) {
             return div;
         };
 
-        movies.forEach(m => track.appendChild(makeCard(m)));
-        movies.forEach(m => track.appendChild(makeCard(m))); // Duplicate for seamless loop
+        // Fetch from multiple sources in parallel: trending movies p1+p2, trending TV, anime
+        const [r1, r2, r3, r4] = await Promise.allSettled([
+            fetch(`${TMDB_BASE}/trending/movie/week?api_key=${TMDB_KEY}&language=en-US&page=1`),
+            fetch(`${TMDB_BASE}/trending/movie/week?api_key=${TMDB_KEY}&language=en-US&page=2`),
+            fetch(`${TMDB_BASE}/trending/tv/week?api_key=${TMDB_KEY}&language=en-US`),
+            fetch(`${TMDB_BASE}/discover/tv?api_key=${TMDB_KEY}&with_genres=16&sort_by=popularity.desc&language=en-US`)
+        ]);
+
+        const seen = new Set();
+        const all  = [];
+        for (const res of [r1, r2, r3, r4]) {
+            if (res.status !== 'fulfilled') continue;
+            try {
+                const data = await res.value.json();
+                (data.results || []).forEach(m => {
+                    if (m.poster_path && !seen.has(m.id)) { seen.add(m.id); all.push(m); }
+                });
+            } catch(_) {}
+        }
+        if (!all.length) return;
+
+        // Shuffle for variety
+        for (let i = all.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [all[i], all[j]] = [all[j], all[i]];
+        }
+
+        // Fill track — duplicate only if fewer than 30 unique items
+        all.forEach(m => track.appendChild(makeCard(m)));
+        if (all.length < 30) all.forEach(m => track.appendChild(makeCard(m)));
 
         sec.style.display = '';
     } catch(_) {}
@@ -6443,6 +7088,7 @@ document.addEventListener('keydown', function(e) {
 var T = {
   en: {
     /* Navigation */
+    'nav.signIn':'Sign In',
     'nav.applications':'Applications',
     'nav.howItWorks':'How it works',
     'nav.features':'Features',
@@ -6454,6 +7100,7 @@ var T = {
     'nav.keys':'Keys',
     'nav.tools':'Tools',
     'nav.notif':'Notifs',
+    'nav.services':'Services',
     'nav.settings':'Settings',
     /* Notifications */
     'apple.notice':'iPhone users: you may receive some notifications twice. We are working on this — we apologize for the inconvenience.',
@@ -6471,6 +7118,8 @@ var T = {
   },
   fr: {
     /* Navigation */
+    'nav.signIn':'Sign In',
+    'nav.signIn':'Connexion',
     'nav.applications':'Applications',
     'nav.howItWorks':'Comment \u00e7a marche',
     'nav.features':'Fonctionnalit\u00e9s',
@@ -6482,7 +7131,8 @@ var T = {
     'nav.keys':'Cl\u00e9s',
     'nav.tools':'Outils',
     'nav.notif':'Notifs',
-    'nav.settings':'R\u00e9glages',
+    'nav.services':'Services',
+    'nav.settings':'Réglages',
     /* Notifications */
     'apple.notice':'Utilisateurs iPhone\u00a0: vous pourriez recevoir certaines notifications en double. Nous travaillons sur ce probl\u00e8me \u2014 veuillez nous en excuser.',
     'notif.empty':'Aucune notification pour le moment',
@@ -6529,7 +7179,28 @@ var ID_MAP = {
     /* Search close label */
     searchOverlay: {childText: null},
     /* Media hub */
-    mediaHubEmpty: {childText: null}
+    mediaHubEmpty: {childText: null},
+    /* Help panel */
+    helpPanelTitle: {text:'Help & Support'},
+    helpPanelDesc: {text:'Answers to frequently asked questions and ways to contact us.'},
+    helpCard1Title: {text:'\uD83D\uDD11 Manage my access keys'},
+    helpCard1Body: {text:'Go to \u201cAccess Keys\u201d and click \u201cGenerate my key\u201d. It\u2019s instant and free. Copy the key from this page then paste it in LevelMovie, LevelMusic or Level IA to unlock all features. Configure a PIN to secure the display.'},
+    helpCard2Title: {text:'\uD83C\uDFAC My key doesn\u2019t work in LevelMovie'},
+    helpCard2Body: {text:'Copy the complete key from \u201cAccess Keys\u201d (\u201cCopy\u201d button). Verify it matches the \u201cLVL-XXXXX-XXXXX\u201d format. If the problem persists, regenerate it from the dashboard.'},
+    helpCard3Title: {text:'\uD83D\uDD12 I forgot my PIN'},
+    helpCard3Body: {text:'Go to Settings \u2192 Security \u2192 click \u201cEdit\u201d. You can set a new PIN without knowing the old one. Your key does not change.'},
+    helpCard4Title: {text:'\uD83C\uDFB5 Is LevelMusic complete?'},
+    helpCard4Body: {text:'LevelMusic is currently in \u201cDiscovery\u201d version. You can listen to 30-second premium previews to explore the world catalog. The full version is in development.'},
+    helpCard5Title: {text:'\uD83D\uDCCB Centralized terms of use'},
+    helpCard5Body: {text:'LevelUp Ecosystem consolidates all its terms in a single document. By using our applications, you agree to our remote access conditions, privacy policy and LVL key usage rules.'},
+    helpTermsLink: {text:'Full terms'},
+    helpPrivacyLink: {text:'Privacy'},
+    helpTermsInApp: {text:'In-app summary'},
+    helpCard6Title: {text:'\uD83D\uDCE7 Contact us'},
+    helpCard6Body: {text:'For any other question, the LevelUp team is at your service. We respond within 24-48h.'},
+    helpEmailBtn: {text:'Email support'},
+    helpInstagramBtn: {text:'Instagram'},
+    helpTeamSignature: {text:'The LevelUp Team'}
   },
   fr: {
     /* Hero */
@@ -6556,7 +7227,26 @@ var ID_MAP = {
     iaMiniInput: {placeholder:'Poser une question \u00e0 l\u2019IA\u2026'},
     toolsPanelEmpty: {childHtml: null},
     searchOverlay: {childText: null},
-    mediaHubEmpty: {childText: null}
+    mediaHubEmpty: {childText: null},
+    /* Help panel */
+    helpCard1Title: {text:'\uD83D\uDD11 G\u00e9rer mes cl\u00e9s d\u2019acc\u00e8s'},
+    helpCard1Body: {text:'Allez dans \u201cCl\u00e9s d\u2019acc\u00e8s\u201d et cliquez \u201cG\u00e9n\u00e9rer ma cl\u00e9\u201d. C\u2019est instantan\u00e9 et gratuit. Copiez la cl\u00e9 depuis cette page puis collez-la dans LevelMovie, LevelMusic ou Level IA pour d\u00e9bloquer toutes les fonctionnalit\u00e9s. Configurez un PIN pour s\u00e9curiser l\u2019affichage.'},
+    helpCard2Title: {text:'\uD83C\uDFAC Ma cl\u00e9 ne fonctionne pas dans LevelMovie'},
+    helpCard2Body: {text:'Copiez la cl\u00e9 compl\u00e8te depuis \u201cCl\u00e9s d\u2019acc\u00e8s\u201d (bouton \u201cCopier\u201d). V\u00e9rifiez le format \u201cLVL-XXXXX-XXXXX\u201d. Si le probl\u00e8me persiste, r\u00e9g\u00e9n\u00e9rez-la depuis le tableau de bord.'},
+    helpCard3Title: {text:'\uD83D\uDD12 J\u2019ai oubli\u00e9 mon PIN'},
+    helpCard3Body: {text:'Allez dans Param\u00e8tres \u2192 S\u00e9curit\u00e9 \u2192 cliquez \u201cModifier\u201d. Vous pouvez d\u00e9finir un nouveau PIN sans conna\u00eetre l\u2019ancien. Votre cl\u00e9 ne change pas.'},
+    helpCard4Title: {text:'\uD83C\uDFB5 LevelMusic est-il complet\u00a0?'},
+    helpCard4Body: {text:'LevelMusic est actuellement en version \u201cD\u00e9couverte\u201d. Vous pouvez \u00e9couter des extraits premium de 30 secondes pour explorer le catalogue mondial. La version compl\u00e8te est en d\u00e9veloppement.'},
+    helpCard5Title: {text:'\uD83D\uDCCB Conditions d\u2019utilisation centralis\u00e9es'},
+    helpCard5Body: {text:'LevelUp Ecosystem regroupe toutes ses conditions dans un document unique. En utilisant nos applications, vous acceptez nos conditions d\u2019acc\u00e8s \u00e0 distance, notre politique de confidentialit\u00e9 et nos r\u00e8gles d\u2019utilisation des cl\u00e9s LVL.'},
+    helpTermsLink: {text:'Conditions compl\u00e8tes'},
+    helpPrivacyLink: {text:'Confidentialit\u00e9'},
+    helpTermsInApp: {text:'R\u00e9sum\u00e9 in-app'},
+    helpCard6Title: {text:'\uD83D\uDCE7 Nous contacter'},
+    helpCard6Body: {text:'Pour toute autre question, l\u2019\u00e9quipe LevelUp est \u00e0 votre disposition. Nous r\u00e9pondons sous 24-48h.'},
+    helpEmailBtn: {text:'Email support'},
+    helpInstagramBtn: {text:'Instagram'},
+    helpTeamSignature: {text:'L\u2019\u00e9quipe LevelUp'}
   }
 };
 
@@ -6578,8 +7268,8 @@ var SEL_MAP = {
     ['.stats-strip .stat-item:nth-child(4) .ss','text','Google Auth only'],
     /* Apps section header */
     ['#apps-sec .sec-label','html','<i class="fa-solid fa-lock"></i>&nbsp; Login and key required for premium apps \u00b7 Free tools without account'],
-    ['#apps-sec .sec-head h2','text','The LevelUp universe in four apps'],
-    ['#apps-sec .sec-head p','text','Three premium applications accessible with your key, and a free integrated toolbox. A single key generated from your dashboard gives you access to the entire ecosystem.'],
+    ['#apps-sec .sec-head h2','text','The LevelUp universe in five apps'],
+    ['#apps-sec .sec-head p','text','Three premium applications accessible with your key, a free integrated toolbox, and partner services. A single key generated from your dashboard gives you access to the entire ecosystem.'],
     /* App 1 - LevelMovie */
     ['#app1Title','text','LevelMovie'],
     ['#app1Desc','text','World cinema in your pocket. Films, series, K-Dramas, anime and Bollywood content available in HD streaming with multi-server support and personal list management.'],
@@ -6616,6 +7306,16 @@ var SEL_MAP = {
     ['#app4Feat .feat-item:nth-child(4)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Advanced features with login'],
     ['#app4Feat .feat-item:nth-child(5)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Regularly updated'],
     ['#outilsFoot button','html','<i class="fa-solid fa-wrench" style="font-size:.78rem"></i> Open tools'],
+    /* App 5 - Services */
+    ['#apps-sec .sec-head h2','text','The LevelUp universe in five apps'],
+    ['#app5Title','text','LevelUp Services'],
+    ['#app5Desc','text','Discover our selection of partner sites and services. Interfaces directly integrated into the ecosystem for a unified, seamless experience.'],
+    ['#app5Feat .feat-item:nth-child(1)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Services curated by LevelUp'],
+    ['#app5Feat .feat-item:nth-child(2)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Integrated iframe interfaces'],
+    ['#app5Feat .feat-item:nth-child(3)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Updated from Firebase'],
+    ['#app5Feat .feat-item:nth-child(4)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Quick access, no redirect'],
+    ['#app5Feat .feat-item:nth-child(5)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Always free'],
+    ['#servicesFoot button','html','<i class="fa-solid fa-layer-group" style="font-size:.78rem"></i> Explore services'],
     /* How it works */
     ['#how-sec .sec-label','html','<i class="fa-solid fa-list-check"></i>&nbsp; How it works'],
     ['#how-sec .sec-head h2','text','Ready in four steps'],
@@ -6710,6 +7410,138 @@ var SEL_MAP = {
     ['.foot-col:nth-child(4) a:nth-child(5)','text','Contact support'],
     ['.foot-bot span:nth-child(1)','text','\u00a9 2026 LevelUp Ecosystem. All rights reserved.'],
     ['.foot-bot span:nth-child(2)','text','Powered by Google & Firebase'],
+    /* Marquee scrolling items */
+    ['.mq-track .mq-i:nth-child(4)','html','<i class=\"fa-solid fa-key\" style=\"color:#a855f7\"></i> Unique access key'],
+    ['.mq-track .mq-i:nth-child(5)','html','<i class=\"fa-solid fa-lock\" style=\"color:#a855f7\"></i> PIN Protection'],
+    ['.mq-track .mq-i:nth-child(6)','html','<i class=\"fa-solid fa-cloud\" style=\"color:#3b82f6\"></i> Firebase Sync'],
+    ['.mq-track .mq-i:nth-child(7)','html','<i class=\"fa-solid fa-gift\" style=\"color:#22c55e\"></i> 100% Free'],
+    ['.mq-track .mq-i:nth-child(8)','html','<i class=\"fa-solid fa-shield-halved\" style=\"color:#22c55e\"></i> Secure & Private'],
+    ['.mq-track .mq-i:nth-child(9)','html','<i class=\"fa-solid fa-mobile-alt\" style=\"color:#a855f7\"></i> Mobile First'],
+    ['.mq-track .mq-i:nth-child(10)','html','<i class=\"fa-solid fa-infinity\" style=\"color:#f97316\"></i> Unlimited Access'],
+    ['.mq-track .mq-i:nth-child(14)','html','<i class=\"fa-solid fa-key\" style=\"color:#a855f7\"></i> Unique access key'],
+    ['.mq-track .mq-i:nth-child(15)','html','<i class=\"fa-solid fa-lock\" style=\"color:#a855f7\"></i> PIN Protection'],
+    ['.mq-track .mq-i:nth-child(16)','html','<i class=\"fa-solid fa-cloud\" style=\"color:#3b82f6\"></i> Firebase Sync'],
+    ['.mq-track .mq-i:nth-child(17)','html','<i class=\"fa-solid fa-gift\" style=\"color:#22c55e\"></i> 100% Free'],
+    ['.mq-track .mq-i:nth-child(18)','html','<i class=\"fa-solid fa-shield-halved\" style=\"color:#22c55e\"></i> Secure & Private'],
+    ['.mq-track .mq-i:nth-child(19)','html','<i class=\"fa-solid fa-mobile-alt\" style=\"color:#a855f7\"></i> Mobile First'],
+    ['.mq-track .mq-i:nth-child(20)','html','<i class=\"fa-solid fa-infinity\" style=\"color:#f97316\"></i> Unlimited Access'],
+    /* How it works section */
+    ['#how-sec .sec-label','html','<i class=\"fa-solid fa-list-check\"></i>&nbsp; How it works'],
+    ['#how-sec .sec-head h2','text','Ready in four steps'],
+    ['#how-sec .sec-head p','text','LevelUp Ecosystem has been designed to be as simple as possible. Zero passwords, zero friction, zero complex setup. Just your Google account and you\u2019re in.'],
+    ['#how-sec .step:nth-child(1) h4','text','Google Login'],
+    ['#how-sec .step:nth-child(1) p','text','Press \u201cContinue with Google\u201d. A Google popup opens, choose your account, that\u2019s it. No form, no password, no email verification. Your Google identity becomes your LevelUp identity.'],
+    ['#how-sec .step:nth-child(2) h4','text','Generate your key'],
+    ['#how-sec .step:nth-child(2) p','text','From your dashboard, in the \u201cAccess Keys\u201d section, click \u201cGenerate my key\u201d. A unique key in LVL-XXXXX-XXXXX format is instantly created and saved to your cloud account.'],
+    ['#how-sec .step:nth-child(3) h4','text','Secure with a PIN'],
+    ['#how-sec .step:nth-child(3) p','text','Set up a 4-digit PIN code in the \u201cAccess Keys\u201d section. Your key will be hidden by default and will only appear after the correct PIN is entered. Maximum protection.'],
+    ['#how-sec .step:nth-child(4) h4','text','Access the apps'],
+    ['#how-sec .step:nth-child(4) p','text','Copy your key, open LevelMovie or Level IA. The dashboard will automatically and securely transmit your profile information to the application. Your access is immediately unlocked.'],
+    /* Deep dive LevelMovie */
+    ['#how-sec + section .sec-label','html','<i class=\"fa-solid fa-clapperboard\" style=\"color:var(--blue)\"></i>&nbsp; LevelMovie in detail'],
+    ['#how-sec + section .sec-head h2','html','World cinema,<br>reimagined for you'],
+    ['#how-sec + section .dd-info h2','html','A video player designed<br>for the ultimate experience'],
+    ['#how-sec + section .dd-info p:nth-child(2)','text','LevelMovie is not just a link aggregator. It\u2019s a streaming platform designed to deliver the best possible viewing experience. Minimalist interface, full-screen immersive player, automatic multi-server support \u2014 if one server goes down, the next one takes over in seconds.'],
+    ['#how-sec + section .dd-info p:nth-child(3)','text','The catalog covers thousands of titles from around the world: American blockbusters, European series, Korean K-Dramas, Japanese anime, Bollywood productions and more. Regularly updated by the LevelUp team.'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(1)','html','<i class=\"fa-solid fa-film\" style=\"color:var(--blue)\"></i> HD Films'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(2)','html','<i class=\"fa-solid fa-tv\" style=\"color:var(--blue)\"></i> Series'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(3)','html','<i class=\"fa-solid fa-dragon\" style=\"color:var(--blue)\"></i> Anime'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(4)','html','<i class=\"fa-solid fa-star\" style=\"color:var(--yellow)\"></i> K-Dramas'],
+    ['#how-sec + section .dd-info .dd-tag:nth-child(5)','html','<i class=\"fa-solid fa-server\" style=\"color:var(--green)\"></i> Multi-server'],
+    ['#how-sec + section .dd-info .btn','html','<i class=\"fa-solid fa-lock\"></i> Unlock LevelMovie'],
+    /* Deep dive LevelMusic */
+    ['#how-sec + section + section .sec-label','html','<i class=\"fa-solid fa-headphones\" style=\"color:var(--blue)\"></i>&nbsp; LevelMusic in detail'],
+    ['#how-sec + section + section .sec-head h2','html','Musical discovery,<br>without limits'],
+    ['#how-sec + section + section .dd-info p:nth-child(2)','text','LevelMusic reinvents the way you explore music. Designed as a premium discovery platform, it lets you listen to 30-second HD previews of the entire world catalog.'],
+    ['#how-sec + section + section .dd-info p:nth-child(3)','text','Why 30 seconds? To let you skip quickly, find the perfect vibe, and build your playlists without wasting time. Whether it\u2019s Amapiano, Drill or K-Pop, the interface is designed for lightning-fast exploration while awaiting the full version.'],
+    ['#how-sec + section + section .dd-info .dd-tag:nth-child(1)','html','<i class=\"fa-solid fa-headphones\" style=\"color:var(--blue)\"></i> HD Audio'],
+    ['#how-sec + section + section .dd-info .dd-tag:nth-child(2)','html','<i class=\"fa-solid fa-bolt\" style=\"color:var(--blue)\"></i> 30s previews'],
+    ['#how-sec + section + section .dd-info .dd-tag:nth-child(3)','html','<i class=\"fa-solid fa-list-music\" style=\"color:var(--blue)\"></i> Playlists'],
+    ['#how-sec + section + section .dd-info .dd-tag:nth-child(4)','html','<i class=\"fa-solid fa-globe\" style=\"color:var(--blue)\"></i> 100+ Genres'],
+    ['#how-sec + section + section .dd-info .btn','html','<i class=\"fa-solid fa-lock\"></i> Unlock LevelMusic'],
+    /* Deep dive Level IA */
+    ['#how-sec + section + section + section .dd-info h2','html','The AI that adapts<br>to your DNA'],
+    ['#how-sec + section + section + section .dd-info p:nth-child(2)','text','Level IA is far more than a simple chatbot. It\u2019s a complete artificial intelligence ecosystem, powered by Gemini 2.5 Flash, Google\u2019s most advanced model. It analyzes PDF documents, reads URLs in real time, understands images and builds a deep memory of your personality.'],
+    ['#how-sec + section + section + section .dd-info p:nth-child(3)','text','Four distinct personality modes let Level IA adapt exactly to your current needs: Auto mode for daily productivity, Expert mode for in-depth analysis, Work mode for professional assistance, and Marco mode for creativity and pop culture.'],
+    ['#how-sec + section + section + section .dd-info .btn','html','<i class=\"fa-solid fa-lock\"></i> Unlock Level IA'],
+    /* Roadmap section */
+    ['#how-sec + section + section + section + section .sec-label','html','<i class=\"fa-solid fa-map\" style=\"color:var(--purple)\"></i>&nbsp; Roadmap 2026\u20132027'],
+    ['#how-sec + section + section + section + section h2','html','The Ecosystem<br>roadmap'],
+    ['#how-sec + section + section + section + section > div > div > p','text','LevelUp is not a static project. It\u2019s a living platform in constant evolution. Discover what our technical team is preparing for the coming months.'],
+    ['.rm-item:nth-child(1) .rm-date','text','Phase 1 (Current)'],
+    ['.rm-item:nth-child(1) .rm-title','text','Ecosystem Foundations'],
+    ['.rm-item:nth-child(1) .rm-desc','text','Launch of the central platform, SSO bridge integration, release of LevelMovie and Level IA. Setting up LevelMusic in Preview.'],
+    ['.rm-item:nth-child(2) .rm-date','text','Phase 2 (In development)'],
+    ['.rm-item:nth-child(2) .rm-title','text','Full LevelMusic Deployment'],
+    ['.rm-item:nth-child(2) .rm-desc','text','Opening of the full music catalog, unlimited listening time, offline mode and global collaborative playlists.'],
+    ['.rm-item:nth-child(3) .rm-date','text','Phase 3 (Future)'],
+    ['.rm-item:nth-child(3) .rm-title','text','Native Mobile Apps'],
+    ['.rm-item:nth-child(3) .rm-desc','text','Development of iOS and Android applications for an even faster experience and perfect integration with the phone system.'],
+    /* Features bento */
+    ['#features-sec .sec-label','html','<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"/></svg>&nbsp; Key Features'],
+    ['#features-sec .sec-head h2','html','Security, performance<br>and simplicity combined'],
+    ['#features-sec .sec-head p','text','Every feature of the LevelUp ecosystem has been designed to provide the best possible experience, without compromising on security or ease of use.'],
+    ['.bento .bc:nth-child(1) h3','text','Google OAuth 2.0 Authentication'],
+    ['.bento .bc:nth-child(1) p:nth-child(3)','text','LevelUp Ecosystem uses Google OAuth 2.0 exclusively as its authentication method. Zero passwords to create, memorize or reset. Your Google account becomes your digital identity across the entire platform.'],
+    ['.bento .bc:nth-child(1) p.detail','text','When you click \u201cContinue with Google\u201d, a secure Google popup opens. You select your account, Google verifies your identity, and LevelUp receives only your name, email and profile photo \u2014 never your password.'],
+    ['.bento .bc:nth-child(2) h3','text','Universal access key'],
+    ['.bento .bc:nth-child(2) p:first-of-type','text','A single key in LVL-XXXXX-XXXXX format unlocks all LevelUp ecosystem applications.'],
+    ['.bento .bc:nth-child(2) p.detail','text','The key is randomly generated, unique per account and securely stored in our Firebase database. You can regenerate it at any time \u2014 the old one is immediately invalidated.'],
+    ['.bento .bc:nth-child(3) h3','text','4-digit PIN protection'],
+    ['.bento .bc:nth-child(3) p:first-of-type','html','Your key is hidden by default behind <code style=\"font-size:.78rem;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:5px\">LVL-\u2022\u2022\u2022\u2022\u2022-\u2022\u2022\u2022\u2022\u2022</code>. A 4-digit PIN is required to display it.'],
+    ['.bento .bc:nth-child(3) p.detail','text','The PIN is hashed (never stored in plaintext) in Firestore. If someone accesses your session, they cannot see your key without the PIN.'],
+    ['.bento .bc:nth-child(4) h3','text','Real-time synchronization'],
+    ['.bento .bc:nth-child(4) p:first-of-type','text','Your profile, preferences and key are instantly synchronized across all your devices via Firebase Firestore.'],
+    ['.bento .bc:nth-child(4) p.detail','text','Switch devices, open your dashboard \u2014 everything is there. Your key, your configured PIN, your Google photo, all synced in real time.'],
+    ['.bento .bc:nth-child(5) h3','text','Mobile First Design'],
+    ['.bento .bc:nth-child(5) p:first-of-type','text','The LevelUp Ecosystem interface is built Mobile First. Every pixel is designed to work perfectly on smartphone before being adapted to desktop screens.'],
+    ['.bento .bc:nth-child(5) p.detail','text','Optimized touch targets, smooth 60fps animations, fast loading, no heavy dependencies \u2014 LevelUp loads in under a second on any 4G connection.'],
+    ['.bento .bc:nth-child(6) h3','text','Ecosystem Bridge (SSO)'],
+    ['.bento .bc:nth-child(6) p:first-of-type','text','Once logged into the dashboard, you no longer need to reconnect. The hub acts as a secure bridge (Single Sign-On) to all other applications.'],
+    ['.bento .bc:nth-child(6) p.detail','text','By clicking an application, LevelUp automatically transmits your key, profile photo and Google name to the target application. Access is instant and seamless.'],
+    ['.bento .bc:nth-child(7) h3','text','Centralized terms of use'],
+    ['.bento .bc:nth-child(7) p:first-of-type','text','Accept once when creating your LevelUp account \u2014 your terms automatically apply to LevelMovie, LevelMusic and Level IA.'],
+    /* Values section */
+    ['#features-sec ~ section .sec-label','html','<i class=\"fa-solid fa-users\"></i>&nbsp; Our Values'],
+    ['#features-sec ~ section .sec-head h2','text','What defines us'],
+    ['#features-sec ~ section .sec-head p','text','The LevelUp ecosystem is built around core values that guide every technical and editorial decision.'],
+    ['.values-grid .val-card:nth-child(1) h4','text','Privacy first'],
+    ['.values-grid .val-card:nth-child(2) h4','text','Permanent free access'],
+    ['.values-grid .val-card:nth-child(3) h4','text','Continuous innovation'],
+    /* Tech stack section */
+    ['.tech-grid ~ section .sec-label, #features-sec ~ section ~ section .sec-label','html','<i class=\"fa-solid fa-microchip\"></i>&nbsp; Tech Stack'],
+    ['#features-sec ~ section ~ section ~ section .sec-label','html','<i class=\"fa-solid fa-microchip\"></i>&nbsp; Tech Stack'],
+    ['.tech-grid .tech-card:nth-child(1) h4','text','Firebase'],
+    /* Settings panel */
+    ['#settingsPanelTitle','text','Settings'],
+    ['#panel-settings .ps','text','Manage your account and security preferences.'],
+    ['#panel-settings .set-sec:nth-child(1) .set-title','text','Account Information'],
+    ['#panel-settings .set-sec:nth-child(2) .set-title','text','Key Security'],
+    ['#panel-settings .set-sec:nth-child(3) .set-title','text','Email Notifications'],
+    ['#panel-settings .set-sec:nth-child(4) .set-title','text','Push Notifications'],
+    ['#panel-settings .set-sec:nth-child(6) .set-title','text','Search'],
+    ['#panel-settings .set-sec:nth-child(7) .set-title','text','Terms & Legal'],
+    ['#nameDisplayRow .set-info h5','text','Display name'],
+    ['#panel-settings .set-row:nth-child(3) .set-info h5','text','Email address'],
+    ['#panel-settings .set-row:nth-child(4) .set-info h5','text','Member since'],
+    ['#panel-settings .set-row:nth-child(5) .set-info h5','text','Identity provider'],
+    ['#panel-settings #setPinStatus','text','Protects the display of your access keys'],
+    ['#panel-settings .set-sec:nth-child(3) .set-row:nth-child(1) .set-info h5','text','Suspicious new login'],
+    ['#panel-settings .set-sec:nth-child(3) .set-row:nth-child(1) .set-info p','text','Receive an email if a login is detected from a new device or IP address'],
+    ['#panel-settings .set-sec:nth-child(3) .set-row:nth-child(2) .set-info h5','text','New tools available'],
+    ['#panel-settings .set-sec:nth-child(3) .set-row:nth-child(2) .set-info p','text','Receive an email when a new tool is added to the ecosystem'],
+    ['#panel-settings .set-sec:nth-child(4) .set-row h5','text','Real-time notifications'],
+    ['#panel-settings .set-sec:nth-child(4) .set-row p','text','Receive alerts even when the app is closed \u2014 new film releases, music, AI tools and more'],
+    ['#panel-settings .set-sec:nth-child(6) .set-row .set-info h5','text','Search for a film or series'],
+    ['#panel-settings .set-sec:nth-child(6) .set-row .set-info p','text','Films, series, music \u2014 available from any screen'],
+    ['#panel-settings .set-sec:nth-child(7) .set-row .set-info h5','text','Terms (In-app)'],
+    ['#panel-settings .set-sec:nth-child(7) .set-row .set-info p','text','Read the terms summary directly in the application'],
+    /* Services partner labels */
+    ['#svcPartnersLabel','text','Technologies & Partners'],
+    ['#svcContactLabel','text','Got a project? Let\u2019s work together.'],
+    ['#svcContactBtn','text','Contact us'],
+    /* SSO / Omniprésence sections */
+    ['.omni-sec .sec-label','html','<i class=\"fa-solid fa-globe\"></i>&nbsp; Everywhere, always'],
     /* Search modal */
     ['.search-close-btn','html','<i class="fa-solid fa-arrow-left"></i> Exit search'],
     ['.search-empty','text','Search for a movie, series or music\u2026'],
@@ -6717,6 +7549,8 @@ var SEL_MAP = {
     ['#sbn-home','html','<i class="fa-solid fa-house"></i> Home'],
     ['#sbn-keys','html','<i class="fa-solid fa-key"></i> Access Keys'],
     ['#sbn-tools','html','<i class="fa-solid fa-wrench" style="color:#22c55e"></i> Tools<span id="toolsNavBadge" class="lvl-nav-badge hidden"></span>'],
+    ['#sbn-services','html','<i class="fa-solid fa-layer-group" style="color:#f97316"></i> Services'],
+    ['#sbn-notif','html','<i class="fa-solid fa-bell" style="color:var(--purple)"></i> Notifications'],
     ['#sbn-settings','html','<i class="fa-solid fa-gear"></i> Settings'],
     ['#sbn-terms','html','<i class="fa-solid fa-file-lines"></i> Terms'],
     ['#sbn-help','html','<i class="fa-regular fa-circle-question"></i> Help'],
@@ -6736,6 +7570,8 @@ var SEL_MAP = {
     ['#panel-home .qa-tile:nth-child(3) .qa-inf span','text','Artificial Intelligence'],
     ['#panel-home .qa-tile:nth-child(4) .qa-inf h4','text','Tools'],
     ['#panel-home .qa-tile:nth-child(4) .qa-inf span','text','Toolbox'],
+    ['#panel-home .qa-tile:nth-child(5) .qa-inf h4','text','Services'],
+    ['#panel-home .qa-tile:nth-child(5) .qa-inf span','text','Partner sites'],
     /* Keys panel */
     ['#panel-keys .pt','text','Access Keys'],
     ['#panel-keys .ps','text','Manage your access key to the LevelUp ecosystem.'],
@@ -6780,8 +7616,8 @@ var SEL_MAP = {
     ['#panel-settings .set-row:has([onclick*="openSearch"]) .set-info h5','text','Search for a movie or series'],
     ['#panel-settings .set-row:has([onclick*="openSearch"]) .set-info p','text','Movies, series, music \u2014 available from any screen'],
     ['#panel-settings .set-sec:nth-child(7) .set-title','text','Terms & Legal'],
-    ['#panel-settings .set-row:nth-child(2) .set-info h5','text','Terms (In-app)'],
-    ['#panel-settings .set-row:nth-child(2) .set-info p','text','Read the terms summary directly in the application'],
+    ['#panel-settings .set-row:has([onclick*="openTerms"]) .set-info h5','text','Terms (In-app)'],
+    ['#panel-settings .set-row:has([onclick*="openTerms"]) .set-info p','text','Read the terms summary directly in the application'],
     ['#panel-settings .set-row[style*="red"] .set-info h5','text','Delete my account'],
     ['#panel-settings .set-row[style*="red"] .set-info p','text','Irreversible action \u2014 all your data will be erased.'],
     ['#panel-settings .set-row[style*="red"] button','text','Delete'],
@@ -6807,6 +7643,17 @@ var SEL_MAP = {
     ['#panel-help .help-card:nth-child(6) h4','text','\uD83C\uDFB5 Is LevelMusic complete?'],
     ['#panel-help .help-card:nth-child(6) p','text','LevelMusic is currently in \u201cDiscovery\u201d version. You can listen to 30-second premium previews to explore the world catalog. The full version is in development.'],
     ['#panel-help .help-card:nth-child(7) h4','text','\uD83D\uDCE7 Contact support'],
+    /* Services panel */
+    ['#panel-services .pt','html','<i class="fa-solid fa-layer-group" style="color:#f97316;font-size:1.15rem;margin-right:6px"></i>LevelUp Services'],
+    ['#panel-services .ps','text','Partner sites and services \u2014 integrated iframe interfaces curated by LevelUp.'],
+    ['#panel-services > div > div > h4','text','Direct access to our services'],
+    ['#panel-services > div > div > p','text','Sites and services selected by the LevelUp team, accessible directly within the ecosystem. No redirects, no installation \u2014 everything in one place.'],
+    /* Notifications panel */
+    ['#panel-notif .pt','html','<i class="fa-solid fa-bell" style="color:var(--purple);font-size:1.15rem;margin-right:6px"></i>Notifications'],
+    ['#panel-notif .ps','text','Your in-app notifications and admin broadcasting tools.'],
+    /* Services overlay */
+    ['#servicesOverlayTitle','text','Services'],
+    ['#servicesOverlayDesc','text','LevelUp ecosystem partner sites'],
     /* Logout modal */
     ['#logoutOv .conf-card h3','text','Sign out?'],
     ['#logoutOv .conf-card p','text','You will need to sign in again to access your keys and applications.'],
@@ -6877,8 +7724,8 @@ var SEL_MAP = {
     ['.stats-strip .stat-item:nth-child(4) .ss','text','Google Auth uniquement'],
     /* Apps section header */
     ['#apps-sec .sec-label','html','<i class="fa-solid fa-lock"></i>&nbsp; Connexion et cl\u00e9 requises pour les apps premium \u00b7 Outils gratuits sans compte'],
-    ['#apps-sec .sec-head h2','text','L\u2019univers LevelUp en quatre apps'],
-    ['#apps-sec .sec-head p','text','Trois applications premium accessibles avec votre cl\u00e9, et une bo\u00eete \u00e0 outils gratuite directement int\u00e9gr\u00e9e. Une seule cl\u00e9 g\u00e9n\u00e9r\u00e9e depuis votre tableau de bord vous donne acc\u00e8s \u00e0 tout l\u2019\u00e9cosyst\u00e8me.'],
+    ['#apps-sec .sec-head h2','text','L\u2019univers LevelUp en cinq apps'],
+    ['#apps-sec .sec-head p','text','Trois applications premium accessibles avec votre cl\u00e9, une bo\u00eete \u00e0 outils gratuite et des services partenaires. Une seule cl\u00e9 g\u00e9n\u00e9r\u00e9e depuis votre tableau de bord vous donne acc\u00e8s \u00e0 tout l\u2019\u00e9cosyst\u00e8me.'],
     /* App 1 */
     ['#app1Title','text','LevelMovie'],
     ['#app1Desc','text','Le cin\u00e9ma mondial dans votre poche. Films, s\u00e9ries, K-Dramas, animes et contenus Bollywood disponibles en streaming haute d\u00e9finition avec multi-serveurs et gestion de liste personnalis\u00e9e.'],
@@ -6915,6 +7762,15 @@ var SEL_MAP = {
     ['#app4Feat .feat-item:nth-child(4)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Fonctions avanc\u00e9es avec connexion'],
     ['#app4Feat .feat-item:nth-child(5)','html','<span class="ck" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#4ade80"></i></span>Mis \u00e0 jour r\u00e9guli\u00e8rement'],
     ['#outilsFoot button','html','<i class="fa-solid fa-wrench" style="font-size:.78rem"></i> Ouvrir les outils'],
+    /* App 5 - Services */
+    ['#app5Title','text','LevelUp Services'],
+    ['#app5Desc','text','D\u00e9couvrez notre s\u00e9lection de sites partenaires et services. Des interfaces directement int\u00e9gr\u00e9es \u00e0 l\u2019\u00e9cosyst\u00e8me pour une exp\u00e9rience unifi\u00e9e et fluide.'],
+    ['#app5Feat .feat-item:nth-child(1)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Services s\u00e9lectionn\u00e9s par LevelUp'],
+    ['#app5Feat .feat-item:nth-child(2)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Interfaces iframe int\u00e9gr\u00e9es'],
+    ['#app5Feat .feat-item:nth-child(3)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Mis \u00e0 jour depuis Firebase'],
+    ['#app5Feat .feat-item:nth-child(4)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Acc\u00e8s rapide, sans redirection'],
+    ['#app5Feat .feat-item:nth-child(5)','html','<span class="ck" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)"><i class="fa-solid fa-check" style="font-size:.5rem;color:#fb923c"></i></span>Toujours gratuit'],
+    ['#servicesFoot button','html','<i class="fa-solid fa-layer-group" style="font-size:.78rem"></i> Explorer les services'],
     /* How it works */
     ['#how-sec .sec-label','html','<i class="fa-solid fa-list-check"></i>&nbsp; Comment \u00e7a marche'],
     ['#how-sec .sec-head h2','text','En quatre \u00e9tapes, vous \u00eates pr\u00eat'],
@@ -7004,6 +7860,8 @@ var SEL_MAP = {
     ['#sbn-home','html','<i class="fa-solid fa-house"></i> Accueil'],
     ['#sbn-keys','html','<i class="fa-solid fa-key"></i> Cl\u00e9s d\u2019acc\u00e8s'],
     ['#sbn-tools','html','<i class="fa-solid fa-wrench" style="color:#22c55e"></i> Outils<span id="toolsNavBadge" class="lvl-nav-badge hidden"></span>'],
+    ['#sbn-services','html','<i class="fa-solid fa-layer-group" style="color:#f97316"></i> Services'],
+    ['#sbn-notif','html','<i class="fa-solid fa-bell" style="color:var(--purple)"></i> Notifications'],
     ['#sbn-settings','html','<i class="fa-solid fa-gear"></i> Param\u00e8tres'],
     ['#sbn-terms','html','<i class="fa-solid fa-file-lines"></i> Conditions'],
     ['#sbn-help','html','<i class="fa-regular fa-circle-question"></i> Aide'],
@@ -7022,6 +7880,8 @@ var SEL_MAP = {
     ['#panel-home .qa-tile:nth-child(3) .qa-inf span','text','Intelligence Artificielle'],
     ['#panel-home .qa-tile:nth-child(4) .qa-inf h4','text','Outils'],
     ['#panel-home .qa-tile:nth-child(4) .qa-inf span','text','Bo\u00eete \u00e0 outils'],
+    ['#panel-home .qa-tile:nth-child(5) .qa-inf h4','text','Services'],
+    ['#panel-home .qa-tile:nth-child(5) .qa-inf span','text','Sites partenaires'],
     /* Keys panel */
     ['#panel-keys .pt','text','Cl\u00e9s d\u2019acc\u00e8s'],
     ['#panel-keys .ps','text','G\u00e9rez votre cl\u00e9 d\u2019acc\u00e8s \u00e0 l\u2019\u00e9cosyst\u00e8me LevelUp.'],
@@ -7087,6 +7947,23 @@ var SEL_MAP = {
     ['#panel-help .help-card:nth-child(6) h4','text','\uD83C\uDFB5 LevelMusic est-il complet ?'],
     ['#panel-help .help-card:nth-child(6) p','text','LevelMusic est actuellement en version \u201cD\u00e9couverte\u201d. Vous pouvez \u00e9couter des extraits premium de 30 secondes pour explorer le catalogue mondial. La version compl\u00e8te est en d\u00e9veloppement.'],
     ['#panel-help .help-card:nth-child(7) h4','text','\uD83D\uDCE7 Contacter le support'],
+    /* Services panel */
+    ['#panel-services .pt','html','<i class="fa-solid fa-layer-group" style="color:#f97316;font-size:1.15rem;margin-right:6px"></i>LevelUp Services'],
+    ['#panel-services .ps','text','Sites partenaires et services \u2014 interfaces iframe int\u00e9gr\u00e9es et s\u00e9lectionn\u00e9es par LevelUp.'],
+    ['#panel-services > div > div > h4','text','Acc\u00e8s direct \u00e0 nos services'],
+    ['#panel-services > div > div > p','text','Sites et services s\u00e9lectionn\u00e9s par l\u2019\u00e9quipe LevelUp, accessibles directement depuis l\u2019\u00e9cosyst\u00e8me. Sans redirection, sans installation \u2014 tout en un seul endroit.'],
+    /* Notifications panel */
+    ['#panel-notif .pt','html','<i class="fa-solid fa-bell" style="color:var(--purple);font-size:1.15rem;margin-right:6px"></i>Notifications'],
+    ['#panel-notif .ps','text','Vos notifications in-app et outils de diffusion administrateur.'],
+    /* Services overlay */
+    ['#servicesOverlayTitle','text','Services'],
+    ['#servicesOverlayDesc','text','Sites partenaires de l\u2019\u00e9cosyst\u00e8me LevelUp'],
+    /* Services partner cards labels */
+    ['#svcPartnersLabel','text','Technologies & Partenaires'],
+    ['#svcContactLabel','text','Un projet\u00a0? Travaillons ensemble.'],
+    ['#svcContactBtn','text','Nous contacter'],
+    /* Settings panel title */
+    ['#settingsPanelTitle','text','R\u00e9glages'],
     /* Logout modal */
     ['#logoutOv .conf-card h3','text','Se d\u00e9connecter ?'],
     ['#logoutOv .conf-card p','text','Vous devrez vous reconnecter pour acc\u00e9der \u00e0 vos cl\u00e9s et applications.'],
