@@ -1074,30 +1074,22 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 .notif-bell-btn, #notifBellBtn, #sbn-notif {
     display: none !important;
 }
-
 /* ═══════════════════════════════════════════════════════
    ANIMATIONS ÉTOILE / FAB — RÈGLE UNIQUE ET PROPRE
-   Par défaut : tout est fixe, aucune animation
-   Exception : iPhone PWA pendant le chargement
 ═══════════════════════════════════════════════════════ */
 
-/* 1. DÉSACTIVER toutes les animations étoile/FAB sur tous les appareils */
+/* 1. DÉSACTIVER toutes les animations étoile sur tous les appareils */
 .als-star,
 .fab-main,
 .fab-main i,
-.fab-hint,
 .splash-logo {
     animation: none !important;
     transform: none !important;
 }
 
-/* Cacher l'écran de chargement entier sur navigateur normal (non iPhone-PWA) */
+/* Cacher l'écran de chargement entier sur navigateur normal */
 .no-loading-screen #appLoadingScreen { display: none !important; }
-
-/* Cacher complètement l'étoile du chargement sur navigateur normal */
 #appLoadingScreen .als-star { display: none !important; }
-
-/* Cacher le "Powered by LevelUp" du chargement sur navigateur normal */
 .als-powered { display: none !important; }
 
 /* 2. Sur iPhone PWA uniquement : activer pendant le chargement */
@@ -1106,21 +1098,19 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
     animation: fabBounceUp 2s infinite ease-in-out !important;
     transform: none !important;
 }
-.lvl-iphone-star-anim .fab-main i,
-.lvl-iphone-star-anim .fab-hint {
+.lvl-iphone-star-anim .fab-main i {
     animation: fabBounceUp 2s infinite ease-in-out !important;
     transform: none !important;
 }
-/* Afficher le "Powered by LevelUp" du chargement sur iPhone PWA */
 .lvl-iphone-star-anim .als-powered { display: block !important; }
 
-/* 3. Rotation au clic (tous appareils) — override explicite */
+/* 3. Rotation au clic du menu (tous appareils) */
 .fab-wrap.open .fab-main {
     transform: rotate(135deg) !important;
     animation: none !important;
 }
 
-/* 4. Signature PWA : cachée par défaut, visible sur iPhone PWA */
+/* 4. Signature PWA */
 .pwa-footer-signature {
     position: fixed;
     bottom: calc(20px + env(safe-area-inset-bottom, 0px));
@@ -1150,14 +1140,26 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
     opacity: 0.65 !important;
 }
 
-/* FIX SAFARI : Cacher icône image cassée + texte alternatif */
-img { color: transparent !important; text-indent: -10000px; }
-img::before {
-    content: "";
-    display: block;
-    background: #030303;
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+/* ═══════════════════════════════════════════════════════
+   BULLE "ASSISTANT" (Passe au-dessus + Bondit + Disparaît)
+═══════════════════════════════════════════════════════ */
+@keyframes bondir {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.fab-hint {
+    z-index: 50 !important; /* Force la bulle AU-DESSUS de l'étoile */
+    animation: bondir 2s infinite ease-in-out !important; /* Fait bondiner */
+    transition: opacity 0.4s ease-out !important; /* Disparition fluide */
+    opacity: 1;
+}
+
+/* Classe ajoutée par le JavaScript pour effacer la bulle au scroll */
+.fab-hint.hidden-on-scroll {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    animation: none !important;
 }
 </style>
 </head>
@@ -8586,23 +8588,17 @@ document.addEventListener('DOMContentLoaded', function() {
 // EFFACER LA BULLE "ASSISTANT" AU SCROLL
 window.addEventListener('scroll', function() {
     const hintBubble = document.getElementById('fabHintBubble'); 
-
-    if (hintBubble && window.scrollY > 15) { // S'active dès qu'on descend un peu
-        hintBubble.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        hintBubble.style.opacity = '0';
-        hintBubble.style.transform = 'translateY(10px) translateX(-50%)'; // Animation douce vers le bas
-        hintBubble.style.pointerEvents = 'none';
-
-        // Cache complètement l'élément après l'animation
-        setTimeout(() => {
-            hintBubble.style.display = 'none';
-        }, 300);
+    
+    if (hintBubble) {
+        if (window.scrollY > 15) { 
+            // Ajoute la classe pour cacher la bulle en douceur dès qu'on défile
+            hintBubble.classList.add('hidden-on-scroll');
+        } else {
+            // Optionnel : La bulle réapparaît si l'utilisateur remonte tout en haut
+            hintBubble.classList.remove('hidden-on-scroll');
+        }
     }
 });
-/* Force la bulle "Assistant" à passer au-dessus de l'étoile */
-.fab-hint {
-    z-index: 50 !important;
-}
 </script>
 </body>
 </html>
