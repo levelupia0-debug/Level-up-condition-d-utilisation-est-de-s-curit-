@@ -479,9 +479,9 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 .conf-card{background:var(--surf);border:1px solid var(--bdr-hi);border-radius:var(--r24);width:100%;max-width:340px;padding:30px;text-align:center;animation:cIn .3s ease;margin:auto}
 
 /* TERMS MODAL */
-.terms-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;display:flex;align-items:stretch;overflow:hidden;animation:tFade .3s ease}
+.terms-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9500;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:20px;animation:tFade .3s ease}
 @keyframes tFade{from{opacity:0}to{opacity:1}}
-.terms-panel{width:100%;max-width:860px;background:var(--surf);margin:auto;border-radius:var(--r24);border:1px solid var(--bdr-hi);display:flex;flex-direction:column;max-height:92vh;animation:cIn .35s ease;overflow:hidden}
+.terms-panel{width:100%;max-width:860px;background:var(--surf);margin:auto;border-radius:var(--r24);border:1px solid var(--bdr-hi);display:flex;flex-direction:column;max-height:90vh;animation:cIn .35s ease;overflow:hidden;position:relative}
 .terms-head{padding:22px 28px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:rgba(168,85,247,.04)}
 .terms-head h2{font-size:1.1rem;display:flex;align-items:center;gap:9px}
 .terms-body{flex:1;overflow-y:auto;padding:28px;line-height:1.8}
@@ -2105,10 +2105,10 @@ Créer un compte
 
 <div class="foot-col">
   <h5>Legal & Support</h5>
-  <a onclick="openTerms()" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-file-lines" style="font-size:.7rem;color:var(--purple)"></i> Conditions d'utilisation</a>
-  <a onclick="openTerms()" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-shield-halved" style="font-size:.7rem;color:#60a5fa"></i> Confidentialité</a>
+  <a onclick="openTerms()" style="display:flex;align-items:center;gap:6px;cursor:pointer"><i class="fa-solid fa-file-lines" style="font-size:.7rem;color:var(--purple)"></i> Conditions (App intégrée)</a>
+  <a href="https://levelup-ecosystem.com/terms" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-file-contract" style="font-size:.7rem;color:var(--purple)"></i> Conditions complètes</a>
+  <a href="https://levelup-ecosystem.com/privacy" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-shield-halved" style="font-size:.7rem;color:#60a5fa"></i> Règles de confidentialité</a>
   <a href="mailto:support@levelup-ecosystem.com" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-envelope" style="font-size:.7rem;color:#34d399"></i> support@levelup-ecosystem.com</a>
-  <a onclick="openTerms()" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-scale-balanced" style="font-size:.7rem;color:#f97316"></i> Politique de cookies</a>
 </div>
 
 </div>
@@ -3017,15 +3017,16 @@ SMART FAB & IA ASSISTANT
 <!-- ═══════════════════════════════════════
 CONDITIONS D'UTILISATION — MODAL COMPLET
 ═══════════════════════════════════════ -->
-<div class="terms-overlay hidden" id="termsOverlay">
+<div class="terms-overlay hidden" id="termsOverlay" onclick="if(event.target===this)closeTerms()">
 <div class="terms-panel">
 <div class="terms-head">
 <h2>
 <svg width="18" height="18" viewBox="0 0 576 512" fill="url(#pg)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
 Conditions Générales d'Utilisation
 </h2>
-<div style="display:flex;align-items:center;gap:9px">
-<span style="font-size:.74rem;color:var(--dim)">Mise à jour : Avril 2026</span>
+<div style="display:flex;align-items:center;gap:12px">
+<span style="font-size:.74rem;color:var(--dim)">Avril 2026</span>
+<button onclick="closeTerms()" aria-label="Fermer" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;transition:all .2s;font-family:var(--sans)" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='var(--muted)'">✕</button>
 </div>
 </div>
 <div class="terms-body">
@@ -5720,8 +5721,19 @@ if(wrapKey) wrapKey.classList.add('hidden');
 }
 
 // TERMS
-function openTerms(){ document.getElementById('termsOverlay').classList.remove('hidden'); }
-function closeTerms(){ document.getElementById('termsOverlay').classList.add('hidden'); }
+function openTerms(){
+  const ov = document.getElementById('termsOverlay');
+  ov.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  document._termsEsc = function(e){ if(e.key==='Escape') closeTerms(); };
+  document.addEventListener('keydown', document._termsEsc);
+}
+function closeTerms(){
+  const ov = document.getElementById('termsOverlay');
+  ov.classList.add('hidden');
+  document.body.style.overflow = '';
+  if(document._termsEsc){ document.removeEventListener('keydown', document._termsEsc); delete document._termsEsc; }
+}
 
 // PANELS
 function pnl(id){
