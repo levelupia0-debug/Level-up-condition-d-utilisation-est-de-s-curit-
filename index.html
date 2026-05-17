@@ -1091,6 +1091,9 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
     transform: none !important;
 }
 
+/* Cacher l'écran de chargement entier sur navigateur normal (non iPhone-PWA) */
+.no-loading-screen #appLoadingScreen { display: none !important; }
+
 /* Cacher complètement l'étoile du chargement sur navigateur normal */
 #appLoadingScreen .als-star { display: none !important; }
 
@@ -1159,6 +1162,9 @@ img::before {
 </style>
 </head>
 <body>
+
+<!-- Masquage immédiat de l'écran de chargement pour les navigateurs non-iPhone-PWA -->
+<script>(function(){var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);var isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;if(!(isIOS&&isPWA))document.documentElement.classList.add('no-loading-screen');})()</script>
 
 <!-- ═══════════════════════════════════════
 ÉCRAN DE CHARGEMENT INITIAL
@@ -2098,6 +2104,14 @@ Créer un compte
   <a href="https://ia.levelup-ecosystem.com" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px"><i class="fa-solid fa-star" style="font-size:.7rem;color:var(--purple)"></i> ia.levelup-ecosystem.com</a>
 </div>
 
+<div class="foot-col">
+  <h5>Legal & Support</h5>
+  <a onclick="openTerms()" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-file-lines" style="font-size:.7rem;color:var(--purple)"></i> Conditions d'utilisation</a>
+  <a onclick="openTerms()" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-shield-halved" style="font-size:.7rem;color:#60a5fa"></i> Confidentialité</a>
+  <a href="mailto:support@levelup-ecosystem.com" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-envelope" style="font-size:.7rem;color:#34d399"></i> support@levelup-ecosystem.com</a>
+  <a onclick="openTerms()" style="display:flex;align-items:center;gap:6px"><i class="fa-solid fa-scale-balanced" style="font-size:.7rem;color:#f97316"></i> Politique de cookies</a>
+</div>
+
 </div>
 
 <!-- TECH LOGOS STRIP -->
@@ -2949,7 +2963,7 @@ SMART FAB & IA ASSISTANT
             <span class="tooltip">Ouvrir l'Assistant IA</span>
         </button>
 
-        <button class="fab-item" id="fabNavBtn" onclick="fabNavAction(); document.getElementById('fabWrap').classList.remove('open');">
+        <button class="fab-item" id="fabNavBtn" onclick="document.getElementById('fabWrap').classList.remove('open'); setTimeout(fabNavAction,180);">
             <i class="fa-solid fa-user" id="fabNavIco"></i>
             <span class="tooltip" id="fabNavTip">Se connecter</span>
         </button>
@@ -2982,6 +2996,7 @@ SMART FAB & IA ASSISTANT
         </svg>
         <i class="fa-solid fa-star"></i>
     </button>
+    <span style="font-size:.52rem;color:rgba(255,255,255,.18);font-family:monospace;text-transform:uppercase;letter-spacing:.1em;font-weight:700;pointer-events:none;user-select:none;white-space:nowrap">Powered by LevelUp</span>
 </div>
 <!-- IA ASSISTANT IFRAME -->
 <div id="iaOverlay" class="ia-overlay">
@@ -3653,67 +3668,111 @@ if(s.logo_et_nom) {
     if(brandEl) brandEl.innerHTML = s.logo_et_nom;
 }
 
-// === NOUVEAU BLOC : PANNEAU HERO AVEC SLIDER AUTOMATIQUE ===
-if(s.image_ou_video_fond) {
-    const bgCont = document.getElementById('heroBgContainer');
-    if(bgCont) {
-        // 1. Transforme la donnée en tableau (même s'il n'y a qu'un lien)
-        const medias = Array.isArray(s.image_ou_video_fond) ? s.image_ou_video_fond : [s.image_ou_video_fond];
+// === PANNEAU HERO — SLIDER AUTOMATIQUE ===
+(function() {
+    // Images de secours fiables (CDN Unsplash, dark/cinematic)
+    const DEFAULT_HERO_IMGS = [
+        'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1920&q=75',
+        'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1920&q=75',
+        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1920&q=75',
+        'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1920&q=75',
+        'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=75',
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=75',
+        'https://images.unsplash.com/photo-1468817814611-b7edf94b5d60?auto=format&fit=crop&w=1920&q=75'
+    ];
 
-        if (medias.length > 0) {
-            bgCont.innerHTML = ''; // On vide le conteneur
+    function _isVideoUrl(u) {
+        if (!u) return false;
+        if (/\.(mp4|webm|ogg|mov|avi|m4v|mkv|ts)(\?|#|$)/i.test(u)) return true;
+        if (/youtube\.com|youtu\.be|vimeo\.com|streamable\.com|dailymotion\.com|twitch\.tv|wistia\.com/i.test(u)) return true;
+        if (/cloudinary\.com\/.+\/video\//i.test(u)) return true;
+        if (/pexels\.com\/video|pixabay\.com\/videos|coverr\.co/i.test(u)) return true;
+        return false;
+    }
+    function _getEmbedUrl(u) {
+        const yt = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1&loop=1&mute=1&controls=0&rel=0&playlist=${yt[1]}`;
+        const vm = u.match(/vimeo\.com\/(\d+)/);
+        if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1&loop=1&muted=1&controls=0&background=1`;
+        return null;
+    }
+    // Fonction robuste pour créer un élément image sans casser sur iPhone
+    function _makeImg(src, activeClass) {
+        const img = document.createElement('img');
+        img.className = `hero-dynamic-img hero-slide ${activeClass}`;
+        img.alt = '';
+        img.decoding = 'async';
+        img.loading = 'lazy';
+        // Sur erreur : tenter le prochain fallback, sinon masquer proprement sans ? bleu
+        img.onerror = function() {
+            this.onerror = null;
+            // Remplace l'image cassée par un fond dégradé invisible — jamais de ? bleu
+            this.style.display = 'none';
+            // Injecter un div dégradé à la place
+            const ph = document.createElement('div');
+            ph.className = `hero-dynamic-img hero-slide ${this.classList.contains('active') ? 'active' : ''}`;
+            ph.style.cssText = 'background:linear-gradient(135deg,#0a0818 0%,#120f2a 100%)';
+            this.parentNode && this.parentNode.insertBefore(ph, this);
+        };
+        img.src = src;
+        return img;
+    }
 
-            // Les fonctions de détection vidéo
-            function _isVideoUrl(u) {
-                if (!u) return false;
-                if (/\.(mp4|webm|ogg|mov|avi|m4v|mkv|ts)(\?|#|$)/i.test(u)) return true;
-                if (/youtube\.com|youtu\.be|vimeo\.com|streamable\.com|dailymotion\.com|twitch\.tv|wistia\.com/i.test(u)) return true;
-                if (/cloudinary\.com\/.+\/video\//i.test(u)) return true;
-                if (/pexels\.com\/video|pixabay\.com\/videos|coverr\.co/i.test(u)) return true;
-                return false;
-            }
-            function _getEmbedUrl(u) {
-                const yt = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-                if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1&loop=1&mute=1&controls=0&rel=0&playlist=${yt[1]}`;
-                const vm = u.match(/vimeo\.com\/(\d+)/);
-                if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1&loop=1&muted=1&controls=0&background=1`;
-                return null;
-            }
+    function _buildSlider(medias) {
+        const bgCont = document.getElementById('heroBgContainer');
+        if (!bgCont) return;
+        bgCont.innerHTML = '';
 
-            // 2. Création de toutes les images/vidéos en arrière-plan
-            medias.forEach((link, index) => {
-                if (!link || typeof link !== 'string') return;
-                let bgStr = link.trim();
-                let activeClass = index === 0 ? 'active' : ''; // Le premier est visible
+        let addedCount = 0;
+        medias.forEach((link, index) => {
+            if (!link || typeof link !== 'string') return;
+            const bgStr = link.trim();
+            const activeClass = addedCount === 0 ? 'active' : '';
 
-                if (!bgStr.includes('<')) {
-                    if (_isVideoUrl(bgStr)) {
-                        const embedUrl = _getEmbedUrl(bgStr);
-                        if (embedUrl) {
-                            bgCont.insertAdjacentHTML('beforeend', `<iframe src="${embedUrl}" class="hero-dynamic-img hero-slide ${activeClass}" style="border:none;pointer-events:none" allowfullscreen allow="autoplay; fullscreen"></iframe>`);
-                        } else {
-                            bgCont.insertAdjacentHTML('beforeend', `<video src="${bgStr}" class="hero-dynamic-img hero-slide ${activeClass}" autoplay loop muted playsinline></video>`);
-                        }
+            if (!bgStr.includes('<')) {
+                if (_isVideoUrl(bgStr)) {
+                    const embedUrl = _getEmbedUrl(bgStr);
+                    if (embedUrl) {
+                        const fr = document.createElement('iframe');
+                        fr.src = embedUrl;
+                        fr.className = `hero-dynamic-img hero-slide ${activeClass}`;
+                        fr.style.cssText = 'border:none;pointer-events:none';
+                        fr.allowFullscreen = true;
+                        fr.allow = 'autoplay; fullscreen';
+                        bgCont.appendChild(fr);
                     } else {
-                        // LA SÉCURITÉ EST AJOUTÉE ICI :
-                            bgCont.insertAdjacentHTML('beforeend', `<img src="${bgStr}" class="hero-dynamic-img hero-slide ${activeClass}" alt="" onerror="this.style.display='none'">`);                    }
+                        const v = document.createElement('video');
+                        v.src = bgStr;
+                        v.className = `hero-dynamic-img hero-slide ${activeClass}`;
+                        v.autoplay = true; v.loop = true; v.muted = true; v.playsInline = true;
+                        bgCont.appendChild(v);
+                    }
+                } else {
+                    bgCont.appendChild(_makeImg(bgStr, activeClass));
                 }
-            });
-
-            // 3. Rotation toutes les 4 secondes (si on a plus d'une image)
-            const slides = bgCont.querySelectorAll('.hero-slide');
-            if (slides.length > 1) {
-                let currentSlide = 0;
-                setInterval(() => {
-                    slides[currentSlide].classList.remove('active');
-                    currentSlide = (currentSlide + 1) % slides.length;
-                    slides[currentSlide].classList.add('active');
-                }, 4000); // 4000 millisecondes = 4 secondes
+                addedCount++;
             }
+        });
+
+        // Rotation automatique
+        const slides = bgCont.querySelectorAll('.hero-slide');
+        if (slides.length > 1) {
+            let cur = 0;
+            setInterval(() => {
+                slides[cur].classList.remove('active');
+                cur = (cur + 1) % slides.length;
+                slides[cur].classList.add('active');
+            }, 4500);
         }
     }
-}
-// === FIN DU NOUVEAU BLOC ===
+
+    // Utilise les images Firestore si dispo, sinon les 7 images par défaut
+    const firestoreMedias = s.image_ou_video_fond
+        ? (Array.isArray(s.image_ou_video_fond) ? s.image_ou_video_fond : [s.image_ou_video_fond])
+        : [];
+    _buildSlider(firestoreMedias.length > 0 ? firestoreMedias : DEFAULT_HERO_IMGS);
+})();
+// === FIN PANNEAU HERO ===
 
 if(s.texte_petit_badge) {
     const badgeEl = document.getElementById('heroBadge');
