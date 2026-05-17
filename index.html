@@ -1072,6 +1072,48 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 .notif-bell-btn, #notifBellBtn, #sbn-notif {
     display: none !important;
 }
+
+/* 1. POSITIONNEMENT DE LA SIGNATURE (Cachée par défaut) */
+.pwa-footer-signature {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.15);
+    font-family: monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+    user-select: none;
+    z-index: 9999;
+    display: none;
+}
+
+/* 2. ARRÊT DE L'ANIMATION DE L'ÉTOILE PAR DÉFAUT */
+.fab-hint {
+    animation: none !important;
+}
+
+/* 3. ACTIVATION PENDANT LE CHARGEMENT SUR IPHONE PWA */
+.lvl-iphone-star-anim .pwa-footer-signature {
+    display: block !important; /* Affiche le texte */
+}
+.lvl-iphone-star-anim .fab-hint {
+    animation: fabBounceUp 2s infinite ease-in-out !important;
+}
+.lvl-iphone-star-anim .fab-main i {
+    animation: fabBounceUp 2s infinite ease-in-out !important; /* Fait bouger l'étoile */
+}
+/* SLIDER FOND D'ÉCRAN HERO (Effet Netflix) */
+.hero-slide {
+    animation: none !important; /* Coupe l'animation de base */
+    opacity: 0 !important;      /* Caché par défaut */
+    transition: opacity 1.5s ease-in-out !important; /* Fondu très fluide */
+}
+.hero-slide.active {
+    opacity: 0.65 !important;   /* Visible ! */
+}
 /* ══════════════════════════════════════════════════
    CORRECTION ANIMATION : ÉTOILE FIXE, BULLE MOBILE
 ═══════════════════════════════════════════════════ */
@@ -1114,24 +1156,11 @@ img::before {
 }
 /* FIX SAFARI : Cacher l'icône image cassée le temps du chargement */
 img { text-indent: -10000px; }
-/* =======================================================
-   SUPPRESSION TOTALE DE TOUTES LES ANIMATIONS D'ÉTOILES
-   ======================================================= */
-.als-star, 
-.fab-main, 
-.fab-main i, 
-.fab-hint, 
-.splash-logo, 
-.lvl-iphone-star-anim .fab-main i,
-.lvl-iphone-star-anim .fab-hint {
+/* Tuer toutes les animations d'étoiles PARTOUT (chargement initial, bouton flottant, splash screen) */
+.als-star, .fab-main, .fab-main i, .fab-hint, .splash-logo, .lvl-iphone-star-anim .fab-main i {
     animation: none !important;
     transform: none !important;
 }
-
-/* On garde juste la rotation quand on clique sur le menu */
-.fab-wrap.open .fab-main {
-    transform: rotate(135deg) !important; 
-}    
 </style>
 </head>
 <body>
