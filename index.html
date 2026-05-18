@@ -2794,69 +2794,62 @@ function closeServiceIframe() {
     }
 }
 
-async function loadServicesHubData() {
+// ==========================================
+// CHARGEMENT DES SERVICES SANS FIREBASE (LOCAL)
+// ==========================================
+function loadServicesHubData() {
     const grid = document.getElementById('servicesGrid');
     if (!grid) return;
 
-    // 1. VÉRIFICATION DE LA SÉCURITÉ (L'utilisateur est-il connecté ?)
-    // Assure-toi que "firebase.auth().currentUser" ou "auth.currentUser" correspond à ton initialisation Firebase
-    const user = firebase.auth().currentUser; 
-    
-    if (!user) {
-        // Design d'accès refusé (Pro et épuré)
-        grid.innerHTML = `
-            <div style="grid-column:1/-1;text-align:center;padding:50px 20px;">
-                <i class="fa-solid fa-lock" style="color:#a855f7;font-size:2rem;margin-bottom:15px;opacity:0.8;"></i>
-                <h3 style="color:#fff;font-size:1.1rem;margin:0 0 8px 0;">Accès Protégé</h3>
-                <p style="color:var(--muted);font-size:0.85rem;line-height:1.5;margin-bottom:20px;">
-                    Vous devez être connecté à l'écosystème pour consulter les services disponibles.
-                </p>
-                <button onclick="closeServicesHub(); openAuth('login');" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.4);color:#c084fc;padding:10px 20px;border-radius:12px;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;">
-                    Se connecter
-                </button>
+    // 💡 AJOUTE TES SITES ICI ! 
+    // Puisqu'ils sont à la racine avec index.html, on met juste "./nomdufichier.html"
+    const mesSites = [
+        {
+            name: "LevelMovie",
+            description: "Plateforme de streaming cinématographique.",
+            url: "./movie.html", 
+            icon: "fa-clapperboard"
+        },
+        {
+            name: "LevelMusic",
+            description: "Écoutez vos morceaux et albums préférés.",
+            url: "./music.html", 
+            icon: "fa-music"
+        },
+        {
+            name: "Level IA",
+            description: "Assistant IA intelligent Gemini 2.5.",
+            url: "./ia.html",
+            icon: "fa-star" // Ton icône fétiche
+        }
+    ];
+
+    // On efface d'éventuels messages de chargement
+    grid.innerHTML = ''; 
+
+    // On crée les cartes instantanément sans attendre Firebase
+    mesSites.forEach(site => {
+        const card = document.createElement('div');
+        card.className = 'service-card';
+        card.style.cursor = 'pointer';
+        
+        // Au clic, ça ouvre la fameuse vitre avec le fichier local
+        card.onclick = () => openServiceIframe(site.url, site.name);
+        
+        card.innerHTML = `
+            <div class="service-icon-wrap" style="width:42px;height:42px;background:rgba(168,85,247,0.08);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#a855f7;font-size:1.05rem;flex-shrink:0;">
+                <i class="fa-solid ${site.icon}"></i>
+            </div>
+            <div class="service-info" style="flex:1;">
+                <h3 style="font-size:0.92rem;color:#fff;margin:0 0 3px 0;font-weight:600;">${site.name}</h3>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0;line-height:1.4;">${site.description}</p>
+            </div>
+            <div class="service-arrow" style="font-size:0.7rem;color:rgba(255,255,255,0.18);">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
             </div>
         `;
-        return; // On arrête le code ici, on ne dérange pas Firebase !
-    }
-
-    // 2. SI L'UTILISATEUR EST CONNECTÉ, ON LANCE LA SYNCHRONISATION
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:0.85rem;font-family:monospace;">SYNCHRONISATION...</div>`;
-
-    try {
-        // Ton chemin ultra sécurisé
-        const snapshot = await db.collection('artifacts/levelup-ecosystem/public/data/services').get();
-        grid.innerHTML = ''; 
-
-        if (snapshot.empty) {
-            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:0.85rem;">Aucun service configuré.</div>`;
-            return;
-        }
-
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const card = document.createElement('div');
-            card.className = 'service-card';
-            
-            card.onclick = () => openServiceIframe(data.url, data.name);
-            
-            card.innerHTML = `
-                <div class="service-icon-wrap" style="width:42px;height:42px;background:rgba(168,85,247,0.08);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#a855f7;font-size:1.05rem;flex-shrink:0;">
-                    <i class="fa-solid ${data.icon || 'fa-layer-group'}"></i>
-                </div>
-                <div class="service-info" style="flex:1;">
-                    <h3 style="font-size:0.92rem;color:#fff;margin:0 0 3px 0;font-weight:600;">${data.name}</h3>
-                    <p style="font-size:0.78rem;color:var(--muted);margin:0;line-height:1.4;">${data.description || ''}</p>
-                </div>
-                <div class="service-arrow" style="font-size:0.7rem;color:rgba(255,255,255,0.18);">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-    } catch (error) {
-        console.error("Erreur Firebase Services:", error);
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;font-size:0.82rem;font-family:monospace;">ÉCHEC DE LA SYNCHRONISATION. VÉRIFIEZ VOS DROITS.</div>`;
-    }
+        grid.appendChild(card);
+    });
 }
 </script>
 
