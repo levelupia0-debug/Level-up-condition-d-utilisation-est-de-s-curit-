@@ -2745,7 +2745,7 @@ SERVICES HUB OVERLAY
       </div>
       <div>
         <h3 id="servicesOverlayTitle" style="font-size:1rem;font-weight:800;font-family:var(--display);letter-spacing:-.02em;margin:0">Services</h3>
-        <p id="servicesOverlayDesc" style="font-size:.72rem;color:var(--muted);margin:0">Création de sites,aide pour hébergement et domaines — LevelUp</p>
+        <p id="servicesOverlayDesc" style="font-size:.72rem;color:var(--muted);margin:0">Création de sites, hébergement et domaines — LevelUp</p>
       </div>
     </div>
     <button onclick="closeServicesHub()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .2s;outline:none" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.7)'">
@@ -2762,96 +2762,6 @@ SERVICES HUB OVERLAY
     </div>
   </div>
 </div>
-<script>
-// ==========================================
-// FONCTIONS DE L'IFRAME SERVICES ET FIREBASE
-// ==========================================
-function openServiceIframe(url, title) {
-    const iframe = document.getElementById('serviceIframe');
-    const titleSpan = document.getElementById('serviceIframeTitle');
-    const overlay = document.getElementById('serviceIframeOverlay');
-    
-    if (iframe && overlay) {
-        titleSpan.innerText = title;
-        iframe.src = url;
-        overlay.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function closeServiceIframe() {
-    const iframe = document.getElementById('serviceIframe');
-    const overlay = document.getElementById('serviceIframeOverlay');
-    
-    if (iframe && overlay) {
-        overlay.classList.add('hidden');
-        iframe.src = ""; 
-        
-        const servicesOverlay = document.getElementById('servicesOverlay');
-        if (!servicesOverlay || servicesOverlay.classList.contains('hidden')) {
-            document.body.style.overflow = '';
-        }
-    }
-}
-
-// ==========================================
-// CHARGEMENT DES SERVICES SANS FIREBASE (LOCAL)
-// ==========================================
-function loadServicesHubData() {
-    const grid = document.getElementById('servicesGrid');
-    if (!grid) return;
-
-    // 💡 AJOUTE TES SITES ICI ! 
-    // Puisqu'ils sont à la racine avec index.html, on met juste "./nomdufichier.html"
-    const mesSites = [
-        {
-            name: "LevelMovie",
-            description: "Plateforme de streaming cinématographique.",
-            url: "./movie.html", 
-            icon: "fa-clapperboard"
-        },
-        {
-            name: "LevelMusic",
-            description: "Écoutez vos morceaux et albums préférés.",
-            url: "./music.html", 
-            icon: "fa-music"
-        },
-        {
-            name: "Level IA",
-            description: "Assistant IA intelligent Gemini 2.5.",
-            url: "./ia.html",
-            icon: "fa-star" // Ton icône fétiche
-        }
-    ];
-
-    // On efface d'éventuels messages de chargement
-    grid.innerHTML = ''; 
-
-    // On crée les cartes instantanément sans attendre Firebase
-    mesSites.forEach(site => {
-        const card = document.createElement('div');
-        card.className = 'service-card';
-        card.style.cursor = 'pointer';
-        
-        // Au clic, ça ouvre la fameuse vitre avec le fichier local
-        card.onclick = () => openServiceIframe(site.url, site.name);
-        
-        card.innerHTML = `
-            <div class="service-icon-wrap" style="width:42px;height:42px;background:rgba(168,85,247,0.08);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#a855f7;font-size:1.05rem;flex-shrink:0;">
-                <i class="fa-solid ${site.icon}"></i>
-            </div>
-            <div class="service-info" style="flex:1;">
-                <h3 style="font-size:0.92rem;color:#fff;margin:0 0 3px 0;font-weight:600;">${site.name}</h3>
-                <p style="font-size:0.78rem;color:var(--muted);margin:0;line-height:1.4;">${site.description}</p>
-            </div>
-            <div class="service-arrow" style="font-size:0.7rem;color:rgba(255,255,255,0.18);">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-            </div>
-        `;
-        grid.appendChild(card);
-    });
-}
-</script>
 
 <!-- ═══ APPS OVERLAY — toutes les applications avec descriptions ═══ -->
 <div id="appsOverlay" class="hidden">
@@ -6531,98 +6441,15 @@ window.closeToolsHub = function() {
     }
     document.body.style.overflow = '';
 };
-// ==========================================
-// SERVICES HUB ET IFRAME SERVICES (NOUVEAU)
-// ==========================================
 
-// 1. Fonctions pour ouvrir et fermer la vitre (Iframe)
-window.openServiceIframe = function(url, title) {
-    const iframe = document.getElementById('serviceIframe');
-    const titleSpan = document.getElementById('serviceIframeTitle');
-    const overlay = document.getElementById('serviceIframeOverlay');
-    
-    if (iframe && overlay) {
-        titleSpan.innerText = title;
-        iframe.src = url;
-        overlay.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-};
-
-window.closeServiceIframe = function() {
-    const iframe = document.getElementById('serviceIframe');
-    const overlay = document.getElementById('serviceIframeOverlay');
-    
-    if (iframe && overlay) {
-        overlay.classList.add('hidden');
-        iframe.src = ""; 
-        
-        const servicesOverlay = document.getElementById('servicesOverlay');
-        if (!servicesOverlay || servicesOverlay.classList.contains('hidden')) {
-            document.body.style.overflow = '';
-        }
-    }
-};
-
-// 2. Fonction pour charger tes sites depuis Firebase
-window.loadServicesHubData = async function() {
-    const grid = document.getElementById('servicesGridCards'); // Cible la bonne div !
-    const emptyState = document.getElementById('servicesEmpty');
-    if (!grid) return;
-
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:0.85rem;font-family:monospace;">SYNCHRONISATION...</div>`;
-    if (emptyState) emptyState.style.display = 'none'; // Cache ton message "En chargement"
-
-    try {
-        const snapshot = await db.collection('services').get();
-        grid.innerHTML = ''; 
-
-        if (snapshot.empty) {
-            if (emptyState) emptyState.style.display = 'flex'; // Remet le message s'il n'y a rien
-            return;
-        }
-
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const card = document.createElement('div');
-            
-            // On réutilise tes classes CSS de cartes pour un design parfait
-            card.className = 'tool-card'; 
-            card.style.cursor = 'pointer';
-            
-            card.onclick = () => window.openServiceIframe(data.url, data.name);
-            
-            card.innerHTML = `
-                <div class="tool-icon-wrap" style="background:rgba(168,85,247,0.1);color:#a855f7;border:1px solid rgba(168,85,247,0.2)">
-                    <i class="fa-solid ${data.icon || 'fa-layer-group'}"></i>
-                </div>
-                <div class="tool-info">
-                    <h3 style="color:#fff">${data.name}</h3>
-                    <p>${data.description || ''}</p>
-                </div>
-                <div class="tool-arrow">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-    } catch (error) {
-        console.error("Erreur Firebase Services:", error);
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;font-size:0.82rem;font-family:monospace;">ÉCHEC DE LA SYNCHRONISATION.</div>`;
-    }
-};
-
-// 3. Tes fonctions d'ouverture du menu (Mises à jour)
+// SERVICES HUB — OPEN / CLOSE
 window.openServicesHub = function() {
     const ov = document.getElementById('servicesOverlay');
     if (!ov) return;
     ov.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-    
-    // Déclenche Firebase !
-    window.loadServicesHubData();
+    window._loadServicesHub && window._loadServicesHub();
 };
-
 window.closeServicesHub = function() {
     const ov = document.getElementById('servicesOverlay');
     if (ov) ov.classList.add('hidden');
@@ -8785,19 +8612,6 @@ window.addEventListener('scroll', function() {
         }
     }
 });
-<script>
-<div id="serviceIframeOverlay" class="hidden" style="position:fixed;inset:0;background:#050505;z-index:999999;display:flex;flex-direction:column;animation:cIn 0.35s ease;">
-    <div style="height:65px;background:#050505;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;">
-        <h2 style="font-size:1.05rem;color:#fff;margin:0;display:flex;align-items:center;gap:12px;font-weight:600;">
-            <i class="fa-solid fa-layer-group" style="color:#a855f7;"></i> 
-            <span id="serviceIframeTitle">Service</span>
-        </h2>
-        <button onclick="closeServiceIframe()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#fff;width:36px;height:36px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-    </div>
-    <iframe id="serviceIframe" src="" style="flex:1;width:100%;border:none;background:#050505;" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"></iframe>
-</div>
 </script>
 </body>
 </html>
