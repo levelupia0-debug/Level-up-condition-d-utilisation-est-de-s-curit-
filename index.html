@@ -2798,10 +2798,33 @@ async function loadServicesHubData() {
     const grid = document.getElementById('servicesGrid');
     if (!grid) return;
 
+    // 1. VÉRIFICATION DE LA SÉCURITÉ (L'utilisateur est-il connecté ?)
+    // Assure-toi que "firebase.auth().currentUser" ou "auth.currentUser" correspond à ton initialisation Firebase
+    const user = firebase.auth().currentUser; 
+    
+    if (!user) {
+        // Design d'accès refusé (Pro et épuré)
+        grid.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:50px 20px;">
+                <i class="fa-solid fa-lock" style="color:#a855f7;font-size:2rem;margin-bottom:15px;opacity:0.8;"></i>
+                <h3 style="color:#fff;font-size:1.1rem;margin:0 0 8px 0;">Accès Protégé</h3>
+                <p style="color:var(--muted);font-size:0.85rem;line-height:1.5;margin-bottom:20px;">
+                    Vous devez être connecté à l'écosystème pour consulter les services disponibles.
+                </p>
+                <button onclick="closeServicesHub(); openAuth('login');" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.4);color:#c084fc;padding:10px 20px;border-radius:12px;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;">
+                    Se connecter
+                </button>
+            </div>
+        `;
+        return; // On arrête le code ici, on ne dérange pas Firebase !
+    }
+
+    // 2. SI L'UTILISATEUR EST CONNECTÉ, ON LANCE LA SYNCHRONISATION
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:0.85rem;font-family:monospace;">SYNCHRONISATION...</div>`;
 
     try {
-        const snapshot = await db.collection('services').get();
+        // Ton chemin ultra sécurisé
+        const snapshot = await db.collection('artifacts/levelup-ecosystem/public/data/services').get();
         grid.innerHTML = ''; 
 
         if (snapshot.empty) {
@@ -2832,7 +2855,7 @@ async function loadServicesHubData() {
         });
     } catch (error) {
         console.error("Erreur Firebase Services:", error);
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;font-size:0.82rem;font-family:monospace;">ÉCHEC DE LA SYNCHRONISATION.</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;font-size:0.82rem;font-family:monospace;">ÉCHEC DE LA SYNCHRONISATION. VÉRIFIEZ VOS DROITS.</div>`;
     }
 }
 </script>
