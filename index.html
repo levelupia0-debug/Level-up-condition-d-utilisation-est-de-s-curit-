@@ -3968,9 +3968,9 @@ await window._loadToolsHub(db, doc, getDoc);
 // ── MEDIA HUB (charge les iframes depuis Firebase) ──
 await window._loadMediaHub(db, doc, getDoc);
 
-// ── IA APPS HUB (charge les apps IA depuis Firebase) ──
-await window._loadIAApps(db, doc, getDoc);
-
+/// ── SERVICES HUB (charge les services depuis Firebase) ──
+await window._loadServicesHub(db, doc, getDoc);
+    
 // Mise à jour de la barre de navigation si on modifie la base de données
 if (!window._user && typeof renderNavGuest === 'function') {
 renderNavGuest();
@@ -6462,88 +6462,122 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// SERVICES HUB LOADER — lit depuis Firestore artifacts/levelup-ecosystem/public/data/services
-window._loadServicesHub = function() {
-    const grid = document.getElementById('servicesGridCards'); // overlay
-    const svcCardsGrid = document.getElementById('svcCardsGrid'); // dashboard panel
+// ========================================================================
+// SERVICES HUB LOADER — Même système que les Outils (Fenêtre intelligente)
+// ========================================================================
+window._loadServicesHub = async function() {
+    const gridOverlay = document.getElementById('servicesGridCards'); // overlay
+    const gridPanel = document.getElementById('svcCardsGrid'); // dashboard panel
+    const emptyOverlay = document.getElementById('servicesEmpty');
+    const emptyPanel = document.getElementById('servicesPanelEmpty');
+
     if (!window._db) return;
     if (window._servicesLoaded) return;
     window._servicesLoaded = true;
-    const { doc, getDoc, onSnapshot, collection } = window._fb || {};
+    
+    const { doc, getDoc } = window._fb || {};
     if (!doc || !getDoc) return;
 
-    function _buildSvcCard(svc, onClick) {
-        const lang = localStorage.getItem('lvl_lang') || 'fr';
-        const title = (lang === 'en' && svc.title_en) ? svc.title_en : (svc.title || svc.name || 'Service');
-        const desc = (lang === 'en' && svc.desc_en) ? svc.desc_en : (svc.desc || svc.description || '');
-        const price = svc.price || svc.prix || '';
-        const imageUrl = svc.image || svc.photo || '';
+    try {
+        // ON UTILISE LA NOUVELLE ROUTE : config > services_hub (comme tools_hub)
+        const ref = doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'config', 'services_hub');
+        const snap = await getDoc(ref);
+        
+        if (gridOverlay) gridOverlay.innerHTML = '';
+        if (gridPanel) gridPanel.innerHTML = '';
 
-        const card = document.createElement('div');
-        card.className = 'svc-card';
-        card.innerHTML = `
-            <button class="card-img-upload-btn" title="Changer l'image"><i class="fa-solid fa-camera"></i></button>
-            ${imageUrl
-                ? `<img class="svc-card-img" src="${imageUrl}" alt="${title}" loading="lazy" onerror="this.parentElement.querySelector('.svc-card-img-placeholder').style.display='flex';this.style.display='none'">`
-                : ''}
-            <div class="svc-card-img-placeholder" style="${imageUrl ? 'display:none' : ''}">
-                <i class="fa-solid fa-globe" style="font-size:2rem;color:rgba(249,115,22,.4)"></i>
-            </div>
-            <div class="svc-card-body">
-                <div class="svc-card-title">${title}</div>
-                ${desc ? `<div class="svc-card-desc">${desc}</div>` : ''}
-                ${price ? `<div class="svc-card-price"><i class="fa-solid fa-tag" style="font-size:.6rem"></i>${price}</div>` : ''}
-                <button class="svc-card-open" onclick="event.stopPropagation()">
-                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.72rem"></i> Ouvrir
-                </button>
-            </div>`;
-        card.addEventListener('click', onClick);
-        card.querySelector('.svc-card-open').addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
-        // Wiring upload button (index passé via data dans les appelants)
-        card.querySelector('.card-img-upload-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = card.dataset.svcIdx !== undefined ? parseInt(card.dataset.svcIdx) : null;
-            window._openCardImageUpload({ type: 'service', key: idx !== null ? String(idx) : null, card });
-        });
-        return card;
-    }
-
-    // Chemin DOCUMENT valide (segments pairs) : 'data' contient un champ 'services' ou 'list'
-    getDoc(doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data'))
-    .then(snap => {
-        let items = [];
-        if (snap.exists()) {
-            const data = snap.data() || {};
-            if (Array.isArray(data.list)) items = data.list;
-            else if (Array.isArray(data.services)) items = data.services;
-            else {
-                for (let i = 1; i <= 50; i++) {
-                    const k = data['service_' + i] || data['service' + i];
-                    if (k && typeof k === 'object') items.push(k);
-                }
-            }
+        if (!snap.exists()) {
+            if(emptyOverlay) emptyOverlay.style.display='';
+            if(emptyPanel) emptyPanel.style.display='';
+            return;
         }
-        items = items.filter(s => s && s.url && (s.active !== false));
 
-        // Vider les grilles
-        if (grid) { grid._loaded = true; const em = document.getElementById('servicesEmpty'); if (em) em.style.display = items.length ? 'none' : ''; }
-        const pEmpty = document.getElementById('servicesPanelEmpty');
-        if (pEmpty) pEmpty.style.display = items.length ? 'none' : '';
+        const data = snap.data();
+        const allServices = [];
+        const seenKeys = new Set();
 
-        items.forEach((svc, idx) => {
-            const openFn = () => window.openServiceIframe && window.openServiceIframe(svc.url, svc.title || svc.name || 'Service');
-            const c1 = _buildSvcCard(svc, openFn); c1.dataset.svcIdx = String(idx);
-            const c2 = _buildSvcCard(svc, openFn); c2.dataset.svcIdx = String(idx);
-            if (grid) grid.insertBefore(c1, grid.firstChild);
-            if (svcCardsGrid) svcCardsGrid.appendChild(c2);
+        // Cherche service_1, service_2... exactement comme tool_1
+        for (let i = 1; i <= 50; i++) {
+            [`service_${i}`, `service${i}`, `services_${i}`, `services${i}`].forEach(k => {
+                if (!seenKeys.has(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].url || data[k].name)) {
+                    seenKeys.add(k);
+                    allServices.push(data[k]);
+                }
+            });
+        }
+
+        if (allServices.length === 0) {
+            if(emptyOverlay) emptyOverlay.style.display='';
+            if(emptyPanel) emptyPanel.style.display='';
+            return;
+        }
+
+        if(emptyOverlay) emptyOverlay.style.display = 'none';
+        if(emptyPanel) emptyPanel.style.display = 'none';
+
+        allServices.forEach((svc, idx) => {
+            const lang = localStorage.getItem('lvl_lang') || 'fr';
+            const title = (lang === 'en' && svc.title_en) ? svc.title_en : (svc.title || svc.name || 'Service');
+            const desc = (lang === 'en' && svc.desc_en) ? svc.desc_en : (svc.desc || svc.description || '');
+            const price = svc.price || svc.prix || '';
+            const imageUrl = svc.image || svc.photo || svc.logo_url || '';
+            const url = svc.url || '';
+            const urlEsc = url.replace(/"/g,'&quot;');
+            const titleEsc = title.replace(/"/g,'&quot;');
+            const svcKey = svc.key || svc.id || String(idx);
+
+            const cardHtml = `
+                <button class="card-img-upload-btn" title="Changer l'image" onclick="event.stopPropagation();window._openCardImageUpload({type:'service',key:'${svcKey}',card:this.parentElement})"><i class="fa-solid fa-camera"></i></button>
+                ${imageUrl
+                    ? `<img class="svc-card-img" src="${imageUrl.replace(/"/g,'&quot;')}" alt="${titleEsc}" loading="lazy" onerror="this.parentElement.querySelector('.svc-card-img-placeholder').style.display='flex';this.style.display='none'">`
+                    : ''}
+                <div class="svc-card-img-placeholder" style="${imageUrl ? 'display:none' : ''}">
+                    <img src="/image_ebd009.png" style="width:60px; height:60px; object-fit:contain; opacity:0.9;" alt="LevelUp Service">
+                </div>
+                <div class="svc-card-body">
+                    <div class="svc-card-title">${title}</div>
+                    ${desc ? `<div class="svc-card-desc">${desc}</div>` : ''}
+                    ${price ? `<div class="svc-card-price"><i class="fa-solid fa-tag" style="font-size:.6rem"></i>${price}</div>` : ''}
+                    <button class="svc-card-open" onclick="event.stopPropagation(); window.closeServicesHub(); window.openToolWindow('${urlEsc}', '${titleEsc}')">
+                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.72rem"></i> Ouvrir
+                    </button>
+                </div>`;
+
+            // ACTION AU CLIC : Ouvre dans la même fenêtre intelligente que les Outils !
+            const actionClick = () => { 
+                if (typeof window.closeServicesHub === 'function') window.closeServicesHub(); 
+                window.openToolWindow(url, title); 
+            };
+
+            // Ajout dans l'Overlay
+            if (gridOverlay) {
+                const card1 = document.createElement('div');
+                card1.className = 'svc-card';
+                card1.innerHTML = cardHtml;
+                card1.onclick = actionClick;
+                gridOverlay.appendChild(card1);
+            }
+            
+            // Ajout dans le Panel Dashboard
+            if (gridPanel) {
+                const card2 = document.createElement('div');
+                card2.className = 'svc-card';
+                card2.innerHTML = cardHtml;
+                card2.onclick = actionClick;
+                gridPanel.appendChild(card2);
+            }
         });
-    }).catch(() => { window._servicesLoaded = false; });
+
+    } catch(e) { 
+        console.warn('Services Hub Firebase:', e); 
+        window._servicesLoaded = false;
+    }
 };
 
-// Ouvre un service dans un iframe plein écran avec bouton fermer
+// Fonction de compatibilité si un autre bout de code appelle encore l'ancienne iframe
 window.openServiceIframe = function(url, title) {
     if (!url) return;
-    window.openToolFullscreen(url, title);
+    window.openToolWindow(url, title);
 };
 
 // ── Ouvre le panneau notifications depuis le FAB ──
