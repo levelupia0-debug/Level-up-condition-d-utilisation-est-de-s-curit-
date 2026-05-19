@@ -3977,7 +3977,7 @@ renderNavGuest();
 }
 };
 
-// ── FONCTION TOOLS HUB (charge les outils depuis Firebase) ──
+// ── FONCTION TOOLS HUB (Design original compact + Détection intelligente SVG & Cartes) ──
 window._loadToolsHub = async function(db, doc, getDoc) {
     try {
         const ref = doc(db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'tools_hub');
@@ -3988,44 +3988,55 @@ window._loadToolsHub = async function(db, doc, getDoc) {
         const panelEmpty = document.getElementById('toolsPanelEmpty');
         if (!grid) return;
         Array.from(grid.children).forEach(c => { if(c.id !== 'toolsEmpty') c.remove(); });
+        
         if (!snap.exists()) {
             if(emptyEl) emptyEl.style.display='';
             if(panelEmpty) panelEmpty.style.display='';
             return;
         }
+        
         const data = snap.data();
-        // Collect all active tools — supports tool_1..tool_50, tool1..tool50, tools_1..tools_50, and array field
         const allTools = [];
         const seenKeys = new Set();
-        // 1. Indexed fields tool_1 → tool_50
-        for (let i = 1; i <= 50; i++) {
-            [`tool_${i}`, `tool${i}`, `tools_${i}`, `tools${i}`].forEach(k => {
-                if (!seenKeys.has(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].url)) {
+        
+        // 1. On cherche tes outils de 1 à 100 pour garder un bel ordre
+        for (let i = 1; i <= 100; i++) {
+            [`tool_${i}`, `tool${i}`, `tools_${i}`, `tools${i}`, `outil_${i}`, `app_${i}`].forEach(k => {
+                // On vérifie qu'il a un titre ou un nom pour être valide
+                if (!seenKeys.has(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].name)) {
                     seenKeys.add(k);
                     allTools.push(data[k]);
                 }
             });
         }
-        // 2. Any other object fields that look like a tool and weren't indexed
+        
+        // 2. SÉCURITÉ ABSOLUE : S'il y a d'autres cartes avec un nom bizarre, on les attrape toutes !
         Object.keys(data).forEach(k => {
-            if (!seenKeys.has(k) && /^tools?/i.test(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].url)) {
+            const item = data[k];
+            if (!seenKeys.has(k) && item && typeof item === 'object' && !Array.isArray(item) && item.active !== false && (item.title || item.name)) {
                 seenKeys.add(k);
-                allTools.push(data[k]);
+                allTools.push(item);
             }
         });
-        // 3. Array field (e.g. field named "tools": [...])
-        if (Array.isArray(data.tools)) {
-            data.tools.forEach((t, i) => {
-                if (t && typeof t === 'object' && t.active !== false && (t.title || t.url)) allTools.push(t);
-            });
-        }
+        
+        // 3. Si tu les as mis dans un tableau
+        ['tools', 'list', 'outils'].forEach(arrKey => {
+            if (Array.isArray(data[arrKey])) {
+                data[arrKey].forEach((t) => {
+                    if (t && typeof t === 'object' && t.active !== false && (t.title || t.name)) allTools.push(t);
+                });
+            }
+        });
+        
         if (allTools.length === 0) {
             if(emptyEl) emptyEl.style.display='';
             if(panelEmpty) panelEmpty.style.display='';
             return;
         }
+        
         if(emptyEl) emptyEl.style.display = 'none';
         if(panelEmpty) panelEmpty.style.display = 'none';
+        
         const GUEST_USE_LIMIT = 3;
         const DESC_LIMIT = 80;
         const _lang = (function(){ try { return localStorage.getItem('lvl_lang') || 'en'; } catch(e) { return 'en'; } })();
@@ -4039,27 +4050,33 @@ window._loadToolsHub = async function(db, doc, getDoc) {
             },
             signIn: _lang === 'fr' ? '<i class="fa-solid fa-arrow-right-to-bracket"></i> Se connecter' : '<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign in'
         };
-        // Tous les outils sont VISIBLES — la limite s'applique uniquement à l'OUVERTURE
-        allTools.forEach(tool => {
+        
+        allTools.forEach((tool, idx) => {
             const card = document.createElement('div');
             card.className = 'tool-card';
-            const icon = tool.icon || 'fa-globe';
-            const iconHtml = tool.icon_html || null;
-            const logoUrl = tool.logo_url || tool.logo || null;
-            const logoCode = tool.logo_code || null;
-            const name = tool.title || 'Outil';
-            const desc = tool.description || '';
+            
+            const name = tool.title || tool.name || 'Outil';
+            const desc = tool.description || tool.desc || '';
             const url = tool.url || tool.code || '';
             const urlEsc = url.replace(/"/g,'&quot;');
             const nameEsc = name.replace(/"/g,'&quot;');
+            
+            const icon = tool.icon || 'fa-wrench';
+            const iconHtml = tool.icon_html || null;
+            let logoUrl = tool.logo_url || tool.logo || null;
+            let logoCode = tool.logo_code || tool.svg || null;
 
-            // Icône : supporte logo_code (SVG/HTML inline) ET/OU logo_url (image), icon_html, ou Font Awesome
+            // 🚨 LA MAGIE ANTI-BUG ICI :
+            // Si tu as collé du <svg> par erreur dans logo_url, on le détecte et on le corrige !
+            if (logoUrl && (logoUrl.trim().startsWith('<svg') || logoUrl.trim().startsWith('<i'))) {
+                logoCode = logoUrl; // On transfère le code SVG au bon endroit
+                logoUrl = null; // On vide l'URL pour ne pas casser l'image
+            }
+
             let icoInner = '';
-            if (logoCode && logoUrl) {
-                // Les deux : code inline + image URL affichés ensemble
-                icoInner = `<span style="display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;height:100%;justify-content:center">${logoCode}<img src="${logoUrl.replace(/"/g,'&quot;')}" style="max-width:100%;max-height:50%;object-fit:contain;border-radius:3px" onerror="this.style.display='none'" loading="lazy"></span>`;
-            } else if (logoCode) {
-                icoInner = logoCode;
+            if (logoCode) {
+                // S'il y a du code SVG, on le teinte de ton magnifique violet !
+                icoInner = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#a855f7;fill:currentColor;">${logoCode}</div>`;
             } else if (logoUrl) {
                 icoInner = `<img src="${logoUrl.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:contain;border-radius:6px" onerror="this.style.display='none'" loading="lazy">`;
             } else if (iconHtml) {
@@ -4068,7 +4085,6 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                 icoInner = `<i class="fa-solid ${icon}"></i>`;
             }
 
-            // Description tronquée avec "voir plus"
             let descHtml = '';
             if (desc) {
                 if (desc.length > DESC_LIMIT) {
@@ -4080,7 +4096,7 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                 }
             }
 
-            const toolKey = tool.key || tool.id || null;
+            const toolKey = tool.key || tool.id || String(idx);
             card.innerHTML = `
                 ${toolKey ? `<button class="card-img-upload-btn" title="Changer l'image" onclick="event.stopPropagation();window._openCardImageUpload({type:'tool',key:'${toolKey}',card:null})"><i class="fa-solid fa-camera"></i></button>` : ''}
                 <div class="tool-card-body">
@@ -4094,6 +4110,7 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                     </button>
                 </div>
             `;
+            
             if (toolKey) {
                 const uploadBtn = card.querySelector('.card-img-upload-btn');
                 if (uploadBtn) uploadBtn.addEventListener('click', (e) => {
@@ -4104,7 +4121,8 @@ window._loadToolsHub = async function(db, doc, getDoc) {
 
             grid.appendChild(card);
         });
-        // Afficher le compteur d'usages gratuits restants si l'utilisateur n'est pas connecté
+        
+        // Afficher le compteur d'usages gratuits restants
         if (!window._user) {
             const todayKey = `lvl_tools_used_${new Date().toDateString()}`;
             const usedToday = parseInt(localStorage.getItem(todayKey) || '0', 10);
@@ -4130,11 +4148,11 @@ window._loadToolsHub = async function(db, doc, getDoc) {
         if (panelGrid) {
             Array.from(panelGrid.children).forEach(c => { if(c.id !== 'toolsPanelEmpty') c.remove(); });
             Array.from(grid.children).forEach(c => {
-                if(c.id !== 'toolsEmpty') panelGrid.appendChild(c.cloneNode(true));
+                if(c.id !== 'toolsEmpty' && c.id !== 'toolsGuestBanner') panelGrid.appendChild(c.cloneNode(true));
             });
         }
 
-        // ── BADGE NOUVEAUX OUTILS ──
+        // Notifications de Nouveaux outils
         try {
             const lastSeen = parseInt(localStorage.getItem('lvl_tools_seen_at') || '0', 10);
             const newTools = allTools.filter(t => {
@@ -4150,7 +4168,6 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                 if (badge1) badge1.classList.remove('hidden');
                 if (badge2) badge2.classList.remove('hidden');
 
-                // Email de notification (1 seul groupé)
                 if (window._user && window.getNotifPref && window.getNotifPref('tools')) {
                     const alreadyNotified = localStorage.getItem('lvl_tools_notified_set') || '';
                     const newUnseen = newTools.filter(t => !alreadyNotified.includes(t.title || ''));
