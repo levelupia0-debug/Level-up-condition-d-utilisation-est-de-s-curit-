@@ -4060,9 +4060,14 @@ window._loadToolsHub = async function(db, doc, getDoc) {
             }
 
             let icoInner = '';
-            if (logoCode) {
-                // On affiche le SVG proprement sans casser le HTML
-                icoInner = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#a855f7;fill:currentColor;">${logoCode}</div>`;
+         if (logoCode) {
+                // On force la taille du SVG et on supporte à la fois le remplissage (fill) et les contours (stroke) !
+                icoInner = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#a855f7;fill:currentColor;stroke:currentColor;">
+                    <style>
+                        .tool-card-ico svg { width: 100%; height: 100%; object-fit: contain; }
+                    </style>
+                    ${logoCode}
+                </div>`;
             } else if (logoUrl) {
                 icoInner = `<img src="${logoUrl.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:contain;border-radius:6px" onerror="this.style.display='none'" loading="lazy">`;
             } else if (tool.icon_html) {
@@ -6404,16 +6409,15 @@ document.addEventListener('click', function(e) {
 });
 
 // ========================================================================
-// SERVICES HUB LOADER — Même système que les Outils (Fenêtre intelligente)
+// SERVICES HUB LOADER — Design 2 Colonnes, Hauteur Égale, Voir Plus & Pop-up
 // ========================================================================
 window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
-    // Synchronisation exacte avec les variables Firebase
     const _db = dbParam || window._db;
     const _doc = docParam || window._fb?.doc;
     const _getDoc = getDocParam || window._fb?.getDoc;
 
-    const gridOverlay = document.getElementById('servicesGridCards'); // overlay
-    const gridPanel = document.getElementById('svcCardsGrid'); // dashboard panel
+    const gridOverlay = document.getElementById('servicesGridCards');
+    const gridPanel = document.getElementById('svcCardsGrid');
     const emptyOverlay = document.getElementById('servicesEmpty');
     const emptyPanel = document.getElementById('servicesPanelEmpty');
 
@@ -6422,12 +6426,13 @@ window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
     window._servicesLoaded = true;
 
     try {
-        // 🚨 LA CORRECTION EST ICI : On utilise "level-ia-premium" exactement comme tools_hub !
         const ref = _doc(_db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'services_hub');
         const snap = await _getDoc(ref);
         
-        if (gridOverlay) gridOverlay.innerHTML = '';
-        if (gridPanel) gridPanel.innerHTML = '';
+        // 🚨 MAGIE 1 : FORCER LE DESIGN "DEUX PAR DEUX" ET HAUTEUR ÉGALE
+        const gridStyle = "display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-items: stretch;";
+        if (gridOverlay) { gridOverlay.innerHTML = ''; gridOverlay.style.cssText = gridStyle; }
+        if (gridPanel) { gridPanel.innerHTML = ''; gridPanel.style.cssText = gridStyle; }
 
         if (!snap.exists()) {
             if(emptyOverlay) emptyOverlay.style.display='';
@@ -6439,7 +6444,6 @@ window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
         const allServices = [];
         const seenKeys = new Set();
 
-        // Cherche service_1, service_2...
         for (let i = 1; i <= 50; i++) {
             [`service_${i}`, `service${i}`, `services_${i}`, `services${i}`].forEach(k => {
                 if (!seenKeys.has(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].url || data[k].name)) {
@@ -6449,7 +6453,6 @@ window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
             });
         }
         
-        // Cherche tout autre champ qui commence par "service"
         Object.keys(data).forEach(k => {
             if (!seenKeys.has(k) && /^services?/i.test(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].url || data[k].name)) {
                 seenKeys.add(k);
@@ -6466,10 +6469,16 @@ window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
         if(emptyOverlay) emptyOverlay.style.display = 'none';
         if(emptyPanel) emptyPanel.style.display = 'none';
 
+        const DESC_LIMIT = 80; // Limite de caractères avant d'afficher "Voir plus"
+        const _lang = (function(){ try { return localStorage.getItem('lvl_lang') || 'fr'; } catch(e) { return 'fr'; } })();
+        const _tx = {
+            seeMore: _lang === 'fr' ? 'Voir plus' : 'See more',
+            open:    _lang === 'fr' ? 'Ouvrir' : 'Open'
+        };
+
         allServices.forEach((svc, idx) => {
-            const lang = localStorage.getItem('lvl_lang') || 'fr';
-            const title = (lang === 'en' && svc.title_en) ? svc.title_en : (svc.title || svc.name || 'Service');
-            const desc = (lang === 'en' && svc.desc_en) ? svc.desc_en : (svc.desc || svc.description || '');
+            const title = (_lang === 'en' && svc.title_en) ? svc.title_en : (svc.title || svc.name || 'Service');
+            const desc = (_lang === 'en' && svc.desc_en) ? svc.desc_en : (svc.desc || svc.description || '');
             const price = svc.price || svc.prix || '';
             const imageUrl = svc.image || svc.photo || svc.logo_url || '';
             const url = svc.url || '';
@@ -6477,42 +6486,63 @@ window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
             const titleEsc = title.replace(/"/g,'&quot;');
             const svcKey = svc.key || svc.id || String(idx);
 
+            // 🚨 MAGIE 2 : GESTION DU BOUTON VOIR PLUS (Qui ouvre le même pop-up que les outils)
+            let descHtml = '';
+            if (desc) {
+                if (desc.length > DESC_LIMIT) {
+                    const short = desc.substring(0, DESC_LIMIT);
+                    const full = desc.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+                    // Ce bouton ferme la grille des services, puis ouvre le beau pop-up !
+                    descHtml = `<div class="svc-card-desc" style="font-size:0.78rem; color:var(--muted); line-height:1.4; margin:0; flex-grow:1;">${short}… <button data-full="${full}" data-name="${titleEsc}" data-url="${urlEsc}" onclick="event.stopPropagation(); if(typeof window.closeServicesHub === 'function') window.closeServicesHub(); window._showToolDesc(this.dataset.name,this.dataset.full,this.dataset.url)" style="background:none;border:none;color:#a855f7;padding:0;font-size:inherit;cursor:pointer;text-decoration:underline;">${_tx.seeMore}</button></div>`;
+                } else {
+                    descHtml = `<div class="svc-card-desc" style="font-size:0.78rem; color:var(--muted); line-height:1.4; margin:0; flex-grow:1;">${desc}</div>`;
+                }
+            }
+
+            // 🚨 MAGIE 3 : CARTE HAUTEUR 100% ET FLEX POUR ALIGNER LES BOUTONS EN BAS
             const cardHtml = `
-                <button class="card-img-upload-btn" title="Changer l'image" onclick="event.stopPropagation();window._openCardImageUpload({type:'service',key:'${svcKey}',card:this.parentElement})"><i class="fa-solid fa-camera"></i></button>
-                ${imageUrl
-                    ? `<img class="svc-card-img" src="${imageUrl.replace(/"/g,'&quot;')}" alt="${titleEsc}" loading="lazy" onerror="this.parentElement.querySelector('.svc-card-img-placeholder').style.display='flex';this.style.display='none'">`
-                    : ''}
-                <div class="svc-card-img-placeholder" style="${imageUrl ? 'display:none' : ''}">
-                    <img src="/image_ebd009.png" style="width:60px; height:60px; object-fit:contain; opacity:0.9;" alt="LevelUp Service">
-                </div>
-                <div class="svc-card-body">
-                    <div class="svc-card-title">${title}</div>
-                    ${desc ? `<div class="svc-card-desc">${desc}</div>` : ''}
-                    ${price ? `<div class="svc-card-price"><i class="fa-solid fa-tag" style="font-size:.6rem"></i>${price}</div>` : ''}
-                    <button class="svc-card-open" onclick="event.stopPropagation(); window.closeServicesHub(); window.openToolWindow('${urlEsc}', '${titleEsc}')">
-                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.72rem"></i> Ouvrir
-                    </button>
+                <div style="height:100%; display:flex; flex-direction:column; position:relative; width:100%;">
+                    <button class="card-img-upload-btn" title="Changer l'image" onclick="event.stopPropagation();window._openCardImageUpload({type:'service',key:'${svcKey}',card:this.parentElement.parentElement})"><i class="fa-solid fa-camera"></i></button>
+                    
+                    ${imageUrl
+                        ? `<img class="svc-card-img" src="${imageUrl.replace(/"/g,'&quot;')}" alt="${titleEsc}" loading="lazy" style="width:100%; height:100px; object-fit:cover;" onerror="this.parentElement.querySelector('.svc-card-img-placeholder').style.display='flex';this.style.display='none'">`
+                        : ''}
+                        
+                    <div class="svc-card-img-placeholder" style="${imageUrl ? 'display:none;' : ''} height:100px; background:rgba(168,85,247,0.02); display:flex; align-items:center; justify-content:center; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <img src="/image_ebd009.png" style="width:50px; height:50px; object-fit:contain; opacity:0.9;" alt="LevelUp Service">
+                    </div>
+                    
+                    <div class="svc-card-body" style="padding:12px; display:flex; flex-direction:column; gap:8px; flex-grow:1;">
+                        <div class="svc-card-title" style="font-size:0.92rem; color:#fff; font-weight:600; margin:0;">${title}</div>
+                        
+                        ${descHtml}
+                        
+                        ${price ? `<div class="svc-card-price" style="font-size:0.75rem; color:#22c55e; font-weight:600;"><i class="fa-solid fa-tag" style="margin-right:4px;"></i>${price}</div>` : ''}
+                        
+                        <button class="svc-card-open" style="margin-top:auto;" onclick="event.stopPropagation(); if(typeof window.closeServicesHub === 'function') window.closeServicesHub(); window.openToolWindow('${urlEsc}', '${titleEsc}')">
+                            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.72rem"></i> ${_tx.open}
+                        </button>
+                    </div>
                 </div>`;
 
-            // ACTION AU CLIC : Ouvre dans la même fenêtre intelligente que les Outils !
             const actionClick = () => { 
                 if (typeof window.closeServicesHub === 'function') window.closeServicesHub(); 
                 window.openToolWindow(url, title); 
             };
 
-            // Ajout dans l'Overlay
             if (gridOverlay) {
                 const card1 = document.createElement('div');
                 card1.className = 'svc-card';
+                card1.style.cssText = "height: 100%; display: flex; flex-direction: column; overflow: hidden; padding: 0;";
                 card1.innerHTML = cardHtml;
                 card1.onclick = actionClick;
                 gridOverlay.appendChild(card1);
             }
             
-            // Ajout dans le Panel Dashboard
             if (gridPanel) {
                 const card2 = document.createElement('div');
                 card2.className = 'svc-card';
+                card2.style.cssText = "height: 100%; display: flex; flex-direction: column; overflow: hidden; padding: 0;";
                 card2.innerHTML = cardHtml;
                 card2.onclick = actionClick;
                 gridPanel.appendChild(card2);
@@ -6525,13 +6555,6 @@ window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
     }
 };
 
-// Fonction de compatibilité si un autre bout de code appelle encore l'ancienne iframe
-window.openServiceIframe = function(url, title) {
-    if (!url) return;
-    window.openToolWindow(url, title);
-};
-    
-// Fonction de compatibilité si un autre bout de code appelle encore l'ancienne iframe
 window.openServiceIframe = function(url, title) {
     if (!url) return;
     window.openToolWindow(url, title);
