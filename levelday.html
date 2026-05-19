@@ -1,1132 +1,1167 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { initializeApp } from "firebase/app";
-import { getAuth, signInAnonymously } from "firebase/auth";
-
-// ==========================================
-// CONFIGURATION FIREBASE
-// (On garde Firebase pour l'auth, mais la clé API Météo est maintenant sécurisée sur Vercel)
-// ==========================================
-const firebaseConfig = {
-  apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-  authDomain: "levelup-ecosystem.com",
-  databaseURL: "https://levelup-ia-default-rtdb.firebaseio.com",
-  projectId: "levelup-ia",
-  storageBucket: "levelup-ia.firebasestorage.app",
-  messagingSenderId: "229420004282",
-  appId: "1:229420004282:web:6735f059a947f0936ae383",
-  measurementId: "G-MSRDY2574K"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// ==========================================
-// CONSTANTES METEO
-// ==========================================
-const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const MAX_REQUESTS = 5; // 🛑 Limite de requêtes par jour
-
-const AQI_MAP = {
-1:{l:"Excellent",c:"#34d399",bg:"rgba(52,211,153,0.12)"},
-2:{l:"Good",c:"#a3e635",bg:"rgba(163,230,53,0.12)"},
-3:{l:"Moderate",c:"#fbbf24",bg:"rgba(251,191,36,0.12)"},
-4:{l:"Poor",c:"#fb923c",bg:"rgba(251,146,60,0.12)"},
-5:{l:"Very Poor",c:"#f87171",bg:"rgba(248,113,113,0.12)"},
-6:{l:"Hazardous",c:"#e879f9",bg:"rgba(232,121,249,0.12)"},
-};
-
-const getBg = (code, isDay) => {
-if (!isDay) return { a:"#020408",b:"#050c1c",c:"#0b1635", type:"night" };
-if (code===1000) return { a:"#051535",b:"#0a2872",c:"#1040b8", type:"sunny" };
-if (code<=1009) return { a:"#090f1c",b:"#111e35",c:"#1c2f52", type:"cloudy" };
-if (code<=1030) return { a:"#0b1018",b:"#14202e",c:"#1e3040", type:"fog" };
-if (code===1087||code>=1273) return { a:"#030407",b:"#060810",c:"#0c1020", type:"storm" };
-if (code>=1135&&code<=1147) return { a:"#0c1118",b:"#141d2a",c:"#1e2c3e", type:"fog" };
-if ((code>=1150&&code<=1201)||(code>=1240&&code<=1264)) return { a:"#050c18",b:"#0c1830",c:"#142244", type:"rain" };
-if (code>=1204&&code<=1237) return { a:"#08101e",b:"#101e38",c:"#182e52", type:"snow" };
-return { a:"#050c18",b:"#0c1830",c:"#142244", type:"rain" };
-};
-
-// ── SVG ICON LIBRARY ──────────────────────────────────────────────────────────
-const Ico = ({ n, s=16, c="currentColor", op=1 }) => {
-const p = { width:s,height:s,viewBox:"0 0 24 24",fill:"none",stroke:c,strokeWidth:"1.8",strokeLinecap:"round",strokeLinejoin:"round",style:{opacity:op,flexShrink:0} };
-const f = { ...p, fill:c, stroke:"none" };
-const icons = {
-search: <svg {...p}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
-loc: <svg {...f}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>,
-wind: <svg {...p}><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>,
-drop: <svg {...p}><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>,
-eye: <svg {...p}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
-gauge: <svg {...p}><path d="M12 2v4M4.93 4.93l2.83 2.83M2 12h4M4.93 19.07l2.83-2.83M19.07 4.93l-2.83 2.83M22 12h-4"/><circle cx="12" cy="12" r="3"/></svg>,
-thermo: <svg {...p}><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>,
-uv: <svg {...p}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
-sunrise: <svg {...p}><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg>,
-sunset: <svg {...p}><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="16 5 12 9 8 5"/></svg>,
-moon: <svg {...f}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
-cloud: <svg {...p}><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>,
-alert: <svg {...p}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-dew: <svg {...p}><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>,
-snow: <svg {...p}><line x1="12" y1="2" x2="12" y2="22"/><path d="m20 10-8-8-8 8"/><path d="m20 14-8 8-8-8"/><line x1="2" y1="12" x2="22" y2="12"/></svg>,
-close: <svg {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-reload: <svg {...p}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-8.36"/></svg>,
-precip: <svg {...p}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg>,
-bell: <svg {...p}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
-lock: <svg {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-};
-return icons[n] || null;
-};
-
-// ── MOON PHASE SVG ────────────────────────────────────────────────────────────
-const MoonPhase = ({ phase, illumination, size = 32 }) => {
-const r = size / 2 - 2;
-const cx = size / 2, cy = size / 2;
-const isNew = phase === "New Moon";
-const isFull = phase === "Full Moon";
-const isFirstQ = phase === "First Quarter";
-const isLastQ = phase === "Last Quarter";
-const isWaxing = phase?.includes("Waxing");
-
-if (isNew) return (
-<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-<circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.25)" strokeWidth="1"/>
-</svg>
-);
-if (isFull) return (
-<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-<circle cx={cx} cy={cy} r={r} fill="rgba(255,235,170,0.9)"/>
-<circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,220,100,0.6)" strokeWidth="1"/>
-</svg>
-);
-if (isFirstQ) return (
-<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-<circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5"/>
-<path d={`M ${cx} ${cy-r} A ${r} ${r} 0 0 1 ${cx} ${cy+r} Z`} fill="rgba(255,235,170,0.9)"/>
-</svg>
-);
-if (isLastQ) return (
-<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-<circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5"/>
-<path d={`M ${cx} ${cy-r} A ${r} ${r} 0 0 0 ${cx} ${cy+r} Z`} fill="rgba(255,235,170,0.9)"/>
-</svg>
-);
-const ellRx = Math.abs(r * (1 - (illumination||50)/50));
-if (isWaxing) return (
-<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-<circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5"/>
-<clipPath id="mc1"><circle cx={cx} cy={cy} r={r}/></clipPath>
-<g clipPath="url(#mc1)">
-<ellipse cx={cx} cy={cy} rx={r} ry={r} fill="rgba(255,235,170,0.9)"/>
-<ellipse cx={cx} cy={cy} rx={ellRx||4} ry={r} fill="rgba(255,255,255,0.04)"/>
-</g>
-</svg>
-);
-return (
-<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-<circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5"/>
-<clipPath id="mc2"><circle cx={cx} cy={cy} r={r}/></clipPath>
-<g clipPath="url(#mc2)">
-<ellipse cx={cx} cy={cy} rx={r} ry={r} fill="rgba(255,235,170,0.9)"/>
-<ellipse cx={cx} cy={cy} rx={ellRx||4} ry={r} fill="rgba(5,15,40,0.95)"/>
-</g>
-</svg>
-);
-};
-
-// ── BACKGROUND PARTICLES ─────────────────────────────────────────────────────
-const Particles = ({ type }) => {
-const count = type==="rain"||type==="storm" ? 55 : type==="snow" ? 40 : type==="night" ? 90 : 0;
-if (!count) return null;
-return (
-<div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
-{Array.from({length:count}).map((_,i)=>{
-const x = Math.random()*100, delay = Math.random()*4, dur = 0.4+Math.random()*0.8;
-const size = type==="snow" ? 2+Math.random()*5 : type==="night" ? 1+Math.random()*2 : null;
-if (type==="rain"||type==="storm") return (
-<div key={i} style={{position:"absolute",left:`${x}%`,top:"-4%",width:1.5,height:14+Math.random()*18,
-background:"rgba(147,197,253,0.22)",borderRadius:1,
-animation:`rainFall ${dur}s linear infinite`,animationDelay:`${delay}s`}}/>
-);
-if (type==="snow") return (
-<div key={i} style={{position:"absolute",left:`${x}%`,top:"-4%",width:size,height:size,borderRadius:"50%",
-background:"rgba(255,255,255,0.7)",
-animation:`snowFall ${3+Math.random()*5}s ease-in infinite`,animationDelay:`${delay}s`}}/>
-);
-return (
-<div key={i} style={{position:"absolute",left:`${x}%`,top:`${Math.random()*100}%`,width:size,height:size,
-borderRadius:"50%",background:"white",
-animation:`twinkle ${2+Math.random()*4}s ease-in-out infinite`,animationDelay:`${delay}s`}}/>
-);
-})}
-{type==="storm" && (
-<div style={{position:"fixed",inset:0,background:"rgba(120,140,255,0.04)",animation:"lightning 10s infinite",animationDelay:"2s"}}/>
-)}
-</div>
-);
-};
-
-// ── PROGRESS BAR ─────────────────────────────────────────────────────────────
-const Bar = ({ val, max, color="#D4A043", h=4 }) => (
-<div style={{height:h,borderRadius:h,background:"rgba(255,255,255,0.07)",overflow:"hidden"}}>
-<div style={{height:"100%",width:`${Math.min(100,(val/max)*100)}%`,background:color,borderRadius:h,transition:"width 1s ease"}}/>
-</div>
-);
-
-// ── STYLES RESPONSIVES ───────────────────────────────────────────────────────
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-::-webkit-scrollbar{height:3px;width:3px}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:4px}
-::-webkit-scrollbar-track{background:transparent}
-input,button{font-family:inherit}
-input::placeholder{color:rgba(255,255,255,0.28)}
-input:focus{outline:none}
-button:focus{outline:none}
-
-/* Animations */
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@keyframes rainFall{0%{transform:rotate(12deg) translateY(-4%);opacity:0}8%{opacity:1}92%{opacity:.5}100%{transform:rotate(12deg) translateY(105vh);opacity:0}}
-@keyframes snowFall{0%{transform:translateY(-4%) translateX(0);opacity:0}10%{opacity:.9}90%{opacity:.6}100%{transform:translateY(105vh) translateX(30px);opacity:0}}
-@keyframes twinkle{0%,100%{opacity:.04;transform:scale(.7)}50%{opacity:.9;transform:scale(1.3)}}
-@keyframes lightning{0%,93%,100%{opacity:0}94%,97%{opacity:1}95%,96%{opacity:.4}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-
-/* Utilities */
-.fu{animation:fadeUp .5s ease both}
-.fu1{animation:fadeUp .5s .08s ease both}
-.fu2{animation:fadeUp .5s .16s ease both}
-.fu3{animation:fadeUp .5s .22s ease both}
-.fu4{animation:fadeUp .5s .28s ease both}
-.fu5{animation:fadeUp .5s .34s ease both}
-.fu6{animation:fadeUp .5s .40s ease both}
-.fu7{animation:fadeUp .5s .46s ease both}
-.g{background:rgba(255,255,255,0.05);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,0.08)}
-.hov{transition:background .18s,transform .18s,border-color .18s;cursor:pointer}
-.hov:hover{background:rgba(255,255,255,0.09)!important;transform:translateY(-2px)}
-.hov-txt{transition:opacity .2s;opacity:.5;text-decoration:none;color:white}
-.hov-txt:hover{opacity:1}
-.icon-img{animation:float 4s ease-in-out infinite}
-.spin{animation:spin .8s linear infinite}
-.blink{animation:pulse 1.5s ease infinite}
-
-/* RESPONSIVE DESIGN CLASSES */
-.header-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
-.header-actions { display: flex; gap: 8px; align-items: center; }
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.forecast-detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.bottom-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.hero-temps { display: inline-flex; gap: 18px; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 40px; padding: 7px 22px; font-size: 13px; }
-.sun-arc-row { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
-.aqi-main-score { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-
-/* Tablettes & Petits écrans */
-@media (max-width: 768px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .forecast-detail-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .bottom-panels { grid-template-columns: 1fr; gap: 14px; }
-    .hero-temps { flex-wrap: wrap; justify-content: center; padding: 10px 20px; gap: 12px; border-radius: 20px; }
-}
-
-/* Mobiles (Smartphones) */
-@media (max-width: 500px) {
-    .header-container { flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 20px; }
-    .header-actions { justify-content: space-between; width: 100%; }
-    .hide-mobile { display: none; }
-    .search-btn { padding: 8px 12px !important; }
-    .hero-temps { gap: 10px; padding: 10px 16px; }
-    .sun-arc-row { flex-direction: column; gap: 20px; }
-    .sun-arc-row > div:nth-child(2) { order: -1; } /* Durée en haut sur mobile */
-    .sun-arc-row .text-right { text-align: left !important; }
-    .aqi-main-score { flex-direction: column; align-items: flex-start; gap: 4px; }
-}
-`;
-
-// ── RATE LIMIT LOGIC ──────────────────────────────────────────────────────────
-const checkRateLimit = () => {
-  const stored = localStorage.getItem('levelday_usage');
-  let usage = stored ? JSON.parse(stored) : null;
-  const now = Date.now();
-
-  const resetDate = new Date();
-  resetDate.setHours(24, 0, 0, 0); // Réinitialisation à minuit pile
-
-  if (!usage || now > usage.resetAt) {
-    usage = { count: 0, resetAt: resetDate.getTime() };
-  }
-
-  if (usage.count >= MAX_REQUESTS) {
-    const resetTime = new Date(usage.resetAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    return { allowed: false, message: `Daily limit reached. We value our quality of service. Please come back tomorrow at ${resetTime} to refresh your daily quota.`, usage };
-  }
-
-  return { allowed: true, usage };
-};
-
-const incrementUsage = (usage) => {
-  usage.count += 1;
-  localStorage.setItem('levelday_usage', JSON.stringify(usage));
-};
-
-// ── MAIN APP ──────────────────────────────────────────────────────────────────
-export default function LevelDay() {
-const [q, setQ] = useState("");
-const [sugg, setSugg] = useState([]);
-const [showSearch, setShowSearch] = useState(false);
-const [showNotifs, setShowNotifs] = useState(false);
-const [data, setData] = useState(null);
-const [astro, setAstro] = useState(null);
-const [loading, setLoading] = useState(true);
-const [err, setErr] = useState(null);
-const [unit, setUnit] = useState("C");
-const [activeDay, setActiveDay] = useState(0);
-const [lastCity, setLastCity] = useState("Paris");
-const [rateLimitErr, setRateLimitErr] = useState(null);
-const [showLocPrompt, setShowLocPrompt] = useState(false);
-const [showTopLocBanner, setShowTopLocBanner] = useState(false);
-const inputRef = useRef(null);
-
-useEffect(() => {
-  signInAnonymously(auth).catch(e => console.error("Auth Error", e));
-}, []);
-
-const T = c => unit==="C" ? Math.round(c) : Math.round(c*9/5+32);
-const TU = unit==="C" ? "°C" : "°F";
-const TS = unit==="C" ? "°" : "°F";
-
-const load = useCallback(async (city, isSearch = false) => {
-const rateStatus = checkRateLimit();
-if (!rateStatus.allowed) {
-  setRateLimitErr(rateStatus.message);
-  setLoading(false);
-  return;
-}
-
-setRateLimitErr(null);
-setLoading(true); setErr(null);
-
-try {
-  const enc = encodeURIComponent(city);
-  const origin = typeof window !== 'undefined' && window.location.origin !== "null" ? window.location.origin : "";
-  const res = await fetch(`${origin}/api/weather?q=${enc}`);
-  
-  if (!res.ok) {
-    if (res.status === 404) {
-       throw new Error("Service temporarily unavailable. Our servers are synchronizing with the latest weather models. Please try again shortly.");
-    }
-    const e = await res.json().catch(()=>({}));
-    throw new Error(e.error || "We couldn't find weather data for this location. Please verify the spelling or zip code and try again.");
-  }
-  
-  const combinedData = await res.json();
-  setData(combinedData.forecast);
-  setAstro(combinedData.astronomy);
-  setLastCity(combinedData.forecast.location.name);
-
-  if (isSearch) incrementUsage(rateStatus.usage);
-
-} catch(e) { 
-  if (e.message.includes("Failed to parse URL") || e.message.includes("fetch")) {
-     setErr("Security Mode Active 🛡️ : This weather radar is protected. It must be hosted on your Vercel server to function and hide your secret key.");
-  } else {
-     setErr(e.message || "A network connection error occurred. Please check your internet connection."); 
-  }
-} finally { 
-  setLoading(false); 
-}
-}, []);
-
-useEffect(() => {
-  const initLoc = async () => {
-    let hasGranted = false;
-    if (navigator.permissions && navigator.permissions.query) {
-      try {
-        const perm = await navigator.permissions.query({ name: 'geolocation' });
-        hasGranted = (perm.state === 'granted');
-      } catch(e){}
-    }
-
-    if (hasGranted && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-           setShowTopLocBanner(false);
-           load(`${pos.coords.latitude},${pos.coords.longitude}`, true);
-        },
-        () => load("auto:ip", true),
-        { timeout: 5000 }
-      );
-    } else {
-      // On charge l'aperçu immédiatement
-      load("auto:ip", true);
-      
-      // On affiche le pop-up après 3 secondes s'il ne l'a pas déjà refusé/accepté
-      const seen = localStorage.getItem("levelday_loc_prompt");
-      if (!seen) {
-        setTimeout(() => setShowLocPrompt(true), 3000);
-      } else {
-        // S'il avait déjà cliqué sur "Plus tard", on affiche le bandeau en haut
-        setShowTopLocBanner(true);
-      }
-    }
-  };
-  initLoc();
-}, [load]);
-
-const handleEnableLoc = () => {
-  setShowLocPrompt(false);
-  localStorage.setItem("levelday_loc_prompt", "1");
-  setLoading(true);
-  setErr(null);
-  
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-         setShowTopLocBanner(false);
-         load(`${pos.coords.latitude},${pos.coords.longitude}`, true);
-      },
-      () => {
-         setErr("Location access denied or unavailable. Using approximate location.");
-         load("auto:ip", true);
-         setShowTopLocBanner(true);
-      },
-      { timeout: 5000 }
-    );
-  } else {
-    setLoading(false);
-    setErr("Geolocation is not supported by your browser.");
-  }
-};
-
-const handleDismissLoc = () => {
-  setShowLocPrompt(false);
-  localStorage.setItem("levelday_loc_prompt", "1");
-  setShowTopLocBanner(true);
-};
-
-useEffect(() => {
-if (q.length < 2) { setSugg([]); return; }
-const t = setTimeout(async () => {
-  try {
-    const origin = typeof window !== 'undefined' && window.location.origin !== "null" ? window.location.origin : "";
-    const r = await fetch(`${origin}/api/search?q=${encodeURIComponent(q)}`);
-    const d = await r.json();
-    setSugg(Array.isArray(d) ? d : []);
-  } catch { setSugg([]); }
-}, 280);
-return () => clearTimeout(t);
-}, [q]);
-
-const pick = (name) => {
-setShowSearch(false); setShowNotifs(false); setSugg([]); setQ(""); setActiveDay(0); load(name, true);
-};
-const openSearch = () => {
-setShowSearch(true);
-setShowNotifs(false);
-setTimeout(() => inputRef.current?.focus(), 50);
-};
-
-// ── Derived data ─────────────────────────────────────────────────────────
-const cur = data?.current;
-const loc = data?.location;
-const fcast = data?.forecast?.forecastday || [];
-const alerts= data?.alerts?.alert || [];
-const code = cur?.condition?.code || 1000;
-const isDay = cur?.is_day ?? 1;
-const bgC = getBg(code, isDay);
-const aqiI = cur?.air_quality?.["us-epa-index"];
-
-const now = new Date();
-const dateStr = `${DAYS[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
-
-const nowH = now.getHours();
-const todayH = fcast[0]?.hour || [];
-const tomorrowH = fcast[1]?.hour || [];
-const hourly24 = [
-...todayH.filter(h => new Date(h.time).getHours() >= nowH),
-...tomorrowH.filter(h => new Date(h.time).getHours() < nowH)
-].slice(0, 24);
-
-const parse12 = (str) => {
-if (!str) return 0;
-const [time, ap] = str.split(" ");
-if (!time) return 0;
-let [h, m] = time.split(":").map(Number);
-if (ap?.toLowerCase()==="pm" && h!==12) h+=12;
-if (ap?.toLowerCase()==="am" && h===12) h=0;
-return h*60+(m||0);
-};
-
-const srMin = parse12(astro?.sunrise);
-const ssMin = parse12(astro?.sunset);
-const nowMin = now.getHours()*60+now.getMinutes();
-
-let isNight = false;
-let arcPct = 0;
-let phaseLen = 0;
-
-if (srMin < ssMin && nowMin >= srMin && nowMin < ssMin) {
-  isNight = false;
-  arcPct = (nowMin - srMin) / (ssMin - srMin);
-  phaseLen = ssMin - srMin;
-} else {
-  isNight = true;
-  const nightLen = (24 * 60 - ssMin) + srMin;
-  if (nowMin >= ssMin) {
-    arcPct = (nowMin - ssMin) / nightLen; 
-  } else {
-    arcPct = ((24 * 60 - ssMin) + nowMin) / nightLen;
-  }
-  phaseLen = nightLen;
-}
-
-const arcStart = isNight ? astro?.sunset : astro?.sunrise;
-const arcEnd = isNight ? astro?.sunrise : astro?.sunset;
-const arcStartLbl = isNight ? "Sunset" : "Sunrise";
-const arcEndLbl = isNight ? "Sunrise" : "Sunset";
-const arcIconStart = isNight ? "sunset" : "sunrise";
-const arcIconEnd = isNight ? "sunrise" : "sunset";
-const arcColorMain = isNight ? "#818CF8" : "#FDB813";
-const arcColorSec = isNight ? "#38BDF8" : "#FF7C5C";
-const arcGlow = isNight ? "rgba(129,140,248,0.15)" : "rgba(253,184,19,0.15)";
-const phaseH = Math.floor(phaseLen / 60);
-const phaseM = phaseLen % 60;
-
-// ── RATE LIMIT UI ──────────────────────────────────────────────────────────
-if (rateLimitErr) {
-  return (
-    <div style={{minHeight:"100vh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",fontFamily:"'Syne',sans-serif",padding:20}}>
-      <style>{CSS}</style>
-      <div className="g fu" style={{maxWidth:480,width:"100%",borderRadius:24,padding:"40px",textAlign:"center",border:"1px solid rgba(255,255,255,0.1)",background:"rgba(10,15,30,0.8)",boxShadow:"0 30px 60px rgba(0,0,0,0.5)"}}>
-        <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(192,132,252,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",border:"1px solid rgba(192,132,252,0.3)"}}>
-          <Ico n="lock" s={36} c="#c084fc"/>
-        </div>
-        <h2 style={{fontSize:28,fontWeight:800,marginBottom:12,letterSpacing:"-.02em"}}>Access Limited</h2>
-        <p style={{fontSize:16,opacity:0.6,fontFamily:"'DM Sans',sans-serif",lineHeight:1.6,marginBottom:30}}>
-          {rateLimitErr}
-        </p>
-        <div style={{fontSize:11,opacity:.4,letterSpacing:".1em",textTransform:"uppercase",fontFamily:"Syne",fontWeight:700}}>
-          POWERED BY LEVEL UP ECOSYSTEM
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Loading (initial) ─────────────────────────────────────────────────────
-if (!data && loading) return (
-<div style={{height:"100vh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,color:"white",fontFamily:"'Syne',sans-serif"}}>
-<style>{CSS}</style>
-<div style={{width:38,height:38,border:"2px solid rgba(255,255,255,0.08)",borderTop:"2px solid #D4A043",borderRadius:"50%"}} className="spin"/>
-<span style={{fontSize:12,opacity:.35,letterSpacing:".18em",textTransform:"uppercase"}}>LevelDay</span>
-</div>
-);
-
-return (
-<div style={{minHeight:"100vh",fontFamily:"'DM Sans',sans-serif",color:"white",
-background:`linear-gradient(155deg,${bgC.a} 0%,${bgC.b} 45%,${bgC.c} 100%)`,
-position:"relative",overflow:"hidden",transition:"background 1.6s ease"}}>
-<style>{CSS}</style>
-
-{/* Ambient glow orbs */}
-<div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
-<div style={{position:"absolute",top:"-25%",right:"-18%",width:750,height:750,borderRadius:"50%",
-background:`radial-gradient(circle,${bgC.c}50 0%,transparent 68%)`,filter:"blur(70px)",transition:"background 1.6s"}}/>
-<div style={{position:"absolute",bottom:"-25%",left:"-18%",width:650,height:650,borderRadius:"50%",
-background:`radial-gradient(circle,${bgC.c}30 0%,transparent 68%)`,filter:"blur(90px)",transition:"background 1.6s"}}/>
-</div>
-
-<Particles type={bgC.type} />
-
-{/* ── PAGE ── */}
-<div style={{position:"relative",zIndex:1,maxWidth:1600,margin:"0 auto",padding:"18px 4vw 48px"}}>
-
-{/* BANDEAU LOCALISATION (S'ils ont fait "Maybe Later") */}
-{showTopLocBanner && !loading && (
-  <div className="fu" style={{background:"rgba(192,132,252,0.1)", border:"1px solid rgba(192,132,252,0.3)", borderRadius:14, padding:"12px 16px", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12}}>
-    <div style={{display:"flex", alignItems:"center", gap:12}}>
-      <div style={{width:32, height:32, borderRadius:8, background:"rgba(192,132,252,0.2)", display:"flex", alignItems:"center", justifyContent:"center"}}>
-        <Ico n="loc" s={16} c="#c084fc"/>
-      </div>
-      <div>
-        <div style={{fontFamily:"Syne", fontWeight:700, fontSize:13, color:"#e9d5ff"}}>Approximate Location</div>
-        <div style={{fontSize:11, opacity:0.6, fontFamily:"DM Sans", marginTop:2}}>Enable location for precise weather data</div>
-      </div>
-    </div>
-    <button onClick={handleEnableLoc} className="hov" style={{background:"#c084fc", color:"#020610", border:"none", padding:"8px 16px", borderRadius:8, fontFamily:"Syne", fontWeight:800, fontSize:11, cursor:"pointer", textTransform:"uppercase", letterSpacing:".05em"}}>
-      Enable Now
-    </button>
-  </div>
-)}
-
-{/* HEADER */}
-<header className="fu header-container">
-<div style={{display:"flex",alignItems:"center",gap:10}}>
-<div>
-<div style={{fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:22,letterSpacing:".07em",lineHeight:1.1}}>
-<span style={{color:"#c084fc"}}>LEVEL</span><span style={{color:"white"}}>DAY</span>
-</div>
-<div style={{fontSize:10,opacity:.7,letterSpacing:".1em",fontFamily:"Syne,sans-serif",color:"#e9d5ff",marginTop:2,fontWeight:600}}>LEVEL UP ECOSYSTEM</div>
-</div>
-</div>
-
-<div className="header-actions">
-<div style={{display:"flex",background:"rgba(255,255,255,0.04)",borderRadius:8,border:"1px solid rgba(255,255,255,0.08)",padding:3,gap:2}}>
-{["C","F"].map(u=>(
-<button key={u} onClick={()=>setUnit(u)} style={{padding:"4px 13px",borderRadius:6,border:"none",cursor:"pointer",
-fontFamily:"Syne,sans-serif",fontWeight:700,fontSize:12,transition:"all .2s",
-background:unit===u?"rgba(212,160,67,.22)":"transparent",
-color:unit===u?"#D4A043":"rgba(255,255,255,.3)"}}>°{u}</button>
-))}
-</div>
-<button onClick={()=>load(lastCity, true)} style={{width:36,height:36,borderRadius:8,border:"1px solid rgba(255,255,255,.08)",
-background:"rgba(255,255,255,0.04)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .2s"}}
-onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.1)"}
-onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"}>
-<Ico n="reload" s={14} c="rgba(255,255,255,.55)"/>
-</button>
-
-{/* NOTIFICATION BUTTON */}
-<button onClick={() => {setShowNotifs(true); setShowSearch(false);}} style={{position:"relative",width:36,height:36,borderRadius:8,border:"1px solid rgba(255,255,255,.08)",
-background:"rgba(255,255,255,0.04)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .2s"}}
-onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.1)"}
-onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"}>
-<Ico n="bell" s={14} c={alerts?.length > 0 ? "#fca5a5" : "rgba(255,255,255,.55)"}/>
-{alerts?.length > 0 && <span className="blink" style={{position:"absolute",top:8,right:8,width:6,height:6,background:"#ef4444",borderRadius:"50%"}}/>}
-</button>
-
-<button onClick={()=>showSearch?setShowSearch(false):openSearch()} className="search-btn" style={{display:"flex",alignItems:"center",gap:7,
-padding:"8px 16px",borderRadius:10,border:`1px solid ${showSearch?"rgba(212,160,67,.4)":"rgba(255,255,255,.1)"}`,
-background:showSearch?"rgba(212,160,67,.13)":"rgba(255,255,255,0.05)",
-cursor:"pointer",color:showSearch?"#D4A043":"white",fontSize:13,transition:"all .2s"}}>
-<Ico n="search" s={14} c={showSearch?"#D4A043":"white"}/>
-<span className="hide-mobile">{showSearch ? "Close" : "Search"}</span>
-</button>
-</div>
-</header>
-
-{/* SEARCH PANEL */}
-{showSearch && (
-<div className="g fu" style={{borderRadius:14,marginBottom:18,overflow:"hidden"}}>
-<div style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",
-borderBottom:sugg.length?"1px solid rgba(255,255,255,0.06)":"none"}}>
-<Ico n="search" s={16} c="rgba(255,255,255,.35)"/>
-<input ref={inputRef} value={q} onChange={e=>setQ(e.target.value)}
-onKeyDown={e=>e.key==="Enter"&&q&&pick(q)}
-placeholder="City, region, country, zip code…"
-style={{flex:1,background:"transparent",border:"none",color:"white",fontSize:14,width:"100%"}}/>
-{q && <button onClick={()=>{setQ("");setSugg([])}}
-style={{background:"none",border:"none",cursor:"pointer",opacity:.4,display:"flex",alignItems:"center"}}>
-<Ico n="close" s={16} c="white"/></button>}
-</div>
-{sugg.length > 0 && (
-<div>
-{sugg.map((s,i)=>(
-<div key={i} onClick={()=>pick(s.name)} className="hov"
-style={{display:"flex",alignItems:"center",gap:12,padding:"11px 16px",
-borderBottom:i<sugg.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
-<Ico n="loc" s={14} c="rgba(212,160,67,.55)"/>
-<div style={{flex:1, minWidth:0}}>
-<span style={{fontWeight:500,fontSize:14,display:"block",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.name}</span>
-<span style={{fontSize:12,opacity:.35,display:"block",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-{s.region && `${s.region}, `}{s.country}
-</span>
-</div>
-<span className="hide-mobile" style={{marginLeft:"auto",fontSize:11,opacity:.25,fontFamily:"Syne,sans-serif"}}>
-{s.lat?.toFixed(2)}°N
-</span>
-</div>
-))}
-</div>
-)}
-</div>
-)}
-
-{/* ERROR */}
-{err && (
-<div className="fu" style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.2)",
-borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
-<Ico n="alert" s={16} c="#f87171"/>
-<span style={{fontSize:13,color:"#fca5a5",wordBreak:"break-word"}}>{err}</span>
-</div>
-)}
-
-{/* Refresh indicator */}
-{loading && data && (
-<div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,opacity:.4,fontSize:12,fontFamily:"Syne,sans-serif"}}>
-<div style={{width:12,height:12,border:"1.5px solid rgba(255,255,255,.2)",borderTop:"1.5px solid #D4A043",borderRadius:"50%"}} className="spin"/>
-Updating…
-</div>
-)}
-
-{data && cur && (<>
-
-{/* ── HERO ── */}
-<div className="fu1" style={{textAlign:"center",padding:"30px 0 26px"}}>
-<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:10}}>
-<Ico n="loc" s={13} c="rgba(212,160,67,.65)"/>
-<span style={{fontFamily:"Syne,sans-serif",fontSize:12,fontWeight:700,letterSpacing:".16em",
-opacity:.65,textTransform:"uppercase"}}>{loc.name}, {loc.country}</span>
-</div>
-<div style={{display:"flex",justifyContent:"center",marginBottom:6}} className="icon-img">
-<img src={`https:${cur.condition.icon.replace("64x64","128x128")}`}
-alt={cur.condition.text} style={{width:100,height:100,filter:"drop-shadow(0 0 24px rgba(255,255,255,.18))"}}
-onError={e=>e.target.style.display="none"}/>
-</div>
-<div style={{fontFamily:"Syne,sans-serif",fontWeight:800,lineHeight:.85,
-fontSize:"clamp(90px,15vw,128px)",letterSpacing:"-.04em",marginBottom:8}}>
-{T(cur.temp_c)}<span style={{fontSize:".35em",opacity:.45,verticalAlign:"super",fontWeight:700}}>{TU}</span>
-</div>
-<p style={{fontSize:17,fontWeight:300,fontStyle:"italic",opacity:.6,marginBottom:8,letterSpacing:".02em"}}>
-{cur.condition.text}
-</p>
-<p style={{fontSize:11,opacity:.28,letterSpacing:".12em",textTransform:"uppercase",fontFamily:"Syne,sans-serif",marginBottom:18}}>
-{dateStr} &nbsp;·&nbsp; {loc.localtime?.split(" ")[1]}
-</p>
-<div className="hero-temps">
-<span style={{opacity:.5}}>
-<span style={{fontSize:9,fontFamily:"Syne",fontWeight:700,letterSpacing:".08em",opacity:.6,marginRight:4}}>MAX</span>
-{T(fcast[0]?.day.maxtemp_c)}{TS}
-</span>
-<span className="hide-mobile" style={{opacity:.18}}>|</span>
-<span style={{opacity:.5}}>
-<span style={{fontSize:9,fontFamily:"Syne",fontWeight:700,letterSpacing:".08em",opacity:.6,marginRight:4}}>MIN</span>
-{T(fcast[0]?.day.mintemp_c)}{TS}
-</span>
-<span className="hide-mobile" style={{opacity:.18}}>|</span>
-<span style={{opacity:.5,display:"flex",alignItems:"center",gap:5}}>
-<Ico n="thermo" s={12} c="rgba(255,255,255,.5)"/>
-Feels like {T(cur.feelslike_c)}{TS}
-</span>
-</div>
-</div>
-
-{/* ── STATS GRID 1 ── */}
-<div className="fu2 stats-grid" style={{marginBottom:10}}>
-{[
-{l:"Humidity", v:`${cur.humidity}%`, sub:null, i:"drop"},
-{l:"Wind", v:`${Math.round(cur.wind_kph)} km/h`, sub:cur.wind_dir, i:"wind"},
-{l:"Visibility",v:`${cur.vis_km} km`, sub:null, i:"eye"},
-{l:"UV Index", v:cur.uv, sub:cur.uv<=2?"Low":cur.uv<=5?"Moderate":cur.uv<=7?"High":"Very High", i:"uv"},
-].map((s,i)=>(
-<div key={i} className="g hov" style={{borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
-<div style={{display:"flex",justifyContent:"center",marginBottom:8,opacity:.3}}><Ico n={s.i} s={14}/></div>
-<div style={{fontFamily:"Syne,sans-serif",fontWeight:700,fontSize:"clamp(17px,3.2vw,22px)",letterSpacing:"-.02em",marginBottom:3}}>{s.v}</div>
-{s.sub && <div style={{fontSize:10,opacity:.35,fontFamily:"Syne",letterSpacing:".07em",textTransform:"uppercase",marginBottom:2}}>{s.sub}</div>}
-<div style={{fontSize:10,opacity:.28,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"Syne"}}>{s.l}</div>
-</div>
-))}
-</div>
-
-{/* ── STATS GRID 2 ── */}
-<div className="fu2 stats-grid" style={{marginBottom:20}}>
-{[
-{l:"Pressure", v:`${cur.pressure_mb} hPa`, i:"gauge"},
-{l:"Dew point",v:`${T(cur.dewpoint_c)}${TS}`, i:"dew"},
-{l:"Cloud cover", v:`${cur.cloud}%`, i:"cloud"},
-{l:"Gusts", v:`${Math.round(cur.gust_kph)} km/h`, i:"wind"},
-].map((s,i)=>(
-<div key={i} className="g hov" style={{borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
-<div style={{display:"flex",justifyContent:"center",marginBottom:8,opacity:.3}}><Ico n={s.i} s={14}/></div>
-<div style={{fontFamily:"Syne,sans-serif",fontWeight:700,fontSize:"clamp(15px,2.6vw,19px)",letterSpacing:"-.02em",marginBottom:3}}>{s.v}</div>
-<div style={{fontSize:10,opacity:.28,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"Syne"}}>{s.l}</div>
-</div>
-))}
-</div>
-
-{/* ── HOURLY 24H ── */}
-<div className="fu3 g" style={{borderRadius:18,padding:"18px 20px",marginBottom:18}}>
-<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-<span style={{fontFamily:"Syne",fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase"}}>24h Forecast</span>
-<span style={{fontSize:10,opacity:.2,fontFamily:"DM Sans"}}>Scroll →</span>
-</div>
-<div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4}}>
-{hourly24.map((h,i)=>{
-const hr = new Date(h.time).getHours();
-const isNow = i===0;
-const rain = h.chance_of_rain > 0;
-const snow = h.chance_of_snow > 0;
-return (
-<div key={i} style={{flexShrink:0,borderRadius:12,padding:"11px 11px",textAlign:"center",minWidth:64,
-background:isNow?"rgba(212,160,67,.12)":"rgba(255,255,255,0.04)",
-border:`1px solid ${isNow?"rgba(212,160,67,.28)":"rgba(255,255,255,0.06)"}`,
-transition:"transform .2s"}}
-onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"}
-onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-<div style={{fontSize:11,fontFamily:"Syne",fontWeight:600,
-color:isNow?"#D4A043":"rgba(255,255,255,.4)",marginBottom:6}}>
-{isNow?"Now":`${hr}h`}
-</div>
-<img src={`https:${h.condition.icon}`} alt="" style={{width:34,height:34,marginBottom:5}}
-onError={e=>e.target.style.display="none"}/>
-<div style={{fontFamily:"Syne",fontWeight:700,fontSize:14,marginBottom:3}}>{T(h.temp_c)}{TS}</div>
-{(rain||snow) && (
-<div style={{fontSize:10,color:snow?"#a5d8ff":"#93c5fd",opacity:.8,display:"flex",alignItems:"center",justifyContent:"center",gap:2}}>
-<Ico n={snow?"snow":"drop"} s={9} c={snow?"#a5d8ff":"#93c5fd"}/>
-{rain?h.chance_of_rain:h.chance_of_snow}%
-</div>
-)}
-</div>
-);
-})}
-</div>
-</div>
-
-{/* ── 3-DAY FORECAST ── */}
-<div className="fu4 g" style={{borderRadius:18,padding:"18px 20px",marginBottom:18}}>
-<span style={{fontFamily:"Syne",fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase",display:"block",marginBottom:14}}>
-3-Day Forecast
-</span>
-<div style={{display:"flex",gap:10,marginBottom:14}}>
-{fcast.map((day,i)=>{
-const d = new Date(day.date);
-const lbl = i===0?"Today":i===1?"Tomorrow":DAYS[d.getDay()];
-const active = activeDay===i;
-const rain = day.day.daily_chance_of_rain;
-const snow = day.day.daily_chance_of_snow;
-return (
-<div key={i} onClick={()=>setActiveDay(i)} className="hov"
-style={{flex:1,borderRadius:14,padding:"16px 10px",textAlign:"center",
-background:active?"rgba(212,160,67,.12)":"rgba(255,255,255,0.04)",
-border:`1px solid ${active?"rgba(212,160,67,.28)":"rgba(255,255,255,0.06)"}`}}>
-<div style={{fontSize:11,fontFamily:"Syne",fontWeight:700,letterSpacing:".07em",textTransform:"uppercase",
-color:active?"#D4A043":"rgba(255,255,255,.45)",marginBottom:8}}>{lbl}</div>
-<img src={`https:${day.day.condition.icon}`} alt="" style={{width:42,height:42,marginBottom:5}}
-onError={e=>e.target.style.display="none"}/>
-<div className="hide-mobile" style={{fontSize:11,opacity:.35,marginBottom:7,lineHeight:1.3,fontFamily:"DM Sans",height:28,overflow:"hidden"}}>{day.day.condition.text}</div>
-<div style={{fontFamily:"Syne",fontWeight:700,fontSize:17,marginBottom:2}}>{T(day.day.maxtemp_c)}{TS}</div>
-<div style={{fontSize:12,opacity:.3,fontFamily:"Syne"}}>{T(day.day.mintemp_c)}{TS}</div>
-{(rain>0||snow>0) && (
-<div style={{marginTop:7,fontSize:10,display:"flex",alignItems:"center",justifyContent:"center",gap:2,
-color:snow>rain?"#a5d8ff":"#93c5fd",opacity:.75}}>
-<Ico n={snow>rain?"snow":"drop"} s={9} c={snow>rain?"#a5d8ff":"#93c5fd"}/>
-{Math.max(rain,snow)}%
-</div>
-)}
-</div>
-);
-})}
-</div>
-{/* Active day detail */}
-{fcast[activeDay] && (() => {
-const d = fcast[activeDay].day;
-return (
-<div className="forecast-detail-grid" style={{paddingTop:14,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
-{[
-{l:"Max wind", v:`${Math.round(d.maxwind_kph)} km/h`, i:"wind"},
-{l:"Avg humidity", v:`${d.avghumidity}%`, i:"drop"},
-{l:"Precipitation",v:`${d.totalprecip_mm} mm`, i:"precip"},
-{l:"Max UV", v:d.uv, i:"uv"},
-].map((s,i)=>(
-<div key={i} style={{textAlign:"center",padding:"10px 8px",
-background:"rgba(255,255,255,0.03)",borderRadius:10,border:"1px solid rgba(255,255,255,0.05)"}}>
-<div style={{display:"flex",justifyContent:"center",marginBottom:6,opacity:.3}}><Ico n={s.i} s={13}/></div>
-<div style={{fontFamily:"Syne",fontWeight:700,fontSize:16,marginBottom:3}}>{s.v}</div>
-<div style={{fontSize:10,opacity:.28,textTransform:"uppercase",letterSpacing:".06em",fontFamily:"Syne"}}>{s.l}</div>
-</div>
-))}
-</div>
-);
-})()}
-</div>
-
-{/* ── SUN & MOON ARC DYNAMIQUE ── */}
-<div className="fu5 g" style={{borderRadius:18,padding:"24px",marginBottom:18,position:"relative",overflow:"hidden"}}>
-<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:"80%",height:100,background:`radial-gradient(ellipse at top, ${arcGlow} 0%, transparent 70%)`,pointerEvents:"none"}}/>
-
-<span style={{fontFamily:"Syne",fontSize:11,fontWeight:800,letterSpacing:".15em",opacity:.4,textTransform:"uppercase",display:"block",marginBottom:20}}>
-{isNight ? "Night Arc" : "Daily Sun Arc"}
-</span>
-
-<div style={{position:"relative",height:130,marginBottom:10}}>
-{(() => {
-const p = arcPct;
-const sx = Math.pow(1 - p, 2) * 40 + 2 * (1 - p) * p * 200 + Math.pow(p, 2) * 360;
-const sy = Math.pow(1 - p, 2) * 110 + 2 * (1 - p) * p * (-30) + Math.pow(p, 2) * 110;
-
-return (
-<svg width="100%" height="130" viewBox="0 0 400 130" preserveAspectRatio="none" style={{overflow:"visible"}}>
-  <defs>
-    <linearGradient id="arc-fill" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor={arcColorMain} stopOpacity="0.3" />
-      <stop offset="100%" stopColor={arcColorMain} stopOpacity="0.0" />
-    </linearGradient>
-    <linearGradient id="arc-stroke" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stopColor={arcColorSec} />
-      <stop offset="50%" stopColor={arcColorMain} />
-      <stop offset="100%" stopColor={arcColorSec} />
-    </linearGradient>
-    <linearGradient id="horizon" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stopColor="white" stopOpacity="0" />
-      <stop offset="15%" stopColor="white" stopOpacity="0.25" />
-      <stop offset="50%" stopColor="white" stopOpacity="0.5" />
-      <stop offset="85%" stopColor="white" stopOpacity="0.25" />
-      <stop offset="100%" stopColor="white" stopOpacity="0" />
-    </linearGradient>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LevelDay - Weather Pro</title>
     
-    <filter id="glow-path" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
+    <!-- 🌟 FAVICON : Étoile Violette Intégrée 🌟 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23c084fc%22><path d=%22M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z%22/></svg>">
     
-    <clipPath id="arc-clip">
-      <rect x="0" y="0" width={p > 0 ? sx : 0} height="140" />
-    </clipPath>
-  </defs>
-
-  <line x1="10" y1="110" x2="390" y2="110" stroke="url(#horizon)" strokeWidth="1.5" />
-  <path d="M 40 110 Q 200 -30 360 110" stroke="rgba(255,255,255,0.15)" strokeWidth="2" strokeDasharray="6 6" fill="none" />
-
-  <g clipPath="url(#arc-clip)">
-    <path d="M 40 110 Q 200 -30 360 110 L 360 110 L 40 110 Z" fill="url(#arc-fill)" />
-    <path d="M 40 110 Q 200 -30 360 110" stroke="url(#arc-stroke)" strokeWidth="4" fill="none" filter="url(#glow-path)" />
-    <path d="M 40 110 Q 200 -30 360 110" stroke="#FFFFFF" strokeWidth="1.5" fill="none" opacity="0.8" />
-  </g>
-
-  <circle cx="40" cy="110" r="3.5" fill={arcColorSec} />
-  <circle cx="360" cy="110" r="3.5" fill={arcColorMain} />
-
-  {p > 0 && p < 1 && (
-    <g transform={`translate(${sx}, ${sy})`}>
-      <line x1="0" y1="0" x2="0" y2={110 - sy} stroke={arcColorMain} strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
-      <circle cx="0" cy={110 - sy} r="2.5" fill={arcColorMain} opacity="0.8" />
-
-      {isNight ? (
-        <g>
-          <circle cx="0" cy="0" r="24" fill={arcColorMain} opacity="0.1" />
-          <circle cx="0" cy="0" r="12" fill={arcColorMain} opacity="0.25" />
-          <circle cx="0" cy="0" r="4.5" fill="#E2E8F0" />
-        </g>
-      ) : (
-        <g>
-          <circle cx="0" cy="0" r="26" fill={arcColorMain} opacity="0.1" />
-          <circle cx="0" cy="0" r="13" fill={arcColorMain} opacity="0.25" />
-          <circle cx="0" cy="0" r="6" fill="#FDE047" />
-          <circle cx="0" cy="0" r="3.5" fill="#FFFFFF" />
-        </g>
-      )}
-
-      <g transform="translate(0, -25)">
-        <rect x="-18" y="-9" width="36" height="18" rx="9" fill="rgba(10,15,30,0.85)" stroke={arcColorMain} strokeWidth="1" strokeOpacity="0.4" />
-        <text x="0" y="3" fill={arcColorMain} fontSize="8.5" fontFamily="Syne" fontWeight="800" textAnchor="middle" letterSpacing="0.05em">NOW</text>
-      </g>
-    </g>
-  )}
-</svg>
-);
-})()}
-</div>
-
-<div className="sun-arc-row">
-  <div style={{display:"flex",alignItems:"center",gap:10}}>
-    <div style={{width:32,height:32,borderRadius:10,background:isNight?"rgba(129,140,248,0.1)":"rgba(253,184,19,0.1)",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${arcColorSec}30`}}>
-      <Ico n={arcIconStart} s={16} c={arcColorSec}/>
-    </div>
-    <div>
-      <div style={{fontFamily:"Syne",fontWeight:800,fontSize:16,color:arcColorSec}}>{arcStart||"--"}</div>
-      <div style={{fontSize:10,opacity:.4,textTransform:"uppercase",letterSpacing:".08em",fontFamily:"Syne",marginTop:2}}>{arcStartLbl}</div>
-    </div>
-  </div>
-  
-  <div style={{textAlign:"center",padding:"8px 20px",background:"rgba(255,255,255,0.03)",borderRadius:12,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 10px 30px rgba(0,0,0,0.2)"}}>
-    <div style={{fontFamily:"Syne",fontWeight:800,fontSize:18,marginBottom:2}}>{phaseH}<span style={{fontSize:12,opacity:.5}}>h</span> {phaseM}<span style={{fontSize:12,opacity:.5}}>m</span></div>
-    <div style={{fontSize:10,opacity:.3,textTransform:"uppercase",letterSpacing:".1em",fontFamily:"Syne"}}>{isNight ? "Nighttime" : "Daylight"}</div>
-  </div>
-  
-  <div style={{display:"flex",alignItems:"center",gap:10}}>
-    <div className="text-right" style={{textAlign:"right"}}>
-      <div style={{fontFamily:"Syne",fontWeight:800,fontSize:16,color:arcColorMain}}>{arcEnd||"--"}</div>
-      <div style={{fontSize:10,opacity:.4,textTransform:"uppercase",letterSpacing:".08em",fontFamily:"Syne",marginTop:2}}>{arcEndLbl}</div>
-    </div>
-    <div style={{width:32,height:32,borderRadius:10,background:isNight?"rgba(56,189,248,0.1)":"rgba(255,124,92,0.1)",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${arcColorMain}30`}}>
-      <Ico n={arcIconEnd} s={16} c={arcColorMain}/>
-    </div>
-  </div>
-</div>
-</div>
-
-{/* ── AIR QUALITY + ASTRONOMY ── */}
-<div className="fu6 bottom-panels">
-
-<div className="g" style={{borderRadius:18,padding:"18px 20px"}}>
-<span style={{fontFamily:"Syne",fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase",display:"block",marginBottom:14}}>
-Air Quality
-</span>
-{aqiI && AQI_MAP[aqiI] ? (<>
-<div className="aqi-main-score">
-<span style={{fontFamily:"Syne",fontWeight:800,fontSize:34,color:AQI_MAP[aqiI].c,letterSpacing:"-.03em",lineHeight:1}}>{aqiI}</span>
-<div>
-<div style={{fontFamily:"Syne",fontWeight:700,fontSize:13,color:AQI_MAP[aqiI].c}}>{AQI_MAP[aqiI].l}</div>
-<div style={{fontSize:10,opacity:.35,fontFamily:"DM Sans",marginTop:1}}>US EPA Index</div>
-</div>
-</div>
-<div style={{height:6,borderRadius:6,overflow:"hidden",
-background:"linear-gradient(90deg,#34d399,#a3e635,#fbbf24,#fb923c,#f87171,#e879f9)",
-marginBottom:12,position:"relative"}}>
-<div style={{position:"absolute",top:-2,bottom:-2,left:`calc(${(aqiI/6)*100}% - 4px)`,
-width:8,background:"white",borderRadius:4,boxShadow:"0 0 6px rgba(255,255,255,.5)"}}/>
-</div>
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-{[
-{l:"PM2.5", v:`${cur.air_quality?.pm2_5?.toFixed(1)} μg/m³`},
-{l:"PM10", v:`${cur.air_quality?.pm10?.toFixed(1)} μg/m³`},
-{l:"CO", v:`${(cur.air_quality?.co/1000)?.toFixed(2)} mg/m³`},
-{l:"O₃", v:`${cur.air_quality?.o3?.toFixed(1)} μg/m³`},
-].map((p,i)=>(
-<div key={i} style={{padding:"8px 10px",background:"rgba(255,255,255,.04)",borderRadius:8,border:"1px solid rgba(255,255,255,.05)"}}>
-<div style={{fontSize:10,opacity:.3,fontFamily:"Syne",textTransform:"uppercase",letterSpacing:".06em",marginBottom:3}}>{p.l}</div>
-<div style={{fontFamily:"Syne",fontWeight:600,fontSize:12}}>{p.v}</div>
-</div>
-))}
-</div>
-</>) : <p style={{opacity:.25,fontSize:12}}>Data unavailable</p>}
-</div>
-
-<div className="g" style={{borderRadius:18,padding:"18px 20px"}}>
-<span style={{fontFamily:"Syne",fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase",display:"block",marginBottom:14}}>
-Astronomy
-</span>
-{astro ? (<>
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10}}>
-{[
-{l:"Moonrise", v:astro.moonrise, i:"moon", c:"#A8B8D8"},
-{l:"Moonset",v:astro.moonset, i:"moon", c:"#607090"},
-].map((a,i)=>(
-<div key={i} style={{padding:"9px 10px",background:"rgba(255,255,255,.04)",borderRadius:10,border:"1px solid rgba(255,255,255,.05)"}}>
-<div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
-<Ico n={a.i} s={11} c={a.c}/>
-<span style={{fontSize:9,opacity:.3,fontFamily:"Syne",textTransform:"uppercase",letterSpacing:".06em"}}>{a.l}</span>
-</div>
-<div style={{fontFamily:"Syne",fontWeight:700,fontSize:13}}>{a.v||"—"}</div>
-</div>
-))}
-</div>
-<div style={{padding:"12px 14px",background:"rgba(255,255,255,.04)",borderRadius:12,
-border:"1px solid rgba(255,255,255,.06)",display:"flex",alignItems:"center",gap:12}}>
-<MoonPhase phase={astro.moon_phase} illumination={Number(astro.moon_illumination)} size={40}/>
-<div style={{flex:1, minWidth:0}}>
-<div style={{fontFamily:"Syne",fontWeight:700,fontSize:13,marginBottom:3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{astro.moon_phase}</div>
-<div style={{fontSize:11,opacity:.35,fontFamily:"DM Sans"}}>Illumination: {astro.moon_illumination}%</div>
-<div style={{marginTop:6}}><Bar val={Number(astro.moon_illumination)} max={100} color="rgba(200,220,255,0.6)" h={3}/></div>
-</div>
-</div>
-</>) : <p style={{opacity:.25,fontSize:12}}>Data unavailable</p>}
-</div>
-</div>
-
-{/* ── FOOTER ── */}
-<div className="fu7" style={{textAlign:"center",opacity:.6,fontSize:11,fontFamily:"DM Sans",letterSpacing:".04em",paddingTop:30}}>
-  LevelDay &nbsp;·&nbsp; Data by WeatherAPI.com &nbsp;·&nbsp; Updated at {cur.last_updated?.split(" ")[1]}
-  
-  <div style={{marginTop:10, fontFamily:"Syne", fontWeight:700, fontSize:12, letterSpacing:".15em", display:"flex", justifyContent:"center", gap:5}}>
-    <span style={{color:"white", opacity:0.8}}>POWERED BY</span>
-    <span style={{color:"#c084fc"}}>LEVEL UP</span>
-  </div>
-
-  <div style={{marginTop:18, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:24, fontSize:10, fontFamily:"DM Sans", textTransform:"uppercase", letterSpacing:".08em"}}>
-    <a href="https://levelup-ecosystem.com/terms" target="_blank" rel="noreferrer" className="hov-txt">Terms</a>
-    <a href="https://levelup-ecosystem.com/privacy" target="_blank" rel="noreferrer" className="hov-txt">Privacy</a>
-    <a href="mailto:support@levelup-ecosystem.com" className="hov-txt">Support</a>
-  </div>
-</div>
-
-</>)}
-</div>
-
-{/* ── NOTIFICATIONS MODAL PLEIN ECRAN ── */}
-{showNotifs && (
-<div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",flexDirection:"column",background:"rgba(5,8,16,0.85)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",animation:"fadeUp 0.3s ease-out"}}>
-  
-  <div style={{padding:"20px 5vw",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0,background:"rgba(255,255,255,0.02)"}}>
-    <div style={{display:"flex",alignItems:"center",gap:16}}>
-      <div style={{width:48,height:48,borderRadius:16,background:alerts?.length>0?"rgba(239,68,68,.15)":"rgba(255,255,255,.05)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <Ico n="bell" s={20} c={alerts?.length>0?"#f87171":"white"} />
-      </div>
-      <div>
-        <h2 style={{fontFamily:"Syne",fontSize:22,fontWeight:800,margin:0,letterSpacing:".02em"}}>Alert Center</h2>
-        <p style={{fontSize:13,opacity:.5,margin:0,fontFamily:"DM Sans",marginTop:2}}>
-          {alerts?.length > 0 ? <span style={{color:"#fca5a5"}}>{alerts.length} active alert(s)</span> : "All clear"}
-        </p>
-      </div>
-    </div>
+    <!-- Importation des polices d'écriture -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
     
-    <button onClick={() => setShowNotifs(false)} className="hov" style={{width:40,height:40,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",color:"white",cursor:"pointer"}}>
-      <Ico n="close" s={20}/>
-    </button>
-  </div>
+    <!-- Importation de Firebase (Version Compat pour HTML simple) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
-  <div style={{padding:"20px 5vw",overflowY:"auto",flex:1}}>
-    <div style={{maxWidth:1200,margin:"0 auto"}}>
-      {alerts?.length > 0 ? (
-        <div style={{display:"flex",flexDirection:"column",gap:20}}>
-          {alerts.map((al,i)=>(
-            <div key={i} style={{background:"rgba(239,68,68,.05)",border:"1px solid rgba(239,68,68,.2)",borderRadius:24,padding:"24px",position:"relative",overflow:"hidden"}}>
-              <div style={{position:"absolute",top:0,left:0,width:4,height:"100%",background:"#ef4444"}}/>
-              <div style={{display:"flex",gap:16,alignItems:"flex-start",flexDirection: window.innerWidth < 500 ? "column" : "row"}}>
-                <div style={{padding:12,background:"rgba(239,68,68,.15)",borderRadius:16,marginTop:2,flexShrink:0}}>
-                  <Ico n="alert" s={24} c="#f87171"/>
-                </div>
-                <div>
-                  <h3 style={{fontFamily:"Syne",fontWeight:700,fontSize:18,color:"#fca5a5",marginBottom:10,lineHeight:1.3}}>{al.headline}</h3>
-                  <p style={{fontSize:14,opacity:.8,lineHeight:1.6,fontFamily:"DM Sans",marginBottom:16}}>{al.desc}</p>
-                  
-                  <div style={{display:"flex",flexWrap:"wrap",gap:12,fontSize:11,opacity:.6,fontFamily:"Syne",textTransform:"uppercase",letterSpacing:".05em"}}>
-                    <span style={{background:"rgba(239,68,68,.15)",padding:"6px 10px",borderRadius:8,color:"#fca5a5",fontWeight:700}}>Event: {al.event}</span>
-                    {al.effective && <span style={{display:"flex",alignItems:"center"}}>From {new Date(al.effective).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span>}
-                  </div>
-                </div>
-              </div>
+    <!-- Importation de React pour fonctionner en HTML -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { margin: 0; padding: 0; background-color: #020610; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Remplacement des 'import' par l'utilisation de la librairie globale React
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        // ==========================================
+        // CONFIGURATION FIREBASE (Sans import)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+            authDomain: "levelup-ecosystem.com",
+            databaseURL: "https://levelup-ia-default-rtdb.firebaseio.com",
+            projectId: "levelup-ia",
+            storageBucket: "levelup-ia.firebasestorage.app",
+            messagingSenderId: "229420004282",
+            appId: "1:229420004282:web:6735f059a947f0936ae383",
+            measurementId: "G-MSRDY2574K"
+        };
+
+        // Initialisation avec l'API Compat de Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // ==========================================
+        // CONSTANTES METEO
+        // ==========================================
+        const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+        const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const MAX_REQUESTS = 5; 
+
+        const AQI_MAP = {
+            1:{l:"Excellent",c:"#34d399",bg:"rgba(52,211,153,0.12)"},
+            2:{l:"Good",c:"#a3e635",bg:"rgba(163,230,53,0.12)"},
+            3:{l:"Moderate",c:"#fbbf24",bg:"rgba(251,191,36,0.12)"},
+            4:{l:"Poor",c:"#fb923c",bg:"rgba(251,146,60,0.12)"},
+            5:{l:"Very Poor",c:"#f87171",bg:"rgba(248,113,113,0.12)"},
+            6:{l:"Hazardous",c:"#e879f9",bg:"rgba(232,121,249,0.12)"},
+        };
+
+        const getBg = (code, isDay) => {
+            if (!isDay) return { a:"#020408",b:"#050c1c",c:"#0b1635", type:"night" };
+            if (code===1000) return { a:"#051535",b:"#0a2872",c:"#1040b8", type:"sunny" };
+            if (code<=1009) return { a:"#090f1c",b:"#111e35",c:"#1c2f52", type:"cloudy" };
+            if (code<=1030) return { a:"#0b1018",b:"#14202e",c:"#1e3040", type:"fog" };
+            if (code===1087||code>=1273) return { a:"#030407",b:"#060810",c:"#0c1020", type:"storm" };
+            if (code>=1135&&code<=1147) return { a:"#0c1118",b:"#141d2a",c:"#1e2c3e", type:"fog" };
+            if ((code>=1150&&code<=1201)||(code>=1240&&code<=1264)) return { a:"#050c18",b:"#0c1830",c:"#142244", type:"rain" };
+            if (code>=1204&&code<=1237) return { a:"#08101e",b:"#101e38",c:"#182e52", type:"snow" };
+            return { a:"#050c18",b:"#0c1830",c:"#142244", type:"rain" };
+        };
+
+        // ── SVG ICON LIBRARY ──────────────────────────────────────────────────────────
+        const Ico = ({ n, s=16, c="currentColor", op=1 }) => {
+            const p = { width:s,height:s,viewBox:"0 0 24 24",fill:"none",stroke:c,strokeWidth:"1.8",strokeLinecap:"round",strokeLinejoin:"round",style:{opacity:op,flexShrink:0} };
+            const f = { ...p, fill:c, stroke:"none" };
+            const icons = {
+                search: <svg {...p}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+                loc: <svg {...f}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>,
+                wind: <svg {...p}><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>,
+                drop: <svg {...p}><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>,
+                eye: <svg {...p}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+                gauge: <svg {...p}><path d="M12 2v4M4.93 4.93l2.83 2.83M2 12h4M4.93 19.07l2.83-2.83M19.07 4.93l-2.83 2.83M22 12h-4"/><circle cx="12" cy="12" r="3"/></svg>,
+                thermo: <svg {...p}><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>,
+                uv: <svg {...p}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
+                sunrise: <svg {...p}><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg>,
+                sunset: <svg {...p}><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="16 5 12 9 8 5"/></svg>,
+                moon: <svg {...f}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+                cloud: <svg {...p}><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>,
+                alert: <svg {...p}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+                dew: <svg {...p}><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>,
+                snow: <svg {...p}><line x1="12" y1="2" x2="12" y2="22"/><path d="m20 10-8-8-8 8"/><path d="m20 14-8 8-8-8"/><line x1="2" y1="12" x2="22" y2="12"/></svg>,
+                close: <svg {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+                reload: <svg {...p}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-8.36"/></svg>,
+                precip: <svg {...p}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg>,
+                bell: <svg {...p}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+                lock: <svg {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            };
+            return icons[n] || null;
+        };
+
+        // ── MOON PHASE SVG ────────────────────────────────────────────────────────────
+        const MoonPhase = ({ phase, illumination, size = 32 }) => {
+            const r = size / 2 - 2;
+            const cx = size / 2, cy = size / 2;
+            const isNew = phase === "New Moon";
+            const isFull = phase === "Full Moon";
+            const isFirstQ = phase === "First Quarter";
+            const isLastQ = phase === "Last Quarter";
+            const isWaxing = phase?.includes("Waxing");
+
+            if (isNew) return (
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.25)" strokeWidth="1"/>
+            </svg>
+            );
+            if (isFull) return (
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <circle cx={cx} cy={cy} r={r} fill="rgba(255,235,170,0.9)"/>
+            <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,220,100,0.6)" strokeWidth="1"/>
+            </svg>
+            );
+            if (isFirstQ) return (
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5"/>
+            <path d={`M ${cx} ${cy-r} A ${r} ${r} 0 0 1 ${cx} ${cy+r} Z`} fill="rgba(255,235,170,0.9)"/>
+            </svg>
+            );
+            if (isLastQ) return (
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5"/>
+            <path d={`M ${cx} ${cy-r} A ${r} ${r} 0 0 0 ${cx} ${cy+r} Z`} fill="rgba(255,235,170,0.9)"/>
+            </svg>
+            );
+            const ellRx = Math.abs(r * (1 - (illumination||50)/50));
+            if (isWaxing) return (
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5"/>
+            <clipPath id="mc1"><circle cx={cx} cy={cy} r={r}/></clipPath>
+            <g clipPath="url(#mc1)">
+            <ellipse cx={cx} cy={cy} rx={r} ry={r} fill="rgba(255,235,170,0.9)"/>
+            <ellipse cx={cx} cy={cy} rx={ellRx||4} ry={r} fill="rgba(255,255,255,0.04)"/>
+            </g>
+            </svg>
+            );
+            return (
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <circle cx={cx} cy={cy} r={r} fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5"/>
+            <clipPath id="mc2"><circle cx={cx} cy={cy} r={r}/></clipPath>
+            <g clipPath="url(#mc2)">
+            <ellipse cx={cx} cy={cy} rx={r} ry={r} fill="rgba(255,235,170,0.9)"/>
+            <ellipse cx={cx} cy={cy} rx={ellRx||4} ry={r} fill="rgba(5,15,40,0.95)"/>
+            </g>
+            </svg>
+            );
+        };
+
+        // ── BACKGROUND PARTICLES ─────────────────────────────────────────────────────
+        const Particles = ({ type }) => {
+            const count = type==="rain"||type==="storm" ? 55 : type==="snow" ? 40 : type==="night" ? 90 : 0;
+            if (!count) return null;
+            return (
+            <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
+            {Array.from({length:count}).map((_,i)=>{
+            const x = Math.random()*100, delay = Math.random()*4, dur = 0.4+Math.random()*0.8;
+            const size = type==="snow" ? 2+Math.random()*5 : type==="night" ? 1+Math.random()*2 : null;
+            if (type==="rain"||type==="storm") return (
+            <div key={i} style={{position:"absolute",left:`${x}%`,top:"-4%",width:1.5,height:14+Math.random()*18,
+            background:"rgba(147,197,253,0.22)",borderRadius:1,
+            animation:`rainFall ${dur}s linear infinite`,animationDelay:`${delay}s`}}/>
+            );
+            if (type==="snow") return (
+            <div key={i} style={{position:"absolute",left:`${x}%`,top:"-4%",width:size,height:size,borderRadius:"50%",
+            background:"rgba(255,255,255,0.7)",
+            animation:`snowFall ${3+Math.random()*5}s ease-in infinite`,animationDelay:`${delay}s`}}/>
+            );
+            return (
+            <div key={i} style={{position:"absolute",left:`${x}%`,top:`${Math.random()*100}%`,width:size,height:size,
+            borderRadius:"50%",background:"white",
+            animation:`twinkle ${2+Math.random()*4}s ease-in-out infinite`,animationDelay:`${delay}s`}}/>
+            );
+            })}
+            {type==="storm" && (
+            <div style={{position:"fixed",inset:0,background:"rgba(120,140,255,0.04)",animation:"lightning 10s infinite",animationDelay:"2s"}}/>
+            )}
             </div>
-          ))}
-        </div>
-      ) : (
-        <div style={{padding:"10vh 0",textAlign:"center",opacity:.4,display:"flex",flexDirection:"column",alignItems:"center",gap:20}}>
-          <div style={{width:100,height:100,borderRadius:"50%",border:"2px dashed rgba(255,255,255,.15)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <Ico n="bell" s={36} op={.5}/>
-          </div>
-          <div style={{fontFamily:"Syne",fontSize:20,fontWeight:700}}>No weather alerts reported</div>
-          <p style={{fontSize:14,maxWidth:400,lineHeight:1.5}}>The weather situation is currently calm. Important alerts will appear here.</p>
-        </div>
-      )}
-    </div>
-  </div>
-</div>
-)}
+            );
+        };
 
-{/* ── MODAL LOCALISATION PRÉCISE (POP-UP 3 SECONDES - DESIGN CARRÉ VIOLET) ── */}
-{showLocPrompt && (
-<div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(2,6,16,0.9)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",animation:"fadeUp 0.4s ease-out",padding:20}}>
-  <div style={{maxWidth:420,width:"100%",borderRadius:0,padding:"40px 32px",textAlign:"center",background:"rgba(10,15,30,0.6)",border:"1px solid rgba(192,132,252,0.4)",boxShadow:"0 30px 60px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05)",position:"relative"}}>
-    
-    {/* Lignes décoratives violettes */}
-    <div style={{position:"absolute",top:0,left:0,width:12,height:12,borderTop:"2px solid #c084fc",borderLeft:"2px solid #c084fc"}}/>
-    <div style={{position:"absolute",top:0,right:0,width:12,height:12,borderTop:"2px solid #c084fc",borderRight:"2px solid #c084fc"}}/>
-    <div style={{position:"absolute",bottom:0,left:0,width:12,height:12,borderBottom:"2px solid #c084fc",borderLeft:"2px solid #c084fc"}}/>
-    <div style={{position:"absolute",bottom:0,right:0,width:12,height:12,borderBottom:"2px solid #c084fc",borderRight:"2px solid #c084fc"}}/>
+        // ── PROGRESS BAR ─────────────────────────────────────────────────────────────
+        const Bar = ({ val, max, color="#D4A043", h=4 }) => (
+            <div style={{height:h,borderRadius:h,background:"rgba(255,255,255,0.07)",overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${Math.min(100,(val/max)*100)}%`,background:color,borderRadius:h,transition:"width 1s ease"}}/>
+            </div>
+        );
 
-    <div style={{width:56,height:56,borderRadius:0,background:"rgba(192,132,252,0.1)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",border:"1px solid rgba(192,132,252,0.5)"}}>
-      <Ico n="loc" s={24} c="#c084fc"/>
-    </div>
-    
-    <h2 style={{fontFamily:"Syne",fontSize:22,fontWeight:800,marginBottom:14,letterSpacing:".08em",textTransform:"uppercase",color:"#c084fc"}}>Enhance Precision</h2>
-    
-    <p style={{fontSize:13,opacity:0.7,fontFamily:"'DM Sans',sans-serif",lineHeight:1.7,marginBottom:32}}>
-      You are currently seeing the weather based on your internet provider's general location. For highly accurate local weather, please enable location access.
-    </p>
-    
-    <div style={{display:"flex",flexDirection:"column",gap:12}}>
-      <button onClick={handleEnableLoc} className="hov" style={{padding:"16px",borderRadius:0,background:"#c084fc",color:"#020610",border:"none",fontFamily:"Syne",fontWeight:800,fontSize:12,letterSpacing:".1em",textTransform:"uppercase",cursor:"pointer",transition:"all 0.2s"}}>
-        Enable Location
-      </button>
-      <button onClick={handleDismissLoc} className="hov" style={{padding:"16px",borderRadius:0,background:"transparent",color:"white",border:"1px solid rgba(255,255,255,0.2)",fontFamily:"Syne",fontWeight:600,fontSize:12,letterSpacing:".1em",textTransform:"uppercase",cursor:"pointer",transition:"all 0.2s"}}>
-        Maybe Later
-      </button>
-    </div>
-  </div>
-</div>
-)}
+        // ── STYLES RESPONSIVES ───────────────────────────────────────────────────────
+        const CSS = `
+            *{box-sizing:border-box;margin:0;padding:0}
+            ::-webkit-scrollbar{height:3px;width:3px}
+            ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:4px}
+            ::-webkit-scrollbar-track{background:transparent}
+            input,button{font-family:inherit}
+            input::placeholder{color:rgba(255,255,255,0.28)}
+            input:focus{outline:none}
+            button:focus{outline:none}
 
-</div>
-);
-}
+            /* Animations */
+            @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+            @keyframes rainFall{0%{transform:rotate(12deg) translateY(-4%);opacity:0}8%{opacity:1}92%{opacity:.5}100%{transform:rotate(12deg) translateY(105vh);opacity:0}}
+            @keyframes snowFall{0%{transform:translateY(-4%) translateX(0);opacity:0}10%{opacity:.9}90%{opacity:.6}100%{transform:translateY(105vh) translateX(30px);opacity:0}}
+            @keyframes twinkle{0%,100%{opacity:.04;transform:scale(.7)}50%{opacity:.9;transform:scale(1.3)}}
+            @keyframes lightning{0%,93%,100%{opacity:0}94%,97%{opacity:1}95%,96%{opacity:.4}}
+            @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+            @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+            @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+            /* Utilities */
+            .fu{animation:fadeUp .5s ease both}
+            .fu1{animation:fadeUp .5s .08s ease both}
+            .fu2{animation:fadeUp .5s .16s ease both}
+            .fu3{animation:fadeUp .5s .22s ease both}
+            .fu4{animation:fadeUp .5s .28s ease both}
+            .fu5{animation:fadeUp .5s .34s ease both}
+            .fu6{animation:fadeUp .5s .40s ease both}
+            .fu7{animation:fadeUp .5s .46s ease both}
+            .g{background:rgba(255,255,255,0.05);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,0.08)}
+            .hov{transition:background .18s,transform .18s,border-color .18s;cursor:pointer}
+            .hov:hover{background:rgba(255,255,255,0.09)!important;transform:translateY(-2px)}
+            .hov-txt{transition:opacity .2s;opacity:.5;text-decoration:none;color:white}
+            .hov-txt:hover{opacity:1}
+            .icon-img{animation:float 4s ease-in-out infinite}
+            .spin{animation:spin .8s linear infinite}
+            .blink{animation:pulse 1.5s ease infinite}
+
+            /* RESPONSIVE DESIGN CLASSES */
+            .header-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+            .header-actions { display: flex; gap: 8px; align-items: center; }
+            .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+            .forecast-detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+            .bottom-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+            .hero-temps { display: inline-flex; gap: 18px; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 40px; padding: 7px 22px; font-size: 13px; }
+            .sun-arc-row { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
+            .aqi-main-score { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+
+            /* Tablettes & Petits écrans */
+            @media (max-width: 768px) {
+                .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+                .forecast-detail-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+                .bottom-panels { grid-template-columns: 1fr; gap: 14px; }
+                .hero-temps { flex-wrap: wrap; justify-content: center; padding: 10px 20px; gap: 12px; border-radius: 20px; }
+            }
+
+            /* Mobiles (Smartphones) */
+            @media (max-width: 500px) {
+                .header-container { flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 20px; }
+                .header-actions { justify-content: space-between; width: 100%; }
+                .hide-mobile { display: none; }
+                .search-btn { padding: 8px 12px !important; }
+                .hero-temps { gap: 10px; padding: 10px 16px; }
+                .sun-arc-row { flex-direction: column; gap: 20px; }
+                .sun-arc-row > div:nth-child(2) { order: -1; }
+                .sun-arc-row .text-right { text-align: left !important; }
+                .aqi-main-score { flex-direction: column; align-items: flex-start; gap: 4px; }
+            }
+        `;
+
+        // ── RATE LIMIT LOGIC ──────────────────────────────────────────────────────────
+        const checkRateLimit = () => {
+            const stored = localStorage.getItem('levelday_usage');
+            let usage = stored ? JSON.parse(stored) : null;
+            const now = Date.now();
+            const resetDate = new Date();
+            resetDate.setHours(24, 0, 0, 0); 
+
+            if (!usage || now > usage.resetAt) {
+                usage = { count: 0, resetAt: resetDate.getTime() };
+            }
+
+            if (usage.count >= MAX_REQUESTS) {
+                const resetTime = new Date(usage.resetAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                return { allowed: false, message: `Daily limit reached. We value our quality of service. Please come back tomorrow at ${resetTime} to refresh your daily quota.`, usage };
+            }
+
+            return { allowed: true, usage };
+        };
+
+        const incrementUsage = (usage) => {
+            usage.count += 1;
+            localStorage.setItem('levelday_usage', JSON.stringify(usage));
+        };
+
+        // ── MAIN APP ──────────────────────────────────────────────────────────────────
+        function LevelDay() {
+            const [q, setQ] = useState("");
+            const [sugg, setSugg] = useState([]);
+            const [showSearch, setShowSearch] = useState(false);
+            const [showNotifs, setShowNotifs] = useState(false);
+            const [data, setData] = useState(null);
+            const [astro, setAstro] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [err, setErr] = useState(null);
+            const [unit, setUnit] = useState("C");
+            const [activeDay, setActiveDay] = useState(0);
+            const [lastCity, setLastCity] = useState("Paris");
+            const [rateLimitErr, setRateLimitErr] = useState(null);
+            const [showLocPrompt, setShowLocPrompt] = useState(false);
+            const [showTopLocBanner, setShowTopLocBanner] = useState(false);
+            const inputRef = useRef(null);
+
+            useEffect(() => {
+                auth.signInAnonymously().catch(e => console.error("Auth Error", e));
+            }, []);
+
+            const T = c => unit==="C" ? Math.round(c) : Math.round(c*9/5+32);
+            const TU = unit==="C" ? "°C" : "°F";
+            const TS = unit==="C" ? "°" : "°F";
+
+            const load = useCallback(async (city, isSearch = false) => {
+                const rateStatus = checkRateLimit();
+                if (!rateStatus.allowed) {
+                    setRateLimitErr(rateStatus.message);
+                    setLoading(false);
+                    return;
+                }
+
+                setRateLimitErr(null);
+                setLoading(true); setErr(null);
+
+                try {
+                    const enc = encodeURIComponent(city);
+                    const origin = typeof window !== 'undefined' && window.location.origin !== "null" ? window.location.origin : "";
+                    const res = await fetch(`${origin}/api/weather?q=${enc}`);
+                    
+                    if (!res.ok) {
+                        if (res.status === 404) {
+                            throw new Error("Service temporarily unavailable. Our servers are synchronizing with the latest weather models. Please try again shortly.");
+                        }
+                        const e = await res.json().catch(()=>({}));
+                        throw new Error(e.error || "We couldn't find weather data for this location. Please verify the spelling or zip code and try again.");
+                    }
+                    
+                    const combinedData = await res.json();
+                    setData(combinedData.forecast);
+                    setAstro(combinedData.astronomy);
+                    setLastCity(combinedData.forecast.location.name);
+
+                    if (isSearch) incrementUsage(rateStatus.usage);
+
+                } catch(e) { 
+                    if (e.message.includes("Failed to parse URL") || e.message.includes("fetch")) {
+                        setErr("Security Mode Active 🛡️ : This weather radar is protected. It must be hosted on your Vercel server to function and hide your secret key.");
+                    } else {
+                        setErr(e.message || "A network connection error occurred. Please check your internet connection."); 
+                    }
+                } finally { 
+                    setLoading(false); 
+                }
+            }, []);
+
+            useEffect(() => {
+                const initLoc = async () => {
+                    let hasGranted = false;
+                    if (navigator.permissions && navigator.permissions.query) {
+                        try {
+                            const perm = await navigator.permissions.query({ name: 'geolocation' });
+                            hasGranted = (perm.state === 'granted');
+                        } catch(e){}
+                    }
+
+                    if (hasGranted && navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                setShowTopLocBanner(false);
+                                load(`${pos.coords.latitude},${pos.coords.longitude}`, true);
+                            },
+                            () => load("auto:ip", true),
+                            { timeout: 5000 }
+                        );
+                    } else {
+                        // On charge l'aperçu immédiatement
+                        load("auto:ip", true);
+                        
+                        // On affiche le pop-up après 3 secondes s'il ne l'a pas déjà refusé/accepté
+                        const seen = localStorage.getItem("levelday_loc_prompt");
+                        if (!seen) {
+                            setTimeout(() => setShowLocPrompt(true), 3000);
+                        } else {
+                            // S'il avait déjà cliqué sur "Plus tard", on affiche le bandeau en haut
+                            setShowTopLocBanner(true);
+                        }
+                    }
+                };
+                initLoc();
+            }, [load]);
+
+            const handleEnableLoc = () => {
+                setShowLocPrompt(false);
+                localStorage.setItem("levelday_loc_prompt", "1");
+                setLoading(true);
+                setErr(null);
+                
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            setShowTopLocBanner(false);
+                            load(`${pos.coords.latitude},${pos.coords.longitude}`, true);
+                        },
+                        () => {
+                            setErr("Location access denied or unavailable. Using approximate location.");
+                            load("auto:ip", true);
+                            setShowTopLocBanner(true);
+                        },
+                        { timeout: 5000 }
+                    );
+                } else {
+                    setLoading(false);
+                    setErr("Geolocation is not supported by your browser.");
+                }
+            };
+
+            const handleDismissLoc = () => {
+                setShowLocPrompt(false);
+                localStorage.setItem("levelday_loc_prompt", "1");
+                setShowTopLocBanner(true);
+            };
+
+            useEffect(() => {
+                if (q.length < 2) { setSugg([]); return; }
+                const t = setTimeout(async () => {
+                    try {
+                        const origin = typeof window !== 'undefined' && window.location.origin !== "null" ? window.location.origin : "";
+                        const r = await fetch(`${origin}/api/search?q=${encodeURIComponent(q)}`);
+                        const d = await r.json();
+                        setSugg(Array.isArray(d) ? d : []);
+                    } catch { setSugg([]); }
+                }, 280);
+                return () => clearTimeout(t);
+            }, [q]);
+
+            const pick = (name) => {
+                setShowSearch(false); setShowNotifs(false); setSugg([]); setQ(""); setActiveDay(0); load(name, true);
+            };
+            const openSearch = () => {
+                setShowSearch(true);
+                setShowNotifs(false);
+                setTimeout(() => inputRef.current?.focus(), 50);
+            };
+
+            // ── Derived data ─────────────────────────────────────────────────────────
+            const cur = data?.current;
+            const loc = data?.location;
+            const fcast = data?.forecast?.forecastday || [];
+            const alerts= data?.alerts?.alert || [];
+            const code = cur?.condition?.code || 1000;
+            const isDay = cur?.is_day ?? 1;
+            const bgC = getBg(code, isDay);
+            const aqiI = cur?.air_quality?.["us-epa-index"];
+
+            const now = new Date();
+            const dateStr = `${DAYS[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+
+            const nowH = now.getHours();
+            const todayH = fcast[0]?.hour || [];
+            const tomorrowH = fcast[1]?.hour || [];
+            const hourly24 = [
+                ...todayH.filter(h => new Date(h.time).getHours() >= nowH),
+                ...tomorrowH.filter(h => new Date(h.time).getHours() < nowH)
+            ].slice(0, 24);
+
+            const parse12 = (str) => {
+                if (!str) return 0;
+                const [time, ap] = str.split(" ");
+                if (!time) return 0;
+                let [h, m] = time.split(":").map(Number);
+                if (ap?.toLowerCase()==="pm" && h!==12) h+=12;
+                if (ap?.toLowerCase()==="am" && h===12) h=0;
+                return h*60+(m||0);
+            };
+
+            const srMin = parse12(astro?.sunrise);
+            const ssMin = parse12(astro?.sunset);
+            const nowMin = now.getHours()*60+now.getMinutes();
+
+            let isNight = false;
+            let arcPct = 0;
+            let phaseLen = 0;
+
+            if (srMin < ssMin && nowMin >= srMin && nowMin < ssMin) {
+                isNight = false;
+                arcPct = (nowMin - srMin) / (ssMin - srMin);
+                phaseLen = ssMin - srMin;
+            } else {
+                isNight = true;
+                const nightLen = (24 * 60 - ssMin) + srMin;
+                if (nowMin >= ssMin) {
+                    arcPct = (nowMin - ssMin) / nightLen; 
+                } else {
+                    arcPct = ((24 * 60 - ssMin) + nowMin) / nightLen;
+                }
+                phaseLen = nightLen;
+            }
+
+            const arcStart = isNight ? astro?.sunset : astro?.sunrise;
+            const arcEnd = isNight ? astro?.sunrise : astro?.sunset;
+            const arcStartLbl = isNight ? "Sunset" : "Sunrise";
+            const arcEndLbl = isNight ? "Sunrise" : "Sunset";
+            const arcIconStart = isNight ? "sunset" : "sunrise";
+            const arcIconEnd = isNight ? "sunrise" : "sunset";
+            const arcColorMain = isNight ? "#818CF8" : "#FDB813";
+            const arcColorSec = isNight ? "#38BDF8" : "#FF7C5C";
+            const arcGlow = isNight ? "rgba(129,140,248,0.15)" : "rgba(253,184,19,0.15)";
+            const phaseH = Math.floor(phaseLen / 60);
+            const phaseM = phaseLen % 60;
+
+            // ── RATE LIMIT UI ──────────────────────────────────────────────────────────
+            if (rateLimitErr) {
+                return (
+                    <div style={{minHeight:"100vh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",fontFamily:"'Syne',sans-serif",padding:20}}>
+                        <style>{CSS}</style>
+                        <div className="g fu" style={{maxWidth:480,width:"100%",borderRadius:24,padding:"40px",textAlign:"center",border:"1px solid rgba(255,255,255,0.1)",background:"rgba(10,15,30,0.8)",boxShadow:"0 30px 60px rgba(0,0,0,0.5)"}}>
+                            <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(192,132,252,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",border:"1px solid rgba(192,132,252,0.3)"}}>
+                                <Ico n="lock" s={36} c="#c084fc"/>
+                            </div>
+                            <h2 style={{fontSize:28,fontWeight:800,marginBottom:12,letterSpacing:"-.02em"}}>Access Limited</h2>
+                            <p style={{fontSize:16,opacity:0.6,fontFamily:"'DM Sans',sans-serif",lineHeight:1.6,marginBottom:30}}>
+                                {rateLimitErr}
+                            </p>
+                            <div style={{fontSize:11,opacity:.4,letterSpacing:".1em",textTransform:"uppercase",fontFamily:"Syne",fontWeight:700}}>
+                                POWERED BY LEVEL UP ECOSYSTEM
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ── Loading (initial) ─────────────────────────────────────────────────────
+            if (!data && loading) return (
+                <div style={{height:"100vh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,color:"white",fontFamily:"'Syne',sans-serif"}}>
+                    <style>{CSS}</style>
+                    <div style={{width:38,height:38,border:"2px solid rgba(255,255,255,0.08)",borderTop:"2px solid #D4A043",borderRadius:"50%"}} className="spin"/>
+                    <span style={{fontSize:12,opacity:.35,letterSpacing:".18em",textTransform:"uppercase"}}>LevelDay</span>
+                </div>
+            );
+
+            return (
+                <div style={{minHeight:"100vh",fontFamily:"'DM Sans',sans-serif",color:"white",
+                background:`linear-gradient(155deg,${bgC.a} 0%,${bgC.b} 45%,${bgC.c} 100%)`,
+                position:"relative",overflow:"hidden",transition:"background 1.6s ease"}}>
+                    <style>{CSS}</style>
+
+                    {/* Ambient glow orbs */}
+                    <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
+                        <div style={{position:"absolute",top:"-25%",right:"-18%",width:750,height:750,borderRadius:"50%",
+                        background:`radial-gradient(circle,${bgC.c}50 0%,transparent 68%)`,filter:"blur(70px)",transition:"background 1.6s"}}/>
+                        <div style={{position:"absolute",bottom:"-25%",left:"-18%",width:650,height:650,borderRadius:"50%",
+                        background:`radial-gradient(circle,${bgC.c}30 0%,transparent 68%)`,filter:"blur(90px)",transition:"background 1.6s"}}/>
+                    </div>
+
+                    <Particles type={bgC.type} />
+
+                    {/* ── PAGE ── */}
+                    <div style={{position:"relative",zIndex:1,maxWidth:1600,margin:"0 auto",padding:"18px 4vw 48px"}}>
+
+                        {/* BANDEAU LOCALISATION (S'ils ont fait "Maybe Later") */}
+                        {showTopLocBanner && !loading && (
+                        <div className="fu" style={{background:"rgba(192,132,252,0.1)", border:"1px solid rgba(192,132,252,0.3)", borderRadius:14, padding:"12px 16px", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12}}>
+                            <div style={{display:"flex", alignItems:"center", gap:12}}>
+                            <div style={{width:32, height:32, borderRadius:8, background:"rgba(192,132,252,0.2)", display:"flex", alignItems:"center", justifyContent:"center"}}>
+                                <Ico n="loc" s={16} c="#c084fc"/>
+                            </div>
+                            <div>
+                                <div style={{fontFamily:"Syne", fontWeight:700, fontSize:13, color:"#e9d5ff"}}>Approximate Location</div>
+                                <div style={{fontSize:11, opacity:0.6, fontFamily:"DM Sans", marginTop:2}}>Enable location for precise weather data</div>
+                            </div>
+                            </div>
+                            <button onClick={handleEnableLoc} className="hov" style={{background:"#c084fc", color:"#020610", border:"none", padding:"8px 16px", borderRadius:8, fontFamily:"Syne", fontWeight:800, fontSize:11, cursor:"pointer", textTransform:"uppercase", letterSpacing:".05em"}}>
+                            Enable Now
+                            </button>
+                        </div>
+                        )}
+
+                        {/* HEADER */}
+                        <header className="fu header-container">
+                            <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                <div>
+                                    <div style={{fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:22,letterSpacing:".07em",lineHeight:1.1}}>
+                                        <span style={{color:"#c084fc"}}>LEVEL</span><span style={{color:"white"}}>DAY</span>
+                                    </div>
+                                    <div style={{fontSize:10,opacity:.7,letterSpacing:".1em",fontFamily:"Syne,sans-serif",color:"#e9d5ff",marginTop:2,fontWeight:600}}>LEVEL UP ECOSYSTEM</div>
+                                </div>
+                            </div>
+
+                            <div className="header-actions">
+                                <div style={{display:"flex",background:"rgba(255,255,255,0.04)",borderRadius:8,border:"1px solid rgba(255,255,255,0.08)",padding:3,gap:2}}>
+                                    {["C","F"].map(u=>(
+                                    <button key={u} onClick={()=>setUnit(u)} style={{padding:"4px 13px",borderRadius:6,border:"none",cursor:"pointer",
+                                    fontFamily:"Syne,sans-serif",fontWeight:700,fontSize:12,transition:"all .2s",
+                                    background:unit===u?"rgba(212,160,67,.22)":"transparent",
+                                    color:unit===u?"#D4A043":"rgba(255,255,255,.3)"}}>°{u}</button>
+                                    ))}
+                                </div>
+                                <button onClick={()=>load(lastCity, true)} style={{width:36,height:36,borderRadius:8,border:"1px solid rgba(255,255,255,.08)",
+                                background:"rgba(255,255,255,0.04)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .2s"}}
+                                onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.1)"}
+                                onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"}>
+                                    <Ico n="reload" s={14} c="rgba(255,255,255,.55)"/>
+                                </button>
+
+                                {/* NOTIFICATION BUTTON */}
+                                <button onClick={() => {setShowNotifs(true); setShowSearch(false);}} style={{position:"relative",width:36,height:36,borderRadius:8,border:"1px solid rgba(255,255,255,.08)",
+                                background:"rgba(255,255,255,0.04)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .2s"}}
+                                onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.1)"}
+                                onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"}>
+                                    <Ico n="bell" s={14} c={alerts?.length > 0 ? "#fca5a5" : "rgba(255,255,255,.55)"}/>
+                                    {alerts?.length > 0 && <span className="blink" style={{position:"absolute",top:8,right:8,width:6,height:6,background:"#ef4444",borderRadius:"50%"}}/>}
+                                </button>
+
+                                <button onClick={()=>showSearch?setShowSearch(false):openSearch()} className="search-btn" style={{display:"flex",alignItems:"center",gap:7,
+                                padding:"8px 16px",borderRadius:10,border:`1px solid ${showSearch?"rgba(212,160,67,.4)":"rgba(255,255,255,.1)"}`,
+                                background:showSearch?"rgba(212,160,67,.13)":"rgba(255,255,255,0.05)",
+                                cursor:"pointer",color:showSearch?"#D4A043":"white",fontSize:13,transition:"all .2s"}}>
+                                    <Ico n="search" s={14} c={showSearch?"#D4A043":"white"}/>
+                                    <span className="hide-mobile">{showSearch ? "Close" : "Search"}</span>
+                                </button>
+                            </div>
+                        </header>
+
+                        {/* SEARCH PANEL */}
+                        {showSearch && (
+                        <div className="g fu" style={{borderRadius:14,marginBottom:18,overflow:"hidden"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",
+                            borderBottom:sugg.length?"1px solid rgba(255,255,255,0.06)":"none"}}>
+                                <Ico n="search" s={16} c="rgba(255,255,255,.35)"/>
+                                <input ref={inputRef} value={q} onChange={e=>setQ(e.target.value)}
+                                onKeyDown={e=>e.key==="Enter"&&q&&pick(q)}
+                                placeholder="City, region, country, zip code…"
+                                style={{flex:1,background:"transparent",border:"none",color:"white",fontSize:14,width:"100%"}}/>
+                                {q && <button onClick={()=>{setQ("");setSugg([])}}
+                                style={{background:"none",border:"none",cursor:"pointer",opacity:.4,display:"flex",alignItems:"center"}}>
+                                <Ico n="close" s={16} c="white"/></button>}
+                            </div>
+                            {sugg.length > 0 && (
+                            <div>
+                                {sugg.map((s,i)=>(
+                                <div key={i} onClick={()=>pick(s.name)} className="hov"
+                                style={{display:"flex",alignItems:"center",gap:12,padding:"11px 16px",
+                                borderBottom:i<sugg.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                                    <Ico n="loc" s={14} c="rgba(212,160,67,.55)"/>
+                                    <div style={{flex:1, minWidth:0}}>
+                                        <span style={{fontWeight:500,fontSize:14,display:"block",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.name}</span>
+                                        <span style={{fontSize:12,opacity:.35,display:"block",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                                        {s.region && `${s.region}, `}{s.country}
+                                        </span>
+                                    </div>
+                                    <span className="hide-mobile" style={{marginLeft:"auto",fontSize:11,opacity:.25,fontFamily:"Syne,sans-serif"}}>
+                                    {s.lat?.toFixed(2)}°N
+                                    </span>
+                                </div>
+                                ))}
+                            </div>
+                            )}
+                        </div>
+                        )}
+
+                        {/* ERROR */}
+                        {err && (
+                        <div className="fu" style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.2)",
+                        borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
+                            <Ico n="alert" s={16} c="#f87171"/>
+                            <span style={{fontSize:13,color:"#fca5a5",wordBreak:"break-word"}}>{err}</span>
+                        </div>
+                        )}
+
+                        {/* Refresh indicator */}
+                        {loading && data && (
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,opacity:.4,fontSize:12,fontFamily:"Syne,sans-serif"}}>
+                            <div style={{width:12,height:12,border:"1.5px solid rgba(255,255,255,.2)",borderTop:"1.5px solid #D4A043",borderRadius:"50%"}} className="spin"/>
+                            Updating…
+                        </div>
+                        )}
+
+                        {data && cur && (<>
+
+                        {/* ── HERO ── */}
+                        <div className="fu1" style={{textAlign:"center",padding:"30px 0 26px"}}>
+                            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:10}}>
+                                <Ico n="loc" s={13} c="rgba(212,160,67,.65)"/>
+                                <span style={{fontFamily:"Syne,sans-serif",fontSize:12,fontWeight:700,letterSpacing:".16em",
+                                opacity:.65,textTransform:"uppercase"}}>{loc.name}, {loc.country}</span>
+                            </div>
+                            <div style={{display:"flex",justifyContent:"center",marginBottom:6}} className="icon-img">
+                                <img src={`https:${cur.condition.icon.replace("64x64","128x128")}`}
+                                alt={cur.condition.text} style={{width:100,height:100,filter:"drop-shadow(0 0 24px rgba(255,255,255,.18))"}}
+                                onError={e=>e.target.style.display="none"}/>
+                            </div>
+                            <div style={{fontFamily:"Syne,sans-serif",fontWeight:800,lineHeight:.85,
+                            fontSize:"clamp(90px,15vw,128px)",letterSpacing:"-.04em",marginBottom:8}}>
+                                {T(cur.temp_c)}<span style={{fontSize:".35em",opacity:.45,verticalAlign:"super",fontWeight:700}}>{TU}</span>
+                            </div>
+                            <p style={{fontSize:17,fontWeight:300,fontStyle:"italic",opacity:.6,marginBottom:8,letterSpacing:".02em"}}>
+                                {cur.condition.text}
+                            </p>
+                            <p style={{fontSize:11,opacity:.28,letterSpacing:".12em",textTransform:"uppercase",fontFamily:"Syne,sans-serif",marginBottom:18}}>
+                                {dateStr} &nbsp;·&nbsp; {loc.localtime?.split(" ")[1]}
+                            </p>
+                            <div className="hero-temps">
+                                <span style={{opacity:.5}}>
+                                    <span style={{fontSize:9,fontFamily:"Syne",fontWeight:700,letterSpacing:".08em",opacity:.6,marginRight:4}}>MAX</span>
+                                    {T(fcast[0]?.day.maxtemp_c)}{TS}
+                                </span>
+                                <span className="hide-mobile" style={{opacity:.18}}>|</span>
+                                <span style={{opacity:.5}}>
+                                    <span style={{fontSize:9,fontFamily:"Syne",fontWeight:700,letterSpacing:".08em",opacity:.6,marginRight:4}}>MIN</span>
+                                    {T(fcast[0]?.day.mintemp_c)}{TS}
+                                </span>
+                                <span className="hide-mobile" style={{opacity:.18}}>|</span>
+                                <span style={{opacity:.5,display:"flex",alignItems:"center",gap:5}}>
+                                    <Ico n="thermo" s={12} c="rgba(255,255,255,.5)"/>
+                                    Feels like {T(cur.feelslike_c)}{TS}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* ── STATS GRID 1 ── */}
+                        <div className="fu2 stats-grid" style={{marginBottom:10}}>
+                            {[
+                            {l:"Humidity", v:`${cur.humidity}%`, sub:null, i:"drop"},
+                            {l:"Wind", v:`${Math.round(cur.wind_kph)} km/h`, sub:cur.wind_dir, i:"wind"},
+                            {l:"Visibility",v:`${cur.vis_km} km`, sub:null, i:"eye"},
+                            {l:"UV Index", v:cur.uv, sub:cur.uv<=2?"Low":cur.uv<=5?"Moderate":cur.uv<=7?"High":"Very High", i:"uv"},
+                            ].map((s,i)=>(
+                            <div key={i} className="g hov" style={{borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
+                                <div style={{display:"flex",justifyContent:"center",marginBottom:8,opacity:.3}}><Ico n={s.i} s={14}/></div>
+                                <div style={{fontFamily:"Syne,sans-serif",fontWeight:700,fontSize:"clamp(17px,3.2vw,22px)",letterSpacing:"-.02em",marginBottom:3}}>{s.v}</div>
+                                {s.sub && <div style={{fontSize:10,opacity:.35,fontFamily:"Syne",letterSpacing:".07em",textTransform:"uppercase",marginBottom:2}}>{s.sub}</div>}
+                                <div style={{fontSize:10,opacity:.28,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"Syne"}}>{s.l}</div>
+                            </div>
+                            ))}
+                        </div>
+
+                        {/* ── STATS GRID 2 ── */}
+                        <div className="fu2 stats-grid" style={{marginBottom:20}}>
+                            {[
+                            {l:"Pressure", v:`${cur.pressure_mb} hPa`, i:"gauge"},
+                            {l:"Dew point",v:`${T(cur.dewpoint_c)}${TS}`, i:"dew"},
+                            {l:"Cloud cover", v:`${cur.cloud}%`, i:"cloud"},
+                            {l:"Gusts", v:`${Math.round(cur.gust_kph)} km/h`, i:"wind"},
+                            ].map((s,i)=>(
+                            <div key={i} className="g hov" style={{borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
+                                <div style={{display:"flex",justifyContent:"center",marginBottom:8,opacity:.3}}><Ico n={s.i} s={14}/></div>
+                                <div style={{fontFamily:"Syne,sans-serif",fontWeight:700,fontSize:"clamp(15px,2.6vw,19px)",letterSpacing:"-.02em",marginBottom:3}}>{s.v}</div>
+                                <div style={{fontSize:10,opacity:.28,letterSpacing:".08em",textTransform:"uppercase",fontFamily:"Syne"}}>{s.l}</div>
+                            </div>
+                            ))}
+                        </div>
+
+                        {/* ── HOURLY 24H ── */}
+                        <div className="fu3 g" style={{borderRadius:18,padding:"18px 20px",marginBottom:18}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                                <span style={{fontFamily:"Syne",fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase"}}>24h Forecast</span>
+                                <span style={{fontSize:10,opacity:.2,fontFamily:"DM Sans"}}>Scroll →</span>
+                            </div>
+                            <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4}}>
+                                {hourly24.map((h,i)=>{
+                                const hr = new Date(h.time).getHours();
+                                const isNow = i===0;
+                                const rain = h.chance_of_rain > 0;
+                                const snow = h.chance_of_snow > 0;
+                                return (
+                                <div key={i} style={{flexShrink:0,borderRadius:12,padding:"11px 11px",textAlign:"center",minWidth:64,
+                                background:isNow?"rgba(212,160,67,.12)":"rgba(255,255,255,0.04)",
+                                border:`1px solid ${isNow?"rgba(212,160,67,.28)":"rgba(255,255,255,0.06)"}`,
+                                transition:"transform .2s"}}
+                                onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"}
+                                onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+                                    <div style={{fontSize:11,fontFamily:"Syne",fontWeight:600,
+                                    color:isNow?"#D4A043":"rgba(255,255,255,.4)",marginBottom:6}}>
+                                    {isNow?"Now":`${hr}h`}
+                                    </div>
+                                    <img src={`https:${h.condition.icon}`} alt="" style={{width:34,height:34,marginBottom:5}}
+                                    onError={e=>e.target.style.display="none"}/>
+                                    <div style={{fontFamily:"Syne",fontWeight:700,fontSize:14,marginBottom:3}}>{T(h.temp_c)}{TS}</div>
+                                    {(rain||snow) && (
+                                    <div style={{fontSize:10,color:snow?"#a5d8ff":"#93c5fd",opacity:.8,display:"flex",alignItems:"center",justifyContent:"center",gap:2}}>
+                                        <Ico n={snow?"snow":"drop"} s={9} c={snow?"#a5d8ff":"#93c5fd"}/>
+                                        {rain?h.chance_of_rain:h.chance_of_snow}%
+                                    </div>
+                                    )}
+                                </div>
+                                );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* ── 3-DAY FORECAST ── */}
+                        <div className="fu4 g" style={{borderRadius:18,padding:"18px 20px",marginBottom:18}}>
+                            <span style={{fontFamily:"Syne",fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase",display:"block",marginBottom:14}}>
+                                3-Day Forecast
+                            </span>
+                            <div style={{display:"flex",gap:10,marginBottom:14}}>
+                                {fcast.map((day,i)=>{
+                                const d = new Date(day.date);
+                                const lbl = i===0?"Today":i===1?"Tomorrow":DAYS[d.getDay()];
+                                const active = activeDay===i;
+                                const rain = day.day.daily_chance_of_rain;
+                                const snow = day.day.daily_chance_of_snow;
+                                return (
+                                <div key={i} onClick={()=>setActiveDay(i)} className="hov"
+                                style={{flex:1,borderRadius:14,padding:"16px 10px",textAlign:"center",
+                                background:active?"rgba(212,160,67,.12)":"rgba(255,255,255,0.04)",
+                                border:`1px solid ${active?"rgba(212,160,67,.28)":"rgba(255,255,255,0.06)"}`}}>
+                                    <div style={{fontSize:11,fontFamily:"Syne",fontWeight:700,letterSpacing:".07em",textTransform:"uppercase",
+                                    color:active?"#D4A043":"rgba(255,255,255,.45)",marginBottom:8}}>{lbl}</div>
+                                    <img src={`https:${day.day.condition.icon}`} alt="" style={{width:42,height:42,marginBottom:5}}
+                                    onError={e=>e.target.style.display="none"}/>
+                                    <div className="hide-mobile" style={{fontSize:11,opacity:.35,marginBottom:7,lineHeight:1.3,fontFamily:"DM Sans",height:28,overflow:"hidden"}}>{day.day.condition.text}</div>
+                                    <div style={{fontFamily:"Syne",fontWeight:700,fontSize:17,marginBottom:2}}>{T(day.day.maxtemp_c)}{TS}</div>
+                                    <div style={{fontSize:12,opacity:.3,fontFamily:"Syne"}}>{T(day.day.mintemp_c)}{TS}</div>
+                                    {(rain>0||snow>0) && (
+                                    <div style={{marginTop:7,fontSize:10,display:"flex",alignItems:"center",justifyContent:"center",gap:2,
+                                    color:snow>rain?"#a5d8ff":"#93c5fd",opacity:.75}}>
+                                        <Ico n={snow>rain?"snow":"drop"} s={9} c={snow>rain?"#a5d8ff":"#93c5fd"}/>
+                                        {Math.max(rain,snow)}%
+                                    </div>
+                                    )}
+                                </div>
+                                );
+                                })}
+                            </div>
+                            {/* Active day detail */}
+                            {fcast[activeDay] && (() => {
+                                const d = fcast[activeDay].day;
+                                return (
+                                <div className="forecast-detail-grid" style={{paddingTop:14,borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+                                    {[
+                                    {l:"Max wind", v:`${Math.round(d.maxwind_kph)} km/h`, i:"wind"},
+                                    {l:"Avg humidity", v:`${d.avghumidity}%`, i:"drop"},
+                                    {l:"Precipitation",v:`${d.totalprecip_mm} mm`, i:"precip"},
+                                    {l:"Max UV", v:d.uv, i:"uv"},
+                                    ].map((s,i)=>(
+                                    <div key={i} style={{textAlign:"center",padding:"10px 8px",
+                                    background:"rgba(255,255,255,0.03)",borderRadius:10,border:"1px solid rgba(255,255,255,0.05)"}}>
+                                        <div style={{display:"flex",justifyContent:"center",marginBottom:6,opacity:.3}}><Ico n={s.i} s={13}/></div>
+                                        <div style={{fontFamily:"Syne",fontWeight:700,fontSize:16,marginBottom:3}}>{s.v}</div>
+                                        <div style={{fontSize:10,opacity:.28,textTransform:"uppercase",letterSpacing:".06em",fontFamily:"Syne"}}>{s.l}</div>
+                                    </div>
+                                    ))}
+                                </div>
+                                );
+                            })()}
+                        </div>
+
+                        {/* ── SUN & MOON ARC DYNAMIQUE ── */}
+                        <div className="fu5 g" style={{borderRadius:18,padding:"24px",marginBottom:18,position:"relative",overflow:"hidden"}}>
+                            <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:"80%",height:100,background:`radial-gradient(ellipse at top, ${arcGlow} 0%, transparent 70%)`,pointerEvents:"none"}}/>
+
+                            <span style={{fontFamily:"Syne",fontSize:11,fontWeight:800,letterSpacing:".15em",opacity:.4,textTransform:"uppercase",display:"block",marginBottom:20}}>
+                                {isNight ? "Night Arc" : "Daily Sun Arc"}
+                            </span>
+
+                            <div style={{position:"relative",height:130,marginBottom:10}}>
+                                {(() => {
+                                const p = arcPct;
+                                const sx = Math.pow(1 - p, 2) * 40 + 2 * (1 - p) * p * 200 + Math.pow(p, 2) * 360;
+                                const sy = Math.pow(1 - p, 2) * 110 + 2 * (1 - p) * p * (-30) + Math.pow(p, 2) * 110;
+
+                                return (
+                                <svg width="100%" height="130" viewBox="0 0 400 130" preserveAspectRatio="none" style={{overflow:"visible"}}>
+                                    <defs>
+                                        <linearGradient id="arc-fill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor={arcColorMain} stopOpacity="0.3" />
+                                        <stop offset="100%" stopColor={arcColorMain} stopOpacity="0.0" />
+                                        </linearGradient>
+                                        <linearGradient id="arc-stroke" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor={arcColorSec} />
+                                        <stop offset="50%" stopColor={arcColorMain} />
+                                        <stop offset="100%" stopColor={arcColorSec} />
+                                        </linearGradient>
+                                        <linearGradient id="horizon" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor="white" stopOpacity="0" />
+                                        <stop offset="15%" stopColor="white" stopOpacity="0.25" />
+                                        <stop offset="50%" stopColor="white" stopOpacity="0.5" />
+                                        <stop offset="85%" stopColor="white" stopOpacity="0.25" />
+                                        <stop offset="100%" stopColor="white" stopOpacity="0" />
+                                        </linearGradient>
+                                        
+                                        <filter id="glow-path" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="3" result="blur" />
+                                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                        </filter>
+                                        
+                                        <clipPath id="arc-clip">
+                                        <rect x="0" y="0" width={p > 0 ? sx : 0} height="140" />
+                                        </clipPath>
+                                    </defs>
+
+                                    <line x1="10" y1="110" x2="390" y2="110" stroke="url(#horizon)" strokeWidth="1.5" />
+                                    <path d="M 40 110 Q 200 -30 360 110" stroke="rgba(255,255,255,0.15)" strokeWidth="2" strokeDasharray="6 6" fill="none" />
+
+                                    <g clipPath="url(#arc-clip)">
+                                        <path d="M 40 110 Q 200 -30 360 110 L 360 110 L 40 110 Z" fill="url(#arc-fill)" />
+                                        <path d="M 40 110 Q 200 -30 360 110" stroke="url(#arc-stroke)" strokeWidth="4" fill="none" filter="url(#glow-path)" />
+                                        <path d="M 40 110 Q 200 -30 360 110" stroke="#FFFFFF" strokeWidth="1.5" fill="none" opacity="0.8" />
+                                    </g>
+
+                                    <circle cx="40" cy="110" r="3.5" fill={arcColorSec} />
+                                    <circle cx="360" cy="110" r="3.5" fill={arcColorMain} />
+
+                                    {p > 0 && p < 1 && (
+                                        <g transform={`translate(${sx}, ${sy})`}>
+                                        <line x1="0" y1="0" x2="0" y2={110 - sy} stroke={arcColorMain} strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
+                                        <circle cx="0" cy={110 - sy} r="2.5" fill={arcColorMain} opacity="0.8" />
+
+                                        {isNight ? (
+                                            <g>
+                                            <circle cx="0" cy="0" r="24" fill={arcColorMain} opacity="0.1" />
+                                            <circle cx="0" cy="0" r="12" fill={arcColorMain} opacity="0.25" />
+                                            <circle cx="0" cy="0" r="4.5" fill="#E2E8F0" />
+                                            </g>
+                                        ) : (
+                                            <g>
+                                            <circle cx="0" cy="0" r="26" fill={arcColorMain} opacity="0.1" />
+                                            <circle cx="0" cy="0" r="13" fill={arcColorMain} opacity="0.25" />
+                                            <circle cx="0" cy="0" r="6" fill="#FDE047" />
+                                            <circle cx="0" cy="0" r="3.5" fill="#FFFFFF" />
+                                            </g>
+                                        )}
+
+                                        <g transform="translate(0, -25)">
+                                            <rect x="-18" y="-9" width="36" height="18" rx="9" fill="rgba(10,15,30,0.85)" stroke={arcColorMain} strokeWidth="1" strokeOpacity="0.4" />
+                                            <text x="0" y="3" fill={arcColorMain} fontSize="8.5" fontFamily="Syne" fontWeight="800" textAnchor="middle" letterSpacing="0.05em">NOW</text>
+                                        </g>
+                                        </g>
+                                    )}
+                                </svg>
+                                );
+                                })()}
+                            </div>
+
+                            <div className="sun-arc-row">
+                                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                    <div style={{width:32,height:32,borderRadius:10,background:isNight?"rgba(129,140,248,0.1)":"rgba(253,184,19,0.1)",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${arcColorSec}30`}}>
+                                    <Ico n={arcIconStart} s={16} c={arcColorSec}/>
+                                    </div>
+                                    <div>
+                                    <div style={{fontFamily:"Syne",fontWeight:800,fontSize:16,color:arcColorSec}}>{arcStart||"--"}</div>
+                                    <div style={{fontSize:10,opacity:.4,textTransform:"uppercase",letterSpacing:".08em",fontFamily:"Syne",marginTop:2}}>{arcStartLbl}</div>
+                                    </div>
+                                </div>
+                                
+                                <div style={{textAlign:"center",padding:"8px 20px",background:"rgba(255,255,255,0.03)",borderRadius:12,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 10px 30px rgba(0,0,0,0.2)"}}>
+                                    <div style={{fontFamily:"Syne",fontWeight:800,fontSize:18,marginBottom:2}}>{phaseH}<span style={{fontSize:12,opacity:.5}}>h</span> {phaseM}<span style={{fontSize:12,opacity:.5}}>m</span></div>
+                                    <div style={{fontSize:10,opacity:.3,textTransform:"uppercase",letterSpacing:".1em",fontFamily:"Syne"}}>{isNight ? "Nighttime" : "Daylight"}</div>
+                                </div>
+                                
+                                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                    <div className="text-right" style={{textAlign:"right"}}>
+                                    <div style={{fontFamily:"Syne",fontWeight:800,fontSize:16,color:arcColorMain}}>{arcEnd||"--"}</div>
+                                    <div style={{fontSize:10,opacity:.4,textTransform:"uppercase",letterSpacing:".08em",fontFamily:"Syne",marginTop:2}}>{arcEndLbl}</div>
+                                    </div>
+                                    <div style={{width:32,height:32,borderRadius:10,background:isNight?"rgba(56,189,248,0.1)":"rgba(255,124,92,0.1)",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${arcColorMain}30`}}>
+                                    <Ico n={arcIconEnd} s={16} c={arcColorMain}/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── AIR QUALITY + ASTRONOMY ── */}
+                        <div className="fu6 bottom-panels">
+
+                            <div className="g" style={{borderRadius:18,padding:"18px 20px"}}>
+                                <span style={{fontFamily:"Syne",fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase",display:"block",marginBottom:14}}>
+                                Air Quality
+                                </span>
+                                {aqiI && AQI_MAP[aqiI] ? (<>
+                                <div className="aqi-main-score">
+                                <span style={{fontFamily:"Syne",fontWeight:800,fontSize:34,color:AQI_MAP[aqiI].c,letterSpacing:"-.03em",lineHeight:1}}>{aqiI}</span>
+                                <div>
+                                <div style={{fontFamily:"Syne",fontWeight:700,fontSize:13,color:AQI_MAP[aqiI].c}}>{AQI_MAP[aqiI].l}</div>
+                                <div style={{fontSize:10,opacity:.35,fontFamily:"DM Sans",marginTop:1}}>US EPA Index</div>
+                                </div>
+                                </div>
+                                <div style={{height:6,borderRadius:6,overflow:"hidden",
+                                background:"linear-gradient(90deg,#34d399,#a3e635,#fbbf24,#fb923c,#f87171,#e879f9)",
+                                marginBottom:12,position:"relative"}}>
+                                <div style={{position:"absolute",top:-2,bottom:-2,left:`calc(${(aqiI/6)*100}% - 4px)`,
+                                width:8,background:"white",borderRadius:4,boxShadow:"0 0 6px rgba(255,255,255,.5)"}}/>
+                                </div>
+                                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                                {[
+                                {l:"PM2.5", v:`${cur.air_quality?.pm2_5?.toFixed(1)} μg/m³`},
+                                {l:"PM10", v:`${cur.air_quality?.pm10?.toFixed(1)} μg/m³`},
+                                {l:"CO", v:`${(cur.air_quality?.co/1000)?.toFixed(2)} mg/m³`},
+                                {l:"O₃", v:`${cur.air_quality?.o3?.toFixed(1)} μg/m³`},
+                                ].map((p,i)=>(
+                                <div key={i} style={{padding:"8px 10px",background:"rgba(255,255,255,.04)",borderRadius:8,border:"1px solid rgba(255,255,255,.05)"}}>
+                                <div style={{fontSize:10,opacity:.3,fontFamily:"Syne",textTransform:"uppercase",letterSpacing:".06em",marginBottom:3}}>{p.l}</div>
+                                <div style={{fontFamily:"Syne",fontWeight:600,fontSize:12}}>{p.v}</div>
+                                </div>
+                                ))}
+                                </div>
+                                </>) : <p style={{opacity:.25,fontSize:12}}>Data unavailable</p>}
+                            </div>
+
+                            <div className="g" style={{borderRadius:18,padding:"18px 20px"}}>
+                                <span style={{fontFamily:"Syne",fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase",display:"block",marginBottom:14}}>
+                                Astronomy
+                                </span>
+                                {astro ? (<>
+                                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10}}>
+                                {[
+                                {l:"Moonrise", v:astro.moonrise, i:"moon", c:"#A8B8D8"},
+                                {l:"Moonset",v:astro.moonset, i:"moon", c:"#607090"},
+                                ].map((a,i)=>(
+                                <div key={i} style={{padding:"9px 10px",background:"rgba(255,255,255,.04)",borderRadius:10,border:"1px solid rgba(255,255,255,.05)"}}>
+                                <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
+                                <Ico n={a.i} s={11} c={a.c}/>
+                                <span style={{fontSize:9,opacity:.3,fontFamily:"Syne",textTransform:"uppercase",letterSpacing:".06em"}}>{a.l}</span>
+                                </div>
+                                <div style={{fontFamily:"Syne",fontWeight:700,fontSize:13}}>{a.v||"—"}</div>
+                                </div>
+                                ))}
+                                </div>
+                                <div style={{padding:"12px 14px",background:"rgba(255,255,255,.04)",borderRadius:12,
+                                border:"1px solid rgba(255,255,255,.06)",display:"flex",alignItems:"center",gap:12}}>
+                                <MoonPhase phase={astro.moon_phase} illumination={Number(astro.moon_illumination)} size={40}/>
+                                <div style={{flex:1, minWidth:0}}>
+                                <div style={{fontFamily:"Syne",fontWeight:700,fontSize:13,marginBottom:3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{astro.moon_phase}</div>
+                                <div style={{fontSize:11,opacity:.35,fontFamily:"DM Sans"}}>Illumination: {astro.moon_illumination}%</div>
+                                <div style={{marginTop:6}}><Bar val={Number(astro.moon_illumination)} max={100} color="rgba(200,220,255,0.6)" h={3}/></div>
+                                </div>
+                                </div>
+                                </>) : <p style={{opacity:.25,fontSize:12}}>Data unavailable</p>}
+                            </div>
+                        </div>
+
+                        {/* ── FOOTER ── */}
+                        <div className="fu7" style={{textAlign:"center",opacity:.6,fontSize:11,fontFamily:"DM Sans",letterSpacing:".04em",paddingTop:30}}>
+                        LevelDay &nbsp;·&nbsp; Data by WeatherAPI.com &nbsp;·&nbsp; Updated at {cur.last_updated?.split(" ")[1]}
+                        
+                        <div style={{marginTop:10, fontFamily:"Syne", fontWeight:700, fontSize:12, letterSpacing:".15em", display:"flex", justifyContent:"center", gap:5}}>
+                            <span style={{color:"white", opacity:0.8}}>POWERED BY</span>
+                            <span style={{color:"#c084fc"}}>LEVEL UP</span>
+                        </div>
+
+                        <div style={{marginTop:18, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:24, fontSize:10, fontFamily:"DM Sans", textTransform:"uppercase", letterSpacing:".08em"}}>
+                            <a href="https://levelup-ecosystem.com/terms" target="_blank" rel="noreferrer" className="hov-txt">Terms</a>
+                            <a href="https://levelup-ecosystem.com/privacy" target="_blank" rel="noreferrer" className="hov-txt">Privacy</a>
+                            <a href="mailto:support@levelup-ecosystem.com" className="hov-txt">Support</a>
+                        </div>
+                        </div>
+
+                        </>)}
+                    </div>
+
+                    {/* ── NOTIFICATIONS MODAL PLEIN ECRAN ── */}
+                    {showNotifs && (
+                    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",flexDirection:"column",background:"rgba(5,8,16,0.85)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",animation:"fadeUp 0.3s ease-out"}}>
+                    
+                    <div style={{padding:"20px 5vw",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0,background:"rgba(255,255,255,0.02)"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:16}}>
+                        <div style={{width:48,height:48,borderRadius:16,background:alerts?.length>0?"rgba(239,68,68,.15)":"rgba(255,255,255,.05)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                            <Ico n="bell" s={20} c={alerts?.length>0?"#f87171":"white"} />
+                        </div>
+                        <div>
+                            <h2 style={{fontFamily:"Syne",fontSize:22,fontWeight:800,margin:0,letterSpacing:".02em"}}>Alert Center</h2>
+                            <p style={{fontSize:13,opacity:.5,margin:0,fontFamily:"DM Sans",marginTop:2}}>
+                            {alerts?.length > 0 ? <span style={{color:"#fca5a5"}}>{alerts.length} active alert(s)</span> : "All clear"}
+                            </p>
+                        </div>
+                        </div>
+                        
+                        <button onClick={() => setShowNotifs(false)} className="hov" style={{width:40,height:40,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",color:"white",cursor:"pointer"}}>
+                        <Ico n="close" s={20}/>
+                        </button>
+                    </div>
+
+                    <div style={{padding:"20px 5vw",overflowY:"auto",flex:1}}>
+                        <div style={{maxWidth:1200,margin:"0 auto"}}>
+                        {alerts?.length > 0 ? (
+                            <div style={{display:"flex",flexDirection:"column",gap:20}}>
+                            {alerts.map((al,i)=>(
+                                <div key={i} style={{background:"rgba(239,68,68,.05)",border:"1px solid rgba(239,68,68,.2)",borderRadius:24,padding:"24px",position:"relative",overflow:"hidden"}}>
+                                <div style={{position:"absolute",top:0,left:0,width:4,height:"100%",background:"#ef4444"}}/>
+                                <div style={{display:"flex",gap:16,alignItems:"flex-start",flexDirection: window.innerWidth < 500 ? "column" : "row"}}>
+                                    <div style={{padding:12,background:"rgba(239,68,68,.15)",borderRadius:16,marginTop:2,flexShrink:0}}>
+                                    <Ico n="alert" s={24} c="#f87171"/>
+                                    </div>
+                                    <div>
+                                    <h3 style={{fontFamily:"Syne",fontWeight:700,fontSize:18,color:"#fca5a5",marginBottom:10,lineHeight:1.3}}>{al.headline}</h3>
+                                    <p style={{fontSize:14,opacity:.8,lineHeight:1.6,fontFamily:"DM Sans",marginBottom:16}}>{al.desc}</p>
+                                    
+                                    <div style={{display:"flex",flexWrap:"wrap",gap:12,fontSize:11,opacity:.6,fontFamily:"Syne",textTransform:"uppercase",letterSpacing:".05em"}}>
+                                        <span style={{background:"rgba(239,68,68,.15)",padding:"6px 10px",borderRadius:8,color:"#fca5a5",fontWeight:700}}>Event: {al.event}</span>
+                                        {al.effective && <span style={{display:"flex",alignItems:"center"}}>From {new Date(al.effective).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span>}
+                                    </div>
+                                    </div>
+                                </div>
+                                </div>
+                            ))}
+                            </div>
+                        ) : (
+                            <div style={{padding:"10vh 0",textAlign:"center",opacity:.4,display:"flex",flexDirection:"column",alignItems:"center",gap:20}}>
+                            <div style={{width:100,height:100,borderRadius:"50%",border:"2px dashed rgba(255,255,255,.15)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                                <Ico n="bell" s={36} op={.5}/>
+                            </div>
+                            <div style={{fontFamily:"Syne",fontSize:20,fontWeight:700}}>No weather alerts reported</div>
+                            <p style={{fontSize:14,maxWidth:400,lineHeight:1.5}}>The weather situation is currently calm. Important alerts will appear here.</p>
+                            </div>
+                        )}
+                        </div>
+                    </div>
+                    </div>
+                    )}
+
+                    {/* ── MODAL LOCALISATION PRÉCISE (POP-UP 3 SECONDES - DESIGN CARRÉ VIOLET) ── */}
+                    {showLocPrompt && (
+                    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(2,6,16,0.9)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",animation:"fadeUp 0.4s ease-out",padding:20}}>
+                    <div style={{maxWidth:420,width:"100%",borderRadius:0,padding:"40px 32px",textAlign:"center",background:"rgba(10,15,30,0.6)",border:"1px solid rgba(192,132,252,0.4)",boxShadow:"0 30px 60px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05)",position:"relative"}}>
+                        
+                        {/* Lignes décoratives violettes */}
+                        <div style={{position:"absolute",top:0,left:0,width:12,height:12,borderTop:"2px solid #c084fc",borderLeft:"2px solid #c084fc"}}/>
+                        <div style={{position:"absolute",top:0,right:0,width:12,height:12,borderTop:"2px solid #c084fc",borderRight:"2px solid #c084fc"}}/>
+                        <div style={{position:"absolute",bottom:0,left:0,width:12,height:12,borderBottom:"2px solid #c084fc",borderLeft:"2px solid #c084fc"}}/>
+                        <div style={{position:"absolute",bottom:0,right:0,width:12,height:12,borderBottom:"2px solid #c084fc",borderRight:"2px solid #c084fc"}}/>
+
+                        <div style={{width:56,height:56,borderRadius:0,background:"rgba(192,132,252,0.1)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",border:"1px solid rgba(192,132,252,0.5)"}}>
+                        <Ico n="loc" s={24} c="#c084fc"/>
+                        </div>
+                        
+                        <h2 style={{fontFamily:"Syne",fontSize:22,fontWeight:800,marginBottom:14,letterSpacing:".08em",textTransform:"uppercase",color:"#c084fc"}}>Enhance Precision</h2>
+                        
+                        <p style={{fontSize:13,opacity:0.7,fontFamily:"'DM Sans',sans-serif",lineHeight:1.7,marginBottom:32}}>
+                        You are currently seeing the weather based on your internet provider's general location. For highly accurate local weather, please enable location access.
+                        </p>
+                        
+                        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                        <button onClick={handleEnableLoc} className="hov" style={{padding:"16px",borderRadius:0,background:"#c084fc",color:"#020610",border:"none",fontFamily:"Syne",fontWeight:800,fontSize:12,letterSpacing:".1em",textTransform:"uppercase",cursor:"pointer",transition:"all 0.2s"}}>
+                            Enable Location
+                        </button>
+                        <button onClick={handleDismissLoc} className="hov" style={{padding:"16px",borderRadius:0,background:"transparent",color:"white",border:"1px solid rgba(255,255,255,0.2)",fontFamily:"Syne",fontWeight:600,fontSize:12,letterSpacing:".1em",textTransform:"uppercase",cursor:"pointer",transition:"all 0.2s"}}>
+                            Maybe Later
+                        </button>
+                        </div>
+                    </div>
+                    </div>
+                    )}
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LevelDay />);
+    </script>
+</body>
+</html>
