@@ -3977,36 +3977,27 @@ renderNavGuest();
 }
 };
 
-// ========================================================================
-// TOOLS HUB LOADER — Design Premium (SVG) + Limites + Notifications
-// ========================================================================
+// ── FONCTION TOOLS HUB (charge les outils depuis Firebase) ──
 window._loadToolsHub = async function(db, doc, getDoc) {
     try {
         const ref = doc(db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'tools_hub');
         const snap = await getDoc(ref);
-        
-        // Cibles DOM
-        const gridOverlay = document.getElementById('toolsGrid');
-        const emptyOverlay = document.getElementById('toolsEmpty');
-        const gridPanel = document.getElementById('toolsPanelGrid');
-        const emptyPanel = document.getElementById('toolsPanelEmpty');
-        
-        if (!gridOverlay) return;
-        
-        // Nettoyage
-        Array.from(gridOverlay.children).forEach(c => { if(c.id !== 'toolsEmpty') c.remove(); });
-        
+        const grid = document.getElementById('toolsGrid');
+        const emptyEl = document.getElementById('toolsEmpty');
+        const panelGrid = document.getElementById('toolsPanelGrid');
+        const panelEmpty = document.getElementById('toolsPanelEmpty');
+        if (!grid) return;
+        Array.from(grid.children).forEach(c => { if(c.id !== 'toolsEmpty') c.remove(); });
         if (!snap.exists()) {
-            if(emptyOverlay) emptyOverlay.style.display='';
-            if(emptyPanel) emptyPanel.style.display='';
+            if(emptyEl) emptyEl.style.display='';
+            if(panelEmpty) panelEmpty.style.display='';
             return;
         }
-        
         const data = snap.data();
+        // Collect all active tools — supports tool_1..tool_50, tool1..tool50, tools_1..tools_50, and array field
         const allTools = [];
         const seenKeys = new Set();
-        
-        // 1. Récupération des outils indexés (tool_1...tool_50)
+        // 1. Indexed fields tool_1 → tool_50
         for (let i = 1; i <= 50; i++) {
             [`tool_${i}`, `tool${i}`, `tools_${i}`, `tools${i}`].forEach(k => {
                 if (!seenKeys.has(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].url)) {
@@ -4015,29 +4006,26 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                 }
             });
         }
-        // 2. Autres clés
+        // 2. Any other object fields that look like a tool and weren't indexed
         Object.keys(data).forEach(k => {
             if (!seenKeys.has(k) && /^tools?/i.test(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].url)) {
                 seenKeys.add(k);
                 allTools.push(data[k]);
             }
         });
-        // 3. Tableaux
+        // 3. Array field (e.g. field named "tools": [...])
         if (Array.isArray(data.tools)) {
-            data.tools.forEach((t) => {
+            data.tools.forEach((t, i) => {
                 if (t && typeof t === 'object' && t.active !== false && (t.title || t.url)) allTools.push(t);
             });
         }
-        
         if (allTools.length === 0) {
-            if(emptyOverlay) emptyOverlay.style.display='';
-            if(emptyPanel) emptyPanel.style.display='';
+            if(emptyEl) emptyEl.style.display='';
+            if(panelEmpty) panelEmpty.style.display='';
             return;
         }
-        
-        if(emptyOverlay) emptyOverlay.style.display = 'none';
-        if(emptyPanel) emptyPanel.style.display = 'none';
-        
+        if(emptyEl) emptyEl.style.display = 'none';
+        if(panelEmpty) panelEmpty.style.display = 'none';
         const GUEST_USE_LIMIT = 3;
         const DESC_LIMIT = 80;
         const _lang = (function(){ try { return localStorage.getItem('lvl_lang') || 'en'; } catch(e) { return 'en'; } })();
@@ -4051,82 +4039,76 @@ window._loadToolsHub = async function(db, doc, getDoc) {
             },
             signIn: _lang === 'fr' ? '<i class="fa-solid fa-arrow-right-to-bracket"></i> Se connecter' : '<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign in'
         };
-
-        // Génération des cartes
-        allTools.forEach((tool, idx) => {
+        // Tous les outils sont VISIBLES — la limite s'applique uniquement à l'OUVERTURE
+        allTools.forEach(tool => {
             const card = document.createElement('div');
-            // On utilise la même classe CSS que les services pour le design !
-            card.className = 'svc-card'; 
-            
+            card.className = 'tool-card';
+            const icon = tool.icon || 'fa-globe';
+            const iconHtml = tool.icon_html || null;
+            const logoUrl = tool.logo_url || tool.logo || null;
+            const logoCode = tool.logo_code || null;
             const name = tool.title || 'Outil';
             const desc = tool.description || '';
             const url = tool.url || tool.code || '';
             const urlEsc = url.replace(/"/g,'&quot;');
             const nameEsc = name.replace(/"/g,'&quot;');
-            const toolKey = tool.key || tool.id || String(idx);
 
-            // Gestion de l'icône / SVG depuis Firebase
-            let visualHtml = '';
-            if (tool.svg) {
-                visualHtml = `<div class="tool-svg-wrap" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; color:#a855f7; fill:currentColor;">${tool.svg}</div>`;
-            } else if (tool.logo_code || tool.logo_url) {
-                // Rétrocompatibilité avec tes anciens champs
-                if (tool.logo_code && tool.logo_url) {
-                    visualHtml = `<span style="display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;height:100%;justify-content:center">${tool.logo_code}<img src="${tool.logo_url.replace(/"/g,'&quot;')}" style="max-width:100%;max-height:50%;object-fit:contain;border-radius:3px" onerror="this.style.display='none'" loading="lazy"></span>`;
-                } else if (tool.logo_code) {
-                    visualHtml = `<div style="color:#a855f7; fill:currentColor;">${tool.logo_code}</div>`;
-                } else {
-                    visualHtml = `<img src="${tool.logo_url.replace(/"/g,'&quot;')}" style="width:50px;height:50px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'" loading="lazy">`;
-                }
+            // Icône : supporte logo_code (SVG/HTML inline) ET/OU logo_url (image), icon_html, ou Font Awesome
+            let icoInner = '';
+            if (logoCode && logoUrl) {
+                // Les deux : code inline + image URL affichés ensemble
+                icoInner = `<span style="display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;height:100%;justify-content:center">${logoCode}<img src="${logoUrl.replace(/"/g,'&quot;')}" style="max-width:100%;max-height:50%;object-fit:contain;border-radius:3px" onerror="this.style.display='none'" loading="lazy"></span>`;
+            } else if (logoCode) {
+                icoInner = logoCode;
+            } else if (logoUrl) {
+                icoInner = `<img src="${logoUrl.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:contain;border-radius:6px" onerror="this.style.display='none'" loading="lazy">`;
+            } else if (iconHtml) {
+                icoInner = iconHtml;
             } else {
-                const icon = tool.icon || 'fa-wrench';
-                visualHtml = `<div style="color:#a855f7;"><i class="fa-solid ${icon}" style="font-size:1.8rem"></i></div>`;
+                icoInner = `<i class="fa-solid ${icon}"></i>`;
             }
 
-            // Description tronquée
+            // Description tronquée avec "voir plus"
             let descHtml = '';
             if (desc) {
                 if (desc.length > DESC_LIMIT) {
                     const short = desc.substring(0, DESC_LIMIT);
                     const full = desc.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-                    descHtml = `<div class="svc-card-desc" style="font-size:0.78rem; color:var(--muted); line-height:1.4; margin:0;">${short}… <button class="tool-card-see-more" data-full="${full}" data-name="${nameEsc}" data-url="${urlEsc}" onclick="event.stopPropagation();window._showToolDesc(this.dataset.name,this.dataset.full,this.dataset.url)" style="background:none;border:none;color:#a855f7;padding:0;font-size:inherit;cursor:pointer;text-decoration:underline;">${_tx.seeMore}</button></div>`;
+                    descHtml = `<div class="tool-card-desc">${short}… <button class="tool-card-see-more" data-full="${full}" data-name="${nameEsc}" data-url="${urlEsc}" onclick="event.stopPropagation();window._showToolDesc(this.dataset.name,this.dataset.full,this.dataset.url)">${_tx.seeMore}</button></div>`;
                 } else {
-                    descHtml = `<div class="svc-card-desc" style="font-size:0.78rem; color:var(--muted); line-height:1.4; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${desc}</div>`;
+                    descHtml = `<div class="tool-card-desc">${desc}</div>`;
                 }
             }
 
-            // STRUCTURE IDENTIQUE AUX SERVICES
+            const toolKey = tool.key || tool.id || null;
             card.innerHTML = `
-                <button class="card-img-upload-btn" title="Changer l'image" onclick="event.stopPropagation();window._openCardImageUpload({type:'tool',key:'${toolKey}',card:this.parentElement})"><i class="fa-solid fa-camera"></i></button>
-                <div class="svc-card-img-placeholder" style="height:130px; background:rgba(168,85,247,0.02); border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
-                    ${visualHtml}
-                </div>
-                <div class="svc-card-body" style="padding:16px; display:flex; flex-direction:column; gap:6px; flex:1;">
-                    <div class="svc-card-title" style="font-size:0.92rem; color:#fff; font-weight:600; margin:0;">${name}</div>
+                ${toolKey ? `<button class="card-img-upload-btn" title="Changer l'image" onclick="event.stopPropagation();window._openCardImageUpload({type:'tool',key:'${toolKey}',card:null})"><i class="fa-solid fa-camera"></i></button>` : ''}
+                <div class="tool-card-body">
+                    <div class="tool-card-header">
+                        <div class="tool-card-ico">${icoInner}</div>
+                        <div class="tool-card-name">${name}</div>
+                    </div>
                     ${descHtml}
-                    <button class="svc-card-open" style="margin-top:auto;" onclick="event.stopPropagation(); if(typeof window.closeToolsHub === 'function') window.closeToolsHub(); window.openToolWindow('${urlEsc}', '${nameEsc}')">
-                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.72rem"></i> ${_tx.open}
+                    <button class="tool-card-try" data-url="${urlEsc}" data-name="${nameEsc}" onclick="event.stopPropagation();window.openToolWindow(this.dataset.url,this.dataset.name)">
+                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.62rem"></i> ${_tx.open}
                     </button>
                 </div>
             `;
+            if (toolKey) {
+                const uploadBtn = card.querySelector('.card-img-upload-btn');
+                if (uploadBtn) uploadBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window._openCardImageUpload({ type: 'tool', key: toolKey, card });
+                });
+            }
 
-            // Clic sur toute la carte
-            card.onclick = () => {
-                if (typeof window.closeToolsHub === 'function') window.closeToolsHub(); 
-                window.openToolWindow(url, name);
-            };
-
-            gridOverlay.appendChild(card);
+            grid.appendChild(card);
         });
-
-        // ==========================================
-        // BANDEAU INVITÉ (Limites gratuites)
-        // ==========================================
+        // Afficher le compteur d'usages gratuits restants si l'utilisateur n'est pas connecté
         if (!window._user) {
             const todayKey = `lvl_tools_used_${new Date().toDateString()}`;
             const usedToday = parseInt(localStorage.getItem(todayKey) || '0', 10);
             const remaining = Math.max(0, GUEST_USE_LIMIT - usedToday);
-            
             if (remaining < GUEST_USE_LIMIT) {
                 const infoEl = document.createElement('div');
                 infoEl.id = 'toolsGuestBanner';
@@ -4140,26 +4122,19 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                         ${_tx.signIn}
                     </button>
                 `;
-                gridOverlay.insertBefore(infoEl, gridOverlay.firstChild);
+                grid.insertBefore(infoEl, grid.firstChild);
             }
         }
 
         // Cloner la grille dans le panel dashboard
-        if (gridPanel) {
-            Array.from(gridPanel.children).forEach(c => { if(c.id !== 'toolsPanelEmpty') c.remove(); });
-            Array.from(gridOverlay.children).forEach(c => {
-                if(c.id !== 'toolsEmpty' && c.id !== 'toolsGuestBanner') {
-                    const clone = c.cloneNode(true);
-                    // Réappliquer le clic car cloneNode ne copie pas les eventListeners !
-                    clone.onclick = c.onclick; 
-                    gridPanel.appendChild(clone);
-                }
+        if (panelGrid) {
+            Array.from(panelGrid.children).forEach(c => { if(c.id !== 'toolsPanelEmpty') c.remove(); });
+            Array.from(grid.children).forEach(c => {
+                if(c.id !== 'toolsEmpty') panelGrid.appendChild(c.cloneNode(true));
             });
         }
 
-        // ==========================================
-        // NOTIFICATIONS DE NOUVEAUX OUTILS
-        // ==========================================
+        // ── BADGE NOUVEAUX OUTILS ──
         try {
             const lastSeen = parseInt(localStorage.getItem('lvl_tools_seen_at') || '0', 10);
             const newTools = allTools.filter(t => {
@@ -4169,17 +4144,16 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                     : new Date(t.added_at).getTime());
                 return addedTs > lastSeen;
             });
-            
             if (newTools.length > 0) {
                 const badge1 = document.getElementById('toolsNavBadge');
                 const badge2 = document.getElementById('toolsMobBadge');
                 if (badge1) badge1.classList.remove('hidden');
                 if (badge2) badge2.classList.remove('hidden');
 
+                // Email de notification (1 seul groupé)
                 if (window._user && window.getNotifPref && window.getNotifPref('tools')) {
                     const alreadyNotified = localStorage.getItem('lvl_tools_notified_set') || '';
                     const newUnseen = newTools.filter(t => !alreadyNotified.includes(t.title || ''));
-                    
                     if (newUnseen.length > 0 && window._emailQuota) {
                         const names = newUnseen.map(t => t.title).join(', ');
                         window._emailQuota.send({
@@ -4195,10 +4169,9 @@ window._loadToolsHub = async function(db, doc, getDoc) {
                 }
             }
         } catch(_) {}
-
-    } catch(e) { console.warn('Tools Hub Firebase Error:', e); }
+    } catch(e) { console.warn('Tools Hub Firebase:', e); }
 };
-    
+
 // ── FONCTION IA APPS HUB (charge les apps depuis Firebase) ──
 window._loadIAApps = async function(db, doc, getDoc) {
     try {
