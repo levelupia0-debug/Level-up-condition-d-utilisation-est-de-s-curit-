@@ -6465,23 +6465,25 @@ document.addEventListener('click', function(e) {
 // ========================================================================
 // SERVICES HUB LOADER — Même système que les Outils (Fenêtre intelligente)
 // ========================================================================
-window._loadServicesHub = async function() {
+window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
+    // Synchronisation exacte avec les variables Firebase
+    const _db = dbParam || window._db;
+    const _doc = docParam || window._fb?.doc;
+    const _getDoc = getDocParam || window._fb?.getDoc;
+
     const gridOverlay = document.getElementById('servicesGridCards'); // overlay
     const gridPanel = document.getElementById('svcCardsGrid'); // dashboard panel
     const emptyOverlay = document.getElementById('servicesEmpty');
     const emptyPanel = document.getElementById('servicesPanelEmpty');
 
-    if (!window._db) return;
+    if (!_db || !_doc || !_getDoc) return;
     if (window._servicesLoaded) return;
     window._servicesLoaded = true;
-    
-    const { doc, getDoc } = window._fb || {};
-    if (!doc || !getDoc) return;
 
     try {
-        // ON UTILISE LA NOUVELLE ROUTE : config > services_hub (comme tools_hub)
-        const ref = doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'config', 'services_hub');
-        const snap = await getDoc(ref);
+        // 🚨 LA CORRECTION EST ICI : On utilise "level-ia-premium" exactement comme tools_hub !
+        const ref = _doc(_db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'services_hub');
+        const snap = await _getDoc(ref);
         
         if (gridOverlay) gridOverlay.innerHTML = '';
         if (gridPanel) gridPanel.innerHTML = '';
@@ -6496,7 +6498,7 @@ window._loadServicesHub = async function() {
         const allServices = [];
         const seenKeys = new Set();
 
-        // Cherche service_1, service_2... exactement comme tool_1
+        // Cherche service_1, service_2...
         for (let i = 1; i <= 50; i++) {
             [`service_${i}`, `service${i}`, `services_${i}`, `services${i}`].forEach(k => {
                 if (!seenKeys.has(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].url || data[k].name)) {
@@ -6505,6 +6507,14 @@ window._loadServicesHub = async function() {
                 }
             });
         }
+        
+        // Cherche tout autre champ qui commence par "service"
+        Object.keys(data).forEach(k => {
+            if (!seenKeys.has(k) && /^services?/i.test(k) && data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && data[k].active !== false && (data[k].title || data[k].url || data[k].name)) {
+                seenKeys.add(k);
+                allServices.push(data[k]);
+            }
+        });
 
         if (allServices.length === 0) {
             if(emptyOverlay) emptyOverlay.style.display='';
@@ -6574,6 +6584,12 @@ window._loadServicesHub = async function() {
     }
 };
 
+// Fonction de compatibilité si un autre bout de code appelle encore l'ancienne iframe
+window.openServiceIframe = function(url, title) {
+    if (!url) return;
+    window.openToolWindow(url, title);
+};
+    
 // Fonction de compatibilité si un autre bout de code appelle encore l'ancienne iframe
 window.openServiceIframe = function(url, title) {
     if (!url) return;
