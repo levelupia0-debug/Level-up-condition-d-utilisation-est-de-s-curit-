@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>LevelAnime - Premium Streaming</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: '#ef4444' }, /* Rouge électrique pro */
+        fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+      }
+    }
+  }
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.292.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"
+  }
+}
+</script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+    -webkit-tap-highlight-color: transparent;
+  }
+  ::-webkit-scrollbar { display: none; }
+  
+  body { 
+    background-color: #060608; 
+    color: white; 
+    overflow-x: hidden;
+  }
+
+  /* Theme LevelAnime (Rouge) */
+  .bg-main { background: radial-gradient(circle at 50% 0%, #250909 0%, #060608 80%); min-height: 100vh; }
+  .glass { background: linear-gradient(135deg, rgba(30,10,10,0.6) 0%, rgba(15,10,15,0.8) 100%); border: 1px solid rgba(239,68,68,0.2); box-shadow: inset 0 0 30px rgba(239,68,68,0.05), 0 30px 60px rgba(0,0,0,0.8); backdrop-filter: blur(30px); }
+  
+  /* Animations Splash Screen */
+  .splash-text { opacity: 0; position: absolute; transform: scale(0.85); filter: blur(15px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); text-align: center; }
+  .splash-text.active { opacity: 1; transform: scale(1); filter: blur(0px); }
+  .splash-text.exit { opacity: 0; transform: scale(1.2); filter: blur(30px); }
+
+  /* Chiffres du Top 10 Netflix-style */
+  .text-outline-netflix {
+    -webkit-text-stroke: 2px #ef4444;
+    color: transparent;
+    text-shadow: 4px 4px 15px rgba(0,0,0,0.8);
+  }
+  
+  @media (max-width: 768px) {
+    .text-outline-netflix {
+      -webkit-text-stroke: 1.5px #ef4444;
+    }
+  }
+
+  @keyframes slideInUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .toast-enter {
+    animation: slideInUp 0.3s ease-out forwards;
+  }
+
+  .toggle-checkbox:checked {
+    right: 0;
+    border-color: #ef4444;
+  }
+  .toggle-checkbox:checked + .toggle-label {
+    background-color: #ef4444;
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel" data-type="module">
+// --- CAPTURE DU LIEN D'INVITATION (SSO ÉCOSYSTÈME) ---
+const urlParams = new URLSearchParams(window.location.search);
+let shouldUpdateUrl = false;
+
+const ssoKey = urlParams.get('lvl_key');
+if (ssoKey) {
+    localStorage.setItem('levelanime_vip_key', ssoKey);
+    const ssoUid = urlParams.get('lvl_uid');
+    if (ssoUid) localStorage.setItem('levelanime_user_uid', ssoUid);
+    const ssoName = urlParams.get('lvl_name');
+    if (ssoName) localStorage.setItem('levelanime_user_name', ssoName);
+    const ssoEmail = urlParams.get('lvl_email');
+    if (ssoEmail) localStorage.setItem('levelanime_user_email', ssoEmail);
+    const ssoPhoto = urlParams.get('lvl_photo');
+    if (ssoPhoto) localStorage.setItem('la_photo', ssoPhoto);
+    
+    urlParams.delete('lvl_key');
+    urlParams.delete('lvl_uid');
+    urlParams.delete('lvl_name');
+    urlParams.delete('lvl_photo');
+    urlParams.delete('lvl_email');
+    shouldUpdateUrl = true;
+}
+
+if (shouldUpdateUrl) {
+    let newUrl = window.location.pathname;
+    if (urlParams.toString()) newUrl += '?' + urlParams.toString();
+    window.history.replaceState({}, document.title, newUrl);
+}
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createRoot } from 'react-dom/client';
+import { 
+  Play, Info, Search, X, Star, ChevronLeft, ChevronRight, 
+  Bookmark, Home, Tv, Clapperboard, Users, Flame, Calendar, 
+  Plus, CheckCircle, Bell, TrendingUp, Award, Compass, 
+  Loader2, Eye, Trophy, Heart, AlignLeft, Filter, Sparkles, LayoutGrid, 
+  BellRing, Mic2, Settings, User, PlayCircle, Subtitles, HardDrive, LogOut, ShieldCheck, KeyRound, EyeOff
+} from 'lucide-react';
+
+// --- FIREBASE SETUP ---
+import { initializeApp } from "firebase/app";
+import { getAuth, signInAnonymously } from "firebase/auth";
+import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+  authDomain: "levelup-ia.firebaseapp.com",
+  databaseURL: "https://levelup-ia-default-rtdb.firebaseio.com",
+  projectId: "levelup-ia",
+  storageBucket: "levelup-ia.firebasestorage.app",
+  messagingSenderId: "229420004282",
+  appId: "1:229420004282:web:6735f059a947f0936ae383",
+  measurementId: "G-MSRDY2574K"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// --- CHEMINS DE L'ÉCOSYSTÈME ---
+const APP_ID = "levelanime"; // Base Isolée pour cette app
+const VALIDATION_API_URL = "https://levelup-ecosystem.com/api/validate-key"; // Ton Serveur de Validation Node.js
+
+const LevelAnimeLogo = ({ className = "w-6 h-6", color = "currentColor" }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill={color}/>
+  </svg>
+);
+
+const formatMetric = (num) => {
+  if (!num) return 'N/A';
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+  return num;
+};
+
+const ANIME_GENRES = [
+  { id: 1, name: 'Action', icon: '🔥' },
+  { id: 2, name: 'Aventure', icon: '🗺️' },
+  { id: 4, name: 'Comédie', icon: '😂' },
+  { id: 8, name: 'Drame', icon: '🎭' },
+  { id: 10, name: 'Fantasy', icon: '✨' },
+  { id: 14, name: 'Horreur', icon: '🩸' },
+  { id: 22, name: 'Romance', icon: '❤️' },
+  { id: 24, name: 'Sci-Fi', icon: '🚀' },
+  { id: 30, name: 'Sport', icon: '🏅' },
+  { id: 36, name: 'Tranche de vie', icon: '☕' },
+  { id: 37, name: 'Surnaturel', icon: '👻' },
+  { id: 7, name: 'Mystère', icon: '🔍' },
+];
+
+const FALLBACK_HERO = {
+  mal_id: 52299,
+  title: "Ore dake Level Up na Ken",
+  title_english: "Solo Leveling",
+  images: { webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1100/138338l.webp" } },
+  trailer: { youtube_id: "euwZ9jI_Xp8", images: { maximum_image_url: "https://img.youtube.com/vi/euwZ9jI_Xp8/maxresdefault.jpg" } },
+  synopsis: "Ils disent que tout ce qui ne vous tue pas vous rend plus fort. Ce n'est pourtant pas le cas pour Sung Jinwoo, le chasseur le plus faible du monde. Après avoir miraculeusement survécu à un double donjon mortel, il se réveille avec une étrange interface l'invitant à devenir le seul joueur capable de monter de niveau...",
+  score: 8.35, year: 2024, episodes: 12, members: 850000, status: "Terminé", rating: "R - 17+", duration: "24 min par ep", type: "TV"
+};
+
+function App() {
+  // --- AUTH STATES ---
+  const [userName, setUserName] = useState('Utilisateur');
+  const [userEmail, setUserEmail] = useState('');
+  const [userPhoto, setUserPhoto] = useState(null);
+  
+  const [hasValidKey, setHasValidKey] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
+  const [accessKey, setAccessKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isLoadingAuth, setIsLoadingAuth] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // --- SPLASH SCREEN ---
+  const [showSplash, setShowSplash] = useState(true);
+  const [splashStep, setSplashStep] = useState(0);
+  
+  // --- APP STATES ---
+  const [currentCategory, setCurrentCategory] = useState('home');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Data States
+  const [heroAnime, setHeroAnime] = useState(null);
+  const [trending, setTrending] = useState([]);
+  const [popular, setPopular] = useState([]);
+  const [actionAnime, setActionAnime] = useState([]);
+  const [romanceAnime, setRomanceAnime] = useState([]);
+  const [topRated, setTopRated] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  
+  // User Data States (Synced with Firestore)
+  const [history, setHistory] = useState([]);
+  const [watchlist, setWatchlist] = useState([]);
+  const [reminders, setReminders] = useState([]);
+  
+  // UI & Modals
+  const [loading, setLoading] = useState(true);
+  const [selectedAnime, setSelectedAnime] = useState(null);
+  const [playerAnime, setPlayerAnime] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showSurprise, setShowSurprise] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [inAppNotifications, setInAppNotifications] = useState([
+    { id: 1, title: 'Système Connecté', desc: "L'écosystème LevelAnime est synchronisé.", time: 'Maintenant', unread: true }
+  ]);
+  const [toasts, setToasts] = useState([]);
+  const [genreCounts, setGenreCounts] = useState({});
+  const [surpriseAnime, setSurpriseAnime] = useState([]);
+  const [loadingSurprise, setLoadingSurprise] = useState(false);
+
+  // Explore
+  const [exploreAnime, setExploreAnime] = useState([]);
+  const [explorePage, setExplorePage] = useState(1);
+  const [loadingExplore, setLoadingExplore] = useState(false);
+  const [hasMoreExplore, setHasMoreExplore] = useState(true);
+  const observerTarget = useRef(null);
+  const [selectedGenre, setSelectedGenre] = useState(null);
+  const isFetchingRef = useRef(false);
+
+  // Animation de démarrage
+  useEffect(() => {
+    const t1 = setTimeout(() => setSplashStep(1), 100);
+    const t2 = setTimeout(() => setSplashStep(2), 800);
+    const t3 = setTimeout(() => setSplashStep(3), 1600);
+    const t4 = setTimeout(() => {
+        setSplashStep(4);
+        setShowSplash(false);
+    }, 2000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); }
+  }, []);
+
+  // VÉRIFICATION SILENCIEUSE VIA L'API DE L'ÉCOSYSTÈME
+  useEffect(() => {
+    const initSilentAuth = async () => {
+      try {
+        if (!auth.currentUser) await signInAnonymously(auth);
+        
+        const savedKey = localStorage.getItem('levelanime_vip_key');
+        const savedUid = localStorage.getItem('levelanime_user_uid');
+        
+        if (savedKey && savedUid) {
+            try {
+                // On ping ton API Server pour vérifier que la clé n'a pas été désactivée entre temps
+                const response = await fetch(VALIDATION_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: savedKey, appId: APP_ID })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.valid) {
+                    setUserName(data.name || localStorage.getItem('levelanime_user_name') || 'Utilisateur');
+                    setUserEmail(data.email || localStorage.getItem('levelanime_user_email') || '');
+                    setHasValidKey(true);
+                    loadUserData(data.uid || savedUid);
+                } else {
+                    // La clé a été bannie ou supprimée côté serveur
+                    localStorage.removeItem('levelanime_vip_key');
+                    setHasValidKey(false);
+                }
+            } catch (err) {
+                console.error("[AUTH] Erreur API en silencieux. Mode Hors-ligne/Tolérance :", err);
+                // Si l'API est temporairement down (Vercel cold start), on accepte la session locale pour ne pas bloquer l'UX
+                setHasValidKey(true);
+                loadUserData(savedUid);
+            }
+        } else {
+            setHasValidKey(false);
+        }
+      } catch (e) {
+          console.error("Erreur globale d'init :", e);
+      } finally {
+          setIsVerifying(false);
+      }
+    };
+
+    initSilentAuth();
+  }, []);
+
+  // --- LOGIN VIA TON SERVEUR NODE.JS (API) ---
+  const handleLogin = async (e) => {
+    e?.preventDefault();
+    const finalKey = accessKey.trim().toUpperCase();
+    if (!finalKey) return;
+    setIsLoadingAuth(true);
+    setErrorMsg('');
+
+    console.log(`[AUTH] Envoi de la clé au serveur : ${finalKey}`);
+
+    try {
+      if (!auth.currentUser) await signInAnonymously(auth);
+
+      // APPEL DE TON SERVEUR BACKEND POUR VALIDER LA CLÉ
+      const response = await fetch(VALIDATION_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: finalKey, appId: APP_ID })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.valid) {
+          console.log("[AUTH] Serveur : Clé valide autorisée !", data);
+          
+          const uid = data.uid || finalKey;
+          const name = data.name || "Utilisateur VIP";
+          const email = data.email || "email@inconnu.com";
+          const photo = localStorage.getItem('la_photo') || null;
+
+          setUserName(name);
+          setUserEmail(email);
+          if (photo) setUserPhoto(photo);
+          
+          // Sauvegarde de session
+          localStorage.setItem('levelanime_vip_key', finalKey);
+          localStorage.setItem('levelanime_user_name', name);
+          localStorage.setItem('levelanime_user_email', email);
+          localStorage.setItem('levelanime_user_uid', uid);
+          
+          setHasValidKey(true);
+          loadUserData(uid); // On charge les données isolées (Watchlist LevelAnime)
+          
+          setAccessKey(''); 
+          showToast("Connexion à l'Écosystème réussie", <CheckCircle className="w-5 h-5 text-green-400" />);
+          
+          setIsLoadingAuth(false);
+          setIsLoggingIn(true);
+          setTimeout(() => { setIsLoggingIn(false); }, 2000);
+
+      } else {
+          console.error("🔥 [AUTH] Refus du Serveur :", data.error);
+          setErrorMsg(data.error || "Clé d'accès invalide.");
+          setIsLoadingAuth(false);
+      }
+    } catch (error) {
+        console.error("🔥 [AUTH] ERREUR RÉSEAU / API DOWN :", error);
+        setErrorMsg("Erreur réseau. Le serveur d'authentification est injoignable.");
+        setIsLoadingAuth(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setShowSettings(false);
+    setShowAccountModal(false);
+    setShowLogoutConfirm(false);
+    setIsLoggingOut(true);
+    
+    setTimeout(() => {
+        localStorage.removeItem('levelanime_vip_key');
+        localStorage.removeItem('levelanime_user_uid');
+        setHasValidKey(false);
+        setAccessKey('');
+        setIsLoggingOut(false);
+        showToast("Déconnexion réussie.", <LogOut className="w-5 h-5 text-white/50" />);
+    }, 2500); 
+  };
+
+  // --- SAVE / LOAD ISOLATED DATA (APP_ID = levelanime) ---
+  const loadUserData = async (uid) => {
+    try {
+      const wlRef = doc(db, 'artifacts', APP_ID, 'users', uid, 'watchlist', 'data');
+      const wlSnap = await getDoc(wlRef);
+      if(wlSnap.exists()) setWatchlist(wlSnap.data().items || []);
+
+      const histRef = doc(db, 'artifacts', APP_ID, 'users', uid, 'history', 'recent');
+      const histSnap = await getDoc(histRef);
+      if(histSnap.exists()) setHistory(histSnap.data().items || []);
+
+      const prefRef = doc(db, 'artifacts', APP_ID, 'users', uid, 'preferences', 'settings');
+      const prefSnap = await getDoc(prefRef);
+      if(prefSnap.exists()) setReminders(prefSnap.data().reminders || []);
+    } catch (error) {
+      console.error("Error loading user data. Note: Firebase Rules must allow read for this UID.", error);
+    }
+  };
+
+  const saveUserData = async (newWatchlist, newReminders, newHistory) => {
+    const uid = localStorage.getItem('levelanime_user_uid');
+    if (!uid) return;
+    try {
+      if (newWatchlist) await setDoc(doc(db, 'artifacts', APP_ID, 'users', uid, 'watchlist', 'data'), { items: newWatchlist }, { merge: true });
+      if (newReminders) await setDoc(doc(db, 'artifacts', APP_ID, 'users', uid, 'preferences', 'settings'), { reminders: newReminders }, { merge: true });
+      if (newHistory) await setDoc(doc(db, 'artifacts', APP_ID, 'users', uid, 'history', 'recent'), { items: newHistory }, { merge: true });
+    } catch (error) {
+      console.error("Error saving user data", error);
+    }
+  };
+
+  const showToast = (message, icon = <CheckCircle className="w-5 h-5 text-green-400" />) => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, icon }]);
+    setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, 4000);
+  };
+
+  useEffect(() => {
+    if (selectedAnime || showSurprise || showNotifications || showSettings || showAccountModal || showLogoutConfirm || playerAnime || isLoggingOut) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [selectedAnime, showSurprise, showNotifications, showSettings, showAccountModal, showLogoutConfirm, playerAnime, isLoggingOut]);
+
+  // ==========================================
+  // 4. API DATA FETCHING (JIKAN)
+  // ==========================================
+  useEffect(() => {
+    if (!hasValidKey) return; 
+
+    const fetchInitialData = async () => {
+      try {
+        setLoading(true);
+        const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+        fetch('https://api.jikan.moe/v4/genres/anime')
+          .then(res => res.json())
+          .then(data => {
+            if(data.data) {
+              const counts = {};
+              data.data.forEach(g => { counts[g.mal_id] = g.count; });
+              setGenreCounts(counts);
+            }
+          }).catch(e => console.error(e));
+
+        const trendingRes = await fetch('https://api.jikan.moe/v4/seasons/now?limit=25');
+        const trendingData = await trendingRes.json();
+        
+        if (trendingData.data) {
+          const validTrending = trendingData.data.filter(a => a.images?.webp?.large_image_url);
+          setTrending(validTrending);
+          const heroCandidate = validTrending.find(a => a.trailer?.images?.maximum_image_url) || validTrending[0];
+          setHeroAnime(heroCandidate || FALLBACK_HERO);
+        } else {
+          setHeroAnime(FALLBACK_HERO); 
+        }
+
+        setLoading(false); 
+        await delay(1200); 
+
+        const popularRes = await fetch('https://api.jikan.moe/v4/top/anime?filter=airing&limit=10');
+        const popularData = await popularRes.json();
+        if(popularData.data) setPopular(popularData.data);
+        await delay(1200);
+
+        const topRes = await fetch('https://api.jikan.moe/v4/top/anime?limit=15');
+        const topData = await topRes.json();
+        if(topData.data) setTopRated(topData.data);
+        await delay(1200);
+
+        const actionRes = await fetch('https://api.jikan.moe/v4/anime?genres=1&order_by=popularity&sort=asc&limit=15');
+        const actionData = await actionRes.json();
+        if(actionData.data) setActionAnime(actionData.data);
+        await delay(1200);
+
+        const romanceRes = await fetch('https://api.jikan.moe/v4/anime?genres=22&order_by=popularity&sort=asc&limit=15');
+        const romanceData = await romanceRes.json();
+        if(romanceData.data) setRomanceAnime(romanceData.data);
+
+      } catch (error) {
+        console.error("Erreur de chargement API:", error);
+        if(!heroAnime) setHeroAnime(FALLBACK_HERO);
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+    const handleScroll = () => setIsScrolled(window.scrollY > 30);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasValidKey]);
+
+  // SEARCH
+  useEffect(() => {
+    if (searchQuery.length < 3 || !hasValidKey) {
+      setSearchResults([]);
+      return;
+    }
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(searchQuery)}&limit=20`);
+        const data = await res.json();
+        setSearchResults(data.data || []);
+      } catch (error) { console.error(error); }
+    }, 800);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, hasValidKey]);
+
+  // EXPLORER
+  const fetchExploreAnime = useCallback(async (pageToLoad, genreId = selectedGenre) => {
+    if (isFetchingRef.current || (!hasMoreExplore && pageToLoad !== 1) || !hasValidKey) return;
+    isFetchingRef.current = true;
+    setLoadingExplore(true);
+    try {
+      const genreQuery = genreId ? `&genres=${genreId}` : '';
+      const res = await fetch(`https://api.jikan.moe/v4/anime?page=${pageToLoad}&limit=24&order_by=popularity&sort=asc${genreQuery}`);
+      const data = await res.json();
+      
+      if (data.data && data.data.length > 0) {
+        setExploreAnime(prev => {
+          if (pageToLoad === 1) return data.data;
+          const newAnimes = data.data.filter((newAnime) => !prev.some((existingAnime) => existingAnime.mal_id === newAnime.mal_id));
+          return [...prev, ...newAnimes];
+        });
+        setExplorePage(pageToLoad);
+        setHasMoreExplore(data.pagination.has_next_page);
+      } else {
+        setHasMoreExplore(false);
+        if (pageToLoad === 1) setExploreAnime([]);
+      }
+    } catch (error) { console.error(error); } 
+    finally {
+      isFetchingRef.current = false;
+      setLoadingExplore(false);
+    }
+  }, [loadingExplore, hasMoreExplore, selectedGenre, hasValidKey]);
+
+  useEffect(() => {
+    if (currentCategory === 'explore' && hasValidKey) {
+      setExploreAnime([]);
+      setHasMoreExplore(true);
+      fetchExploreAnime(1, selectedGenre);
+    }
+  }, [currentCategory, selectedGenre, hasValidKey]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMoreExplore && !loadingExplore && currentCategory === 'explore') {
+          fetchExploreAnime(explorePage + 1, selectedGenre);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (observerTarget.current) observer.observe(observerTarget.current);
+    return () => { if (observerTarget.current) observer.unobserve(observerTarget.current); };
+  }, [observerTarget, hasMoreExplore, loadingExplore, currentCategory, explorePage, selectedGenre, fetchExploreAnime]);
+
+  const handleAnimeSelect = (anime) => {
+    setSelectedAnime(anime);
+    const newHist = history.filter(a => a.mal_id !== anime.mal_id);
+    const updatedHistory = [anime, ...newHist].slice(0, 20);
+    setHistory(updatedHistory);
+    saveUserData(watchlist, reminders, updatedHistory);
+  };
+
+  const handleSurpriseMe = async () => {
+    setShowSurprise(true);
+    if (surpriseAnime.length === 0) {
+      setLoadingSurprise(true);
+      try {
+        const res = await fetch('https://api.jikan.moe/v4/top/anime?filter=favorite&limit=12');
+        const data = await res.json();
+        setSurpriseAnime(data.data || []);
+      } catch (e) { console.error(e); } 
+      finally { setLoadingSurprise(false); }
+    }
+  };
+
+  const toggleWatchlist = (anime, e) => {
+    if (e) e.stopPropagation();
+    let newWatchlist = [];
+    const isAdded = watchlist.some(a => a.mal_id === anime.mal_id);
+    
+    if (isAdded) {
+      showToast("Retiré des favoris", <CheckCircle className="w-5 h-5 text-white/50" />);
+      newWatchlist = watchlist.filter(a => a.mal_id !== anime.mal_id);
+    } else {
+      showToast("Ajouté aux favoris !", <CheckCircle className="w-5 h-5 text-primary" />);
+      newWatchlist = [...watchlist, anime];
+    }
+    setWatchlist(newWatchlist);
+    saveUserData(newWatchlist, reminders, history);
+  };
+  const isAdded = (id) => watchlist.some(a => a.mal_id === id);
+
+  const toggleReminder = (anime) => {
+    let newReminders = [];
+    const isReminded = reminders.some(a => a.mal_id === anime.mal_id);
+    
+    if (isReminded) {
+      showToast("Alerte désactivée", <Bell className="w-5 h-5 text-white/50" />);
+      newReminders = reminders.filter(a => a.mal_id !== anime.mal_id);
+    } else {
+      showToast(`Alerte activée pour ${anime.title_english || anime.title}`, <BellRing className="w-5 h-5 text-primary" />);
+      const newNotif = {
+        id: Date.now(), title: 'Alerte configurée',
+        desc: `Vous recevrez un push pour les épisodes de ${anime.title_english || anime.title}.`,
+        time: "À l'instant", unread: true
+      };
+      setInAppNotifications([newNotif, ...inAppNotifications]);
+      newReminders = [...reminders, anime];
+    }
+    setReminders(newReminders);
+    saveUserData(watchlist, newReminders, history);
+  };
+  const isReminded = (id) => reminders.some(a => a.mal_id === id);
+  const getUnreadCount = () => inAppNotifications.filter(n => n.unread).length;
+
+
+  // ==========================================
+  // VUES (SPLASH, LOGIN, APP)
+  // ==========================================
+
+  if (showSplash) {
+    return (
+      <div className={`fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col transition-opacity duration-500 ${splashStep === 3 ? 'opacity-0' : 'opacity-100'}`}>
+        <div className={`splash-text flex flex-col items-center ${splashStep === 1 ? 'active' : ''} ${splashStep >= 2 ? 'exit' : ''}`}>
+          <LevelAnimeLogo className="w-20 h-20 text-primary mb-6" />
+          <div className="text-4xl font-black tracking-widest">
+            <span className="text-white">LEVEL</span><span className="text-primary">ANIME</span>
+          </div>
+        </div>
+        <div className={`splash-text flex flex-col items-center justify-center ${splashStep === 2 ? 'active' : ''} ${splashStep >= 3 ? 'exit' : ''}`}>
+          <span className="text-white font-black tracking-[0.6em] text-2xl uppercase">LevelUp</span>
+          <span className="text-[10px] font-bold tracking-[0.5em] text-primary mt-4 uppercase">Version 1.0</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Animation spéciale pour la déconnexion
+  if (isLoggingOut) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col transition-opacity duration-500 animate-in fade-in">
+        <LevelAnimeLogo className="w-20 h-20 text-primary mb-6 animate-pulse" />
+        <h2 className="text-3xl font-black tracking-widest text-white uppercase drop-shadow-md mb-2 animate-pulse">
+          DÉCONNEXION...
+        </h2>
+      </div>
+    );
+  }
+
+  if (isLoggingIn) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col transition-opacity duration-500 animate-in fade-in">
+        <LevelAnimeLogo className="w-20 h-20 text-primary mb-6 animate-pulse" />
+        <h2 className="text-3xl font-black tracking-widest text-white uppercase drop-shadow-md mb-2">
+          LEVEL<span className="text-primary">ANIME</span>
+        </h2>
+      </div>
+    );
+  }
+
+  if (!hasValidKey) {
+    return (
+      <div className="bg-main flex items-center justify-center p-4 sm:p-8 fixed inset-0 z-[5000]">
+        <div className="w-full max-w-sm text-center py-4 relative glass p-8 rounded-[2rem] border border-white/5 shadow-[0_0_50px_rgba(239,68,68,0.15)] animate-in fade-in zoom-in duration-300">
+          <LevelAnimeLogo className="w-12 h-12 text-primary mx-auto mb-4" />
+          <h1 className="text-3xl font-black tracking-widest mb-10 shrink-0 drop-shadow-md">
+            <span className="text-white">LEVEL</span><span className="text-primary">ANIME</span>
+          </h1>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <p className="text-[11px] font-bold text-primary uppercase tracking-[0.1em] mb-2 flex items-center justify-center gap-2">
+              <ShieldCheck className="w-4 h-4" /> Clé d'Accès requise
+            </p>
+            <div className="relative w-full">
+              <input
+                type={showKey ? "text" : "password"}
+                value={accessKey}
+                onChange={(e) => setAccessKey(e.target.value)}
+                placeholder="LVL-XXXXX-XXXXX"
+                className="w-full bg-[#030305] border border-primary/40 rounded-xl py-4 pl-5 pr-12 text-center text-white font-mono text-[13px] tracking-widest outline-none focus:border-primary transition-all shadow-inner uppercase"
+              />
+              <button 
+                type="button"
+                onClick={() => setShowKey(!showKey)} 
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/60 hover:text-primary transition-colors outline-none"
+              >
+                {showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+            <button
+              type="submit"
+              disabled={isLoadingAuth || !accessKey.trim()}
+              className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-4 rounded-xl font-black text-[12px] uppercase tracking-[0.1em] hover:opacity-90 active:scale-95 transition-all shadow-[0_0_25px_rgba(239,68,68,0.4)] disabled:opacity-50 disabled:cursor-not-allowed outline-none flex justify-center items-center gap-2"
+            >
+              {isLoadingAuth ? <Loader2 className="w-4 h-4 animate-spin" /> : "Connexion"}
+            </button>
+            <div className="mt-4 flex justify-center">
+              <a href="https://levelup-ecosystem.com" target="_blank" rel="noreferrer" className="flex items-center justify-center w-full gap-2 px-6 py-4 rounded-xl bg-white/10 border border-white/20 text-[11px] font-black uppercase tracking-[0.1em] text-white/90 hover:text-white hover:bg-white/20 hover:border-primary transition-all duration-300 no-underline outline-none shadow-md">
+                <KeyRound className="w-4 h-4 text-primary" /> <span>Obtenir ma clé</span>
+              </a>
+            </div>
+            {errorMsg && <p className="text-[12px] text-red-400 font-bold mt-2 bg-red-500/10 py-2 rounded-lg border border-red-500/20">{errorMsg}</p>}
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // --- UI COMPONENTS (APP CONNECTÉE) ---
+  const ToggleSwitch = ({ label, id, defaultChecked = false }) => (
+    <div className="flex items-center justify-between py-3 border-b border-white/5">
+      <span className="text-sm font-medium text-white/80">{label}</span>
+      <div className="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+        <input type="checkbox" name={id} id={id} defaultChecked={defaultChecked} className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none transition-all duration-300"/>
+        <label htmlFor={id} className="toggle-label block overflow-hidden h-6 rounded-full bg-white/20 cursor-pointer transition-colors duration-300"></label>
+      </div>
+    </div>
+  );
+
+  const Header = () => (
+    <header className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 py-3 md:py-4 ${isScrolled ? 'bg-[#060608]/95 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
+      <div className="flex items-center space-x-6 md:space-x-10">
+        <div className="flex items-center gap-2 cursor-pointer outline-none" onClick={() => {setCurrentCategory('home'); setSearchQuery(''); window.scrollTo(0,0);}}>
+          <h1 className="text-xl md:text-2xl font-black tracking-[0.1em] leading-none drop-shadow-lg uppercase flex items-center gap-2">
+            <LevelAnimeLogo className="w-6 h-6 text-primary sm:hidden" />
+            <span className="hidden sm:inline"><span className="text-white">LEVEL</span><span className="text-primary">ANIME</span></span>
+          </h1>
+        </div>
+
+        <nav className="hidden lg:flex items-center space-x-6 text-[11px] font-bold uppercase tracking-widest text-white/60">
+          <button onClick={() => setCurrentCategory('home')} className={`transition-colors hover:text-white outline-none ${currentCategory === 'home' ? 'text-primary' : ''}`}>Accueil</button>
+          <button onClick={() => setCurrentCategory('explore')} className={`transition-colors hover:text-white outline-none flex items-center gap-1.5 ${currentCategory === 'explore' ? 'text-primary' : ''}`}><Compass className="w-3.5 h-3.5"/> Explorer</button>
+          <button onClick={() => setCurrentCategory('trending')} className={`transition-colors hover:text-white outline-none ${currentCategory === 'trending' ? 'text-primary' : ''}`}>Simulcasts</button>
+          <button onClick={() => setCurrentCategory('watchlist')} className={`transition-colors hover:text-white outline-none ${currentCategory === 'watchlist' ? 'text-primary' : ''}`}>Favoris</button>
+          
+          <button onClick={handleSurpriseMe} className="flex items-center gap-2 text-white hover:text-white bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary px-4 py-2.5 rounded-full transition-all outline-none">
+            <Star className="w-3.5 h-3.5 text-primary fill-primary" /> 
+            <span className="font-bold tracking-widest">SURPRENDS-MOI</span>
+          </button>
+        </nav>
+      </div>
+
+      <div className="flex items-center space-x-4 md:space-x-6">
+        <div className="relative hidden md:block">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Rechercher anime..." className="bg-[#151520] border border-white/10 text-white text-xs pl-10 pr-4 py-2.5 rounded-full outline-none w-64 lg:w-80 focus:border-primary transition-all shadow-inner placeholder:text-white/30" />
+        </div>
+        
+        <button className="md:hidden text-white/50 hover:text-white outline-none">
+          <Search className="w-5 h-5" />
+        </button>
+
+        <button onClick={() => setShowNotifications(true)} className="relative text-white/50 hover:text-white transition-colors outline-none hover:scale-110 hidden sm:block">
+          <Bell className="w-5 h-5" />
+          {getUnreadCount() > 0 && (
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary rounded-full border-2 border-[#060608] flex items-center justify-center text-[7px] font-black text-white">{getUnreadCount()}</span>
+          )}
+        </button>
+
+        <button onClick={() => setShowSettings(true)} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#151520] flex items-center justify-center border border-primary/40 shadow-inner cursor-pointer hover:bg-primary/10 hover:scale-105 transition-all shrink-0 outline-none overflow-hidden">
+          {userPhoto ? <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" /> : <span className="text-[12px] md:text-[13px] font-black text-primary">{userName.charAt(0).toUpperCase()}</span>}
+        </button>
+      </div>
+    </header>
+  );
+
+  const MobileNav = () => (
+    <nav className="lg:hidden fixed bottom-0 w-full z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-white/5 flex justify-around items-center py-3 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] pb-[env(safe-area-inset-bottom)]">
+      <button onClick={() => setCurrentCategory('home')} className={`flex flex-col items-center gap-1 transition-colors outline-none ${currentCategory === 'home' ? 'text-primary' : 'text-white/50 hover:text-white'}`}>
+        <Home className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">Accueil</span>
+      </button>
+      <button onClick={() => setCurrentCategory('explore')} className={`flex flex-col items-center gap-1 transition-colors outline-none ${currentCategory === 'explore' ? 'text-primary' : 'text-white/50 hover:text-white'}`}>
+        <Compass className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">Explorer</span>
+      </button>
+      
+      <button onClick={handleSurpriseMe} className="flex flex-col items-center justify-center gap-1 outline-none -mt-6">
+        <div className="w-12 h-12 bg-[#0a0a0f] border-2 border-primary rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.4)]">
+           <Star className="w-5 h-5 text-primary fill-primary" />
+        </div>
+      </button>
+
+      <button onClick={() => setCurrentCategory('trending')} className={`flex flex-col items-center gap-1 transition-colors outline-none ${currentCategory === 'trending' ? 'text-primary' : 'text-white/50 hover:text-white'}`}>
+        <Flame className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">Trending</span>
+      </button>
+      <button onClick={() => setShowNotifications(true)} className="flex flex-col items-center gap-1 transition-colors outline-none text-white/50 hover:text-white relative">
+        <Bell className="w-5 h-5" />
+        {getUnreadCount() > 0 && <span className="absolute -top-1 right-2 w-2 h-2 bg-primary rounded-full border border-[#060608]"></span>}
+        <span className="text-[9px] font-bold uppercase tracking-widest">Alertes</span>
+      </button>
+    </nav>
+  );
+
+  const HeroBanner = () => {
+    if (loading || !heroAnime) {
+       return (
+         <div className="h-[70vh] md:h-[85vh] w-full bg-[#060608] flex items-center justify-center flex-col gap-4">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            <span className="text-white/50 text-[10px] md:text-sm font-bold uppercase tracking-widest">Connexion à la base de données...</span>
+         </div>
+       );
+    }
+    
+    const bgImage = heroAnime.trailer?.images?.maximum_image_url || heroAnime.trailer?.images?.large_image_url || heroAnime.images?.webp?.large_image_url;
+
+    return (
+      <header className="relative h-[70vh] md:h-[85vh] min-h-[500px] text-white transition-all duration-700 bg-[#060608]" style={{ backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url("${bgImage}")` }}>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#060608] via-[#060608]/80 to-transparent w-full md:w-[80%] z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-transparent to-[#060608]/40 h-full z-10"></div>
+
+        <div className="relative z-20 flex flex-col justify-end h-full px-4 md:px-14 pb-12 md:pb-24 max-w-4xl w-full">
+          <div className="flex items-center space-x-3 mb-3 md:mb-4">
+            <span className="text-white/80 font-black tracking-[0.3em] text-[9px] md:text-[11px] uppercase bg-white/5 px-3 py-1 rounded-full border border-white/10 shadow-sm flex items-center gap-1.5">
+              <Flame className="w-3 h-3 text-primary" /> EN COURS DE DIFFUSION
+            </span>
+          </div>
+
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black pb-2 tracking-tighter text-white uppercase drop-shadow-[0_0_30px_rgba(0,0,0,0.9)] leading-tight line-clamp-3">
+            {heroAnime.title_english || heroAnime.title}
+          </h1>
+
+          <div className="flex items-center gap-3 mt-1 mb-3 text-[10px] md:text-xs font-bold text-white/60 uppercase tracking-widest flex-wrap">
+            <span className="text-green-400 border border-green-400/30 bg-green-400/10 px-2 py-0.5 rounded shadow-sm flex items-center gap-1"><Mic2 className="w-3 h-3"/> VF & VOSTFR</span>
+            <span>{heroAnime.year || 'EN COURS'}</span>
+            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-primary" /> {heroAnime.score || 'N/A'}</span>
+            <span className="border-l border-white/20 pl-3">{heroAnime.episodes ? `${heroAnime.episodes} EPS` : 'EN COURS'}</span>
+            <span className="border-l border-white/20 pl-3 flex items-center gap-1 text-primary"><Eye className="w-3 h-3" /> {formatMetric(heroAnime.members)} VUES</span>
+          </div>
+
+          <p className="w-full text-[12px] md:text-[14px] text-white/70 font-medium leading-relaxed max-w-2xl text-justify drop-shadow-lg line-clamp-3 md:line-clamp-4">
+            {heroAnime.synopsis || "Aucun synopsis disponible pour cet anime."}
+          </p>
+
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-5 md:mt-6">
+            <button onClick={() => setPlayerAnime(heroAnime)} className="flex-1 sm:flex-none items-center justify-center flex gap-2 px-8 py-3.5 bg-white text-black rounded-xl text-[11px] md:text-[12px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] active:scale-95 outline-none">
+              <Play className="w-4 h-4 fill-black" /> <span>Lecture</span>
+            </button>
+            <button onClick={() => handleAnimeSelect(heroAnime)} className="flex-1 sm:flex-none items-center justify-center flex gap-2 px-8 py-3.5 bg-white/10 border border-white/20 rounded-xl text-[11px] md:text-[12px] font-bold text-white uppercase tracking-widest hover:bg-white/20 transition-all active:scale-95 backdrop-blur-md outline-none">
+              <Info className="w-4 h-4" /> <span>Plus d'infos</span>
+            </button>
+          </div>
+        </div>
+      </header>
+    );
+  };
+
+  const Top10Row = ({ title, animes }) => {
+    const rowRef = useRef(null);
+    const scrollAction = (direction) => {
+      if (rowRef.current) {
+        const scrollAmt = window.innerWidth > 768 ? 800 : 400;
+        rowRef.current.scrollBy({ left: direction === 'left' ? -scrollAmt : scrollAmt, behavior: 'smooth' });
+      }
+    };
+    if (!animes || animes.length === 0) return null;
+
+    return (
+      <div className="group relative mb-10 md:mb-16 mt-8">
+        <h2 className="text-white/90 text-[13px] md:text-lg font-black mb-4 uppercase tracking-[0.2em] border-l-4 border-primary ml-4 md:ml-12 pl-3 md:pl-4 drop-shadow-sm flex items-center gap-3">
+          {title} <TrendingUp className="w-4 h-4 text-primary" />
+        </h2>
+
+        <div onClick={() => scrollAction('left')} className="absolute left-0 top-12 bottom-0 z-40 w-12 bg-gradient-to-r from-[#060608] via-[#060608]/80 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-start cursor-pointer transition-opacity duration-300 hidden md:flex outline-none">
+          <ChevronLeft className="text-white hover:text-primary transition-colors w-10 h-10 ml-2 drop-shadow-lg" />
+        </div>
+
+        <div ref={rowRef} className="flex overflow-y-hidden overflow-x-auto py-8 space-x-8 md:space-x-12 no-scrollbar pl-12 md:pl-20 pr-12 scroll-smooth items-end">
+          {animes.slice(0, 10).map((anime, index) => (
+            <div key={`${anime.mal_id}-${index}`} className="relative flex-none cursor-pointer group flex items-end w-[130px] md:w-[180px] lg:w-[220px]" onClick={() => handleAnimeSelect(anime)}>
+              <span className="text-outline-netflix text-[100px] md:text-[150px] leading-none font-black absolute -left-10 md:-left-16 -bottom-4 md:-bottom-6 z-20 pointer-events-none drop-shadow-2xl italic tracking-tighter">
+                {index + 1}
+              </span>
+              <div className="relative rounded-xl overflow-hidden shadow-2xl border border-white/5 bg-[#151520] group-hover:scale-105 transition-transform duration-300 w-full aspect-[2/3] z-10">
+                <img className="object-cover w-full h-full transition-opacity duration-500" src={anime.images.webp.large_image_url} loading="lazy" alt={anime.title} draggable="false" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
+                  <h3 className="text-white font-black text-[9px] md:text-xs uppercase tracking-wider line-clamp-2 drop-shadow-md leading-tight mb-1">{anime.title_english || anime.title}</h3>
+                  <div className="flex items-center gap-1 text-primary font-black text-[9px] bg-primary/20 px-1.5 py-0.5 rounded border border-primary/30 w-fit">
+                    <Eye className="w-2.5 h-2.5" /> {formatMetric(anime.members)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div onClick={() => scrollAction('right')} className="absolute right-0 top-12 bottom-0 z-40 w-16 bg-gradient-to-l from-[#060608] via-[#060608]/80 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-end cursor-pointer transition-opacity duration-300 hidden md:flex outline-none">
+          <ChevronRight className="text-white hover:text-primary transition-colors w-10 h-10 mr-2 drop-shadow-lg" />
+        </div>
+      </div>
+    );
+  };
+
+  const AnimeRow = ({ title, animes, icon: Icon }) => {
+    const rowRef = useRef(null);
+    const scrollAction = (direction) => {
+      if (rowRef.current) {
+        const scrollAmt = window.innerWidth > 768 ? 600 : 300;
+        rowRef.current.scrollBy({ left: direction === 'left' ? -scrollAmt : scrollAmt, behavior: 'smooth' });
+      }
+    };
+    if (!animes || animes.length === 0) return null;
+
+    return (
+      <div className="group relative ml-4 md:ml-12 mb-8 md:mb-12">
+        <h2 className="text-white/90 text-[13px] md:text-lg font-black mb-4 uppercase tracking-[0.2em] border-l-4 border-primary pl-3 md:pl-4 drop-shadow-sm flex items-center gap-3">
+          {title} {Icon && <Icon className="w-4 h-4 text-primary" />}
+        </h2>
+        <div onClick={() => scrollAction('left')} className="absolute left-0 top-12 bottom-0 z-40 w-12 bg-gradient-to-r from-[#060608] via-[#060608]/80 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-start cursor-pointer transition-opacity duration-300 -ml-4 md:-ml-12 hidden md:flex outline-none">
+          <ChevronLeft className="text-white hover:text-primary transition-colors w-10 h-10 ml-1 drop-shadow-lg" />
+        </div>
+        <div ref={rowRef} className="flex overflow-y-hidden overflow-x-auto py-2 md:py-4 space-x-4 no-scrollbar pr-8 scroll-smooth">
+          {animes.map((anime, index) => (
+            <div key={`${anime.mal_id}-${index}`} className="relative flex-none cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform duration-300 w-[140px] md:w-[180px] lg:w-[220px] aspect-[2/3] group" onClick={() => handleAnimeSelect(anime)}>
+              <img className="object-cover w-full h-full transition-opacity duration-500" src={anime.images.webp.large_image_url} loading="lazy" alt={anime.title} draggable="false" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 pointer-events-none z-20">
+                <h3 className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider line-clamp-2 drop-shadow-md leading-tight mb-2">
+                  {anime.title_english || anime.title}
+                </h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-primary font-bold text-[9px] md:text-[11px] bg-primary/20 px-2 py-0.5 rounded border border-primary/30">
+                    <Star className="w-3 h-3 inline mb-0.5" /> {anime.score || 'N/A'}
+                  </span>
+                  {anime.members && (
+                    <span className="text-white/80 font-bold text-[8px] md:text-[9px] uppercase tracking-widest bg-black/50 px-2 py-0.5 rounded backdrop-blur-sm flex items-center gap-1">
+                      <Eye className="w-2.5 h-2.5" /> {formatMetric(anime.members)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div onClick={() => scrollAction('right')} className="absolute right-0 top-12 bottom-0 z-40 w-16 bg-gradient-to-l from-[#060608] via-[#060608]/80 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-end cursor-pointer transition-opacity duration-300 hidden md:flex outline-none">
+          <ChevronRight className="text-white hover:text-primary transition-colors w-10 h-10 mr-2 drop-shadow-lg" />
+        </div>
+      </div>
+    );
+  };
+
+  const MassiveTrendingGrid = ({ animes }) => {
+    if (!animes || animes.length === 0) return null;
+    return (
+      <div className="mb-12 mt-6">
+        <h2 className="text-white/90 text-[13px] md:text-lg font-black mb-6 uppercase tracking-[0.2em] border-l-4 border-primary ml-4 md:ml-12 pl-3 md:pl-4 drop-shadow-sm flex items-center gap-3">
+          Simulcasts (Catalogue Complet) <LayoutGrid className="w-4 h-4 text-primary" />
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 px-4 md:px-12">
+          {animes.map((anime, index) => (
+            <div key={`${anime.mal_id}-${index}`} className="relative cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform duration-300 w-full aspect-[2/3] group" onClick={() => handleAnimeSelect(anime)}>
+              <img className="object-cover w-full h-full transition-opacity duration-500" src={anime.images.webp.large_image_url} loading="lazy" alt={anime.title} draggable="false" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 pointer-events-none z-20">
+                <h3 className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider line-clamp-2 drop-shadow-md leading-tight mb-2">
+                  {anime.title_english || anime.title}
+                </h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-primary font-bold text-[9px] md:text-[11px] bg-primary/20 px-2 py-0.5 rounded border border-primary/30">
+                    <Star className="w-3 h-3 inline mb-0.5" /> {anime.score || 'N/A'}
+                  </span>
+                </div>
+              </div>
+              <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)] z-20"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // --- MODAL ANIME (FICHE DÉTAILLÉE) ---
+  const AnimeModal = () => {
+    const [characters, setCharacters] = useState([]);
+    const [loadingChars, setLoadingChars] = useState(false);
+
+    useEffect(() => {
+      if (selectedAnime) {
+        setLoadingChars(true);
+        fetch(`https://api.jikan.moe/v4/anime/${selectedAnime.mal_id}/characters`)
+          .then(res => res.json())
+          .then(data => setCharacters(data.data?.slice(0, 12) || []))
+          .catch(e => console.error(e))
+          .finally(() => setLoadingChars(false));
+      }
+    }, [selectedAnime]);
+
+    if (!selectedAnime) return null;
+    
+    const bgImage = selectedAnime.trailer?.images?.maximum_image_url || selectedAnime.images?.webp?.large_image_url;
+    const added = isAdded(selectedAnime.mal_id);
+    const alerted = isReminded(selectedAnime.mal_id);
+    const isAiring = selectedAnime.status === 'Currently Airing' || selectedAnime.status === 'Not yet aired';
+
+    return (
+      <div className="fixed inset-0 z-[8000] bg-[#0a0a0f] flex flex-col overflow-x-hidden overflow-y-auto no-scrollbar animate-in fade-in duration-300">
+        <div className="w-full bg-black/60 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-4 md:px-10 py-3 md:py-4 shrink-0 sticky top-0 z-[60] shadow-md">
+          <div className="flex items-center gap-2">
+            <span className="text-white font-black tracking-[0.2em] text-sm md:text-base uppercase drop-shadow-md">LEVEL<span className="text-primary">ANIME</span></span>
+          </div>
+          <button onClick={() => { setSelectedAnime(null); setCharacters([]); }} className="flex items-center gap-2 px-5 py-2.5 bg-white/5 text-white/50 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/10 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 outline-none">
+            <X className="w-4 h-4 md:w-5 md:h-5" /> <span className="hidden sm:inline">FERMER</span>
+          </button>
+        </div>
+
+        <div className="relative pt-[56.25%] md:h-[60vh] md:pt-0 w-full bg-black shrink-0 overflow-hidden border-b border-white/10 shadow-lg flex items-center justify-center group">
+           <img src={bgImage} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-30 transition-opacity duration-500 cursor-pointer" alt={selectedAnime.title} draggable="false" onClick={() => setPlayerAnime(selectedAnime)}/>
+           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-[#0a0a0f]/40 pointer-events-none"></div>
+           <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer z-10" onClick={() => setPlayerAnime(selectedAnime)}>
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-black/60 border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/90 group-hover:border-primary transition-all shadow-[0_0_30px_rgba(239,68,68,0.5)] backdrop-blur-sm">
+                 <Play className="w-8 h-8 md:w-10 md:h-10 fill-white text-white ml-1 md:ml-1.5 opacity-80 group-hover:opacity-100" />
+              </div>
+              <span className="mt-4 text-[10px] md:text-xs font-bold text-white/70 uppercase tracking-[0.2em] group-hover:text-white transition-colors drop-shadow-md">LANCER LE STREAM</span>
+           </div>
+        </div>
+
+        <div className="p-5 md:p-10 lg:p-14 shrink-0 bg-gradient-to-b from-[#1a0505]/30 to-[#0a0a0f] flex-1 pb-32 w-full mx-auto">
+          <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 max-w-7xl mx-auto">
+            <div className="flex-1">
+              <h2 className="text-4xl md:text-6xl font-black mb-4 text-white uppercase tracking-tighter drop-shadow-lg leading-tight">
+                {selectedAnime.title_english || selectedAnime.title}
+              </h2>
+
+              <div className="flex items-center space-x-4 mb-8 flex-wrap gap-y-4">
+                <span className="text-green-400 font-black text-xs md:text-sm uppercase tracking-widest border border-green-400/30 px-3 py-1.5 rounded bg-green-400/10 shadow-sm flex items-center gap-1.5"><Mic2 className="w-4 h-4"/> VF / VOSTFR</span>
+                <span className="text-blue-400 font-bold text-xs md:text-sm uppercase tracking-widest border border-blue-400/30 px-3 py-1.5 rounded bg-blue-400/10">{selectedAnime.status}</span>
+                <span className="text-white/80 font-bold text-sm md:text-base border-l border-white/20 pl-4">{selectedAnime.year || (selectedAnime.aired?.prop?.from?.year || 'N/A')}</span>
+                <span className="text-white/80 font-bold text-sm md:text-base border-l border-white/20 pl-4">{selectedAnime.episodes ? `${selectedAnime.episodes} EPS` : '? EPS'}</span>
+              </div>
+
+              <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <span className="text-white/40 font-bold text-[10px] uppercase tracking-widest block mb-1">TITRE JAPONAIS</span>
+                  <span className="text-white/70 font-medium text-sm italic">{selectedAnime.title_japanese || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-white/40 font-bold text-[10px] uppercase tracking-widest block mb-1">TITRE ORIGINAL</span>
+                  <span className="text-white/70 font-medium text-sm italic">{selectedAnime.title || "N/A"}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-10 border-b border-white/10 pb-10">
+                <button 
+                  onClick={() => { setPlayerAnime(selectedAnime); window.scrollTo({top: 0, behavior: 'smooth'}); }} 
+                  className="flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-primary text-white rounded-xl text-xs md:text-sm font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-[0_0_30px_rgba(239,68,68,0.4)] active:scale-95 outline-none"
+                >
+                  <Play className="w-5 h-5 fill-white" /> <span>LECTURE</span>
+                </button>
+                <button onClick={(e) => toggleWatchlist(selectedAnime, e)} className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all active:scale-95 outline-none ${added ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10'}`}>
+                  {added ? <><CheckCircle className="w-5 h-5" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">DANS MA LISTE</span></> : <><Plus className="w-5 h-5 text-white/50" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">MA LISTE</span></>}
+                </button>
+                {isAiring && (
+                  <button onClick={() => toggleReminder(selectedAnime)} className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all active:scale-95 outline-none ${alerted ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10'}`}>
+                    {alerted ? <><BellRing className="w-5 h-5 animate-pulse" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">ALERTE ACTIVÉE</span></> : <><Bell className="w-5 h-5 text-white/50" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">M'ALERTER 🔔</span></>}
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-white/90 text-lg font-black mb-3 uppercase tracking-widest border-l-4 border-primary pl-3 flex items-center gap-2"><AlignLeft className="w-5 h-5 text-primary"/> SYNOPSIS</h3>
+                  <div className="text-justify text-sm md:text-base leading-relaxed text-white/80 font-medium">
+                    {selectedAnime.synopsis ? selectedAnime.synopsis.split('\n').map((p,i) => <p key={i} className="mb-3">{p}</p>) : "Aucun résumé disponible pour cet anime."}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-12 pt-8 border-t border-white/10">
+                <h3 className="text-white/90 text-lg font-black mb-6 uppercase tracking-widest border-l-4 border-primary pl-3 flex items-center gap-2"><Users className="w-5 h-5 text-primary"/> PERSONNAGES PRINCIPAUX</h3>
+                
+                {loadingChars ? (
+                  <div className="flex items-center gap-2 text-primary"><Loader2 className="w-5 h-5 animate-spin" /> Chargement du casting...</div>
+                ) : characters.length > 0 ? (
+                  <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4">
+                    {characters.map(char => (
+                      <div key={char.character.mal_id} className="flex flex-col items-center min-w-[80px] md:min-w-[100px] gap-2 shrink-0 group">
+                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-primary transition-colors shadow-md">
+                           <img src={char.character.images?.webp?.image_url} className="w-full h-full object-cover" alt={char.character.name} draggable="false"/>
+                        </div>
+                        <span className="text-[10px] md:text-xs text-white/90 text-center font-bold w-[90px] md:w-[110px] truncate">{char.character.name}</span>
+                        <span className="text-[9px] md:text-[10px] text-primary text-center w-full truncate">{char.role}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-white/40 text-sm italic">Aucun personnage répertorié.</p>
+                )}
+              </div>
+
+            </div>
+
+            <div className="w-full lg:w-[35%] space-y-6 bg-[#111116] p-6 md:p-8 rounded-3xl border border-white/5 shadow-inner h-fit">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                 <div className="bg-black/50 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                    <Star className="w-6 h-6 text-yellow-400 mb-2 fill-yellow-400" />
+                    <span className="text-2xl font-black text-white">{selectedAnime.score || 'N/A'}</span>
+                    <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest mt-1">Score ({formatMetric(selectedAnime.scored_by)} avis)</span>
+                 </div>
+                 <div className="bg-black/50 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                    <Trophy className="w-6 h-6 text-primary mb-2" />
+                    <span className="text-2xl font-black text-white">#{selectedAnime.rank || '?'}</span>
+                    <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest mt-1">Rang Mondial</span>
+                 </div>
+                 <div className="bg-black/50 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                    <Eye className="w-6 h-6 text-blue-400 mb-2" />
+                    <span className="text-lg font-black text-white">#{selectedAnime.popularity || '?'}</span>
+                    <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest mt-1">Popularité</span>
+                 </div>
+                 <div className="bg-black/50 p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+                    <Heart className="w-6 h-6 text-red-500 mb-2 fill-red-500/20" />
+                    <span className="text-lg font-black text-white">{formatMetric(selectedAnime.favorites)}</span>
+                    <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest mt-1">Favoris</span>
+                 </div>
+              </div>
+
+              <div className="w-full h-px bg-white/10"></div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-white/40 font-bold uppercase tracking-widest text-[10px]">FORMAT</span>
+                  <span className="text-white text-xs font-bold bg-white/10 px-2 py-1 rounded">{selectedAnime.type || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/40 font-bold uppercase tracking-widest text-[10px]">CLASSIFICATION</span>
+                  <span className="text-red-400 text-xs font-bold">{selectedAnime.rating || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/40 font-bold uppercase tracking-widest text-[10px]">DURÉE</span>
+                  <span className="text-white text-xs font-bold">{selectedAnime.duration || 'N/A'}</span>
+                </div>
+              </div>
+
+              <div className="w-full h-px bg-white/10"></div>
+
+              <div className="space-y-6">
+                <div>
+                  <span className="text-white/40 font-bold block mb-2 uppercase tracking-widest text-[10px]">STUDIOS & PRODUCTION</span>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedAnime.studios?.map(s => <span key={s.mal_id} className="text-white text-[10px] font-bold bg-white/10 px-2 py-1 rounded-md border border-white/5">{s.name}</span>)}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-white/40 font-bold block mb-2 uppercase tracking-widest text-[10px]">GENRES</span>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedAnime.genres?.map(g => <span key={g.mal_id} className="text-primary text-[10px] font-black uppercase bg-primary/10 border border-primary/30 px-2.5 py-1.5 rounded-md">{g.name}</span>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // --- LECTEUR VIDÉO AVEC SÉLECTEUR DE SERVEUR ---
+  const PlayerModal = () => {
+    const [activeServer, setActiveServer] = useState(1);
+    
+    if (!playerAnime) return null;
+    
+    const SERVERS = [
+        { id: 1, name: "VidSrc Pro", url: `https://vidsrc.to/embed/anime/${playerAnime.mal_id}` },
+        { id: 2, name: "AutoEmbed", url: `https://player.autoembed.cc/embed/anime/${playerAnime.mal_id}` },
+        { id: 3, name: "SmashyStream", url: `https://player.smashy.stream/anime?mal=${playerAnime.mal_id}` }
+    ];
+
+    const currentUrl = SERVERS.find(s => s.id === activeServer)?.url;
+
+    return (
+      <div className="fixed inset-0 z-[9999] bg-black flex flex-col animate-in fade-in duration-300">
+        <div className="w-full bg-gradient-to-b from-black/80 to-transparent p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 absolute top-0 z-50">
+          <div className="flex items-center gap-3">
+             <button onClick={() => setPlayerAnime(null)} className="text-white hover:text-primary transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur-md outline-none">
+               <ChevronLeft className="w-6 h-6" />
+             </button>
+             <h2 className="text-white font-black uppercase tracking-widest drop-shadow-md text-sm md:text-base line-clamp-1">
+               {playerAnime.title_english || playerAnime.title}
+             </h2>
+          </div>
+          
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
+             <span className="text-white/50 text-[10px] font-bold uppercase tracking-widest mr-2 shrink-0">Serveurs :</span>
+             {SERVERS.map(s => (
+               <button 
+                 key={s.id} 
+                 onClick={() => setActiveServer(s.id)}
+                 className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors shrink-0 ${activeServer === s.id ? 'bg-primary text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}
+               >
+                 {s.name}
+               </button>
+             ))}
+          </div>
+        </div>
+        
+        <div className="flex-1 w-full h-full flex items-center justify-center bg-[#0a0a0f] pt-20 md:pt-0">
+           <iframe className="w-full h-full" src={currentUrl} allowFullScreen allow="autoplay; encrypted-media"></iframe>
+        </div>
+      </div>
+    );
+  };
+
+  // --- MODAL COMPTE ---
+  const AccountModal = () => {
+    if(!showAccountModal) return null;
+    const loginDate = user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('fr-FR') : "N/A";
+    
+    return (
+      <div className="fixed inset-0 z-[9500] flex justify-center items-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+         <div className="w-full max-w-md bg-[#111116] border border-white/10 rounded-2xl p-6 shadow-2xl relative">
+            <button onClick={() => setShowAccountModal(false)} className="absolute top-4 right-4 text-white/50 hover:text-white outline-none"><X className="w-5 h-5"/></button>
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-primary to-orange-500 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.4)] mb-4 overflow-hidden border-2 border-primary/50">
+                {userPhoto ? <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" /> : <User className="w-10 h-10 text-white" />}
+              </div>
+              <h2 className="text-xl font-black uppercase tracking-widest text-white truncate max-w-full px-4">{userName}</h2>
+              <p className="text-xs text-white/50 font-mono mt-1 mb-1 truncate max-w-full px-4">{userEmail}</p>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+               <div className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col gap-1">
+                 <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Activité & Données</span>
+                 <div className="flex items-center gap-4 mt-2">
+                   <button onClick={() => { setShowAccountModal(false); setShowSettings(false); setCurrentCategory('watchlist'); window.scrollTo(0,0); }} className="text-white text-xs font-bold hover:text-primary transition-colors cursor-pointer outline-none"><strong className="text-primary">{watchlist.length}</strong> Favoris</button>
+                   <span className="text-white text-xs font-bold"><strong className="text-primary">{history.length}</strong> Consultés</span>
+                 </div>
+               </div>
+               <div className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col gap-1">
+                 <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Membre depuis</span>
+                 <span className="text-white text-xs font-bold">{loginDate}</span>
+               </div>
+            </div>
+
+            <button onClick={() => setShowLogoutConfirm(true)} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-xl text-xs font-black uppercase tracking-widest transition-colors outline-none flex items-center justify-center gap-2">
+               <LogOut className="w-4 h-4" /> Se déconnecter
+            </button>
+         </div>
+      </div>
+    );
+  };
+
+  // --- MODAL DÉCONNEXION CONFIRMATION ---
+  const LogoutConfirmModal = () => {
+    if(!showLogoutConfirm) return null;
+    return (
+      <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="bg-[#0a0a0f] border border-red-500/30 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in duration-300">
+          <LogOut className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-xl font-black text-white mb-2 uppercase tracking-widest">Se déconnecter</h3>
+          <p className="text-white/60 text-xs mb-6 leading-relaxed">Êtes-vous sûr de vouloir quitter votre compte sur cet appareil ?</p>
+          <div className="flex gap-3">
+            <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl text-[10px] font-bold uppercase transition-colors outline-none">Annuler</button>
+            <button onClick={handleLogout} className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-bold uppercase shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-colors outline-none">Confirmer</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // --- PANNEAU PARAMÈTRES (SETTINGS) ---
+  const SettingsPanel = () => {
+    if(!showSettings) return null;
+    return (
+        <div className="fixed inset-0 z-[9000] flex justify-end">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSettings(false)}></div>
+          <div className="relative w-full max-w-sm bg-[#0a0a0f] border-l border-white/5 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] h-full flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="flex items-center justify-between p-6 border-b border-white/5 shrink-0 bg-[#060608]">
+              <h3 className="text-white font-black uppercase tracking-widest text-lg flex items-center gap-2">
+                <Settings className="w-5 h-5 text-primary" /> Paramètres
+              </h3>
+              <button onClick={() => setShowSettings(false)} className="text-white/50 hover:text-white transition-colors outline-none bg-white/5 p-2 rounded-full hover:bg-white/10">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
+              
+              {/* Profil */}
+              <div>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-r from-primary to-orange-500 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.4)] overflow-hidden border-2 border-primary/50 shrink-0">
+                    {userPhoto ? <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" /> : <User className="w-6 h-6 text-white" />}
+                  </div>
+                  <div className="flex flex-col items-start overflow-hidden w-full">
+                    <h4 className="font-black text-white text-lg truncate w-full">{userName}</h4>
+                    <p className="text-[10px] text-white/50 font-mono mb-1.5 truncate w-full">{userEmail}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowAccountModal(true)} className="w-full py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors">Gérer mon compte</button>
+              </div>
+
+              {/* Qualité & Lecture */}
+              <div>
+                <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><PlayCircle className="w-4 h-4 text-white/40"/> Lecture & Vidéo</h4>
+                <div className="bg-white/5 rounded-xl border border-white/5 px-4">
+                  <div className="flex items-center justify-between py-4 border-b border-white/5">
+                    <span className="text-xs font-bold text-white/80">Qualité par défaut</span>
+                    <span className="text-xs font-black text-primary">1080p Ultra HD</span>
+                  </div>
+                  <ToggleSwitch label="Lecture Automatique" id="autoplay" defaultChecked={true} />
+                </div>
+              </div>
+
+              {/* Sous-titres & Audio */}
+              <div>
+                <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Subtitles className="w-4 h-4 text-white/40"/> Langue & Sous-titres</h4>
+                <div className="bg-white/5 rounded-xl border border-white/5 px-4">
+                  <div className="flex items-center justify-between py-4 border-b border-white/5">
+                    <span className="text-xs font-bold text-white/80">Langue Audio préférée</span>
+                    <span className="text-xs font-black text-white">Japonais (VO)</span>
+                  </div>
+                  <div className="flex items-center justify-between py-4 border-b border-white/5">
+                    <span className="text-xs font-bold text-white/80">Sous-titres préférés</span>
+                    <span className="text-xs font-black text-white">Français</span>
+                  </div>
+                  <div className="flex items-center justify-between py-4 cursor-pointer group" onClick={() => { setShowSettings(false); setCurrentCategory('watchlist'); window.scrollTo(0,0); }}>
+                    <span className="text-xs font-bold text-white/80 group-hover:text-primary transition-colors flex items-center gap-2"><Bookmark className="w-3.5 h-3.5"/> Mes Favoris</span>
+                    <span className="text-xs font-black text-white bg-white/10 px-2 py-0.5 rounded">{watchlist.length}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Données & Cache */}
+              <div>
+                <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><HardDrive className="w-4 h-4 text-white/40"/> Stockage & Données</h4>
+                <div className="bg-white/5 rounded-xl border border-white/5 px-4">
+                  <ToggleSwitch label="Tél. via Wi-Fi uniquement" id="wifi" defaultChecked={true} />
+                  <div className="flex items-center justify-between py-4 cursor-pointer hover:text-primary transition-colors group">
+                    <span className="text-xs font-bold text-white/80 group-hover:text-primary">Vider le cache mémoire</span>
+                    <span className="text-[10px] font-black text-white/40">124 MB</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+    );
+  };
+
+  // --- RENDER MAIN ---
+  return (
+    <div className="min-h-screen bg-[#060608] text-white">
+      <Header />
+
+      {searchQuery.length >= 3 ? (
+         <div className="pt-24 px-4 md:px-14 pb-24 relative z-30 min-h-screen">
+          <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest border-l-4 border-primary pl-3 mb-6">Résultats pour "{searchQuery}"</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+            {searchResults.map(anime => (
+               <div key={anime.mal_id} className="relative cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform aspect-[2/3] group" onClick={() => handleAnimeSelect(anime)}>
+                 <img className="object-cover w-full h-full" src={anime.images.webp.large_image_url} loading="lazy" alt="" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                   <h3 className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider line-clamp-2 drop-shadow-md">{anime.title}</h3>
+                 </div>
+               </div>
+            ))}
+            {searchResults.length === 0 && <p className="text-white/50 col-span-full py-10 text-center uppercase tracking-widest text-sm font-bold">Aucun résultat trouvé.</p>}
+          </div>
+        </div>
+      ) : currentCategory === 'watchlist' ? (
+        <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen">
+          <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest pl-3 border-l-4 border-primary mb-8">Ma Liste</h2>
+          {watchlist.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-32 opacity-50">
+              <Bookmark className="w-16 h-16 mb-4 text-primary" />
+              <p className="text-sm uppercase tracking-widest font-bold">Votre liste est vide.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+              {watchlist.map((anime, idx) => (
+                <div key={`${anime.mal_id}-${idx}`} className="relative cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform aspect-[2/3] group" onClick={() => handleAnimeSelect(anime)}>
+                  <img className="object-cover w-full h-full" src={anime.images.webp.large_image_url} loading="lazy" alt="" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-transparent to-transparent flex flex-col justify-end p-3">
+                    <h3 className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider line-clamp-2">{anime.title_english || anime.title}</h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : currentCategory === 'explore' ? (
+        <div className="pt-24 px-4 md:px-14 pb-32 min-h-screen">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/40 shadow-inner shrink-0">
+                <Compass className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest leading-tight">Explorer</h2>
+                <p className="text-white/50 text-xs font-bold uppercase tracking-widest">Base de données globale</p>
+              </div>
+            </div>
+
+            <div className="flex overflow-x-auto no-scrollbar gap-2 py-2">
+              <button 
+                onClick={() => setSelectedGenre(null)} 
+                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap outline-none border ${!selectedGenre ? 'bg-primary text-white border-primary shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}
+              >
+                Tous les animes
+              </button>
+              {ANIME_GENRES.map(g => (
+                <button 
+                  key={g.id}
+                  onClick={() => setSelectedGenre(g.id)} 
+                  className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap outline-none border flex items-center gap-1.5 ${selectedGenre === g.id ? 'bg-primary text-white border-primary shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}
+                >
+                  <span>{g.icon}</span> {g.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+            {exploreAnime.map((anime, idx) => (
+              <div key={`${anime.mal_id}-${idx}`} className="relative cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform aspect-[2/3] group" onClick={() => handleAnimeSelect(anime)}>
+                <img className="object-cover w-full h-full" src={anime.images.webp.large_image_url} loading="lazy" alt="" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-transparent to-transparent flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                  <h3 className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider line-clamp-2 drop-shadow-md">{anime.title_english || anime.title}</h3>
+                  <div className="mt-1 flex gap-2">
+                    <span className="text-primary font-bold text-[9px] bg-primary/20 px-2 py-0.5 rounded border border-primary/30">
+                      <Star className="w-3 h-3 inline mb-0.5" /> {anime.score || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div ref={observerTarget} className="h-20 w-full flex items-center justify-center mt-10">
+            {loadingExplore && <Loader2 className="w-8 h-8 animate-spin text-primary" />}
+          </div>
+        </div>
+      ) : (
+        <>
+          {currentCategory === 'home' && <HeroBanner />}
+          
+          <main className={`pb-24 relative z-20 ${currentCategory === 'home' ? 'mt-6 md:-mt-10' : 'pt-24'}`}>
+            {loading && currentCategory !== 'home' ? (
+              <div className="flex justify-center items-center py-32"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>
+            ) : (
+              <>
+                {history.length > 0 && currentCategory === 'home' && (
+                  <AnimeRow title="Reprendre la lecture" animes={history} icon={PlayCircle} />
+                )}
+
+                {currentCategory === 'trending' && <MassiveTrendingGrid animes={trending} />}
+                
+                {currentCategory === 'home' && (
+                  <>
+                    <Top10Row title="Top 10 de la Semaine" animes={popular} />
+                    
+                    <AnimeRow title="Action & Aventure" animes={actionAnime} icon={Flame} />
+                    <AnimeRow title="Chefs-d'œuvre Mieux Notés" animes={topRated} icon={Award} />
+                    <AnimeRow title="Romance & Drame" animes={romanceAnime} icon={Users} />
+                    
+                    <div className="group relative ml-4 md:ml-12 mb-10 md:mb-16 mt-16 pt-8 border-t border-white/5">
+                      <h2 className="text-white/90 text-[13px] md:text-lg font-black mb-6 uppercase tracking-[0.2em] border-l-4 border-primary pl-3 md:pl-4 drop-shadow-sm flex items-center gap-3">
+                        Parcourir par genre <Filter className="w-4 h-4 text-primary" />
+                      </h2>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 pr-4 md:pr-12">
+                         {ANIME_GENRES.map(g => (
+                            <button 
+                              key={g.id}
+                              onClick={() => { setSelectedGenre(g.id); setCurrentCategory('explore'); window.scrollTo(0,0); }} 
+                              className="bg-[#151520] hover:bg-primary/20 border border-white/5 hover:border-primary/50 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-2 md:gap-3 transition-all duration-300 group outline-none shadow-sm hover:shadow-[0_0_30px_rgba(239,68,68,0.2)]"
+                            >
+                               <span className="text-2xl md:text-4xl group-hover:scale-110 transition-transform duration-300 drop-shadow-md">{g.icon}</span>
+                               <h3 className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/70 group-hover:text-white transition-colors">{g.name}</h3>
+                               <p className="text-[8px] md:text-[9px] text-white/40 uppercase tracking-widest mt-1">
+                                 {genreCounts[g.id] ? `${genreCounts[g.id].toLocaleString()} Titres` : '...'}
+                               </p>
+                            </button>
+                         ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </main>
+        </>
+      )}
+
+      {/* LECTEUR VIDÉO */}
+      <PlayerModal />
+
+      {/* MODAL SURPRISE ME */}
+      {showSurprise && (
+        <div className="fixed inset-0 z-[9000] flex justify-center items-center p-4 sm:p-8 bg-[#060608]/95 backdrop-blur-3xl overflow-hidden">
+          <div className="relative w-full max-w-5xl bg-[#0a0a0f] rounded-[2rem] p-6 md:p-10 flex flex-col animate-in zoom-in duration-300 z-10 shadow-[0_0_80px_rgba(239,68,68,0.3)] border border-primary/30 max-h-[95vh]">
+            <button onClick={() => setShowSurprise(false)} className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors shadow-sm z-20 outline-none">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex flex-col items-center mb-8 text-center shrink-0">
+              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.5)] mb-4">
+                <Star className="w-8 h-8 text-white fill-white" />
+              </div>
+              <h2 className="text-2xl md:text-4xl font-black text-white uppercase tracking-widest mb-3 drop-shadow-md">
+                Sélection <span className="text-primary">LEVELANIME</span>
+              </h2>
+              <p className="text-sm md:text-base text-white/70 max-w-2xl leading-relaxed italic">
+                "Nous avons analysé des milliers d'œuvres. Voici le <strong>Top absolu</strong> sélectionné par notre algorithme. Des chefs-d'œuvre incontournables à voir au moins une fois dans sa vie."
+              </p>
+            </div>
+            <div className="flex-1 overflow-y-auto no-scrollbar pb-6">
+              {loadingSurprise ? (
+                <div className="flex justify-center items-center py-20"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+                  {surpriseAnime.map((anime, idx) => (
+                    <div key={`${anime.mal_id}-${idx}`} className="relative cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/10 hover:border-primary bg-[#151520] hover:scale-105 transition-all duration-300 aspect-[2/3] group" onClick={() => { setSelectedAnime(anime); setShowSurprise(false); }}>
+                      <div className="absolute top-2 left-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center font-black text-white z-20 shadow-md border border-[#060608]">
+                        {idx + 1}
+                      </div>
+                      <img className="object-cover w-full h-full transition-opacity duration-500" src={anime.images.webp.large_image_url} loading="lazy" alt="" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 z-10">
+                        <h3 className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider line-clamp-2 drop-shadow-md">{anime.title_english || anime.title}</h3>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="pt-6 border-t border-white/10 shrink-0 text-center">
+               <button onClick={() => setShowSurprise(false)} className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-colors outline-none">
+                 Fermer la sélection
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PARAMETRES */}
+      <SettingsPanel />
+
+      {/* MODALS COMPTE & DÉCONNEXION */}
+      <AccountModal />
+      <LogoutConfirmModal />
+
+      {/* PANNEAU NOTIFICATIONS */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-[9000] flex justify-end">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowNotifications(false)}></div>
+          <div className="relative w-full max-w-sm bg-[#0a0a0f] border-l border-white/5 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] h-full flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="flex items-center justify-between p-6 border-b border-white/5 shrink-0">
+              <h3 className="text-white font-black uppercase tracking-widest text-lg flex items-center gap-2">
+                <Bell className="w-5 h-5 text-primary" /> Notifications
+              </h3>
+              <button onClick={() => setShowNotifications(false)} className="text-white/50 hover:text-white transition-colors outline-none bg-white/5 p-2 rounded-full hover:bg-white/10">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-3">
+              {inAppNotifications.map(notif => (
+                <div key={notif.id} className="bg-white/5 border border-white/10 hover:bg-white/10 transition-colors rounded-xl p-4 cursor-pointer group relative overflow-hidden">
+                  {notif.unread && <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>}
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className={`text-xs font-black uppercase tracking-widest ${notif.unread ? 'text-white' : 'text-white/60'}`}>{notif.title}</h4>
+                    <span className="text-[9px] text-primary font-bold">{notif.time}</span>
+                  </div>
+                  <p className="text-white/70 text-[11px] leading-relaxed mt-2">{notif.desc}</p>
+                </div>
+              ))}
+              <div className="mt-4 p-4 border border-dashed border-white/10 rounded-xl text-center opacity-50 flex flex-col items-center justify-center py-10">
+                <CheckCircle className="w-8 h-8 mb-2" />
+                <span className="text-[10px] uppercase font-bold tracking-widest">Vous êtes à jour</span>
+              </div>
+            </div>
+            <div className="p-4 border-t border-white/5 shrink-0 bg-black/20">
+              <button onClick={() => {
+                setInAppNotifications(inAppNotifications.map(n => ({...n, unread: false})));
+              }} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors outline-none">
+                Tout marquer comme lu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST SYSTEM */}
+      <div className="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none items-center w-full px-4">
+        {toasts.map(toast => (
+          <div key={toast.id} className="toast-enter flex items-center gap-3 px-6 py-3 md:py-4 bg-[#151520]/95 backdrop-blur-md border border-white/10 rounded-full shadow-2xl">
+            {toast.icon} <span className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-white">{toast.message}</span>
+          </div>
+        ))}
+      </div>
+
+      <AnimeModal />
+      <MobileNav />
+    </div>
+  );
+}
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+
+</body>
+</html>
