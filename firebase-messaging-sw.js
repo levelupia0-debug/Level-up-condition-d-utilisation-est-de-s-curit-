@@ -16,53 +16,65 @@ const messaging = firebase.messaging();
 const ICON_URL = '/icon.svg';
 const APP_URL  = 'https://levelup-ecosystem.com';
 
-// ─── ANTI-DOUBLON contenu ────────────────────────────────────────────────────
-const _shownKeys    = new Set();
-const _handledByPage = new Set(); // ← clés signalées par onMessage() de la page
+// ─── Detect user language ─────────────────────────────────────────────────────
+function _detectLang() {
+    try {
+        const stored = self._cachedLang;
+        if (stored) return stored;
+    } catch(_) {}
+    const lang = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
+    return lang.startsWith('fr') ? 'fr' : 'en';
+}
+
+// ─── Pick bilingual field ─────────────────────────────────────────────────────
+function _pick(payload, field) {
+    const lang = _detectLang();
+    const fr = payload.data?.[field + '_fr'];
+    const en = payload.data?.[field + '_en'];
+    const base = payload.notification?.[field] || payload.data?.[field];
+    if (lang === 'fr') return fr || base;
+    return en || fr || base;
+}
+
+// ─── ANTI-DOUBLON ────────────────────────────────────────────────────────────
+const _shownKeys     = new Set();
+const _handledByPage = new Set();
 
 function _notifKey(title, body) {
     return `${title}|${body}|${Math.floor(Date.now() / 15000)}`;
 }
 
-// ─── La page signale qu'elle a géré un message (fix iOS) ─────────────────────
+// ─── La page signale qu'elle a géré un message ───────────────────────────────
 self.addEventListener('message', (event) => {
     if (event.data?.type === 'PAGE_HANDLED_NOTIF') {
         _handledByPage.add(event.data.key);
         setTimeout(() => _handledByPage.delete(event.data.key), 10000);
     }
+    if (event.data?.type === 'SET_LANG') {
+        self._cachedLang = event.data.lang;
+    }
 });
 
 // ─── HANDLER PRINCIPAL ────────────────────────────────────────────────────────
 messaging.onBackgroundMessage(async (payload) => {
-    const title = payload.notification?.title || payload.data?.title || 'LevelUp Ecosystem';
-    const body  = payload.notification?.body  || payload.data?.body  || 'Nouvelle notification.';
+    const title = _pick(payload, 'title') || 'LevelUp Ecosystem';
+    const body  = _pick(payload, 'body')  || 'Nouvelle notification.';
     const url   = payload.data?.url || APP_URL;
     const image = payload.data?.image || undefined;
 
-    // 1. Dédup contenu — même message reçu deux fois par FCM
     const key = _notifKey(title, body);
     if (_shownKeys.has(key)) return;
     _shownKeys.add(key);
     setTimeout(() => _shownKeys.delete(key), 30000);
 
-    // 2. Vérification de l'état de l'application
     const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const appIsOpen  = allClients.some(c => c.focused === true || c.visibilityState === 'visible');
 
     if (appIsOpen) {
-        // Attendre que onMessage() de la page nous signale s'il a géré le message
         await new Promise(r => setTimeout(r, 300));
-        
-        // Si la page l'a géré et affiche le toast, on bloque la notification native pour éviter le doublon
-        if (_handledByPage.has(key)) return; 
-        
-        // CORRECTION ANDROID : On a supprimé le `return;` ici.
-        // Si l'app est en arrière-plan/veille, Chrome la voit parfois comme "ouverte" mais la page
-        // est gelée et n'envoie pas le signal dans les 300ms. 
-        // En laissant passer, on force l'affichage de la notification native !
+        if (_handledByPage.has(key)) return;
     }
 
-    // 3. App en arrière-plan, fermée, ou ne répondant pas → notification système unique
     const tag = `lvlup-${btoa(unescape(encodeURIComponent(title + body))).slice(0, 20)}`;
     const options = {
         body,
