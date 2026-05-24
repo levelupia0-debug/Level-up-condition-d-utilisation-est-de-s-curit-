@@ -46,52 +46,62 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'FIREBASE_SERVICE_ACCOUNT non configuré.' });
     }
 
-    const { title, body, url, image } = req.body || {};
-    if (!title || !body) return res.status(400).json({ error: 'Les champs "title" et "body" sont obligatoires.' });
+    const {
+        title, body, url, image,
+        // Bilingual support
+        title_fr, title_en, body_fr, body_en,
+        // Targeting
+        topic = 'levelup-all',
+        // Category for filtering in dashboard
+        category = 'general'
+    } = req.body || {};
+
+    const finalTitle = title || title_fr || title_en;
+    const finalBody  = body  || body_fr  || body_en;
+
+    if (!finalTitle || !finalBody) {
+        return res.status(400).json({ error: 'Les champs "title" et "body" (ou leurs variantes FR/EN) sont obligatoires.' });
+    }
 
     const targetUrl = url || 'https://levelup-ecosystem.com';
     const iconUrl   = 'https://levelup-ecosystem.com/icon.svg';
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // CORRECTION : Passage en mode Data-Only pour le WebPush.
-    // En supprimant le bloc "notification" de "webpush", on empêche iOS/Chrome 
-    // d'afficher une notification native automatiquement.
-    // C'est le Service Worker qui prendra le relais via onBackgroundMessage.
-    // ─────────────────────────────────────────────────────────────────────────
+    // All data fields (bilingual + meta)
+    const dataFields = {
+        title:    finalTitle,
+        body:     finalBody,
+        url:      targetUrl,
+        icon:     iconUrl,
+        sentAt:   new Date().toISOString(),
+        category,
+        // Bilingual fields for service worker
+        title_fr: title_fr || title || '',
+        title_en: title_en || title || '',
+        body_fr:  body_fr  || body  || '',
+        body_en:  body_en  || body  || '',
+        ...(image ? { image } : {})
+    };
 
     const message = {
-        topic: 'levelup-all',
-
-        // Toutes les infos passent par la "data" pour le Service Worker
-        data: {
-            title,
-            body,
-            url:     targetUrl,
-            icon:    iconUrl,
-            sentAt:  new Date().toISOString(),
-            ...(image ? { image } : {})
-        },
-        
+        topic,
+        data: dataFields,
         webpush: {
             headers: { Urgency: 'high', TTL: '86400' },
-            // Pas de champ "notification" ici !
             fcm_options: { link: targetUrl }
         },
-        
         android: {
             priority: 'high',
             notification: {
-                title,
-                body,
+                title: finalTitle,
+                body:  finalBody,
                 icon:       'notification_icon',
                 channel_id: 'levelup_push',
-                tag:        `lvlup-${title.slice(0, 10)}`,
+                tag:        `lvlup-${finalTitle.slice(0, 10)}`,
                 ...(image ? { image } : {})
             }
         },
-        
         apns: {
-            payload: { aps: { alert: { title, body }, sound: 'default', badge: 1 } },
+            payload: { aps: { alert: { title: finalTitle, body: finalBody }, sound: 'default', badge: 1 } },
             ...(image ? { fcm_options: { image } } : {})
         }
     };
