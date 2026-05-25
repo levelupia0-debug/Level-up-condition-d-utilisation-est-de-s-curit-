@@ -3792,26 +3792,21 @@ btn.innerHTML = orig;
 };
 
 window.execLogout = async function() {
-document.getElementById('logoutOv').classList.add('hidden');
+    document.getElementById('logoutOv').classList.add('hidden');
+    const loader = document.getElementById('logoutLoadingOv');
+    if (loader) loader.classList.remove('hidden');
 
-// Afficher l'animation de déconnexion
-const loader = document.getElementById('logoutLoadingOv');
-if (loader) loader.classList.remove('hidden');
+    localStorage.removeItem('lm_key');
+    localStorage.removeItem('lm_uid');
+    localStorage.removeItem('lm_name');
+    localStorage.removeItem('lm_photo');
+    localStorage.removeItem('lm_login_mode');
+    try { await window._fb.signOut(window._auth); } catch(e){}
 
-// Nettoyage de la session en arrière-plan
-localStorage.removeItem('lm_key');
-localStorage.removeItem('lm_uid');
-localStorage.removeItem('lm_name');
-localStorage.removeItem('lm_photo');
-localStorage.removeItem('lm_login_mode');
-try { await window._fb.signOut(window._auth); } catch(e){}
-
-// Laisser l'animation tourner 1.5 seconde avant de recharger la page
-setTimeout(() => {
-    window.location.reload();
-}, 1500);
+    setTimeout(() => {
+        window.location.replace('/'); // Redirige proprement à l'accueil
+    }, 1500);
 };
-
 // 🌟 LE PONT D'ÉCOSYSTÈME (SSO) 🌟
 window.openApp = function(appId) {
 // Vérification maintenance GLOBALE
@@ -4736,11 +4731,23 @@ localStorage.setItem('lm_name', window._ud.displayName);
 if (window._ud.photoURL) localStorage.setItem('lm_photo', window._ud.photoURL);
 localStorage.setItem('lm_login_mode', 'google');
 
-await window.loadAppStatus();
-closeAuth();
-showDash(u);
-// Vérifier si onboarding complété
-window._checkOnboarding && window._checkOnboarding(u);
+function showDash(u) {
+    window._hideLoadingScreen();
+    renderNavLogged(u);
+    updateLoggedUI();
+    window.refreshUI();
+    updateViewFromURL(); // Ajuste l'affichage selon l'URL (permet de rester sur / avec la navbar connectée)
+    try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL, ts: Date.now() })); } catch(_) {}
+}
+
+function showLand() {
+    window._hideLoadingScreen();
+    renderNavGuest();
+    updateGuestUI();
+    window.updateAppCards();
+    updateViewFromURL(); // Ajuste l'affichage selon l'URL
+    setTimeout(() => { try { if (typeof _getPushPref === 'function' && _getPushPref() === 'granted' && Notification.permission === 'granted') window._registerFCMAnonOrUser(); } catch(_) {} }, 2000);
+}
 
 // ── PUSH NOTIFICATIONS FCM ──
 setTimeout(() => initFCM(u), 1500);
@@ -5854,30 +5861,6 @@ async function saveLocationToKey(locData) {
 let _pMode = null, _pVal = '', _pFirst = '';
 window._kVis = false;
 
-window.sTo = function(id) {
-const landing = document.getElementById('landing');
-const dashboard = document.getElementById('dashboard');
-
-// Si on est dans le tableau de bord, on retourne d'abord à l'accueil
-if (dashboard && dashboard.style.display !== 'none' && !dashboard.classList.contains('hidden')) {
-dashboard.classList.add('hidden');
-dashboard.style.display = 'none';
-if (landing) {
-landing.classList.remove('hidden');
-landing.style.display = 'block';
-}
-// Petit délai pour laisser le navigateur réafficher la page avant de défiler
-setTimeout(() => {
-const el = document.getElementById(id);
-if (el) el.scrollIntoView({behavior:'smooth'});
-}, 50);
-} else {
-// Comportement normal si on est déjà sur l'accueil
-const el = document.getElementById(id);
-if (el) el.scrollIntoView({behavior:'smooth'});
-}
-};
-
 function bgClose(e,id){ if(e.target.id===id) document.getElementById(id).classList.add('hidden'); }
 function toast_(msg,type='info'){
 const c=document.getElementById('toasts');
@@ -5889,56 +5872,71 @@ setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(14px)';el.st
 }
 function sHash(s){ let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0; return h.toString(16); }
 
-// NAV
+// ═══ VIEW ROUTER (Gestionnaire d'URL natif) ═══
+function updateViewFromURL() {
+    const path = window.location.pathname;
+    const landing = document.getElementById('landing');
+    const dashboard = document.getElementById('dashboard');
+    const mobileNav = document.getElementById('mobileNav');
+
+    if (path === '/dashboard') {
+        if (landing) { landing.classList.add('hidden'); landing.style.display = 'none'; }
+        if (dashboard) { dashboard.classList.remove('hidden'); dashboard.style.display = 'flex'; }
+        if (mobileNav) { mobileNav.classList.add('vis'); }
+    } else {
+        if (dashboard) { dashboard.classList.add('hidden'); dashboard.style.display = 'none'; }
+        if (mobileNav) { mobileNav.classList.remove('vis'); }
+        if (landing) { landing.classList.remove('hidden'); landing.style.display = 'block'; }
+    }
+    if (window.updateFabContext) window.updateFabContext();
+}
+
+// Gère le bouton retour/suivant du navigateur
+window.addEventListener('popstate', function() {
+    if (!window._user && window.location.pathname === '/dashboard') {
+        window.location.replace('/login');
+    } else {
+        updateViewFromURL();
+    }
+});
+
+// ═══ NAVIGATION PRINCIPALE ═══
+window.sTo = function(id) {
+    const dashboard = document.getElementById('dashboard');
+    if (dashboard && dashboard.style.display !== 'none' && !dashboard.classList.contains('hidden')) {
+        window.goHome(); // Retourne à l'accueil et met à jour l'URL
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({behavior:'smooth'});
+        }, 50);
+    } else {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({behavior:'smooth'});
+    }
+};
+
 window.goHome = function() {
-const landing = document.getElementById('landing');
-const dashboard = document.getElementById('dashboard');
-if (dashboard) {
-dashboard.classList.add('hidden');
-dashboard.style.display = 'none';
-}
-if (landing) {
-landing.classList.remove('hidden');
-landing.style.display = 'block';
-}
-window.scrollTo({top:0,behavior:'smooth'});
-if(window.updateFabContext) window.updateFabContext();
+    if (window.location.pathname !== '/') {
+        try { history.pushState({}, '', '/'); } catch(_) {}
+    }
+    updateViewFromURL();
+    window.scrollTo({top:0,behavior:'smooth'});
 };
 
 window.openDashboard = function() {
-const landing = document.getElementById('landing');
-const dashboard = document.getElementById('dashboard');
-if (landing) {
-landing.classList.add('hidden');
-landing.style.display = 'none';
-}
-if (dashboard) {
-dashboard.classList.remove('hidden');
-dashboard.style.display = 'flex';
-}
-pnl('home');
-window.scrollTo({top:0, behavior:'smooth'});
-if(window.updateFabContext) window.updateFabContext();
-// Update browser URL to /dashboard
-if (window.location.pathname !== '/dashboard') {
-    try { history.pushState({}, '', '/dashboard'); } catch(_) {}
-}
+    if (!window._user) { window.openAuth('login'); return; }
+    if (window.location.pathname !== '/dashboard') {
+        try { history.pushState({}, '', '/dashboard'); } catch(_) {}
+    }
+    updateViewFromURL();
+    if(typeof pnl === 'function') pnl('home');
+    window.scrollTo({top:0, behavior:'smooth'});
 };
 
 window.closeDashboard = function() {
-const landing = document.getElementById('landing');
-const dashboard = document.getElementById('dashboard');
-if (dashboard) { dashboard.classList.add('hidden'); dashboard.style.display = 'none'; }
-if (landing) { landing.classList.remove('hidden'); landing.style.display = ''; }
-document.body.style.overflow = '';
-window.scrollTo({top:0, behavior:'smooth'});
-if(window.updateFabContext) window.updateFabContext();
-// Restore URL to / when closing dashboard
-if (window.location.pathname === '/dashboard') {
-    try { history.pushState({}, '', '/'); } catch(_) {}
-}
+    window.goHome(); // Même comportement
 };
-
+    
 // AUTH — redirige vers la page de connexion dédiée
 window.openAuth = function(mode = 'create') {
     if(window._user) { window.openDashboard(); return; }
