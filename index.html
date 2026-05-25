@@ -4736,19 +4736,24 @@ function showDash(u) {
     renderNavLogged(u);
     updateLoggedUI();
     window.refreshUI();
-    updateViewFromURL(); // Ajuste l'affichage selon l'URL (permet de rester sur / avec la navbar connectée)
+    
+    // Cache le HTML de la landing et affiche le dashboard
+    const landing = document.getElementById('landing');
+    const dashboard = document.getElementById('dashboard');
+    const mobileNav = document.getElementById('mobileNav');
+
+    if (landing) { landing.classList.add('hidden'); landing.style.display = 'none'; }
+    if (dashboard) { dashboard.classList.remove('hidden'); dashboard.style.display = 'flex'; }
+    if (mobileNav) { mobileNav.classList.add('vis'); }
+
+    // --- MAGIE DE L'URL : Change l'adresse en /dashboard sans recharger ni faire de 404 ---
+    if (window.location.pathname !== '/dashboard') {
+        try { history.replaceState({}, '', '/dashboard'); } catch(_) {}
+    }
+
+    if(window.updateFabContext) window.updateFabContext();
     try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL, ts: Date.now() })); } catch(_) {}
 }
-
-function showLand() {
-    window._hideLoadingScreen();
-    renderNavGuest();
-    updateGuestUI();
-    window.updateAppCards();
-    updateViewFromURL(); // Ajuste l'affichage selon l'URL
-    setTimeout(() => { try { if (typeof _getPushPref === 'function' && _getPushPref() === 'granted' && Notification.permission === 'granted') window._registerFCMAnonOrUser(); } catch(_) {} }, 2000);
-}
-
 // ── PUSH NOTIFICATIONS FCM ──
 setTimeout(() => initFCM(u), 1500);
 
@@ -5919,8 +5924,18 @@ window.goHome = function() {
     if (window.location.pathname !== '/') {
         try { history.pushState({}, '', '/'); } catch(_) {}
     }
-    updateViewFromURL();
+    
+    // Réaffiche la landing page
+    const landing = document.getElementById('landing');
+    const dashboard = document.getElementById('dashboard');
+    const mobileNav = document.getElementById('mobileNav');
+
+    if (dashboard) { dashboard.classList.add('hidden'); dashboard.style.display = 'none'; }
+    if (mobileNav) { mobileNav.classList.remove('vis'); }
+    if (landing) { landing.classList.remove('hidden'); landing.style.display = 'block'; }
+    
     window.scrollTo({top:0,behavior:'smooth'});
+    if (window.updateFabContext) window.updateFabContext();
 };
 
 window.openDashboard = function() {
