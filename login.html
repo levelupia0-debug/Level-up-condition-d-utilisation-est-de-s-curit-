@@ -212,11 +212,20 @@ function setLoading(btnId, loading) {
   }
 }
 
-// --- CORRECTION : Redirection vers /dashboard ---
+// --- CORRECTION : On redirige vers la racine pour charger index.html ---
 function goToDashboard() {
-  window.location.replace('/dashboard');
+  window.location.replace('/');
 }
 
+// --- CORRECTION : On s'assure d'ignorer les connexions anonymes ---
+onAuthStateChanged(auth, (user) => {
+  if (user && !user.isAnonymous) {
+    loader.classList.remove('out');
+    goToDashboard();
+    return;
+  }
+  loader.classList.add('out');
+});
 // Handle URL params
 const params = new URLSearchParams(window.location.search);
 const customToken = params.get('customToken');
