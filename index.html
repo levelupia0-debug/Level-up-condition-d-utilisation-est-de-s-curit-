@@ -4731,88 +4731,6 @@ localStorage.setItem('lm_name', window._ud.displayName);
 if (window._ud.photoURL) localStorage.setItem('lm_photo', window._ud.photoURL);
 localStorage.setItem('lm_login_mode', 'google');
 
-function showDash(u) {
-    window._hideLoadingScreen();
-    renderNavLogged(u);
-    updateLoggedUI();
-    window.refreshUI();
-    
-    // Cache le HTML de la landing et affiche le dashboard
-    const landing = document.getElementById('landing');
-    const dashboard = document.getElementById('dashboard');
-    const mobileNav = document.getElementById('mobileNav');
-
-    if (landing) { landing.classList.add('hidden'); landing.style.display = 'none'; }
-    if (dashboard) { dashboard.classList.remove('hidden'); dashboard.style.display = 'flex'; }
-    if (mobileNav) { mobileNav.classList.add('vis'); }
-
-    // --- MAGIE DE L'URL : Change l'adresse en /dashboard sans recharger ni faire de 404 ---
-    if (window.location.pathname !== '/dashboard') {
-        try { history.replaceState({}, '', '/dashboard'); } catch(_) {}
-    }
-
-    if(window.updateFabContext) window.updateFabContext();
-    try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL, ts: Date.now() })); } catch(_) {}
-}
-// ── PUSH NOTIFICATIONS FCM ──
-setTimeout(() => initFCM(u), 1500);
-
-// ── SURVEILLANCE COMPTE EN TEMPS RÉEL (suspension / suppression) ──
-window._accountUnsubscribe && window._accountUnsubscribe();
-window._accountUnsubscribe = onSnapshot(ref, async (snap) => {
-    const data = snap.exists() ? snap.data() : null;
-    const status = data?.status || '';
-    if (status === 'suspended' || status === 'deleted') {
-        // Bloquer immédiatement l'interface
-        const already = document.getElementById('accountBlockedOverlay');
-        if (already) return;
-        // Envoyer l'email de notification (quota contrôlé)
-        if (window._emailQuota) {
-            window._emailQuota.send({
-                email: window._ud?.email || u.email || '',
-                name: window._ud?.displayName || '',
-                type: status === 'suspended' ? 'SUSPENDED' : 'DELETED'
-            });
-        }
-        // Marquer qu'on a déjà envoyé (évite les doublons si snapshot refired)
-        if (window._ud) window._ud._notifSent = true;
-        // Afficher l'overlay de blocage
-        const ov = document.createElement('div');
-        ov.id = 'accountBlockedOverlay';
-        const isSuspended = status === 'suspended';
-        ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#07070d;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:var(--sans)';
-        ov.innerHTML = `
-            <div style="font-size:3.5rem;margin-bottom:20px">${isSuspended ? '⚠️' : '🗑️'}</div>
-            <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 18px;border-radius:100px;background:${isSuspended ? 'rgba(251,191,36,.08)' : 'rgba(239,68,68,.08)'};border:1px solid ${isSuspended ? 'rgba(251,191,36,.25)' : 'rgba(239,68,68,.25)'};color:${isSuspended ? '#fbbf24' : '#fca5a5'};font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px">
-                <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:block"></span>
-                ${isSuspended ? 'Compte suspendu' : 'Compte supprimé'}
-            </div>
-            <h2 style="color:#fff;font-size:1.5rem;font-weight:800;margin:0 0 12px;letter-spacing:-.02em">
-                ${isSuspended ? 'Ton compte a été suspendu' : 'Ton compte a été supprimé'}
-            </h2>
-            <p style="color:rgba(255,255,255,.45);font-size:.9rem;line-height:1.7;max-width:360px;margin:0 0 28px">
-                ${isSuspended
-                    ? 'Ton accès à LevelUp Ecosystem a été temporairement suspendu. Un email t\'a été envoyé. Contacte le support pour plus d\'informations.'
-                    : 'Ton compte LevelUp a été définitivement supprimé. Un email de confirmation t\'a été envoyé.'}
-            </p>
-            <a href="mailto:support@levelup-ecosystem.com?subject=${isSuspended ? 'Suspension' : 'Suppression'} compte LevelUp" style="display:inline-flex;align-items:center;gap:8px;padding:11px 26px;border-radius:12px;background:${isSuspended ? 'rgba(251,191,36,.12)' : 'rgba(168,85,247,.12)'};border:1px solid ${isSuspended ? 'rgba(251,191,36,.35)' : 'rgba(168,85,247,.35)'};color:${isSuspended ? '#fbbf24' : '#d8b4fe'};font-size:.85rem;font-weight:700;text-decoration:none;margin-bottom:14px">
-                <i class="fa-solid fa-envelope"></i> Contacter le support
-            </a>
-            <button onclick="window._accountUnsubscribe&&window._accountUnsubscribe();signOut(window._auth).then(()=>{localStorage.clear();location.reload();})" style="background:none;border:none;color:rgba(255,255,255,.25);font-size:.78rem;cursor:pointer;font-family:var(--sans);padding:8px">
-                Se déconnecter
-            </button>`;
-        document.body.appendChild(ov);
-        // Déconnecter silencieusement après 4s
-        setTimeout(async () => {
-            try {
-                window._accountUnsubscribe && window._accountUnsubscribe();
-                await signOut(auth);
-                localStorage.clear();
-            } catch(_) {}
-        }, 4000);
-    }
-});
-
 } catch(e) {
 window._ud = window._ud || { displayName: u.displayName || 'Utilisateur' };
 localStorage.setItem('lm_login_mode', 'google');
@@ -4897,14 +4815,18 @@ if (mobileNav) {
 mobileNav.classList.add('vis');
 }
 
+// URL propre — /dashboard sans rechargement de page
+if (window.location.pathname !== '/dashboard') {
+    try { history.replaceState({}, '', '/dashboard'); } catch(_) {}
+}
+
 window._hideLoadingScreen();
 renderNavLogged(u);
 updateLoggedUI();
 window.refreshUI();
 if(window.updateFabContext) window.updateFabContext();
-// Sauvegarder session pour persistance iOS
-try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL, ts: Date.now() })); } catch(_) {}
-
+// Sauvegarder session pour persistance iOS/PWA
+try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u?.uid, email: u?.email, displayName: u?.displayName, photoURL: u?.photoURL, ts: Date.now() })); } catch(_) {}
 }
 
 
@@ -5924,7 +5846,7 @@ window.goHome = function() {
     if (window.location.pathname !== '/') {
         try { history.pushState({}, '', '/'); } catch(_) {}
     }
-    
+
     // Réaffiche la landing page
     const landing = document.getElementById('landing');
     const dashboard = document.getElementById('dashboard');
@@ -5933,7 +5855,7 @@ window.goHome = function() {
     if (dashboard) { dashboard.classList.add('hidden'); dashboard.style.display = 'none'; }
     if (mobileNav) { mobileNav.classList.remove('vis'); }
     if (landing) { landing.classList.remove('hidden'); landing.style.display = 'block'; }
-    
+
     window.scrollTo({top:0,behavior:'smooth'});
     if (window.updateFabContext) window.updateFabContext();
 };
@@ -5951,7 +5873,7 @@ window.openDashboard = function() {
 window.closeDashboard = function() {
     window.goHome(); // Même comportement
 };
-    
+
 // AUTH — redirige vers la page de connexion dédiée
 window.openAuth = function(mode = 'create') {
     if(window._user) { window.openDashboard(); return; }
@@ -5959,7 +5881,8 @@ window.openAuth = function(mode = 'create') {
 };
 
 function closeAuth(){
-document.getElementById('authOverlay').classList.add('hidden');
+const ov = document.getElementById('authOverlay');
+if(ov) ov.classList.add('hidden');
 const b=document.getElementById('gSignInBtn'); if(b) { b.disabled=false; }
 const t=document.getElementById('gBtnTxt'); if(t) t.textContent='Continuer avec Google';
 const btnKey = document.getElementById('showKeyInputBtn');
@@ -8617,7 +8540,7 @@ var SEL_MAP = {
     ['.quote-text','text','L\u2019\u00e9cosyst\u00e8me LevelUp n\u2019est pas juste une plateforme \u2014 c\u2019est un engagement. L\u2019engagement de cr\u00e9er des outils qui respectent l\u2019utilisateur, qui fonctionnent vraiment, et qui restent accessibles \u00e0 tous, quels que soient leurs moyens.'],
     /* Tech stack */
     ['.tech-grid .tech-card:nth-child(1) p','text','Base de donn\u00e9es Firestore, authentification, et synchronisation.'],
-    ['.tech-grid .tech-card:nth-child(2) p','text','L'infrastructure Google Cloud qui propulse l'ecosysteme LevelUp.'],
+    ['.tech-grid .tech-card:nth-child(2) p','text','L\u2019infrastructure Google Cloud qui propulse l\u2019\u00e9cosyst\u00e8me LevelUp.'],
     ['.tech-grid .tech-card:nth-child(3) p','text','H\u00e9bergement edge global et CDN mondial performant.'],
     ['.tech-grid .tech-card:nth-child(4) p','text','Le standard pour une authentification sans mot de passe.'],
     ['.tech-grid .tech-card:nth-child(5) p','text','H\u00e9bergement et contr\u00f4le de version du code source.'],
@@ -8877,6 +8800,8 @@ document.addEventListener('DOMContentLoaded', function() {
   try { localStorage.setItem('lvl_lang', 'en'); } catch(e) {}
   applyLang('en');
 });
+
+})(); // ── fin IIFE i18n ──
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SPLASH SCREEN iOS (uniquement sur iPhone / iPad)
