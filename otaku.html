@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Otaku Hub</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Variables de design demandées par ton code */
+    :root {
+      --display: 'Poppins', sans-serif;
+      --muted: #94a3b8;
+      --bg-dark: #0b0b0f;
+      --panel-bg: #13131a;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --pink-primary: #ec4899;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-dark);
+      font-family: var(--display);
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Bouton pour ouvrir le Hub (si caché) */
+    .open-btn {
+      padding: 12px 24px;
+      background: var(--pink-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--display);
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .open-btn:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+
+    /* Structure de l'Overlay */
+    .tools-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(11, 11, 15, 0.95);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      z-index: 999;
+      transition: all 0.3s ease;
+    }
+
+    .tools-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.98);
+    }
+
+    /* Header */
+    .tools-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    /* Grille et Contenu */
+    .tools-grid-wrap {
+      flex: 1;
+      padding: 40px;
+      position: relative;
+    }
+
+    .hub-grid-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 100%;
+    }
+
+    .hub-split-section {
+      margin-bottom: 30px;
+    }
+
+    .hub-split-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .svc-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .hub-split-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 30px 0;
+    }
+
+    /* Écran "Coming Soon" / Chargement */
+    .tools-coming-soon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .tcs-glow {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .tcs-glow-inner {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(236, 72, 153, 0.1);
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--pink-primary);
+      font-size: 1.5rem;
+      box-shadow: 0 0 20px rgba(236, 72, 153, 0.2);
+      animation: pulse 2s infinite;
+    }
+
+    .tcs-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 15px;
+    }
+
+    .tcs-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .tcs-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      max-width: 400px;
+      margin: 0;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="open-btn" onclick="openOtakuHub()">Ouvrir la Zone Otaku</button>
+
+  <div id="otakuHubOverlay" class="tools-overlay">
+    <div class="tools-head">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(236,72,153,.12);border:1px solid rgba(236,72,153,.25);display:flex;align-items:center;justify-content:center;">
+          <i class="fa-solid fa-torii-gate" style="color:#ec4899;font-size:.9rem"></i>
+        </div>
+        <div>
+          <h3 style="font-size:1rem;font-weight:800;font-family:var(--display);letter-spacing:-.02em;margin:0">Otaku Zone</h3>
+          <p style="font-size:.72rem;color:var(--muted);margin:0">Anime, manga, culture japonaise — sélection LevelUp</p>
+        </div>
+      </div>
+      <button onclick="window.closeOtakuHub()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .2s;outline:none" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.7)'">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="tools-grid-wrap" style="overflow-y:auto">
+      <div class="hub-bg-full" id="otakuBgFull"></div>
+      <div class="hub-grid-inner" style="overflow-y:auto">
+        <div class="hub-split-section" id="otakuSecInternal">
+          <div class="hub-split-label">🔵 Nos Applications</div>
+          <div class="svc-cards-grid" id="otakuHubInternal"></div>
+        </div>
+        <div class="hub-split-divider" id="otakuSplitDiv"></div>
+        <div class="hub-split-section" id="otakuSecExternal">
+          <div class="hub-split-label">🔗 Apps Externes</div>
+          <div class="svc-cards-grid" id="otakuHubExternal"></div>
+        </div>
+        <div class="hub-split-section hub-sec-all active" id="otakuSecAll">
+          <div class="svc-cards-grid" id="otakuHubGrid"></div>
+        </div>
+        <div class="tools-coming-soon" id="otakuHubEmpty">
+          <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-torii-gate"></i></div></div>
+          <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#ec4899;flex-shrink:0"></span> En chargement…</div>
+          <div class="tcs-title">Otaku Zone</div>
+          <p class="tcs-sub">Les applications anime & manga arrivent. Revenez bientôt.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const overlay = document.getElementById('otakuHubOverlay');
+
+    // Fonction de fermeture demandée par ton bouton
+    window.closeOtakuHub = function() {
+      overlay.classList.add('hidden');
+    };
+
+    // Fonction pour réouvrir au clic sur le bouton principal
+    window.openOtakuHub = function() {
+      overlay.classList.remove('hidden');
+    };
+  </script>
+</body>
+</html>
