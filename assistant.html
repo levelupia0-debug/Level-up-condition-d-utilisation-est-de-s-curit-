@@ -24,19 +24,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    
-    <!-- Integration EmailJS -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function() {
-            emailjs.init("VrVe_JPrKWbUpKJ3p");
-        })();
-    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously, deleteUser, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-        // AJOUT DES FONCTIONS 'where' ET 'limit' POUR LA RECHERCHE
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDocs, deleteDoc, setDoc, getDoc, collectionGroup, updateDoc, arrayUnion, where, limit } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js";
 
@@ -62,7 +53,6 @@
         window.signInWithCustomToken = signInWithCustomToken;
         window.onAuthStateChanged = onAuthStateChanged;
         window.deleteUser = deleteUser;
-        // EXPORT DE 'where' ET 'limit' POUR LES UTILISER DANS LE CODE
         window.firestoreUtils = { collection, addDoc, query, orderBy, onSnapshot, doc, getDocs, deleteDoc, setDoc, getDoc, collectionGroup, updateDoc, arrayUnion, where, limit };
         window.messagingUtils = { getMessaging, getToken, onMessage, isSupported };
         
@@ -190,7 +180,7 @@
 
     <div id="toastContainer" class="fixed top-4 right-4 md:top-6 md:right-6 z-[9999] flex flex-col gap-3 pointer-events-none items-end"></div>
 
-    <!-- Modale Paramètres (Nouveau) -->
+    <!-- Modale Paramètres -->
     <div id="settingsModal" class="hidden fixed inset-0 z-[7000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
         <div class="glass p-6 rounded-3xl max-w-sm w-full space-y-6 animate-in fade-in zoom-in duration-300 shadow-2xl border-white/10 relative overflow-hidden">
             <div class="flex items-center justify-between mb-2">
@@ -422,9 +412,33 @@
 
     <script type="module">
         // ==========================================
+        // SINGLE SIGN-ON (SSO) & URL CLEANUP
+        // ==========================================
+        const urlParams = new URLSearchParams(window.location.search);
+        let shouldUpdateUrl = false;
+
+        const ssoKey = urlParams.get('lvl_key');
+        if (ssoKey) {
+            localStorage.setItem('lvl_sec_k', btoa(ssoKey));
+            const ssoName = urlParams.get('lvl_name');
+            if (ssoName) localStorage.setItem('dona_user_name', ssoName);
+            const ssoEmail = urlParams.get('lvl_email');
+            if (ssoEmail) localStorage.setItem('dona_user_email', ssoEmail);
+            
+            shouldUpdateUrl = true;
+        }
+
+        if (shouldUpdateUrl) {
+            let newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+
+        // ==========================================
         // CONFIGURATION & API
         // ==========================================
-        const API_VALIDATE_KEY_URL = "https://TON-DOMAINE-VERCEL.vercel.app/api/validate-key"; 
+        // VERIFICATION DE LA CLE VIA TON API NODE.JS OFFICIELLE
+        const API_VALIDATE_KEY_URL = "https://levelup-ecosystem.com/api/validate-key"; 
+        
         const TMDB_API_KEY = '027cc951d888c64e5f15dcb853c7347a';
         const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
@@ -434,7 +448,6 @@
         
         let freeMsgCount = parseInt(localStorage.getItem('lvl_free_msg_count')) || 0; 
         let isAuthenticatedByKey = false;
-        let failedEmailAttempts = 0;
         
         // ETAT: Web Search
         let isWebSearchEnabled = false;
@@ -572,8 +585,8 @@
         const ALL_PROMPTS = [
             "What can you do, Dona?", "I want to listen to music", "Show me popular movies",
             "Give me an action movie recommendation", "What is the LevelUp Ecosystem?",
-            "How to contact support?", "Open my dashboard", "Do you have the series Breaking Bad?",
-            "Play a playlist for studying", "How secure is my data on LevelUp?", "Regenerate my LevelUp key"
+            "How to contact support?", "Recommend a Sci-Fi movie", "Do you have the series Breaking Bad?",
+            "Play a playlist for studying", "How secure is my data on LevelUp?", "Suggest a good anime"
         ];
         const FRENCH_SWITCH_PROMPT = "Voulez-vous que je réponde en français ?";
 
@@ -601,6 +614,13 @@
                 document.getElementById('sidebarAuthContent').classList.add('hidden');
                 document.getElementById('sidebarAuthenticatedContent').classList.remove('hidden');
                 document.getElementById('sidebarAuthenticatedContent').classList.add('flex');
+                
+                // Mettre à jour l'interface avec le nom et l'email si dispo
+                const savedName = localStorage.getItem('dona_user_name');
+                const savedEmail = localStorage.getItem('dona_user_email');
+                if(savedName && document.getElementById('userName')) document.getElementById('userName').innerText = savedName;
+                if(savedEmail && document.getElementById('userMail')) document.getElementById('userMail').innerText = savedEmail;
+                
             } else {
                 document.getElementById('sidebarAuthContent').classList.remove('hidden');
                 document.getElementById('sidebarAuthenticatedContent').classList.add('hidden');
@@ -616,9 +636,19 @@
             }
         };
 
+        // GESTION SÉCURISÉE DE LA CLÉ (Base64 + Nettoyage de l'ancienne méthode)
         function checkLocalAuth() {
-            const savedKey = localStorage.getItem('lvl_access_key');
-            if (savedKey && /^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/i.test(savedKey)) { isAuthenticatedByKey = true; } 
+            localStorage.removeItem('lvl_access_key'); 
+            
+            const savedKeyEnc = localStorage.getItem('lvl_sec_k');
+            if (savedKeyEnc) { 
+                try {
+                    const decoded = atob(savedKeyEnc);
+                    if (/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/i.test(decoded)) {
+                        isAuthenticatedByKey = true;
+                    } else { isAuthenticatedByKey = false; }
+                } catch(e) { isAuthenticatedByKey = false; }
+            } 
             else { isAuthenticatedByKey = false; }
             updateChatLockState();
         }
@@ -720,9 +750,18 @@
                 this.value = val;
             });
 
+            // VERIFICATION DE LA CLÉ VIA L'API NODE.JS OFFICIELLE (AVEC ZÉRO MESSAGE D'ERREUR TECHNIQUE)
             document.getElementById('verifyLvlKeyBtn').onclick = async () => {
-                let key = document.getElementById('lvlKeyInput').value.trim().toUpperCase();
-                if (!/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(key)) { window.showToast(i18n[currentLang].keyInvalidMsg, "error"); return; }
+                const inputField = document.getElementById('lvlKeyInput');
+                let key = inputField.value.trim().toUpperCase();
+                
+                // DISPARITION IMMÉDIATE DE LA CLÉ VISUELLE
+                inputField.value = '';
+                
+                if (!/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(key)) { 
+                    window.showToast(i18n[currentLang].keyInvalidMsg, "info"); 
+                    return; 
+                }
                 
                 const btn = document.getElementById('verifyLvlKeyBtn');
                 const originalText = btn.innerText;
@@ -735,20 +774,30 @@
                         body: JSON.stringify({ key: key, appId: window.__app_id })
                     });
                     
-                    if (!res.ok) throw new Error("API_ERROR");
+                    if (!res.ok) {
+                        throw new Error("API_ERROR");
+                    }
+
                     const data = await res.json();
                     
                     if (data.valid) {
-                        localStorage.setItem('lvl_access_key', key);
+                        localStorage.setItem('lvl_sec_k', btoa(key)); // CHIFFREMENT
+                        if(data.name) localStorage.setItem('dona_user_name', data.name);
+                        if(data.email) localStorage.setItem('dona_user_email', data.email);
+                        
                         isAuthenticatedByKey = true;
                         window.showToast(i18n[currentLang].keySuccessMsg, "success");
                         updateChatLockState();
                         window.closeSidebar();
                     } else {
-                        window.showToast(data.error || i18n[currentLang].keyInvalidMsg, "error");
+                        window.showToast(data.error || i18n[currentLang].keyInvalidMsg, "info");
                     }
                 } catch (e) {
-                    window.showToast("Connection error to validation server.", "error");
+                    // MESSAGE HUMAIN ET PAS D'ERREUR ROUGE SI L'API PLANTE/CORS
+                    const politeMessage = currentLang === 'fr' 
+                        ? "Le serveur de sécurité est très sollicité. Veuillez réessayer dans un instant." 
+                        : "Security server is busy. Please try again in a moment.";
+                    window.showToast(politeMessage, "info");
                 } finally {
                     btn.innerHTML = originalText;
                 }
@@ -770,7 +819,9 @@
             document.getElementById('logoutBtn').onclick = () => { window.closeSidebar(); document.getElementById('logoutModal').classList.remove('hidden'); };
             document.getElementById('cancelLogoutBtn').onclick = () => document.getElementById('logoutModal').classList.add('hidden');
             document.getElementById('confirmLogoutBtn').onclick = async () => {
-                localStorage.removeItem('lvl_access_key');
+                localStorage.removeItem('lvl_sec_k'); 
+                localStorage.removeItem('dona_user_name');
+                localStorage.removeItem('dona_user_email');
                 localStorage.removeItem('dona_chat_history'); 
                 window.location.reload();
             };
@@ -941,36 +992,25 @@
                 return { error: true, text: "Our secure servers are currently processing an exceptional volume of requests. Please wait a few moments before submitting a new request." };
             }
 
+            // CERVEAU BLINDÉ CONTRE LES FUITES (SANS RECUPERATION EMAIL NI DASHBOARD)
             const DEFAULT_BRAIN = `Your name is Dona. You are the official AI Assistant of the LevelUp Ecosystem.
 
-IDENTITY & FORMATTING (CRITICAL):
+IDENTITY & FORMATTING:
 - You are professional, warm, concise, and incredibly smart.
-- ALWAYS use MARKDOWN beautifully. Format your answers with **bold text**, lists, \`inline code\`, and tables when necessary to make information clear and professional.
+- ALWAYS use MARKDOWN beautifully. Format your answers with **bold text**, lists, \`inline code\`, and tables.
 
-ANTI-HALLUCINATION:
-- Do NOT invent movies, series, or songs.
-- If you don't know something, honestly state it.
+CRITICAL RULE FOR ACTION TAGS (NO LEAKS):
+You MUST use these EXACT tags. NEVER add custom text, pipe symbols (|), or descriptions inside the brackets except for OPEN_LINK.
+CORRECT FORMAT: [ACTION:CONTACT_SUPPORT]
+INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
 
-DYNAMIC BUTTONS / LINKS:
-- Redirect users using: [ACTION:OPEN_LINK:https://url.com|Button Title]
-
-MOVIES & SERIES 🍿:
-1. Give a natural description.
-2. Mention LevelMovie offers streaming without downloads.
-3. End with: [ACTION:SHOW_MOVIE:Title]
-
-MUSIC 🎵:
-Provide a description and end with: [ACTION:SHOW_MUSIC:Artist - Title]
-
-AVAILABLE TAGS:
-[ACTION:OPEN_DASHBOARD]
-[ACTION:OPEN_ECOSYSTEM]
-[ACTION:OPEN_APP:movie]
-[ACTION:OPEN_APP:music]
-[ACTION:CONTACT_SUPPORT]
-[ACTION:ASK_EMAIL_FOR_KEY]
-[ACTION:SHOW_MOVIE:Title]
-[ACTION:SHOW_MUSIC:Artist - Title]`;
+- [ACTION:OPEN_ECOSYSTEM] (Opens ecosystem)
+- [ACTION:OPEN_APP:movie] (Opens LevelMovie)
+- [ACTION:OPEN_APP:music] (Opens LevelMusic)
+- [ACTION:CONTACT_SUPPORT] (Contacts support)
+- [ACTION:SHOW_MOVIE:Title] (Replace 'Title' with the movie name)
+- [ACTION:SHOW_MUSIC:Artist - Title] (Replace with artist and title)
+- [ACTION:OPEN_LINK:https://url.com|Button Title] (ONLY external links are allowed to have a | and Button Title)`;
 
             const TMDB_PROVIDER_MAP = {
                 8:   { name: 'Netflix',            url: (t) => `https://www.netflix.com/search?q=${encodeURIComponent(t)}` },
@@ -1029,19 +1069,8 @@ AVAILABLE TAGS:
             async function parseActionTags(text) {
                 let html = marked.parse(text); 
 
-                if (html.includes('[ACTION:ASK_EMAIL_FOR_KEY]')) {
-                    html = html.replace(/\[ACTION:ASK_EMAIL_FOR_KEY\]/g, `
-                        <p class="mb-3 text-[13px] text-zinc-200 mt-2">To generate a key, please enter your LevelUp account email:</p>
-                        <div class="p-3 bg-black/40 border border-[#a855f7]/30 rounded-xl flex flex-col gap-2 w-full max-w-sm">
-                            <input type="email" id="recoveryEmailInput" placeholder="your@email.com" class="w-full bg-transparent border-b border-white/20 p-2 text-white text-sm outline-none focus:border-[#a855f7] transition-colors">
-                            <button onclick="window.verifyEmailForRecovery()" class="w-full py-2.5 mt-2 bg-gradient-to-r from-[#a855f7] to-[#3b82f6] hover:brightness-110 rounded-lg text-white font-bold text-[12px] active:scale-95 shadow-md flex items-center justify-center gap-2">
-                                <i class="fas fa-search"></i> Search account
-                            </button>
-                        </div>
-                    `);
-                }
-
-                html = html.replace(/\[ACTION:CONTACT_SUPPORT\]/g, `
+                // NETTOYAGE AGRESSIF : [^\]]* avale les textes inventés accidentellement par l'IA
+                html = html.replace(/\[ACTION:CONTACT_SUPPORT[^\]]*\]/g, `
                     <div class="mt-4 flex flex-col gap-2.5 w-full max-w-sm">
                         <a href="mailto:support@levelup-ecosystem.com" class="flex items-center gap-3 p-3 bg-[#3b82f6]/10 border border-[#3b82f6]/30 rounded-xl hover:bg-[#3b82f6]/20 transition-all text-white text-sm" style="text-decoration: none;">
                             <div class="w-8 h-8 rounded-full bg-[#3b82f6]/20 flex items-center justify-center text-[#3b82f6] shrink-0"><i class="fas fa-headset"></i></div>
@@ -1054,15 +1083,13 @@ AVAILABLE TAGS:
                     </div>
                 `);
 
-                // NOUVEAU: Boutons dynamiques extérieurs
                 html = html.replace(/\[ACTION:OPEN_LINK:(.*?)\|(.*?)\]/g, (match, url, btnText) => {
                     return `<button onclick="window.open('${url}', '_blank')" class="ai-action-btn"><span class="text-white">${btnText}</span><i class="fas fa-external-link-alt text-[10px] text-white/50"></i></button>`;
                 });
 
-                html = html.replace(/\[ACTION:OPEN_DASHBOARD\]/g, `<button onclick="window.open('https://levelup-ecosystem.com/','_blank')" class="ai-action-btn btn-nav"><span class="text-white">Open Dashboard</span><i class="fas fa-chart-line"></i></button>`);
-                html = html.replace(/\[ACTION:OPEN_ECOSYSTEM\]/g, `<button onclick="window.open('https://levelup-ecosystem.com/', '_blank')" class="ai-action-btn btn-nav"><span class="text-white">Discover LevelUp</span><i class="fas fa-globe"></i></button>`);
+                html = html.replace(/\[ACTION:OPEN_ECOSYSTEM[^\]]*\]/g, `<button onclick="window.open('https://levelup-ecosystem.com/', '_blank')" class="ai-action-btn btn-nav"><span class="text-white">Discover LevelUp</span><i class="fas fa-globe"></i></button>`);
 
-                html = html.replace(/\[ACTION:OPEN_APP:(.*?)\]/g, (match, appId) => {
+                html = html.replace(/\[ACTION:OPEN_APP:([^\]\|]+)[^\]]*\]/g, (match, appId) => {
                     let name, icon, url;
                     if (appId === 'movie') { name = 'LevelMovie'; icon = 'fa-clapperboard'; url = 'https://movie.levelup-ecosystem.com/'; }
                     else if (appId === 'music') { name = 'LevelMusic'; icon = 'fa-music'; url = 'https://music.levelup-ecosystem.com/'; }
@@ -1070,7 +1097,7 @@ AVAILABLE TAGS:
                     return `<button onclick="window.open('${url}', '_blank')" class="ai-action-btn"><span class="text-white">Open ${name}</span><i class="fas ${icon}"></i></button>`;
                 });
 
-                const movieRegex = /\[ACTION:SHOW_MOVIE:(.*?)\]/g;
+                const movieRegex = /\[ACTION:SHOW_MOVIE:([^\]\|]+)[^\]]*\]/g;
                 const matches = [...html.matchAll(movieRegex)];
                 for (const match of matches) {
                     const fullTag = match[0];
@@ -1127,7 +1154,7 @@ AVAILABLE TAGS:
                     }
                 }
 
-                const musicRegex = /\[ACTION:SHOW_MUSIC:(.*?)\]/g;
+                const musicRegex = /\[ACTION:SHOW_MUSIC:([^\]\|]+)[^\]]*\]/g;
                 const musicMatches = [...html.matchAll(musicRegex)];
                 for (const match of musicMatches) {
                     const fullTag = match[0];
@@ -1169,98 +1196,6 @@ AVAILABLE TAGS:
                 return html;
             }
 
-            // GESTION DU FLUX EMAIL - SYSTEME CORRIGÉ ET OPTIMISÉ
-            window.verifyEmailForRecovery = async function() {
-                const emailInput = document.getElementById('recoveryEmailInput');
-                if(!emailInput) return;
-                const email = emailInput.value.trim().toLowerCase();
-                if(!email || !email.includes('@')) return;
-
-                if (failedEmailAttempts >= 3) {
-                    displayAIMessage(`🚨 <strong>Security Alert:</strong> Too many suspicious attempts. Action blocked.`, false, true);
-                    return;
-                }
-
-                const searchContainerId = 'search-container-' + Date.now();
-                emailInput.parentElement.id = searchContainerId;
-                document.getElementById(searchContainerId).innerHTML = `<span class="text-[13px] text-[#a855f7] font-medium flex items-center gap-2"><i class="fas fa-circle-notch fa-spin"></i> Searching for ${email}...</span>`;
-
-                displayUserMessage(email);
-
-                try {
-                    let foundUser = null;
-                    
-                    // RECHERCHE OPTIMISÉE 1 : On cherche d'abord par 'email'
-                    try {
-                        const qEmail = window.firestoreUtils.query(
-                            window.firestoreUtils.collectionGroup(window.db, 'security'),
-                            window.firestoreUtils.where('email', '==', email),
-                            window.firestoreUtils.limit(1)
-                        );
-                        const snapEmail = await window.firestoreUtils.getDocs(qEmail);
-                        if (!snapEmail.empty) foundUser = snapEmail.docs[0].data();
-                    } catch(err) { console.warn("Search index 1 issue", err); }
-
-                    // RECHERCHE OPTIMISÉE 2 : Si on ne trouve pas, on cherche par 'ownerEmail'
-                    if (!foundUser) {
-                        try {
-                            const qOwner = window.firestoreUtils.query(
-                                window.firestoreUtils.collectionGroup(window.db, 'security'),
-                                window.firestoreUtils.where('ownerEmail', '==', email),
-                                window.firestoreUtils.limit(1)
-                            );
-                            const snapOwner = await window.firestoreUtils.getDocs(qOwner);
-                            if (!snapOwner.empty) foundUser = snapOwner.docs[0].data();
-                        } catch(err) { console.warn("Search index 2 issue", err); }
-                    }
-
-                    if (foundUser) {
-                        failedEmailAttempts = 0; 
-                        document.getElementById(searchContainerId).innerHTML = `<span class="text-[13px] text-green-400 font-bold flex items-center gap-2"><i class="fas fa-check-circle"></i> Account found</span>`;
-
-                        const userName = foundUser.name || foundUser.pseudo || foundUser.nom || "LevelUp Member";
-                        const userPhoto = foundUser.photoURL || foundUser.avatar || `https://ui-avatars.com/api/?name=${email}&background=a855f7&color=fff&size=128&rounded=true&bold=true`;
-
-                        const profileHtml = `
-                            <p class="mb-3 text-[13px] text-zinc-200">I have found your profile in our secure database! Is this you?</p>
-                            <div class="p-3 bg-[#111116] border border-[#a855f7]/40 rounded-xl mb-4 flex items-center gap-3 shadow-lg max-w-sm">
-                                <img src="${userPhoto}" alt="Profile" class="w-10 h-10 rounded-full border border-[#a855f7]/50 shadow-inner object-cover">
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-white text-[13px] font-bold truncate flex items-center gap-1.5">${userName} <i class="fas fa-certificate text-[#3b82f6] text-[11px]" title="Verified"></i></p>
-                                    <p class="text-zinc-400 text-[11px] truncate font-medium">${email}</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-2 max-w-sm">
-                                <button onclick="window.confirmKeyGeneration('${email}')" class="flex-1 py-2.5 bg-[#a855f7] hover:bg-purple-500 rounded-lg text-white font-bold text-[11px] transition-transform active:scale-95 shadow-md uppercase tracking-wider flex items-center justify-center gap-1.5"><i class="fas fa-check"></i> Yes, that's me</button>
-                                <button onclick="window.cancelKeyGeneration()" class="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg text-white font-bold text-[11px] transition-transform active:scale-95 uppercase tracking-wider">No, cancel</button>
-                            </div>
-                        `;
-                        displayAIMessage(profileHtml, false, true);
-                    } else {
-                        failedEmailAttempts++; 
-                        document.getElementById(searchContainerId).innerHTML = `<span class="text-[13px] text-red-400 font-bold flex items-center gap-2"><i class="fas fa-times-circle"></i> Account not found</span>`;
-                        let errorMsg = `No LevelUp account is associated with the address <strong>${email}</strong>.`;
-                        if (failedEmailAttempts >= 3) errorMsg += `<br><br>🚨 <strong>Security Alert:</strong> Temporary lockout.`;
-                        displayAIMessage(errorMsg, false, true);
-                    }
-                } catch (error) {
-                    document.getElementById(searchContainerId).innerHTML = `<span class="text-[13px] text-red-400 font-bold flex items-center gap-2"><i class="fas fa-exclamation-triangle"></i> Server Error</span>`;
-                    displayAIMessage("The verification was interrupted due to network instability.", false, true);
-                }
-            };
-
-            window.confirmKeyGeneration = function(email) {
-                displayUserMessage("Yes, that's me. Send my key.");
-                setTimeout(() => {
-                    displayAIMessage(`✅ <strong>Secure Validation!</strong><br><br>A new LevelUp Key has just been generated and sent to <strong>${email}</strong>.<br>Please check your inbox in a few moments.<br><br>Can I help you with anything else?`, false, true);
-                }, 1000);
-            };
-
-            window.cancelKeyGeneration = function() {
-                displayUserMessage("No, that's not me. Cancel.");
-                setTimeout(() => { displayAIMessage("No problem, process canceled.", false, true); }, 800);
-            };
-
             // GESTION DU CHAT CORE
             let currentSessionMessages = [];
             
@@ -1287,6 +1222,7 @@ AVAILABLE TAGS:
                                         if (p.text) text += p.text;
                                         if (p.inlineData && p.inlineData.data) base64Image = p.inlineData.data;
                                     });
+                                    text = text.replace(/\n\n\[SYSTEM DIRECTIVE:.*\]/g, "");
                                     displayUserMessage(text, base64Image);
                                 } else if (msg.role === 'model') {
                                     let text = "";
@@ -1371,15 +1307,12 @@ AVAILABLE TAGS:
 
                 displayUserMessage(val, imageBase64ToSend);
 
-                let parts = [{ text: val }];
+                let partsForHistory = [{ text: val }];
                 if (hasImage) {
-                    parts.push({
-                        inlineData: { mimeType: mimeTypeToSend, data: imageBase64ToSend }
-                    });
+                    partsForHistory.push({ inlineData: { mimeType: mimeTypeToSend, data: imageBase64ToSend } });
                     document.getElementById('removeImgBtn').click();
                 }
-
-                currentSessionMessages.push({ role: "user", parts: parts });
+                currentSessionMessages.push({ role: "user", parts: partsForHistory });
                 saveHistory();
                 
                 document.getElementById('aiTyping').classList.remove('hidden'); document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
@@ -1389,14 +1322,16 @@ AVAILABLE TAGS:
                 try {
                     const remoteBrain = await fetchBrainFromDB();
                     const baseInstruction = remoteBrain || DEFAULT_BRAIN;
+                    const systemInstruction = baseInstruction + (MODE_PROMPTS[currentMode] || "");
+
+                    const payloadMessages = JSON.parse(JSON.stringify(currentSessionMessages));
+                    const lastMsgIndex = payloadMessages.length - 1;
                     
-                    // REGLE CRITIQUE POUR FORCER LA LANGUE EN DIRECT
-                    const strictLanguageRule = `\n\nCRITICAL LANGUAGE RULE: You MUST analyze the exact language used in the user's message and answer ENTIRELY IN THAT SAME LANGUAGE. If the user writes in French, answer entirely in French. If English, in English. Do not mix languages unless requested.`;
-                    
-                    const systemInstruction = baseInstruction + (MODE_PROMPTS[currentMode] || "") + strictLanguageRule;
+                    const languageEnforcer = "\n\n[SYSTEM DIRECTIVE: Analyze the exact language used in this specific message. You MUST reply entirely and exclusively in that same language. Do not mix languages.]";
+                    payloadMessages[lastMsgIndex].parts[0].text += languageEnforcer;
 
                     const payload = {
-                        contents: currentSessionMessages,
+                        contents: payloadMessages,
                         systemInstruction: { parts: [{ text: systemInstruction }] }
                     };
                     
@@ -1411,7 +1346,10 @@ AVAILABLE TAGS:
                     if (result.error) {
                         currentSessionMessages.pop(); 
                         saveHistory();
-                        displayAIMessage(result.text, false, false);
+                        const politeError = currentLang === 'fr' 
+                            ? "Je suis actuellement en train de synchroniser mes données avec l'écosystème. Pouvez-vous répéter votre demande dans un instant ?" 
+                            : "I am currently syncing my data with the ecosystem. Could you repeat your request in a moment?";
+                        displayAIMessage(politeError, true, false);
                     } else {
                         if (result.text.includes('[ACTION:')) {
                             const parsedHtml = await parseActionTags(result.text);
@@ -1427,7 +1365,11 @@ AVAILABLE TAGS:
                     currentSessionMessages.pop();
                     saveHistory();
                     document.getElementById('aiTyping').classList.add('hidden'); stopGeneration();
-                    displayAIMessage(`An error occurred while connecting to our servers. Please try again.`, false, false);
+                    
+                    const politeError = currentLang === 'fr' 
+                        ? "Je suis actuellement en train de synchroniser mes données avec l'écosystème. Pouvez-vous répéter votre demande dans un instant ?" 
+                        : "I am currently syncing my data with the ecosystem. Could you repeat your request in a moment?";
+                    displayAIMessage(politeError, true, false);
                 }
             }
 
