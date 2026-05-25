@@ -31,7 +31,6 @@
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDocs, deleteDoc, setDoc, getDoc, collectionGroup, updateDoc, arrayUnion, where, limit } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
         import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js";
 
-        // IMPORTANT : Conserve ta configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
             authDomain: "levelup-ia.firebaseapp.com",
@@ -65,6 +64,12 @@
         :root { --primary: #a855f7; --dark: #020202; }
 
         .hidden { display: none !important; }
+        
+        /* DETECTEUR PWA */
+        .pwa-only { display: none !important; }
+        @media (display-mode: standalone) {
+            .pwa-only { display: flex !important; }
+        }
         
         html { 
             background-color: var(--dark); 
@@ -164,10 +169,6 @@
         /* Dropdown Menu Attachement */
         #attachMenu { transition: all 0.2s cubic-bezier(0.1, 0.9, 0.2, 1); transform-origin: bottom left; }
         #attachMenu.hidden-menu { opacity: 0; transform: scale(0.9) translateY(10px); pointer-events: none; }
-        
-        /* Toggle Switch Custom */
-        .toggle-switch-on { background-color: #a855f7 !important; }
-        .toggle-switch-on > div { transform: translateX(12px); }
 
         .img-preview-bubble { animation: popIn 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; position: relative; overflow: hidden; }
         @keyframes popIn { from { opacity: 0; transform: scale(0.8) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
@@ -202,7 +203,7 @@
                 <div class="space-y-2">
                     <label id="modeTitle" class="text-[10px] font-bold uppercase tracking-widest opacity-40">Expertise Mode</label>
                     <select id="modeSelect" class="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-[13px] text-white outline-none focus:border-purple-500 transition-all font-medium appearance-none cursor-pointer">
-                        <option value="auto" class="bg-black text-white">Auto (General)</option>
+                        <option value="auto" class="bg-black text-white">Auto (Smart & Adaptive)</option>
                         <option value="otaku" class="bg-black text-white">Otaku (Anime/Manga)</option>
                         <option value="movie" class="bg-black text-white">Cinephile (Movies/Series)</option>
                         <option value="music" class="bg-black text-white">Audiophile (Music)</option>
@@ -316,18 +317,24 @@
         </div>
 
         <!-- HEADER PRINCIPAL -->
-        <header class="px-5 pb-4 flex items-center justify-between border-b border-white/5 bg-black/40 backdrop-blur-2xl shrink-0 z-40 safe-pt">
+        <header class="px-4 pb-4 flex items-center justify-between border-b border-white/5 bg-black/40 backdrop-blur-2xl shrink-0 z-40 safe-pt">
             <div class="flex items-center gap-3">
-                <i class="fas fa-star text-[#a855f7] text-[26px] drop-shadow-[0_0_12px_rgba(168,85,247,0.7)]"></i>
-                <div>
-                    <h2 class="text-sm font-black uppercase tracking-widest"><strong id="headerAppBrand">Dona</strong></h2>
-                    <p class="text-[9px] font-semibold text-white/50 uppercase tracking-widest mt-0.5">AI Assistant</p>
+                <i class="fas fa-star text-[#a855f7] text-[26px] drop-shadow-[0_0_12px_rgba(168,85,247,0.7)] shrink-0"></i>
+                <div class="min-w-0">
+                    <h2 class="text-sm font-black uppercase tracking-widest truncate"><strong id="headerAppBrand">Dona</strong></h2>
+                    <p class="text-[9px] font-semibold text-white/50 uppercase tracking-widest mt-0.5 truncate">AI Assistant</p>
                 </div>
             </div>
-            <button id="openSidebar" class="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-1.5 hover:bg-white/5 active:scale-90 transition-all">
-                <span class="w-5 h-0.5 bg-white rounded-full"></span>
-                <span class="w-5 h-0.5 bg-white rounded-full opacity-60"></span>
-            </button>
+            <div class="flex items-center gap-2">
+                <!-- BOUTON RETOUR PWA (Caché sur desktop normal) -->
+                <button onclick="window.location.href='https://levelup-ecosystem.com/'" class="pwa-only w-10 h-10 rounded-xl items-center justify-center hover:bg-white/5 active:scale-90 transition-all shrink-0 text-white/60 hover:text-white" title="Réduire l'application">
+                    <i class="fas fa-compress-alt text-lg drop-shadow-md"></i>
+                </button>
+                <button id="openSidebar" class="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-1.5 hover:bg-white/5 active:scale-90 transition-all shrink-0">
+                    <span class="w-5 h-0.5 bg-white rounded-full"></span>
+                    <span class="w-5 h-0.5 bg-white rounded-full opacity-60"></span>
+                </button>
+            </div>
         </header>
 
         <main class="flex-1 overflow-y-auto overflow-x-hidden px-4 py-8 no-scrollbar space-y-8 relative" id="chatArea">
@@ -343,9 +350,12 @@
             <div class="max-w-3xl mx-auto space-y-6 w-full" id="conversationContainer"></div>
             
             <div id="aiTyping" class="max-w-3xl mx-auto hidden pl-2 pb-6">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-star text-[#a855f7] text-[18px] drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></i>
-                    <div class="typing-dots flex gap-1.5"><span></span><span></span><span></span></div>
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-star text-[#a855f7] text-[18px] drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></i>
+                        <div class="typing-dots flex gap-1.5"><span></span><span></span><span></span></div>
+                    </div>
+                    <div id="smartTypingText" class="text-[10px] text-[#a855f7]/70 font-bold uppercase tracking-widest pl-1 transition-opacity duration-300 opacity-0"></div>
                 </div>
             </div>
         </main>
@@ -360,12 +370,10 @@
                     </button>
                     <div class="h-px w-full bg-white/5 my-1"></div>
                     <button id="menuWebSearch" class="flex items-center gap-3 w-full p-3 hover:bg-white/5 rounded-xl text-left text-sm text-white transition-all active:scale-95">
-                        <i class="fas fa-globe text-blue-400 w-5 text-center"></i>
+                        <i id="webSearchIcon" class="fas fa-globe text-zinc-400 w-5 text-center transition-colors"></i>
                         <div class="flex-1 flex justify-between items-center">
-                            <span id="attachMenuWebText" class="font-medium">Deep Web Search</span>
-                            <div id="webSearchToggle" class="w-8 h-4.5 bg-white/10 rounded-full relative transition-colors duration-300">
-                                <div class="w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300 shadow-md"></div>
-                            </div>
+                            <span id="attachMenuWebText" class="font-medium text-zinc-300 transition-colors">Deep Web Search</span>
+                            <i id="webSearchCheck" class="fas fa-check text-blue-400 opacity-0 transition-opacity"></i>
                         </div>
                     </button>
                 </div>
@@ -436,7 +444,6 @@
         // ==========================================
         // CONFIGURATION & API
         // ==========================================
-        // VERIFICATION DE LA CLE VIA TON API NODE.JS OFFICIELLE
         const API_VALIDATE_KEY_URL = "https://levelup-ecosystem.com/api/validate-key"; 
         
         const TMDB_API_KEY = '027cc951d888c64e5f15dcb853c7347a';
@@ -445,6 +452,7 @@
         let abortController = null;
         let isGenerating = false;
         let typingInterval = null;
+        let smartTypingInterval = null; 
         
         let freeMsgCount = parseInt(localStorage.getItem('lvl_free_msg_count')) || 0; 
         let isAuthenticatedByKey = false;
@@ -452,13 +460,27 @@
         // ETAT: Web Search
         let isWebSearchEnabled = false;
 
+        // ==========================================
+        // GESTION GLOBALE DE L'AUDIO (Smart Audio)
+        // ==========================================
+        document.addEventListener('play', function(e) {
+            if (e.target.tagName === 'AUDIO') {
+                const audios = document.getElementsByTagName('audio');
+                for (let i = 0; i < audios.length; i++) {
+                    if (audios[i] !== e.target) {
+                        audios[i].pause();
+                    }
+                }
+            }
+        }, true);
+
         let currentImageBase64 = null;
         let currentImageMimeType = null;
         
         let currentMode = localStorage.getItem('dona_saved_mode') || 'auto';
         
         const MODE_PROMPTS = {
-            'auto': "",
+            'auto': "\n\nMODE EXPERT: AUTO. You are highly intelligent, adaptive, and proactive. Pay close attention to the user's habits and adjust your tone and recommendations accordingly.",
             'otaku': "\n\nMODE EXPERT: OTAKU. You are an elite Otaku and anime/manga expert. Provide highly detailed, passionate, and deeply knowledgeable answers about Japanese pop culture, anime, manga, light novels, and cosplay. Format with beautiful Markdown.",
             'movie': "\n\nMODE EXPERT: MOVIE. You are a professional cinephile, film critic, and historian. Provide highly detailed, analytical, and expert answers about cinema, movies, directors, and TV series. Format with beautiful Markdown.",
             'music': "\n\nMODE EXPERT: MUSIC. You are an expert audiophile, musicologist, and producer. Provide highly detailed, professional, and insightful answers about music theory, artists, genres. Format with beautiful Markdown.",
@@ -489,7 +511,8 @@
                 confirmLogout: "Quitter",
                 keyInvalidMsg: "Format invalide. Requis : LVL-XXXXX-XXXXX",
                 keySuccessMsg: "Clé validée. Accès premium autorisé.",
-                keyReqImg: "L'analyse visuelle et la recherche web sont des fonctionnalités exclusives Premium.",
+                freeImgLimit: "Limite gratuite atteinte (1 image/jour).",
+                premiumWeb: "La recherche Web est une exclusivité Premium.",
                 modeChanged: "Mode d'expertise défini sur : ",
                 toastSuccess: "Succès",
                 toastError: "Erreur",
@@ -520,7 +543,8 @@
                 confirmLogout: "Leave",
                 keyInvalidMsg: "Invalid format. Required: LVL-XXXXX-XXXXX",
                 keySuccessMsg: "Key validated. Premium access granted.",
-                keyReqImg: "Visual analysis and deep web search are exclusive Premium features.",
+                freeImgLimit: "Free limit reached (1 image/day).",
+                premiumWeb: "Deep Web Search is a Premium exclusive feature.",
                 modeChanged: "Expertise mode set to: ",
                 toastSuccess: "Success",
                 toastError: "Error",
@@ -534,10 +558,10 @@
             if ('target' in node) { node.setAttribute('target', '_blank'); node.setAttribute('rel', 'noopener noreferrer'); }
         });
 
-        // SANITIZER M.A.J POUR SUPPORTER PARFAITEMENT LE MARKDOWN
+        // SANITIZER M.A.J
         const sanitizeHTML = (html) => DOMPurify.sanitize(html, { 
-            ADD_ATTR: ['target', 'rel', 'viewBox', 'fill', 'd', 'xmlns', 'class', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'onclick', 'id', 'data-rating', 'src', 'alt', 'type', 'placeholder', 'data-action'],
-            ADD_TAGS: ['svg', 'path', 'g', 'circle', 'line', 'polyline', 'rect', 'polygon', 'i', 'img', 'a', 'button', 'input', 'strong', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'blockquote', 'ul', 'ol', 'li', 'em', 'hr', 'br', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+            ADD_ATTR: ['target', 'rel', 'viewBox', 'fill', 'd', 'xmlns', 'class', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'onclick', 'id', 'data-rating', 'src', 'alt', 'type', 'placeholder', 'data-action', 'controls', 'allow', 'allowfullscreen', 'frameborder', 'style'],
+            ADD_TAGS: ['svg', 'path', 'g', 'circle', 'line', 'polyline', 'rect', 'polygon', 'i', 'img', 'a', 'button', 'input', 'strong', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'blockquote', 'ul', 'ol', 'li', 'em', 'hr', 'br', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'audio', 'source', 'iframe']
         });
 
         window.showToast = function(msg, type = 'info', customTitle = null) {
@@ -615,7 +639,6 @@
                 document.getElementById('sidebarAuthenticatedContent').classList.remove('hidden');
                 document.getElementById('sidebarAuthenticatedContent').classList.add('flex');
                 
-                // Mettre à jour l'interface avec le nom et l'email si dispo
                 const savedName = localStorage.getItem('dona_user_name');
                 const savedEmail = localStorage.getItem('dona_user_email');
                 if(savedName && document.getElementById('userName')) document.getElementById('userName').innerText = savedName;
@@ -636,7 +659,6 @@
             }
         };
 
-        // GESTION SÉCURISÉE DE LA CLÉ (Base64 + Nettoyage de l'ancienne méthode)
         function checkLocalAuth() {
             localStorage.removeItem('lvl_access_key'); 
             
@@ -711,7 +733,6 @@
                 applyLanguage(e.target.value); localStorage.setItem('thiabs_saved_lang', e.target.value);
             });
 
-            // PARAMETRES (MODAL)
             document.getElementById('openSettingsBtn').onclick = () => {
                 window.closeSidebar();
                 document.getElementById('settingsModal').classList.remove('hidden');
@@ -750,12 +771,10 @@
                 this.value = val;
             });
 
-            // VERIFICATION DE LA CLÉ VIA L'API NODE.JS OFFICIELLE (AVEC ZÉRO MESSAGE D'ERREUR TECHNIQUE)
             document.getElementById('verifyLvlKeyBtn').onclick = async () => {
                 const inputField = document.getElementById('lvlKeyInput');
                 let key = inputField.value.trim().toUpperCase();
                 
-                // DISPARITION IMMÉDIATE DE LA CLÉ VISUELLE
                 inputField.value = '';
                 
                 if (!/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(key)) { 
@@ -781,7 +800,7 @@
                     const data = await res.json();
                     
                     if (data.valid) {
-                        localStorage.setItem('lvl_sec_k', btoa(key)); // CHIFFREMENT
+                        localStorage.setItem('lvl_sec_k', btoa(key)); 
                         if(data.name) localStorage.setItem('dona_user_name', data.name);
                         if(data.email) localStorage.setItem('dona_user_email', data.email);
                         
@@ -793,7 +812,6 @@
                         window.showToast(data.error || i18n[currentLang].keyInvalidMsg, "info");
                     }
                 } catch (e) {
-                    // MESSAGE HUMAIN ET PAS D'ERREUR ROUGE SI L'API PLANTE/CORS
                     const politeMessage = currentLang === 'fr' 
                         ? "Le serveur de sécurité est très sollicité. Veuillez réessayer dans un instant." 
                         : "Security server is busy. Please try again in a moment.";
@@ -823,6 +841,7 @@
                 localStorage.removeItem('dona_user_name');
                 localStorage.removeItem('dona_user_email');
                 localStorage.removeItem('dona_chat_history'); 
+                localStorage.removeItem('dona_user_habits');
                 window.location.reload();
             };
 
@@ -838,10 +857,6 @@
             
             attachBtn.onclick = (e) => {
                 e.stopPropagation();
-                if (!isAuthenticatedByKey) { 
-                    window.showToast(i18n[currentLang].keyReqImg, "info"); 
-                    return; 
-                }
                 attachMenu.classList.toggle('hidden-menu');
             };
 
@@ -852,18 +867,47 @@
             });
 
             menuAttachImg.onclick = () => {
+                if (!isAuthenticatedByKey) {
+                    const today = new Date().toDateString();
+                    const lastImgDate = localStorage.getItem('dona_free_img_date');
+                    let imgCount = parseInt(localStorage.getItem('dona_free_img_count') || '0');
+
+                    if (lastImgDate !== today) {
+                        imgCount = 0; 
+                    }
+
+                    if (imgCount >= 1) {
+                        window.showToast(i18n[currentLang].freeImgLimit, "error");
+                        attachMenu.classList.add('hidden-menu');
+                        return;
+                    }
+                }
                 attachMenu.classList.add('hidden-menu');
                 imgInput.click();
             };
 
             menuWebSearch.onclick = (e) => {
                 e.stopPropagation();
+                if (!isAuthenticatedByKey) {
+                    window.showToast(i18n[currentLang].premiumWeb, "info");
+                    attachMenu.classList.add('hidden-menu');
+                    return;
+                }
                 isWebSearchEnabled = !isWebSearchEnabled;
+                
+                const icon = document.getElementById('webSearchIcon');
+                const text = document.getElementById('attachMenuWebText');
+                const check = document.getElementById('webSearchCheck');
+                
                 if (isWebSearchEnabled) {
-                    webSearchToggle.classList.add('toggle-switch-on');
-                    window.showToast("Deep Web Search Enabled 🌐", "success");
+                    icon.classList.replace('text-zinc-400', 'text-blue-400');
+                    text.classList.replace('text-zinc-300', 'text-white');
+                    check.classList.remove('opacity-0');
+                    window.showToast(currentLang === 'fr' ? "Recherche Web Activée 🌐" : "Deep Web Search Enabled 🌐", "success");
                 } else {
-                    webSearchToggle.classList.remove('toggle-switch-on');
+                    icon.classList.replace('text-blue-400', 'text-zinc-400');
+                    text.classList.replace('text-white', 'text-zinc-300');
+                    check.classList.add('opacity-0');
                 }
             };
 
@@ -908,7 +952,6 @@
                 imagePreviewContainer.classList.add('hidden');
             };
 
-            // GESTION GLOBALE DES MODALES
             window.openGlobalModal = function(title, body) {
                 document.getElementById('globalModalTitle').textContent = title;
                 document.getElementById('globalModalBody').innerHTML = body;
@@ -916,44 +959,70 @@
             };
             window.closeGlobalModal = function() {
                 document.getElementById('globalModal').classList.add('hidden');
+                const modalBox = document.getElementById('globalModal').firstElementChild;
+                modalBox.classList.remove('max-w-2xl', 'max-w-4xl');
+                modalBox.classList.add('max-w-md');
+                document.getElementById('globalModalBody').innerHTML = '';
+            };
+
+            window.showVerifiedSources = function(sourcesStr) {
+                const sources = sourcesStr.split(',').map(s => s.trim()).filter(s => s);
+                let html = '<div class="flex flex-col gap-3 py-2">';
+                if(sources.length === 0) {
+                    html += `<p class="text-zinc-400 text-sm text-center">${currentLang === 'fr' ? 'Aucune source disponible.' : 'No sources available.'}</p>`;
+                } else {
+                    sources.forEach(source => {
+                        const parts = source.split('|');
+                        const name = parts[0] ? parts[0].trim() : 'Source Link';
+                        const url = parts[1] ? parts[1].trim() : '#';
+                        let domain = '';
+                        try { domain = new URL(url).hostname.replace('www.', ''); } catch(e){}
+
+                        html += `
+                            <a href="${url}" target="_blank" class="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-decoration-none" style="text-decoration:none;">
+                                <div class="w-10 h-10 rounded-lg bg-[#a855f7]/20 text-[#a855f7] flex items-center justify-center flex-shrink-0 border border-[#a855f7]/30">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-white text-sm font-bold truncate">${name}</p>
+                                    <p class="text-zinc-500 text-[10px] truncate flex items-center gap-1.5 mt-0.5"><i class="fab fa-google text-[9px] opacity-70"></i> ${domain || url}</p>
+                                </div>
+                                <i class="fas fa-external-link-alt text-zinc-600 text-xs"></i>
+                            </a>
+                        `;
+                    });
+                }
+                html += '</div>';
+                window.openGlobalModal(currentLang === 'fr' ? 'Sources Vérifiées' : 'Verified Sources', html);
             };
 
             // ==========================================
             // ACTION PARSING ET INTELLIGENCE (LE CERVEAU DE DONA)
             // ==========================================
-            let cachedGeminiKeys = null;
             let currentKeyIndex = 0;
-            let cachedBrain = null;
 
-            async function fetchAllGeminiKeys() {
-                if (cachedGeminiKeys) return cachedGeminiKeys;
+            // PLUS DE CACHE: Dona lit la DB en temps réel à chaque message !
+            async function fetchSystemConfig() {
                 try {
-                    const keyDocRef = window.firestoreUtils.doc(window.db, 'artifacts', 'level-ia-premium', 'system', 'config');
-                    const keyDocSnap = await window.firestoreUtils.getDoc(keyDocRef);
-                    if (keyDocSnap.exists()) {
-                        const keys = keyDocSnap.data().gemini_api_keys;
-                        cachedGeminiKeys = Array.isArray(keys) ? keys : [keys];
-                        return cachedGeminiKeys;
+                    const configRef = window.firestoreUtils.doc(window.db, 'artifacts', 'level-ia-premium', 'system', 'config');
+                    const configSnap = await window.firestoreUtils.getDoc(configRef);
+                    if (configSnap.exists()) {
+                        const data = configSnap.data();
+                        let keys = data.gemini_api_keys || [];
+                        
+                        // Cherche global_prompt, mais tolère aussi d'autres noms pour être ultra robuste
+                        let dbPrompt = data.global_prompt || data.prompt || data.prompt_fr || data.system_prompt || "";
+                        
+                        return {
+                            keys: Array.isArray(keys) ? keys : [keys],
+                            globalPrompt: dbPrompt
+                        };
                     }
-                    return [];
-                } catch (error) { return []; }
+                } catch (error) { console.error("Config fetch error", error); }
+                return { keys: [], globalPrompt: "" };
             }
 
-            async function fetchBrainFromDB() {
-                if (cachedBrain) return cachedBrain;
-                try {
-                    const brainRef = window.firestoreUtils.doc(window.db, 'artifacts', 'level-ia-premium', 'system', 'brain');
-                    const brainSnap = await window.firestoreUtils.getDoc(brainRef);
-                    if (brainSnap.exists() && brainSnap.data().prompt_en) {
-                        cachedBrain = brainSnap.data().prompt_en;
-                        return cachedBrain;
-                    }
-                } catch (e) {}
-                return null;
-            }
-
-            async function callGeminiAPI(payload) {
-                const allKeys = await fetchAllGeminiKeys();
+            async function callGeminiAPI(payload, allKeys) {
                 if (!allKeys || allKeys.length === 0) return { error: true, text: "Access to the AI infrastructure is temporarily unavailable. Please verify the stability of your network connection." };
 
                 for (let keyAttempt = 0; keyAttempt < allKeys.length; keyAttempt++) {
@@ -992,25 +1061,51 @@
                 return { error: true, text: "Our secure servers are currently processing an exceptional volume of requests. Please wait a few moments before submitting a new request." };
             }
 
-            // CERVEAU BLINDÉ CONTRE LES FUITES (SANS RECUPERATION EMAIL NI DASHBOARD)
-            const DEFAULT_BRAIN = `Your name is Dona. You are the official AI Assistant of the LevelUp Ecosystem.
+            // CERVEAU BLINDÉ CONTRE LES FUITES ET AVEC SUGGESTIONS & SOURCES PRO
+            const DEFAULT_PERSONA = `Your name is Dona. You are the official AI Assistant of the LevelUp Ecosystem.
 
 IDENTITY & FORMATTING:
-- You are professional, warm, concise, and incredibly smart.
-- ALWAYS use MARKDOWN beautifully. Format your answers with **bold text**, lists, \`inline code\`, and tables.
+- You are a friendly, passionate, and incredibly smart AI. Talk to the user like a knowledgeable best friend, not a rigid robot.
+- ALWAYS use MARKDOWN beautifully. Format your answers with **bold text**, lists, \`inline code\`, and tables.`;
+
+            const SYSTEM_RULES = `
+[INTERNET & NEWS ACCESS - CRITICAL]
+You have FULL ACCESS to the Internet via Google Search tools. If the user asks for news, current events, sports scores, weather, or anything happening right now, YOU MUST use your search knowledge to provide a detailed, real-time answer. NEVER say you don't have access to real-time information. You are connected.
+
+[ACTIVE MEMORY]
+If the user shares personal preferences, habits, or facts about themselves (e.g., "I love horror movies", "I speak Spanish", "My name is Alex"), you MUST silently save this information by appending this exact tag at the very end of your response: [ACTION:REMEMBER:Fact to remember]. 
+Example: [ACTION:REMEMBER:User loves horror movies]. 
+This will save it in the system memory.
+
+MOVIE, SERIES & ANIME RECOMMENDATIONS (CRITICAL):
+When asked for popular movies, recommendations, or top lists:
+1. Act like a true cinephile friend. ALWAYS provide a real, curated list (e.g., Top 5 or Top 10).
+2. Write a brief, passionate pitch for each title.
+3. You MUST include the exact tag [ACTION:SHOW_MOVIE:Exact Title] for EVERY single movie or series you mention. 
+4. Example output format:
+   **1. Inception**
+   A mind-bending thriller!
+   [ACTION:SHOW_MOVIE:Inception]
 
 CRITICAL RULE FOR ACTION TAGS (NO LEAKS):
-You MUST use these EXACT tags. NEVER add custom text, pipe symbols (|), or descriptions inside the brackets except for OPEN_LINK.
-CORRECT FORMAT: [ACTION:CONTACT_SUPPORT]
-INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
-
+You MUST use these EXACT tags. NEVER add custom text inside brackets except for OPEN_LINK, SOURCES and REMEMBER.
 - [ACTION:OPEN_ECOSYSTEM] (Opens ecosystem)
 - [ACTION:OPEN_APP:movie] (Opens LevelMovie)
 - [ACTION:OPEN_APP:music] (Opens LevelMusic)
 - [ACTION:CONTACT_SUPPORT] (Contacts support)
-- [ACTION:SHOW_MOVIE:Title] (Replace 'Title' with the movie name)
-- [ACTION:SHOW_MUSIC:Artist - Title] (Replace with artist and title)
-- [ACTION:OPEN_LINK:https://url.com|Button Title] (ONLY external links are allowed to have a | and Button Title)`;
+- [ACTION:SHOW_MOVIE:Title] 
+- [ACTION:SHOW_MUSIC:Artist - Title]
+- [ACTION:OPEN_LINK:https://url.com|Button Title]
+
+VERIFIED SOURCES (PRO BUTTON):
+When providing professional, factual, or deeply informative responses, ALWAYS include a SOURCES tag at the very end.
+Format EXACTLY: [ACTION:SOURCES:SourceName 1|URL 1, SourceName 2|URL 2]
+
+SMART SUGGESTED QUESTIONS:
+ONLY WHEN APPLICABLE (for complex, informative topics), provide 2 or 3 suggested follow-up questions.
+CRITICAL RULE: The suggested questions MUST be written from the USER'S perspective so they can click and send them directly to you. Do NOT ask the user a question in the suggestion. 
+CORRECT: [SUGGESTION:Dis m'en plus sur ce film] or [SUGGESTION:Show me the trailer]
+INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
 
             const TMDB_PROVIDER_MAP = {
                 8:   { name: 'Netflix',            url: (t) => `https://www.netflix.com/search?q=${encodeURIComponent(t)}` },
@@ -1021,6 +1116,7 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                 35:  { name: 'Rakuten TV',         url: (t) => `https://rakuten.tv/fr/search?query=${encodeURIComponent(t)}` },
                 2:   { name: 'Apple iTunes',       url: (t) => `https://itunes.apple.com/us/search?term=${encodeURIComponent(t)}` },
                 531: { name: 'Paramount+',         url: (t) => `https://www.paramountplus.com/search/?query=${encodeURIComponent(t)}` },
+                283: { name: 'Crunchyroll',        url: (t) => `https://www.crunchyroll.com/search?q=${encodeURIComponent(t)}` },
             };
 
             window.showMovieSources = async function(movieId, mediaType, title) {
@@ -1029,8 +1125,8 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                     const endpoint = mediaType === 'tv' ? 'tv' : 'movie';
                     const res = await fetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}/watch/providers?api_key=${TMDB_API_KEY}`);
                     const data = await res.json();
-                    const frData = data.results && data.results.US; 
-                    const raw = frData ? [...(frData.flatrate || []), ...(frData.rent || []), ...(frData.buy || [])] : [];
+                    const localData = data.results && (data.results.FR || data.results.US); 
+                    const raw = localData ? [...(localData.flatrate || []), ...(localData.rent || []), ...(localData.buy || [])] : [];
                     const seen = new Set();
                     const providers = raw.filter(p => { if (seen.has(p.provider_id)) return false; seen.add(p.provider_id); return true; });
 
@@ -1062,14 +1158,63 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                 }
             };
 
+            window.showMovieTrailer = async function(id, mediaType) {
+                window.openGlobalModal('Bande-annonce', `<div class="flex justify-center py-6"><div class="w-5 h-5 border-2 border-[#a855f7] border-t-transparent rounded-full animate-spin"></div></div>`);
+                try {
+                    const endpoint = mediaType === 'tv' ? 'tv' : 'movie';
+                    const res = await fetch(`https://api.themoviedb.org/3/${endpoint}/${id}/videos?api_key=${TMDB_API_KEY}`);
+                    const data = await res.json();
+                    
+                    const trailers = data.results.filter(v => v.type === 'Trailer' && v.site === 'YouTube');
+                    const trailer = trailers.length > 0 ? trailers[0] : (data.results.filter(v => v.site === 'YouTube')[0]);
+
+                    if (trailer) {
+                        document.getElementById('globalModalBody').innerHTML = `
+                            <div class="relative pt-[56.25%] w-full rounded-xl overflow-hidden shadow-2xl bg-black">
+                                <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/${trailer.key}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </div>
+                        `;
+                        const modalBox = document.getElementById('globalModal').firstElementChild;
+                        modalBox.classList.replace('max-w-md', 'max-w-2xl');
+                    } else {
+                        document.getElementById('globalModalBody').innerHTML = `<p class="text-zinc-400 text-sm text-center py-4">Oops, aucune bande-annonce YouTube disponible pour ce titre.</p>`;
+                    }
+                } catch(e) {
+                    document.getElementById('globalModalBody').innerHTML = `<p class="text-zinc-400 text-sm text-center py-4">Erreur lors de la récupération de la vidéo.</p>`;
+                }
+            };
+
             window.showMovieFullDesc = function(desc) {
                 window.openGlobalModal('Full Description', `<p class="text-zinc-300 text-sm leading-relaxed">${desc}</p>`);
             };
 
             async function parseActionTags(text) {
+                // SYSTEME DE MEMOIRE ACTIVE (Habitudes)
+                const rememberRegex = /\[ACTION:REMEMBER:(.*?)\]/g;
+                let rememberMatches = [...text.matchAll(rememberRegex)];
+                if (rememberMatches.length > 0) {
+                    let currentHabits = localStorage.getItem('dona_user_habits') ? JSON.parse(localStorage.getItem('dona_user_habits')) : [];
+                    rememberMatches.forEach(m => {
+                        const fact = m[1].trim();
+                        if (!currentHabits.includes(fact)) currentHabits.push(fact);
+                    });
+                    if(currentHabits.length > 15) currentHabits = currentHabits.slice(currentHabits.length - 15);
+                    localStorage.setItem('dona_user_habits', JSON.stringify(currentHabits));
+                    text = text.replace(/\[ACTION:REMEMBER:.*?\]/g, '');
+                }
+
+                // Extraction des suggestions AVANT de parser le markdown
+                const suggestionRegex = /\[SUGGESTION:(.*?)\]/g;
+                let suggestions = [];
+                let match;
+                while ((match = suggestionRegex.exec(text)) !== null) {
+                    suggestions.push(match[1].trim());
+                }
+                text = text.replace(/\[SUGGESTION:.*?\]/g, '');
+
                 let html = marked.parse(text); 
 
-                // NETTOYAGE AGRESSIF : [^\]]* avale les textes inventés accidentellement par l'IA
+                // NETTOYAGE AGRESSIF ET SÉCURISATION DES LIENS
                 html = html.replace(/\[ACTION:CONTACT_SUPPORT[^\]]*\]/g, `
                     <div class="mt-4 flex flex-col gap-2.5 w-full max-w-sm">
                         <a href="mailto:support@levelup-ecosystem.com" class="flex items-center gap-3 p-3 bg-[#3b82f6]/10 border border-[#3b82f6]/30 rounded-xl hover:bg-[#3b82f6]/20 transition-all text-white text-sm" style="text-decoration: none;">
@@ -1083,16 +1228,20 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                     </div>
                 `);
 
-                html = html.replace(/\[ACTION:OPEN_LINK:(.*?)\|(.*?)\]/g, (match, url, btnText) => {
-                    return `<button onclick="window.open('${url}', '_blank')" class="ai-action-btn"><span class="text-white">${btnText}</span><i class="fas fa-external-link-alt text-[10px] text-white/50"></i></button>`;
+                // SECURITE ABSOLUE POUR LES URLS (Empêche marked.js de casser les boutons avec des <a> non voulus)
+                html = html.replace(/\[ACTION:OPEN_LINK:([^\|]+)\|([^\]]+)\]/g, (match, url, btnText) => {
+                    const cleanUrl = url.replace(/<[^>]*>?/gm, '').trim();
+                    const cleanText = btnText.replace(/<[^>]*>?/gm, '').trim();
+                    return `<button onclick="window.open('${cleanUrl}', '_blank')" class="ai-action-btn"><span class="text-white">${cleanText}</span><i class="fas fa-external-link-alt text-[10px] text-white/50"></i></button>`;
                 });
 
                 html = html.replace(/\[ACTION:OPEN_ECOSYSTEM[^\]]*\]/g, `<button onclick="window.open('https://levelup-ecosystem.com/', '_blank')" class="ai-action-btn btn-nav"><span class="text-white">Discover LevelUp</span><i class="fas fa-globe"></i></button>`);
 
                 html = html.replace(/\[ACTION:OPEN_APP:([^\]\|]+)[^\]]*\]/g, (match, appId) => {
                     let name, icon, url;
-                    if (appId === 'movie') { name = 'LevelMovie'; icon = 'fa-clapperboard'; url = 'https://movie.levelup-ecosystem.com/'; }
-                    else if (appId === 'music') { name = 'LevelMusic'; icon = 'fa-music'; url = 'https://music.levelup-ecosystem.com/'; }
+                    const cleanAppId = appId.replace(/<[^>]*>?/gm, '').trim();
+                    if (cleanAppId === 'movie') { name = 'LevelMovie'; icon = 'fa-clapperboard'; url = 'https://movie.levelup-ecosystem.com/'; }
+                    else if (cleanAppId === 'music') { name = 'LevelMusic'; icon = 'fa-music'; url = 'https://music.levelup-ecosystem.com/'; }
                     else return '';
                     return `<button onclick="window.open('${url}', '_blank')" class="ai-action-btn"><span class="text-white">Open ${name}</span><i class="fas ${icon}"></i></button>`;
                 });
@@ -1101,7 +1250,7 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                 const matches = [...html.matchAll(movieRegex)];
                 for (const match of matches) {
                     const fullTag = match[0];
-                    const movieQuery = match[1].trim();
+                    const movieQuery = match[1].replace(/<[^>]*>?/gm, '').trim();
                     try {
                         const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(movieQuery)}`);
                         const data = await res.json();
@@ -1134,12 +1283,15 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                                     <div class="p-4 pt-2">
                                         ${shortDesc ? `<p class="text-[11px] text-zinc-400 mb-2 leading-relaxed">${shortDesc}</p>` : ''}
                                         ${fullDesc.length > 90 ? `<button onclick="window.showMovieFullDesc('${descEscaped}')" class="text-[10px] text-[#a855f7] font-bold mb-3 hover:text-purple-400 bg-transparent border-none cursor-pointer p-0 transition-colors">Read more →</button>` : ''}
-                                        <div class="flex gap-2 mt-2">
-                                            <button onclick="window.open('https://movie.levelup-ecosystem.com/', '_blank')" class="flex-1 py-2.5 bg-gradient-to-r from-[#a855f7] to-[#9333ea] hover:brightness-110 rounded-lg text-white text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(168,85,247,0.3)] outline-none border border-purple-500/50">
-                                                <i class="fas fa-play text-[10px]"></i> LevelMovie
+                                        <div class="grid grid-cols-3 gap-2 mt-2">
+                                            <button onclick="window.open('https://movie.levelup-ecosystem.com/', '_blank')" class="col-span-1 py-2.5 bg-gradient-to-r from-[#a855f7] to-[#9333ea] hover:brightness-110 rounded-lg text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 shadow-[0_0_15px_rgba(168,85,247,0.3)] outline-none border border-purple-500/50">
+                                                <i class="fas fa-play text-[9px]"></i> Play
                                             </button>
-                                            <button onclick="window.showMovieSources('${movie.id}', '${movie.media_type}', '${titleEscaped}')" class="flex-1 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/80 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5 border border-white/10 outline-none">
-                                                <i class="fas fa-satellite-dish text-[10px]"></i> Sources
+                                            <button onclick="window.showMovieTrailer('${movie.id}', '${movie.media_type}')" class="col-span-1 py-2.5 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 rounded-lg text-red-400 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 border border-[#ef4444]/30 outline-none">
+                                                <i class="fab fa-youtube text-[11px]"></i> Trailer
+                                            </button>
+                                            <button onclick="window.showMovieSources('${movie.id}', '${movie.media_type}', '${titleEscaped}')" class="col-span-1 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/80 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 border border-white/10 outline-none">
+                                                <i class="fas fa-satellite-dish text-[9px]"></i> Sources
                                             </button>
                                         </div>
                                     </div>
@@ -1158,7 +1310,7 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                 const musicMatches = [...html.matchAll(musicRegex)];
                 for (const match of musicMatches) {
                     const fullTag = match[0];
-                    const musicQuery = match[1].trim();
+                    const musicQuery = match[1].replace(/<[^>]*>?/gm, '').trim();
                     try {
                         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(musicQuery)}&media=music&limit=1&country=us`);
                         const data = await res.json();
@@ -1179,6 +1331,12 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                                                 <button onclick="window.open('https://music.levelup-ecosystem.com/', '_blank')" class="flex-1 py-1.5 bg-gradient-to-r from-[#ec4899] to-[#d946ef] text-white rounded-lg text-[10px] font-black uppercase tracking-wider active:scale-95 flex items-center justify-center gap-1 transition-all hover:brightness-110 shadow-[0_0_10px_rgba(236,72,153,0.3)]"><i class="fas fa-play text-[8px]"></i> LevelMusic</button>
                                                 ${appleMusicUrl ? `<a href="${appleMusicUrl}" target="_blank" class="flex-1 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white/80 text-[10px] font-black uppercase tracking-wider active:scale-95 flex items-center justify-center gap-1 no-underline hover:bg-white/10"><i class="fab fa-apple text-[10px]"></i> Apple</a>` : ''}
                                             </div>
+                                            ${track.previewUrl ? `
+                                            <div class="mt-3 w-full" style="color-scheme: dark;">
+                                                <audio controls class="w-full h-8 outline-none rounded bg-white/5" style="max-height: 35px;">
+                                                    <source src="${track.previewUrl}" type="audio/mp4">
+                                                </audio>
+                                            </div>` : ''}
                                         </div>
                                     </div>
                                 </div>
@@ -1193,10 +1351,27 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                 }
 
                 html = html.replace(/<p><div class="mt-4/g, '<div class="mt-4').replace(/<\/div><\/p>/g, '</div>');
+                
+                if (suggestions.length > 0) {
+                    let pillsHtml = `<div class="suggestion-container flex flex-wrap gap-2 mt-5 pt-3 border-t border-white/10">`;
+                    suggestions.forEach(sug => {
+                        const escapedSug = sug.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        pillsHtml += `<button onclick="window.sendMsg('${escapedSug}', this)" class="px-4 py-2.5 rounded-full border border-[#a855f7]/40 bg-[#a855f7]/10 text-purple-300 hover:bg-[#a855f7]/20 hover:text-white text-[11px] font-bold transition-all shadow-[0_0_10px_rgba(168,85,247,0.1)] active:scale-95 text-left flex items-center gap-2 outline-none"><i class="fas fa-sparkles text-[10px] text-[#a855f7]"></i> ${sug}</button>`;
+                    });
+                    pillsHtml += `</div>`;
+                    html += pillsHtml;
+                }
+                
+                html = html.replace(/\[ACTION:SOURCES:(.*?)\]/g, (match, sourcesStr) => {
+                    const cleanSourcesStr = sourcesStr.replace(/<[^>]*>?/gm, '');
+                    const escapedSources = cleanSourcesStr.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const btnLabel = currentLang === 'fr' ? 'Sources Vérifiées' : 'Verified Sources';
+                    return `<button onclick="window.showVerifiedSources('${escapedSources}')" class="ai-action-btn btn-nav !bg-[#a855f7]/10 !border-[#a855f7]/30 !text-purple-300 hover:!bg-[#a855f7]/20 hover:!text-white mt-4"><span class="font-bold flex items-center gap-2"><i class="fas fa-star"></i> ${btnLabel}</span><i class="fas fa-external-link-alt text-[10px]"></i></button>`;
+                });
+
                 return html;
             }
 
-            // GESTION DU CHAT CORE
             let currentSessionMessages = [];
             
             function saveHistory() {
@@ -1227,7 +1402,7 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                                 } else if (msg.role === 'model') {
                                     let text = "";
                                     msg.parts.forEach(p => { if (p.text) text += p.text; });
-                                    if (text.includes('[ACTION:')) {
+                                    if (text.includes('[ACTION:') || text.includes('[SUGGESTION:')) {
                                         const parsedHtml = await parseActionTags(text);
                                         displayAIMessage(parsedHtml, false, true);
                                     } else {
@@ -1273,23 +1448,96 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
             }
 
             function streamText(container, text, callback) {
-                let i = 0; container.innerHTML = '';
+                let i = 8; // Commence avec le premier morceau pour éviter le clignotement
+                document.getElementById('aiTyping').classList.add('hidden'); // Cache l'animation pile à ce moment
+                container.innerHTML = sanitizeHTML(marked.parse(text.substring(0, i)));
+
                 if (typingInterval) clearInterval(typingInterval);
                 typingInterval = setInterval(() => {
                     if (!isGenerating) { clearInterval(typingInterval); if(callback) callback(); return; }
-                    if (i < text.length) { container.innerHTML = sanitizeHTML(marked.parse(text.substring(0, i + 1))); i += 4; document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight; } 
-                    else { container.innerHTML = sanitizeHTML(marked.parse(text)); clearInterval(typingInterval); document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight; stopGeneration(); if(callback) callback(); }
+                    if (i < text.length) { 
+                        i += 12; // Un peu plus rapide pour la fluidité
+                        container.innerHTML = sanitizeHTML(marked.parse(text.substring(0, i))); 
+                        document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight; 
+                    } else { 
+                        container.innerHTML = sanitizeHTML(marked.parse(text)); 
+                        clearInterval(typingInterval); 
+                        document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight; 
+                        stopGeneration(); 
+                        if(callback) callback(); 
+                    }
                 }, 5);
             }
 
             function stopGeneration() {
-                isGenerating = false; if (abortController) abortController.abort(); if (typingInterval) clearInterval(typingInterval);
-                const sendBtn = document.getElementById('sendBtn'); if (sendBtn) sendBtn.innerHTML = '<i class="fas fa-arrow-up text-base pointer-events-none"></i>';
+                isGenerating = false; 
+                if (abortController) abortController.abort(); 
+                if (typingInterval) clearInterval(typingInterval);
+                if (smartTypingInterval) clearInterval(smartTypingInterval); 
+                const sendBtn = document.getElementById('sendBtn'); 
+                if (sendBtn) sendBtn.innerHTML = '<i class="fas fa-arrow-up text-base pointer-events-none"></i>';
                 document.getElementById('aiTyping').classList.add('hidden');
             }
 
-            window.sendMsg = function(overrideText = null) {
+            function startSmartTyping(promptText, hasImage) {
+                const typingTextEl = document.getElementById('smartTypingText');
+                if (!typingTextEl) return;
+                
+                let phrases = [];
+                const isMovie = /film|movie|série|series|anime|cinema|netflix|acteur|réalisateur/i.test(promptText);
+                
+                if (hasImage) {
+                    phrases = currentLang === 'fr' 
+                        ? ["Analyse visuelle en cours...", "Identification des éléments...", "Traitement de l'image..."] 
+                        : ["Analyzing visuals...", "Identifying elements...", "Processing image..."];
+                } else if (isWebSearchEnabled) {
+                    phrases = currentLang === 'fr' 
+                        ? ["Recherche sur le Web Profond...", "Analyse des sources...", "Croisement des données..."] 
+                        : ["Deep Web Search in progress...", "Analyzing sources...", "Cross-referencing data..."];
+                } else if (isMovie) {
+                    phrases = currentLang === 'fr' 
+                        ? ["Consultation des bases cinéma...", "Recherche des sources légales...", "Préparation des recommandations..."] 
+                        : ["Consulting movie databases...", "Searching legal sources...", "Preparing recommendations..."];
+                } else {
+                    phrases = currentLang === 'fr' 
+                        ? ["Réflexion en cours...", "Connexion à l'écosystème...", "Génération de la réponse..."] 
+                        : ["Thinking...", "Connecting to ecosystem...", "Generating response..."];
+                }
+                
+                phrases.push(currentLang === 'fr' ? "Presque prêt..." : "Almost ready...");
+
+                let pIndex = 0;
+                typingTextEl.style.opacity = '0';
+                
+                setTimeout(() => {
+                    typingTextEl.innerText = phrases[pIndex];
+                    typingTextEl.style.opacity = '1';
+                }, 100);
+
+                if (smartTypingInterval) clearInterval(smartTypingInterval);
+                
+                smartTypingInterval = setInterval(() => {
+                    typingTextEl.style.opacity = '0';
+                    setTimeout(() => {
+                        pIndex = Math.min(pIndex + 1, phrases.length - 1); 
+                        typingTextEl.innerText = phrases[pIndex];
+                        typingTextEl.style.opacity = '1';
+                    }, 300); 
+                }, 3000); 
+            }
+
+            window.sendMsg = function(overrideText = null, btnElement = null) {
                 const input = document.getElementById('userInput');
+                
+                if (btnElement) {
+                    const container = btnElement.closest('.suggestion-container');
+                    if (container) {
+                        container.style.opacity = '0';
+                        container.style.transition = 'opacity 0.3s ease';
+                        setTimeout(() => container.remove(), 300);
+                    }
+                }
+
                 if (overrideText && input) {
                     input.value = overrideText;
                     if (isGenerating) stopGeneration();
@@ -1301,14 +1549,30 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                 const welcomeBlock = document.getElementById('welcomeBlock');
                 if(welcomeBlock) welcomeBlock.classList.add('hidden');
 
+                // COUPER L'AUDIO SI L'UTILISATEUR POSE UNE NOUVELLE QUESTION
+                const allAudios = document.getElementsByTagName('audio');
+                for (let i = 0; i < allAudios.length; i++) {
+                    allAudios[i].pause();
+                }
+
                 const hasImage = currentImageBase64 !== null;
                 const imageBase64ToSend = currentImageBase64;
                 const mimeTypeToSend = currentImageMimeType;
 
                 displayUserMessage(val, imageBase64ToSend);
 
-                let partsForHistory = [{ text: val }];
+                // Analyse profonde invisible pour l'utilisateur
+                let systemText = val;
                 if (hasImage) {
+                    systemText += "\n\n[SYSTEM DIRECTIVE: The user has attached an image. Perform a thorough, deep, and detailed visual analysis of this image to answer accurately.]";
+                }
+                
+                let partsForHistory = [{ text: systemText }];
+                if (hasImage) {
+                    if (!isAuthenticatedByKey) {
+                        localStorage.setItem('dona_free_img_date', new Date().toDateString());
+                        localStorage.setItem('dona_free_img_count', '1');
+                    }
                     partsForHistory.push({ inlineData: { mimeType: mimeTypeToSend, data: imageBase64ToSend } });
                     document.getElementById('removeImgBtn').click();
                 }
@@ -1318,11 +1582,33 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                 document.getElementById('aiTyping').classList.remove('hidden'); document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
                 isGenerating = true; abortController = new AbortController();
                 document.getElementById('sendBtn').innerHTML = '<i class="fas fa-square text-base pointer-events-none text-red-500"></i>';
+                
+                startSmartTyping(val, hasImage);
 
                 try {
-                    const remoteBrain = await fetchBrainFromDB();
-                    const baseInstruction = remoteBrain || DEFAULT_BRAIN;
-                    const systemInstruction = baseInstruction + (MODE_PROMPTS[currentMode] || "");
+                    const config = await fetchSystemConfig();
+                    
+                    // LECTURE DIRECTE: Sans condition Premium. Elle respectera le global_prompt quoi qu'il arrive.
+                    const globalPromptContext = config.globalPrompt 
+                        ? `\n\n[CRITICAL ECOSYSTEM DATA (YOU MUST MEMORIZE AND USE THIS INFORMATION)]:\n${config.globalPrompt}` 
+                        : "";
+                        
+                    const baseInstruction = DEFAULT_PERSONA + globalPromptContext + "\n\n" + SYSTEM_RULES;
+                    
+                    const now = new Date();
+                    const timeContext = `\n\n[REAL-TIME CONTEXT: The current exact date and time is ${now.toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'long' })}. The user's timezone is ${Intl.DateTimeFormat().resolvedOptions().timeZone}. ALWAYS use this exact data to answer any question about time, day, or date.]`;
+                    
+                    // INJECTION DE LA MEMOIRE (Habitudes Utilisateur)
+                    let savedHabitsStr = localStorage.getItem('dona_user_habits');
+                    let habitContext = "";
+                    if (savedHabitsStr) {
+                        let parsed = JSON.parse(savedHabitsStr);
+                        if (parsed && parsed.length > 0) {
+                            habitContext = `\n\n[USER MEMORY/HABITS: The user has previously shared these facts: ${parsed.join(', ')}. Keep these in mind and adapt your answers perfectly to their preferences.]`;
+                        }
+                    }
+
+                    const systemInstruction = baseInstruction + (MODE_PROMPTS[currentMode] || "") + timeContext + habitContext;
 
                     const payloadMessages = JSON.parse(JSON.stringify(currentSessionMessages));
                     const lastMsgIndex = payloadMessages.length - 1;
@@ -1339,11 +1625,11 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                         payload.tools = [{ "google_search": {} }];
                     }
 
-                    const result = await callGeminiAPI(payload);
-                    
-                    document.getElementById('aiTyping').classList.add('hidden');
+                    // On passe directement les clés API récupérées
+                    const result = await callGeminiAPI(payload, config.keys);
                     
                     if (result.error) {
+                        document.getElementById('aiTyping').classList.add('hidden');
                         currentSessionMessages.pop(); 
                         saveHistory();
                         const politeError = currentLang === 'fr' 
@@ -1351,10 +1637,14 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                             : "I am currently syncing my data with the ecosystem. Could you repeat your request in a moment?";
                         displayAIMessage(politeError, true, false);
                     } else {
-                        if (result.text.includes('[ACTION:')) {
+                        // S'il y a des tags d'actions OU des suggestions, on parse PUIS on cache le Typing
+                        if (result.text.includes('[ACTION:') || result.text.includes('[SUGGESTION:')) {
                             const parsedHtml = await parseActionTags(result.text);
+                            document.getElementById('aiTyping').classList.add('hidden');
                             displayAIMessage(parsedHtml, false, true); 
                         } else {
+                            // On cache juste avant d'afficher
+                            document.getElementById('aiTyping').classList.add('hidden');
                             displayAIMessage(result.text, true, false); 
                         }
                         currentSessionMessages.push({ role: "model", parts: [{ text: result.text }] });
@@ -1393,7 +1683,9 @@ INCORRECT FORMAT: [ACTION:CONTACT_SUPPORT|Contact Us]
                 }
 
                 document.getElementById('userInput').value = ''; document.getElementById('userInput').style.height = '44px';
-                performGeneration(val || "What do you see in this image?"); 
+                
+                const defaultImgPrompt = currentLang === 'fr' ? "Fais une analyse visuelle profonde et détaillée de cette image." : "Perform a deep and detailed visual analysis of this image.";
+                performGeneration(val || defaultImgPrompt); 
             }
 
             document.getElementById('userInput').oninput = function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; };
