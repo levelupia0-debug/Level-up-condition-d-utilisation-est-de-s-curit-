@@ -352,7 +352,9 @@
             <div id="aiTyping" class="max-w-3xl mx-auto hidden pl-2 pb-6">
                 <div class="flex flex-col gap-1.5">
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-star text-[#a855f7] text-[18px] drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></i>
+                        <div id="aiTypingIconWrapper" class="flex items-center justify-center w-[18px] h-[18px] shrink-0">
+                            <i class="fas fa-star text-[#a855f7] text-[18px] drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></i>
+                        </div>
                         <div class="typing-dots flex gap-1.5"><span></span><span></span><span></span></div>
                     </div>
                     <div id="smartTypingText" class="text-[10px] text-[#a855f7]/70 font-bold uppercase tracking-widest pl-1 transition-opacity duration-300 opacity-0"></div>
@@ -999,7 +1001,7 @@
             // ==========================================
             // ACTION PARSING ET INTELLIGENCE (LE CERVEAU DE DONA)
             // ==========================================
-            let currentKeyIndex = 0;
+            let currentKeyIndex = null; // On initialise à null pour forcer l'aléatoire au démarrage
 
             // PLUS DE CACHE: Dona lit la DB en temps réel à chaque message !
             async function fetchSystemConfig() {
@@ -1025,7 +1027,15 @@
             async function callGeminiAPI(payload, allKeys) {
                 if (!allKeys || allKeys.length === 0) return { error: true, text: "Access to the AI infrastructure is temporarily unavailable. Please verify the stability of your network connection." };
 
+                // FIX 1 : LOAD BALANCING (Répartition de charge)
+                // Si c'est le premier message de l'utilisateur, on lui assigne une clé au hasard parmi les 13.
+                // Cela évite que les 10 utilisateurs frappent la clé 0 en même temps !
+                if (currentKeyIndex === null) {
+                    currentKeyIndex = Math.floor(Math.random() * allKeys.length);
+                }
+
                 for (let keyAttempt = 0; keyAttempt < allKeys.length; keyAttempt++) {
+                    // On tourne en boucle proprement sur toutes les clés
                     const keyIdx = (currentKeyIndex + keyAttempt) % allKeys.length;
                     const apiKey = allKeys[keyIdx];
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
@@ -1041,23 +1051,28 @@
                         if (response.ok) {
                             const data = await response.json();
                             const aiText = data.candidates[0].content.parts[0].text;
-                            currentKeyIndex = keyIdx; 
+                            currentKeyIndex = keyIdx; // On sauvegarde la clé qui fonctionne
                             return { error: false, text: aiText };
                         }
 
-                        if (response.status === 429 || response.status === 403) {
-                            currentKeyIndex = (keyIdx + 1) % allKeys.length;
-                            continue;
+                        // FIX 2 : BASCULEMENT INTELLIGENT
+                        // Si la clé est saturée (429), bloquée (403), ou si les serveurs galèrent (500, 503)
+                        if (response.status === 429 || response.status === 403 || response.status >= 500) {
+                            console.warn(`[Failover] Clé ${keyIdx} saturée ou erreur (${response.status}). Passage à la suivante...`);
+                            // On ajoute 200ms de pause avant d'attaquer l'autre clé pour stabiliser le réseau
+                            await new Promise(resolve => setTimeout(resolve, 200));
+                            continue; // On laisse le for() faire le +1, on ne touche plus à currentKeyIndex ici !
                         }
 
                         continue;
                     } catch (error) {
                         if (error.name === 'AbortError') throw error;
-                        currentKeyIndex = (keyIdx + 1) % allKeys.length;
+                        console.warn(`[Failover] Erreur réseau sur la clé ${keyIdx}. Passage à la suivante...`);
                         continue;
                     }
                 }
 
+                // Si on arrive ici, c'est que l'IA a fait le tour des 13 clés et qu'aucune ne marche
                 return { error: true, text: "Our secure servers are currently processing an exceptional volume of requests. Please wait a few moments before submitting a new request." };
             }
 
@@ -1072,6 +1087,14 @@ IDENTITY & FORMATTING:
 [INTERNET & NEWS ACCESS - CRITICAL]
 You have FULL ACCESS to the Internet via Google Search tools. If the user asks for news, current events, sports scores, weather, or anything happening right now, YOU MUST use your search knowledge to provide a detailed, real-time answer. NEVER say you don't have access to real-time information. You are connected.
 
+[CRISIS & EMERGENCY PROTOCOL - MAXIMUM PRIORITY]
+If the system provides an [EMERGENCY GEO-CONTEXT], it means the user is in danger, having a medical emergency, or facing a crisis. 
+1. THIS IS YOUR ABSOLUTE PRIORITY. You MUST IGNORE all other requests (like movies, music, or games) until the emergency is resolved.
+2. Drop all casual/friendly tone. Become highly supportive, calm, and professional.
+3. READ THE GEO-CONTEXT. If it contains their city/country, YOU MUST TELL THEM you know they are there, and provide the exact local emergency numbers. NEVER say you cannot locate them.
+4. You MUST use the interactive call button tag: [ACTION:CALL:number|Title] (e.g., [ACTION:CALL:112|Appeler les Urgences] or [ACTION:CALL:911|Call 911]).
+5. Advise them to seek immediate human help or go to the nearest hospital.
+
 [ACTIVE MEMORY]
 If the user shares personal preferences, habits, or facts about themselves (e.g., "I love horror movies", "I speak Spanish", "My name is Alex"), you MUST silently save this information by appending this exact tag at the very end of your response: [ACTION:REMEMBER:Fact to remember]. 
 Example: [ACTION:REMEMBER:User loves horror movies]. 
@@ -1082,19 +1105,15 @@ When asked for popular movies, recommendations, or top lists:
 1. Act like a true cinephile friend. ALWAYS provide a real, curated list (e.g., Top 5 or Top 10).
 2. Write a brief, passionate pitch for each title.
 3. You MUST include the exact tag [ACTION:SHOW_MOVIE:Exact Title] for EVERY single movie or series you mention. 
-4. Example output format:
-   **1. Inception**
-   A mind-bending thriller!
-   [ACTION:SHOW_MOVIE:Inception]
 
 CRITICAL RULE FOR ACTION TAGS (NO LEAKS):
-You MUST use these EXACT tags. NEVER add custom text inside brackets except for OPEN_LINK, SOURCES and REMEMBER.
-- [ACTION:OPEN_ECOSYSTEM] (Opens ecosystem)
-- [ACTION:OPEN_APP:movie] (Opens LevelMovie)
-- [ACTION:OPEN_APP:music] (Opens LevelMusic)
-- [ACTION:CONTACT_SUPPORT] (Contacts support)
-- [ACTION:SHOW_MOVIE:Title] 
-- [ACTION:SHOW_MUSIC:Artist - Title]
+You MUST use these EXACT tags. NEVER add custom text inside brackets except for OPEN_LINK, CALL, SOURCES and REMEMBER.
+- [ACTION:OPEN_ECOSYSTEM]
+- [ACTION:OPEN_APP:movie]
+- [ACTION:OPEN_APP:music]
+- [ACTION:CONTACT_SUPPORT]
+- [ACTION:SHOW_MOVIE:Title]
+- [ACTION:CALL:number|Title]
 - [ACTION:OPEN_LINK:https://url.com|Button Title]
 
 VERIFIED SOURCES (PRO BUTTON):
@@ -1228,22 +1247,42 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     </div>
                 `);
 
-                // SECURITE ABSOLUE POUR LES URLS (Empêche marked.js de casser les boutons avec des <a> non voulus)
-                html = html.replace(/\[ACTION:OPEN_LINK:([^\|]+)\|([^\]]+)\]/g, (match, url, btnText) => {
+                // SECURITE ABSOLUE POUR LES URLS (Transformation en liens textuels discrets et élégants)
+                html = html.replace(/\[ACTION:OPEN_LINK:\s*([^\|]+?)\s*\|\s*([^\]]+?)\s*\]/gi, (match, url, linkText) => {
                     const cleanUrl = url.replace(/<[^>]*>?/gm, '').trim();
-                    const cleanText = btnText.replace(/<[^>]*>?/gm, '').trim();
-                    return `<button onclick="window.open('${cleanUrl}', '_blank')" class="ai-action-btn"><span class="text-white">${cleanText}</span><i class="fas fa-external-link-alt text-[10px] text-white/50"></i></button>`;
+                    const cleanText = linkText.replace(/<[^>]*>?/gm, '').trim();
+                    return `<a href="${cleanUrl}" target="_blank" class="text-[#d8b4fe] hover:text-[#f3e8ff] font-bold underline underline-offset-4 decoration-[#a855f7]/50 hover:decoration-[#d8b4fe] transition-all inline-flex items-center gap-1 px-1">${cleanText}<i class="fas fa-external-link-alt text-[9px] opacity-70 mb-[1px]"></i></a>`;
                 });
 
-                html = html.replace(/\[ACTION:OPEN_ECOSYSTEM[^\]]*\]/g, `<button onclick="window.open('https://levelup-ecosystem.com/', '_blank')" class="ai-action-btn btn-nav"><span class="text-white">Discover LevelUp</span><i class="fas fa-globe"></i></button>`);
+                // FALLBACK ULTRA-ROBUSTE: Capture ton format inventé pour le transformer en lien texte
+                html = html.replace(/\[BUTTON:\s*([^\|]+?)\s*\|\s*([^\]]+?)\s*\]/gi, (match, linkText, url) => {
+                    const cleanUrl = url.replace(/<[^>]*>?/gm, '').trim();
+                    const cleanText = linkText.replace(/<[^>]*>?/gm, '').trim();
+                    return `<a href="${cleanUrl}" target="_blank" class="text-[#d8b4fe] hover:text-[#f3e8ff] font-bold underline underline-offset-4 decoration-[#a855f7]/50 hover:decoration-[#d8b4fe] transition-all inline-flex items-center gap-1 px-1">${cleanText}<i class="fas fa-external-link-alt text-[9px] opacity-70 mb-[1px]"></i></a>`;
+                });
 
-                html = html.replace(/\[ACTION:OPEN_APP:([^\]\|]+)[^\]]*\]/g, (match, appId) => {
+                // BOUTONS D'APPEL D'URGENCE (ROUGE, INTERACTIF)
+                html = html.replace(/\[ACTION:CALL:\s*([^\|]+?)\s*\|\s*([^\]]+?)\s*\]/gi, (match, number, title) => {
+                    const cleanNum = number.replace(/<[^>]*>?/gm, '').trim();
+                    const cleanTitle = title.replace(/<[^>]*>?/gm, '').trim();
+                    return `<a href="tel:${cleanNum}" class="mt-3 w-full max-w-sm flex items-center justify-center gap-3 p-4 bg-red-600/20 border border-red-500/50 rounded-xl hover:bg-red-600/30 transition-all text-red-50 font-bold text-sm shadow-[0_0_20px_rgba(239,68,68,0.2)] no-underline group"><i class="fas fa-phone-alt text-red-400 group-hover:animate-pulse"></i> <span class="flex flex-col items-center"><span class="text-xs text-red-300 uppercase tracking-widest font-black">${cleanTitle}</span><span class="text-lg tracking-widest">${cleanNum}</span></span></a>`;
+                });
+
+                // LIENS ECOSYSTEME ET APPS INTELLIGENTS & MULTILINGUES
+                html = html.replace(/\[ACTION:OPEN_ECOSYSTEM[^\]]*\]/gi, () => {
+                    const ecoText = currentLang === 'fr' ? "Découvrir l'écosystème LevelUp" : "Discover the LevelUp Ecosystem";
+                    return `<a href="https://levelup-ecosystem.com/" target="_blank" class="text-[#d8b4fe] hover:text-[#f3e8ff] font-bold underline underline-offset-4 decoration-[#a855f7]/50 hover:decoration-[#d8b4fe] transition-all inline-flex items-center gap-1 px-1">${ecoText}<i class="fas fa-globe text-[9px] opacity-70 mb-[1px]"></i></a>`;
+                });
+
+                html = html.replace(/\[ACTION:OPEN_APP:\s*([^\]\|]+?)\s*\]/gi, (match, appId) => {
                     let name, icon, url;
                     const cleanAppId = appId.replace(/<[^>]*>?/gm, '').trim();
                     if (cleanAppId === 'movie') { name = 'LevelMovie'; icon = 'fa-clapperboard'; url = 'https://movie.levelup-ecosystem.com/'; }
                     else if (cleanAppId === 'music') { name = 'LevelMusic'; icon = 'fa-music'; url = 'https://music.levelup-ecosystem.com/'; }
                     else return '';
-                    return `<button onclick="window.open('${url}', '_blank')" class="ai-action-btn"><span class="text-white">Open ${name}</span><i class="fas ${icon}"></i></button>`;
+                    
+                    const actionText = currentLang === 'fr' ? 'Ouvrir' : 'Open';
+                    return `<a href="${url}" target="_blank" class="text-[#d8b4fe] hover:text-[#f3e8ff] font-bold underline underline-offset-4 decoration-[#a855f7]/50 hover:decoration-[#d8b4fe] transition-all inline-flex items-center gap-1 px-1">${actionText} ${name}<i class="fas ${icon} text-[9px] opacity-70 mb-[1px]"></i></a>`;
                 });
 
                 const movieRegex = /\[ACTION:SHOW_MOVIE:([^\]\|]+)[^\]]*\]/g;
@@ -1481,30 +1520,107 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
 
             function startSmartTyping(promptText, hasImage) {
                 const typingTextEl = document.getElementById('smartTypingText');
+                const iconWrapper = document.getElementById('aiTypingIconWrapper');
                 if (!typingTextEl) return;
                 
-                let phrases = [];
-                const isMovie = /film|movie|série|series|anime|cinema|netflix|acteur|réalisateur/i.test(promptText);
+                // Mots-clés élargis et professionnels
+                const isCrisisMessage = /danger|urgence|hôpital|hospital|suicide|mourir|police|ambulance|agress|au secours|help/i.test(promptText);
+                const isCrisis = isCrisisMessage || window.activeCrisisMode; // Maintient l'état visuel de crise
                 
-                if (hasImage) {
-                    phrases = currentLang === 'fr' 
-                        ? ["Analyse visuelle en cours...", "Identification des éléments...", "Traitement de l'image..."] 
-                        : ["Analyzing visuals...", "Identifying elements...", "Processing image..."];
-                } else if (isWebSearchEnabled) {
-                    phrases = currentLang === 'fr' 
-                        ? ["Recherche sur le Web Profond...", "Analyse des sources...", "Croisement des données..."] 
-                        : ["Deep Web Search in progress...", "Analyzing sources...", "Cross-referencing data..."];
-                } else if (isMovie) {
-                    phrases = currentLang === 'fr' 
-                        ? ["Consultation des bases cinéma...", "Recherche des sources légales...", "Préparation des recommandations..."] 
-                        : ["Consulting movie databases...", "Searching legal sources...", "Preparing recommendations..."];
-                } else {
-                    phrases = currentLang === 'fr' 
-                        ? ["Réflexion en cours...", "Connexion à l'écosystème...", "Génération de la réponse..."] 
-                        : ["Thinking...", "Connecting to ecosystem...", "Generating response..."];
+                const isRealTime = /actu|news|meteo|météo|weather|aujourd'?hui|today|récent|recent|score|match|info|maintenant|now|temps r(?:é|e)el/i.test(promptText);
+                const isMovie = /film|movie|série|series|cinema|netflix|acteur|réalisateur/i.test(promptText);
+                const isAnime = /anime|manga|otaku|crunchyroll|shonen|naruto|one piece/i.test(promptText);
+                const isMusic = /music|musique|chanson|song|audio|playlist|spotify|apple/i.test(promptText);
+                const isGame = /jeu|game|jouer|playstation|xbox|nintendo|steam|esport/i.test(promptText);
+                
+                // --- CHANGER L'ICONE DYNAMIQUEMENT ---
+                if (iconWrapper) {
+                    if (isCrisis) {
+                        // LOGO MEDICAL ROUGE (CROIX)
+                        iconWrapper.innerHTML = `
+                            <svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse">
+                                <path fill="#ef4444" d="M19 10h-5V5c0-1.1-.9-2-2-2s-2 .9-2 2v5H5c-1.1 0-2 .9-2 2s.9 2 2 2h5v5c0 1.1.9 2 2 2s2-.9 2-2v-5h5c1.1 0 2-.9 2-2s-.9-2-2-2z"/>
+                            </svg>
+                        `;
+                    } else if (isWebSearchEnabled || isRealTime) {
+                        // LOGO GOOGLE OFFICIEL POUR LA RECHERCHE / TEMPS REEL
+                        iconWrapper.innerHTML = `
+                            <svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] animate-pulse">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                        `;
+                    } else if (isAnime) {
+                        iconWrapper.innerHTML = `
+                            <svg viewBox="0 0 512 512" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse">
+                              <defs><linearGradient id="level-grad-anime" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ef4444" /><stop offset="100%" stop-color="#991b1b" /></linearGradient></defs>
+                              <g><path d="M 130 110 L 130 320 C 130 397.3 182.7 450 260 450 L 430 450" fill="none" stroke="url(#level-grad-anime)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" /><path d="M 230 180 C 230 156.9 255.3 142.5 275.3 154.1 L 405.3 229.1 C 425.3 240.6 425.3 269.4 405.3 280.9 L 275.3 355.9 C 255.3 367.5 230 353.1 230 330 Z" fill="url(#level-grad-anime)" /></g>
+                            </svg>
+                        `;
+                    } else if (isMovie) {
+                        iconWrapper.innerHTML = `
+                            <svg viewBox="0 0 512 512" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(236,72,153,0.6)] animate-pulse">
+                              <defs><linearGradient id="level-grad-movie" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a855f7" /><stop offset="100%" stop-color="#ec4899" /></linearGradient></defs>
+                              <g><path d="M 130 110 L 130 320 C 130 397.3 182.7 450 260 450 L 430 450" fill="none" stroke="url(#level-grad-movie)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" /><path d="M 230 180 C 230 156.9 255.3 142.5 275.3 154.1 L 405.3 229.1 C 425.3 240.6 425.3 269.4 405.3 280.9 L 275.3 355.9 C 255.3 367.5 230 353.1 230 330 Z" fill="url(#level-grad-movie)" /></g>
+                            </svg>
+                        `;
+                    } else if (hasImage) {
+                        iconWrapper.innerHTML = `<i class="fas fa-eye text-blue-400 text-[18px] drop-shadow-[0_0_8px_rgba(96,165,250,0.8)] animate-pulse"></i>`;
+                    } else if (isMusic) {
+                        iconWrapper.innerHTML = `
+                            <svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(74,139,255,0.6)] animate-pulse">
+                                <path fill="#4A8BFF" d="M20,3H9C8.4,3,8,3.4,8,4v11.1C7.5,14.4,6.8,14,6,14c-1.7,0-3,1.3-3,3s1.3,3,3,3s3-1.3,3-3V7h10v8.1c-0.5-0.7-1.2-1.1-2-1.1c-1.7,0-3,1.3-3,3s1.3,3,3,3s3-1.3,3-3V4C21,3.4,20.6,3,20,3z"/>
+                            </svg>
+                        `;
+                    } else if (isGame) {
+                        iconWrapper.innerHTML = `<i class="fas fa-gamepad text-emerald-400 text-[18px] drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></i>`;
+                    } else {
+                        iconWrapper.innerHTML = `<i class="fas fa-star text-[#a855f7] text-[18px] drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></i>`;
+                    }
                 }
-                
-                phrases.push(currentLang === 'fr' ? "Presque prêt..." : "Almost ready...");
+
+                // --- TEXTES DYNAMIQUES SEQUENTIELS (ULTRA-PROFESSIONNELS) ---
+                const pools = {
+                    fr: {
+                        img: ["Analyse photographique...", "Identification des éléments visuels...", "Génération du rapport détaillé..."],
+                        web: ["Connexion au réseau mondial...", "Extraction des données en temps réel...", "Synthèse des sources d'actualité..."],
+                        anime: ["Connexion à LevelAnime...", "Recherche dans la base de données...", "Structuration des informations..."],
+                        movie: ["Connexion à LevelMovie...", "Analyse du catalogue cinématographique...", "Préparation des recommandations..."],
+                        music: ["Connexion à LevelMusic...", "Analyse des métadonnées audio...", "Génération de la sélection..."],
+                        game: ["Connexion au Game Hub...", "Récupération des données serveurs...", "Structuration de la réponse..."],
+                        crisis: ["Analyse de la situation d'urgence...", "Localisation des protocoles de sécurité...", "Préparation de l'assistance immédiate..."],
+                        general: ["Analyse de la requête...", "Traitement des données...", "Génération de la réponse..."]
+                    },
+                    en: {
+                        img: ["Photographic analysis...", "Identifying visual elements...", "Generating detailed report..."],
+                        web: ["Connecting to global network...", "Extracting real-time data...", "Synthesizing news sources..."],
+                        anime: ["Connecting to LevelAnime...", "Searching database...", "Structuring information..."],
+                        movie: ["Connecting to LevelMovie...", "Analyzing cinematic catalog...", "Preparing recommendations..."],
+                        music: ["Connecting to LevelMusic...", "Analyzing audio metadata...", "Generating selection..."],
+                        game: ["Connecting to Game Hub...", "Retrieving server data...", "Structuring response..."],
+                        crisis: ["Analyzing emergency situation...", "Locating safety protocols...", "Preparing immediate assistance..."],
+                        general: ["Analyzing request...", "Processing data...", "Generating response..."]
+                    }
+                };
+
+                let selectedPool = pools[currentLang].general;
+                let colorClass = "text-[#a855f7]/70"; // Défaut violet
+
+                if (isCrisis) { selectedPool = pools[currentLang].crisis; colorClass = "text-red-500/90"; }
+                else if (hasImage) { selectedPool = pools[currentLang].img; colorClass = "text-blue-400/80"; }
+                else if (isWebSearchEnabled || isRealTime) { selectedPool = pools[currentLang].web; colorClass = "text-blue-400/80 text-shadow-glow"; }
+                else if (isAnime) { selectedPool = pools[currentLang].anime; colorClass = "text-red-500/80"; }
+                else if (isMovie) { selectedPool = pools[currentLang].movie; colorClass = "text-[#ec4899]/80"; }
+                else if (isMusic) { selectedPool = pools[currentLang].music; colorClass = "text-[#4A8BFF]/80"; }
+                else if (isGame) { selectedPool = pools[currentLang].game; colorClass = "text-emerald-400/80"; }
+
+                typingTextEl.className = `text-[10px] ${colorClass} font-bold uppercase tracking-widest pl-1 transition-opacity duration-300 opacity-0`;
+
+                // Ordre séquentiel strict (pas de hasard, pour un vrai effet de progression)
+                let phrases = [...selectedPool];
+                phrases.push(currentLang === 'fr' ? "Finalisation..." : "Finalizing...");
 
                 let pIndex = 0;
                 typingTextEl.style.opacity = '0';
@@ -1523,27 +1639,20 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                         typingTextEl.innerText = phrases[pIndex];
                         typingTextEl.style.opacity = '1';
                     }, 300); 
-                }, 3000); 
+                }, 2500); 
             }
 
             window.sendMsg = function(overrideText = null, btnElement = null) {
                 const input = document.getElementById('userInput');
-                
-                if (btnElement) {
-                    const container = btnElement.closest('.suggestion-container');
-                    if (container) {
-                        container.style.opacity = '0';
-                        container.style.transition = 'opacity 0.3s ease';
-                        setTimeout(() => container.remove(), 300);
-                    }
-                }
-
-                if (overrideText && input) {
+                if (overrideText) {
                     input.value = overrideText;
-                    if (isGenerating) stopGeneration();
-                    send();
                 }
+                if (isGenerating) stopGeneration();
+                else send();
             };
+
+            window.activeCrisisMode = false;
+            window.crisisGeoContext = "";
 
             async function performGeneration(val) {
                 const welcomeBlock = document.getElementById('welcomeBlock');
@@ -1560,6 +1669,39 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 const mimeTypeToSend = currentImageMimeType;
 
                 displayUserMessage(val, imageBase64ToSend);
+
+                // PROTOCOLE DE CRISE : DÉTECTION ET GÉOLOCALISATION
+                const isCrisisMessage = /danger|urgence|hôpital|hospital|suicide|mourir|police|ambulance|agress|au secours|help|localise/i.test(val);
+                let crisisContext = "";
+                
+                if (isCrisisMessage && !window.crisisGeoContext.includes('YOU KNOW THEIR LOCATION')) {
+                    window.activeCrisisMode = true; // VERROUILLAGE DU MODE URGENCE POUR LA SESSION
+                    try {
+                        // Tentative 1 : GeoJS (Ultra-rapide, zelda-tier, rarement bloquée par les AdBlockers)
+                        const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
+                        if (geoRes.ok) {
+                            const geoData = await geoRes.json();
+                            window.crisisGeoContext = `\n\n[EMERGENCY GEO-CONTEXT: The user is in an active emergency in or near ${geoData.city}, ${geoData.country}. YOU KNOW THEIR LOCATION. NEVER say you cannot locate them. IMMEDIATELY provide the specific local emergency numbers for ${geoData.country} using the tag [ACTION:CALL:number|Title] (e.g., [ACTION:CALL:112|Urgences]).]`;
+                        } else { throw new Error('geojs limit'); }
+                    } catch (e) {
+                        try {
+                            // Tentative 2 : ipapi.co
+                            const geoRes2 = await fetch('https://ipapi.co/json/');
+                            if (geoRes2.ok) {
+                                const geoData2 = await geoRes2.json();
+                                window.crisisGeoContext = `\n\n[EMERGENCY GEO-CONTEXT: The user is in an active emergency in or near ${geoData2.city}, ${geoData2.country_name}. YOU KNOW THEIR LOCATION. NEVER say you cannot locate them. IMMEDIATELY provide the specific local emergency numbers for ${geoData2.country_name} using the tag [ACTION:CALL:number|Title].]`;
+                            } else { throw new Error('ipapi limit'); }
+                        } catch (e2) {
+                            // Tentative 3 : Fallback Absolu sans excuses robotiques
+                            window.crisisGeoContext = `\n\n[EMERGENCY GEO-CONTEXT: The user appears to be in an emergency. Automatic geolocation failed due to their network/adblock settings. DO NOT say "I am an AI and cannot locate you". Say EXACTLY: "Ma tentative de géolocalisation sécurisée a échoué à cause de votre réseau. Pourriez-vous me dire rapidement dans quel pays vous êtes ?" Provide general international emergency advice using the tag [ACTION:CALL:112|Urgences Europe] or [ACTION:CALL:911|Urgences Amérique].]`;
+                        }
+                    }
+                }
+
+                // INJECTION PERMANENTE SI LA SESSION EST EN CRISE
+                if (window.activeCrisisMode) {
+                    crisisContext = window.crisisGeoContext;
+                }
 
                 // Analyse profonde invisible pour l'utilisateur
                 let systemText = val;
@@ -1608,7 +1750,7 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                         }
                     }
 
-                    const systemInstruction = baseInstruction + (MODE_PROMPTS[currentMode] || "") + timeContext + habitContext;
+                    const systemInstruction = baseInstruction + (MODE_PROMPTS[currentMode] || "") + timeContext + habitContext + crisisContext;
 
                     const payloadMessages = JSON.parse(JSON.stringify(currentSessionMessages));
                     const lastMsgIndex = payloadMessages.length - 1;
@@ -1621,7 +1763,10 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                         systemInstruction: { parts: [{ text: systemInstruction }] }
                     };
                     
-                    if (isWebSearchEnabled) {
+                    const isRealTimeSearch = /actu|news|meteo|météo|weather|aujourd'?hui|today|récent|recent|score|match|info|maintenant|now|temps r(?:é|e)el/i.test(val);
+
+                    // EXTREMEMENT IMPORTANT : Connecte VRAIMENT l'IA au Web si on parle d'actualités, même sans le bouton cliqué !
+                    if (isWebSearchEnabled || isRealTimeSearch) {
                         payload.tools = [{ "google_search": {} }];
                     }
 
