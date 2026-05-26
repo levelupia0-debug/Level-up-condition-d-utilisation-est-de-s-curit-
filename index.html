@@ -4720,15 +4720,38 @@ if (window._emailQuota) {
 
 const secRef = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
 const secSnap = await getDoc(secRef);
-if(secSnap.exists()) {
-const sData = secSnap.data();
-window._ud.apiKey = sData.apiKey || sData.key;
-window._ud.keyCreatedAt = sData.keyCreatedAt;
-window._ud.pinHash = sData.pinHash;
 
-// SAUVEGARDE CRUCIALE POUR ÉVITER LA DÉCONNEXION EN CAS DE CONFLIT ANONYME
-localStorage.setItem('lm_key', window._ud.apiKey);
-localStorage.setItem('lm_uid', u.uid);
+if(secSnap.exists()) {
+    const sData = secSnap.data();
+    window._ud.apiKey = sData.apiKey || sData.key;
+    window._ud.keyCreatedAt = sData.keyCreatedAt;
+    window._ud.pinHash = sData.pinHash;
+
+    // SAUVEGARDE CRUCIALE POUR ÉVITER LA DÉCONNEXION EN CAS DE CONFLIT ANONYME
+    localStorage.setItem('lm_key', window._ud.apiKey);
+    localStorage.setItem('lm_uid', u.uid);
+
+    // 🟢 NOUVEAU : On prévient l'interface HTML que la clé existe !
+    const secExisting = document.getElementById('sec-existing');
+    const secGen = document.getElementById('sec-generate');
+    if (secExisting && secGen) {
+        secGen.style.display = 'none';
+        secExisting.classList.remove('hidden');
+        secExisting.style.display = 'block';
+    }
+    
+    // On met à jour les stats rapides du header
+    const hKV = document.getElementById('hKV');
+    const hKS = document.getElementById('hKS');
+    if (hKV) hKV.textContent = "LVL-•••••-•••••"; 
+    if (hKS) hKS.textContent = "Active ✓";
+    
+    // On affiche la date de création sur la carte de la clé
+    const kDate = document.getElementById('kDate');
+    if (kDate && window._ud.keyCreatedAt) {
+        const dateObj = new Date(window._ud.keyCreatedAt);
+        kDate.textContent = dateObj.toLocaleDateString('fr-FR');
+    }
 }
 
 // Mise en cache
@@ -4739,6 +4762,7 @@ localStorage.setItem('lm_login_mode', 'google');
 await window.loadAppStatus();
 closeAuth();
 showDash(u);
+
 // Vérifier si onboarding complété
 window._checkOnboarding && window._checkOnboarding(u);
 
