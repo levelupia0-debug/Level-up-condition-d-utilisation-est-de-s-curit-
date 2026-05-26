@@ -5,13 +5,13 @@
 <meta name="google-site-verification" content="YqY4GBEbg3ZlrrmxH8W2U7KYzV1Z05jDGA62Sk10cWw" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="description" content="LevelUp Ecosystem — Movie, Music, Game, Otaku & Outils. One account, one key, your entire LevelUp universe. Powered by Firebase & Google Cloud.">
+<meta name="description" content="LevelUp Platform — Movie, Music, Game, Otaku, AI & Tools. One key, every hub. Premium content platform powered by Firebase & Google Cloud.">
 <meta name="theme-color" content="#a855f7">
 <meta name="msapplication-TileColor" content="#a855f7">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LevelUp">
-<title>LevelUp Ecosystem — One Account, Every App</title>
+<title>LevelUp Platform — One Key, Every Hub</title>
 
 <link rel="icon" href="/icon-eco.svg" type="image/svg+xml">
 
@@ -27,17 +27,17 @@
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://levelup-ecosystem.com/">
-<meta property="og:title" content="LevelUp Ecosystem — One Account, Every App">
-<meta property="og:description" content="Your central hub for Movie, Music, Game, Otaku & Tools. Sign in once, one key, access your entire LevelUp universe.">
+<meta property="og:title" content="LevelUp Platform">
+<meta property="og:description" content="Movie, Music, Game, Otaku, AI & Tools — all your premium hubs in one place. One key, unlimited access.">
 <meta property="og:image" content="https://levelup-ecosystem.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:site_name" content="LevelUp Ecosystem">
+<meta property="og:site_name" content="LevelUp Platform">
 <meta property="og:locale" content="en_US">
 <!-- Twitter / X Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="LevelUp Ecosystem — One Account, Every App">
-<meta name="twitter:description" content="5 hubs. One key. Unlimited access.">
+<meta name="twitter:title" content="LevelUp Platform">
+<meta name="twitter:description" content="Movie · Music · Game · Otaku · AI · Tools — One key, every hub.">
 <meta name="twitter:image" content="https://levelup-ecosystem.com/og.png">
 <!-- JSON-LD Structured Data — WebSite + WebApplication (Schema.org E-E-A-T) -->
 <script type="application/ld+json">
@@ -3131,6 +3131,20 @@ try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) 
 // Récupère le résultat d'un signInWithRedirect au retour sur la page (iPhone PWA)
 getRedirectResult(auth).catch(() => {});
 
+// Fix session loss: quand l'utilisateur revient sur cet onglet depuis un sous-lien,
+// on vérifie l'état Firebase et on restaure la session si nécessaire
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    const current = auth.currentUser;
+    if (current && !current.isAnonymous && !window._user) {
+        // Firebase a l'utilisateur mais le state local a été perdu — on restaure
+        window._user = current;
+        if (window._ud && typeof showDash === 'function') {
+            showDash(current);
+        }
+    }
+});
+
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
 
@@ -3343,6 +3357,14 @@ if (appId === 'movie') {
 targetUrl = 'https://movie.levelup-ecosystem.com';
 } else if (appId === 'music') {
 targetUrl = 'https://music.levelup-ecosystem.com';
+} else if (appId === 'game') {
+targetUrl = 'https://game.levelup-ecosystem.com';
+} else if (appId === 'otaku') {
+targetUrl = 'https://otaku.levelup-ecosystem.com';
+} else if (appId === 'ia') {
+targetUrl = 'https://ia.levelup-ecosystem.com';
+} else if (appId === 'tools') {
+targetUrl = 'https://levelup-ecosystem.com/tools';
 }
 
 if (targetUrl) {
@@ -4241,8 +4263,6 @@ showDash(window._user);
 // 🔴 UTILISATEUR ANONYME PUR (Pas de clé sauvegardée)
 window._user = null;
 window._ud = null;
-// Si l'URL est /dashboard sans être connecté → rediriger vers /login
-if (window.location.pathname === '/dashboard') { window.location.replace('/login'); return; }
 await window.loadAppStatus();
 showLand();
 }
@@ -4257,18 +4277,24 @@ try {
     }
     localStorage.removeItem('lvl_session');
 } catch(_) {}
-// Si l'URL est /dashboard sans session → rediriger vers /login
-if (window.location.pathname === '/dashboard') { window.location.replace('/login'); return; }
 // Aucune session : connexion silencieuse pour initialisation
 signInAnonymously(auth).catch(e => console.error("Initialisation anonyme impossible:", e));
 }
 });
 
 function showDash(u) {
-// L'utilisateur est connecté — on le redirige vers la page dashboard indépendante
-try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u?.uid, email: u?.email, displayName: u?.displayName, photoURL: u?.photoURL, ts: Date.now() })); } catch(_) {}
+const landing = document.getElementById('landing');
+const dashboard = document.getElementById('dashboard');
+const mobileNav = document.getElementById('mobileNav');
+if (landing) { landing.classList.add('hidden'); landing.style.display = 'none'; }
+if (dashboard) { dashboard.classList.remove('hidden'); dashboard.style.display = 'flex'; }
+if (mobileNav) { mobileNav.classList.add('vis'); }
 window._hideLoadingScreen();
-window.location.replace('/dashboard');
+renderNavLogged(u);
+updateLoggedUI();
+window.refreshUI();
+if(window.updateFabContext) window.updateFabContext();
+try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u?.uid, email: u?.email, displayName: u?.displayName, photoURL: u?.photoURL, ts: Date.now() })); } catch(_) {}
 }
 
 
@@ -5014,7 +5040,7 @@ const photo = d?.photoURL || u.photoURL;
 const init = name.charAt(0).toUpperCase();
 const avaHtml = photo ? `<img src="${photo}" class="nav-avatar-img" referrerpolicy="no-referrer">` : `<div class="nav-avatar-txt">${init}</div>`;
 document.getElementById('navRight').innerHTML = `
-  <div class="nav-user" onclick="window.openDashboard()">${avaHtml}<span class="hidden sm:inline-block">${name.split(' ')[0]}</span></div>`;
+  <button class="btn btn-p btn-sm" onclick="window.openDashboard()" style="gap:8px;display:flex;align-items:center">${avaHtml}<span>My Dashboard</span></button>`;
 const _nb = document.getElementById('navBellBtn');
 if (_nb) _nb.style.display = 'flex';
 const _fhL = document.getElementById('fabHintBubble');
@@ -6054,21 +6080,17 @@ window.toggleIA = function(e) {
     if (e) e.stopPropagation();
     const fabWrap = document.getElementById('fabWrap');
     if (fabWrap) fabWrap.classList.remove('open');
-
-    const modal = document.getElementById('iaFullModal');
-    if (!modal) return;
-
-    if (!modal.classList.contains('hidden')) {
-        window.closeIAModal();
-        return;
-    }
-
-    const frame = document.getElementById('iaFrame');
-    if (frame && !frame.src.includes('assistant.html')) {
-        frame.src = './assistant.html';
-    }
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    // Construire l'URL IA avec la clé utilisateur si connecté
+    const d = window._ud || {};
+    const params = new URLSearchParams();
+    if (d.apiKey) params.set('lvl_key', d.apiKey);
+    if (d.uid) params.set('lvl_uid', d.uid);
+    if (d.displayName) params.set('lvl_name', d.displayName);
+    if (d.email) params.set('lvl_email', d.email);
+    if (d.photoURL) params.set('lvl_photo', d.photoURL);
+    const query = params.toString();
+    const iaUrl = 'https://ia.levelup-ecosystem.com' + (query ? '?' + query : '');
+    window.open(iaUrl, '_blank');
 };
 
 window.closeIAModal = function() {
@@ -6098,12 +6120,18 @@ window.switchMediaSlot = function(slotNum) {
         s.classList.toggle('active', s.dataset.slot === n);
     });
 };
-// TOOLS HUB — OPEN / CLOSE / FULLSCREEN / FLOATING
+// TOOLS HUB — Ouvre dans un nouvel onglet avec la clé utilisateur
 window.openToolsHub = function() {
-    const ov = document.getElementById('toolsOverlay');
-    if (!ov) return;
-    ov.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    const d = window._ud || {};
+    const params = new URLSearchParams();
+    if (d.apiKey) params.set('lvl_key', d.apiKey);
+    if (d.uid) params.set('lvl_uid', d.uid);
+    if (d.displayName) params.set('lvl_name', d.displayName);
+    if (d.email) params.set('lvl_email', d.email);
+    if (d.photoURL) params.set('lvl_photo', d.photoURL);
+    const query = params.toString();
+    const toolsUrl = 'https://levelup-ecosystem.com/tools' + (query ? '?' + query : '');
+    window.open(toolsUrl, '_blank');
 };
 // Ferme l'overlay des outils seulement — la fenêtre flottante reste indépendante
 window.closeToolsHub = function() {
