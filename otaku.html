@@ -87,7 +87,7 @@
       border-bottom: 1px solid var(--bdr);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      display: none; /* CHANGÉ : Totalement invisible au chargement initial */
+      display: none; /* Totalement invisible au chargement initial */
       align-items: center;
       padding: var(--sat) 24px 0 24px;
       gap: 16px;
@@ -229,7 +229,7 @@
       position: fixed;
       inset: 0;
       background: transparent;
-      display: none; /* CHANGÉ : Totalement invisible au chargement initial */
+      display: none; /* Totalement invisible au chargement initial */
       flex-direction: column;
       z-index: 99;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -615,7 +615,7 @@
     }
 
     // ==========================================
-    // BOTTOM BAR NAVIGATION MOBILE
+    // BOTTOM BAR NAVIGATION MOBILE (Correction dynamique !)
     // ==========================================
     function updateMobileBottomBar() {
       const bar = document.getElementById('mobileBottomBar');
@@ -623,32 +623,78 @@
       
       if (window.isGuest) {
         bar.innerHTML = `
-          <a href="/login" class="bar-btn">
+          <button onclick="window.location.href='/login'" class="bar-btn">
             <i class="fa-solid fa-right-to-bracket"></i>
             <span>Login</span>
-          </a>
-          <a href="/" class="bar-btn">
+          </button>
+          <button onclick="window.handleGoHome()" class="bar-btn">
             <i class="fa-solid fa-house"></i>
             <span>Home</span>
-          </a>
-          <button onclick="window.location.reload()" class="bar-btn">
+          </button>
+          <button onclick="window.handleRefresh()" class="bar-btn">
             <i class="fa-solid fa-rotate"></i>
             <span>Refresh</span>
           </button>
         `;
       } else {
         bar.innerHTML = `
-          <a href="/" class="bar-btn">
+          <button onclick="window.handleGoHome()" class="bar-btn">
             <i class="fa-solid fa-house"></i>
             <span>Home</span>
-          </a>
-          <button onclick="window.location.reload()" class="bar-btn">
+          </button>
+          <button onclick="window.handleRefresh()" class="bar-btn">
             <i class="fa-solid fa-rotate"></i>
             <span>Refresh</span>
           </button>
         `;
       }
     }
+
+    // ==========================================
+    // ACTION ACCUEIL (HOME) MOBILE INTELLIGENT
+    // ==========================================
+    window.handleGoHome = function() {
+      // Ferme tous les modals ouverts pour éviter les overlays fantômes
+      window.closeAppModal();
+      window.closeLoginRequired();
+      
+      if (window.isGuest) {
+        // Cache l'overlay d'applications et la navigation
+        if (overlay) overlay.classList.remove('active');
+        const nav = document.querySelector('nav');
+        if (nav) nav.classList.remove('active');
+        
+        // Réaffiche proprement l'écran de bienvenue de départ
+        if (authGate) authGate.classList.add('show');
+      } else {
+        // Si connecté, on fait un petit rafraîchissement propre
+        window.handleRefresh();
+      }
+    };
+
+    // ==========================================
+    // ACTION RAFRAÎCHISSEMENT DOUX (SOFT REFRESH)
+    // ==========================================
+    window.handleRefresh = async function() {
+      // Ferme les fenêtres modales
+      window.closeAppModal();
+      window.closeLoginRequired();
+      
+      // Affiche l'écran de chargement rose
+      if (loader) loader.classList.remove('out');
+      
+      try {
+        // Recharge les cartes d'applications en direct depuis Firestore
+        await loadOtakuApps();
+      } catch (e) {
+        console.error("Erreur de rafraîchissement :", e);
+      }
+      
+      // Petit délai d'attente fluide avant de masquer le chargeur
+      setTimeout(() => {
+        if (loader) loader.classList.add('out');
+      }, 600);
+    };
 
     // ==========================================
     // DETECTION DU CLÉ D'ÉCOSYSTÈME (SSO)
