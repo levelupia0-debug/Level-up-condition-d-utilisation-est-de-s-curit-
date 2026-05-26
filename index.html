@@ -2472,38 +2472,6 @@ MEDIA HUB OVERLAY
 <!-- ═══════════════════════════════════════
 TOOLS HUB OVERLAY
 ═══════════════════════════════════════ -->
-<div id="toolsOverlay" class="tools-overlay hidden">
-  <div class="tools-head">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="width:36px;height:36px;border-radius:10px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);display:flex;align-items:center;justify-content:center;">
-        <i class="fa-solid fa-wrench" style="color:#22c55e;font-size:.9rem"></i>
-      </div>
-      <div>
-        <h3 style="font-size:1rem;font-weight:800;font-family:var(--display);letter-spacing:-.02em;margin:0">Outils</h3>
-        <p style="font-size:.72rem;color:var(--muted);margin:0">Boîte à outils de l'écosystème LevelUp</p>
-      </div>
-    </div>
-    <button onclick="closeToolsHub()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .2s;outline:none" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.7)'">
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-  </div>
-  <div class="tools-grid-wrap" id="toolsGrid">
-    <div class="tools-coming-soon" id="toolsEmpty">
-      <div class="tcs-glow">
-        <div class="tcs-glow-inner"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-      </div>
-      <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0"></span> En construction</div>
-      <div class="tcs-title">Outils LevelUp</div>
-      <p class="tcs-sub">Notre boîte à outils intelligente arrive bientôt. Des applications et utilitaires puissants, directement intégrés à votre écosystème.</p>
-      <div class="tcs-features">
-        <span class="tcs-feat"><i class="fa-solid fa-brain" style="color:#a855f7"></i> IA & Productivité</span>
-        <span class="tcs-feat"><i class="fa-solid fa-chart-bar" style="color:#3b82f6"></i> Analyses & Stats</span>
-        <span class="tcs-feat"><i class="fa-solid fa-file-code" style="color:#22c55e"></i> Outils Dev</span>
-        <span class="tcs-feat"><i class="fa-solid fa-music" style="color:#f97316"></i> Création</span>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 
@@ -2692,25 +2660,6 @@ TOOLS HUB OVERLAY
 SMART FAB & IA ASSISTANT
 ═══════════════════════════════════════ -->
 <!-- ═══ IA FULL MODAL ═══ -->
-<div id="iaFullModal" class="hidden">
-  <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;background:#06020a">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:max(14px,calc(10px + env(safe-area-inset-top,0px))) 18px 14px;background:rgba(10,5,20,.98);border-bottom:1px solid rgba(168,85,247,.2);flex-shrink:0">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:32px;height:32px;border-radius:9px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center">
-          <i class="fa-solid fa-star" style="color:#c084fc;font-size:.8rem"></i>
-        </div>
-        <div>
-          <div style="font-weight:800;font-size:.88rem;color:#fff;font-family:var(--display)">Assistant IA LevelUp</div>
-          <div style="font-size:.65rem;color:rgba(168,85,247,.8)">Propulsé par LevelUp AI</div>
-        </div>
-      </div>
-      <button onclick="window.closeIAModal()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;outline:none;transition:all .2s" onmouseover="this.style.background='rgba(239,68,68,.18)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.6)'">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-    <iframe id="iaFrame" src="" frameborder="0" allow="microphone" style="flex:1;width:100%;height:0;background:#06020a;border:none;min-height:0"></iframe>
-  </div>
-</div>
 
 <div class="fab-wrap" id="fabWrap">
     <div class="fab-menu" id="fabMenu">
@@ -5288,11 +5237,7 @@ function updateViewFromURL() {
 
 // Gère le bouton retour/suivant du navigateur
 window.addEventListener('popstate', function() {
-    if (!window._user && window.location.pathname === '/dashboard') {
-        window.location.replace('/login');
-    } else {
-        updateViewFromURL();
-    }
+    updateViewFromURL();
 });
 
 // ═══ NAVIGATION PRINCIPALE ═══
@@ -5330,11 +5275,14 @@ window.goHome = function() {
 
 window.openDashboard = function() {
     if (!window._user) { window.openAuth('login'); return; }
-    if (window.location.pathname !== '/dashboard') {
-        try { history.pushState({}, '', '/dashboard'); } catch(_) {}
-    }
-    updateViewFromURL();
+    const landing = document.getElementById('landing');
+    const dashboard = document.getElementById('dashboard');
+    const mobileNav = document.getElementById('mobileNav');
+    if (landing) { landing.classList.add('hidden'); landing.style.display = 'none'; }
+    if (dashboard) { dashboard.classList.remove('hidden'); dashboard.style.display = 'flex'; }
+    if (mobileNav) { mobileNav.classList.add('vis'); }
     if(typeof pnl === 'function') pnl('home');
+    if(window.updateFabContext) window.updateFabContext();
     window.scrollTo({top:0, behavior:'smooth'});
 };
 
@@ -5672,21 +5620,16 @@ window._aiLandingSend = function(){
   const q = (inp ? inp.value.trim() : '') || '';
   if (!q) return;
   if(inp) inp.value = '';
-  window.toggleIA && window.toggleIA(null);
-  const frame = document.getElementById('iaFrame');
-  if (!frame) return;
-  function sendMsg(){
-    try { frame.contentWindow.postMessage({type:'prefill',text:q},'*'); } catch(_){}
-  }
-  // Si l'iframe est déjà chargée, envoyer après un court délai
-  if (frame.src && frame.src !== '' && !frame.src.includes('about:blank')) {
-    setTimeout(sendMsg, 500);
-  } else {
-    // Attendre le load event puis envoyer
-    const onLoad = () => { frame.removeEventListener('load', onLoad); setTimeout(sendMsg, 300); };
-    frame.addEventListener('load', onLoad);
-    setTimeout(sendMsg, 1400); // fallback si l'event ne se déclenche pas
-  }
+  // Ouvre dona.html dans un nouvel onglet avec la question en paramètre URL
+  const d = window._ud || {};
+  const params = new URLSearchParams();
+  params.set('q', q);
+  if (d.apiKey) params.set('lvl_key', d.apiKey);
+  if (d.uid) params.set('lvl_uid', d.uid);
+  if (d.displayName) params.set('lvl_name', d.displayName);
+  if (d.email) params.set('lvl_email', d.email);
+  if (d.photoURL) params.set('lvl_photo', d.photoURL);
+  window.open('./dona.html?' + params.toString(), '_blank');
 };
 
 // DESC POPUP — "voir plus" pour les cartes hub
@@ -5779,15 +5722,7 @@ if(sBar) {
 window.toggleFab = function(e) {
     if(e) e.stopPropagation();
     const fabWrap = document.getElementById('fabWrap');
-    const iaModal = document.getElementById('iaFullModal');
     const hint = document.getElementById('fabHint');
-
-    // FERMETURE INTELLIGENTE : Si l'IA est ouverte, le bouton FAB la ferme
-    if (iaModal && !iaModal.classList.contains('hidden')) {
-        window.closeIAModal();
-        fabWrap.classList.remove('open');
-        return;
-    }
 
     // Comportement normal d'ouverture du menu
     fabWrap.classList.toggle('open');
@@ -5825,42 +5760,13 @@ document.addEventListener('click', (e) => {
         fabWrap.classList.remove('open');
     }
 
-    // Fermer le modal IA si on clique sur le backdrop
-    const iaModal2 = document.getElementById('iaFullModal');
-    if (iaModal2 && !iaModal2.classList.contains('hidden') && e.target === iaModal2) {
-        window.closeIAModal();
-    }
+    // IA dans un onglet séparé — plus de backdrop à gérer ici
 });
 
 // GÉNÉRATION & ENVOI DU JETON ÉPHÉMÈRE À L'IFRAME
 window._activeSessionToken = null;
 window.sendAuthToIA = function() {
-    const frame = document.getElementById('iaFrame');
-    if (!frame || !frame.contentWindow) return;
-    if (window._user) {
-        const token = Math.random().toString(36).substr(2) + Date.now().toString(36);
-        window._activeSessionToken = token;
-        // Contexte enrichi : app, features, access controls
-        const ctx = {
-            hasKey: !!(window._ud?.apiKey),
-            apps: {
-                movie: { access: (window._appsAccess||{}).movie || 'key', maintenance: !!(window._appsMaintenance||{}).movie },
-                music: { access: (window._appsAccess||{}).music || 'key', maintenance: !!(window._appsMaintenance||{}).music },
-                ia:    { access: (window._appsAccess||{}).ia    || 'key', maintenance: !!(window._appsMaintenance||{}).ia }
-            },
-            globalMaintenance: !!window._globalMaintenance,
-            featLocks: window._featLocks || {}
-        };
-        frame.contentWindow.postMessage({
-            action: 'START_SESSION',
-            token: token,
-            name: window._ud?.displayName || window._user?.email?.split('@')[0] || 'Utilisateur',
-            context: ctx
-        }, '*');
-    } else {
-        window._activeSessionToken = '__public__';
-        frame.contentWindow.postMessage({ action: 'START_SESSION', token: '__public__', isGuest: true }, '*');
-    }
+    // IA est maintenant dans un onglet séparé (dona.html) — pas d'iframe à contacter
 };
 
 // Variable globale pour le cache du prompt IA
@@ -5884,15 +5790,7 @@ window.addEventListener('message', async (e) => {
         document.body.style.overflow = '';
     }
 
-    // ── LOGIQUE DE DIMENSIONNEMENT DE L'IFRAME ──
-    if(data.action === 'minimize_ia' || data.action === 'expand_ia') {
-        // Dans le nouveau modal plein écran, minimize = ferme
-        window.closeIAModal && window.closeIAModal();
-    }
-
-    if(data.action === 'close_ia') {
-        window.closeIAModal && window.closeIAModal();
-    }
+    // IA ouverte dans un onglet séparé — les messages minimize/close/expand sont ignorés ici
 
     // 🌟 TRAITEMENT DES MESSAGES DE L'IA (MOTEUR GEMINI CENTRALISÉ) — VALIDATION DU JETON 🌟
     if(data.action === 'process_ia_prompt') {
@@ -5900,11 +5798,10 @@ window.addEventListener('message', async (e) => {
         const isAuth = data.sessionToken && data.sessionToken === window._activeSessionToken;
         const isPublic = data.sessionToken === '__public__';
         if (!isAuth && !isPublic) {
-            const iframe = document.getElementById('iaFrame');
-            if(iframe && iframe.contentWindow) iframe.contentWindow.postMessage({action: 'ia_api_response', error: true, text: "Session invalide. Veuillez rafraîchir la page."}, '*');
+            // IA dans onglet séparé — on ignore les messages de session invalide ici
             return;
         }
-        const iframe = document.getElementById('iaFrame');
+        const iframe = null; // IA est maintenant dans un onglet séparé (dona.html)
 
         try {
             // 1. Récupération du Super Prompt depuis Firestore (seulement la première fois pour optimiser)
@@ -6080,7 +5977,6 @@ window.toggleIA = function(e) {
     if (e) e.stopPropagation();
     const fabWrap = document.getElementById('fabWrap');
     if (fabWrap) fabWrap.classList.remove('open');
-    // Construire l'URL IA avec la clé utilisateur si connecté
     const d = window._ud || {};
     const params = new URLSearchParams();
     if (d.apiKey) params.set('lvl_key', d.apiKey);
@@ -6089,14 +5985,11 @@ window.toggleIA = function(e) {
     if (d.email) params.set('lvl_email', d.email);
     if (d.photoURL) params.set('lvl_photo', d.photoURL);
     const query = params.toString();
-    const iaUrl = 'https://ia.levelup-ecosystem.com' + (query ? '?' + query : '');
-    window.open(iaUrl, '_blank');
+    window.open('./dona.html' + (query ? '?' + query : ''), '_blank');
 };
 
 window.closeIAModal = function() {
-    const modal = document.getElementById('iaFullModal');
-    if (modal) modal.classList.add('hidden');
-    document.body.style.overflow = '';
+    // IA dans un onglet séparé — rien à fermer ici
 };
 // MEDIA HUB — OPEN / CLOSE / SWITCH
 window.openMediaHub = function() {
@@ -6120,7 +6013,7 @@ window.switchMediaSlot = function(slotNum) {
         s.classList.toggle('active', s.dataset.slot === n);
     });
 };
-// TOOLS HUB — Ouvre dans un nouvel onglet avec la clé utilisateur
+// TOOLS HUB — Ouvre tool.html dans un nouvel onglet avec la clé utilisateur
 window.openToolsHub = function() {
     const d = window._ud || {};
     const params = new URLSearchParams();
@@ -6130,13 +6023,10 @@ window.openToolsHub = function() {
     if (d.email) params.set('lvl_email', d.email);
     if (d.photoURL) params.set('lvl_photo', d.photoURL);
     const query = params.toString();
-    const toolsUrl = 'https://levelup-ecosystem.com/tools' + (query ? '?' + query : '');
-    window.open(toolsUrl, '_blank');
+    window.open('./tool.html' + (query ? '?' + query : ''), '_blank');
 };
-// Ferme l'overlay des outils seulement — la fenêtre flottante reste indépendante
+// Tools dans un onglet séparé — closeToolsHub ferme uniquement les fenêtres flottantes
 window.closeToolsHub = function() {
-    const ov = document.getElementById('toolsOverlay');
-    if (ov) ov.classList.add('hidden');
     const fs = document.getElementById('toolFullscreen');
     if (fs && !fs.classList.contains('hidden')) {
         fs.classList.add('hidden');
@@ -6770,11 +6660,6 @@ window.openToolFloat = function(url, name) {
 
     win.addEventListener('mousedown', function() { window._floatBringToFront(id); });
 
-    const ov = document.getElementById('toolsOverlay');
-    if (ov && !ov.classList.contains('hidden')) {
-        ov.classList.add('hidden');
-        document.body.style.overflow = '';
-    }
 };
 
 window.closeToolFloatById = function(id) {
@@ -6840,8 +6725,6 @@ document.addEventListener('keydown', e => {
         }
         const fsOv = document.getElementById('toolFullscreen');
         if (fsOv && !fsOv.classList.contains('hidden')) { window.closeToolFullscreen(); return; }
-        const toolsOv = document.getElementById('toolsOverlay');
-        if (toolsOv && !toolsOv.classList.contains('hidden')) { window.closeToolsHub(); return; }
         const mhOv = document.getElementById('mediaHubOverlay');
         if (mhOv && !mhOv.classList.contains('hidden')) { window.closeMediaHub(); return; }
     }
@@ -7379,10 +7262,8 @@ document.addEventListener('keydown', function(e) {
 <script>
 (function() {
     function expandIA() {
-        const modal = document.getElementById('iaFullModal');
-        if (!modal) return;
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
+        // IA dans un onglet séparé — on ouvre dona.html
+        window.toggleIA && window.toggleIA(null);
     }
     window.expandIA = expandIA;
 
@@ -7390,13 +7271,15 @@ document.addEventListener('keydown', function(e) {
         const input = document.getElementById('iaMiniInput');
         const text = input ? input.value.trim() : '';
         if (!text) return;
-        expandIA();
-        const frame = document.getElementById('iaFrame');
-        if (frame && frame.contentWindow) {
-            setTimeout(function() {
-                frame.contentWindow.postMessage({ type: 'QUICK_MSG', text: text }, '*');
-            }, 350);
-        }
+        // Ouvre dona.html avec la question en paramètre
+        const d = window._ud || {};
+        const params = new URLSearchParams();
+        params.set('q', text);
+        if (d.apiKey) params.set('lvl_key', d.apiKey);
+        if (d.uid) params.set('lvl_uid', d.uid);
+        if (d.displayName) params.set('lvl_name', d.displayName);
+        if (d.email) params.set('lvl_email', d.email);
+        window.open('./dona.html?' + params.toString(), '_blank');
         if (input) input.value = '';
     }
 
