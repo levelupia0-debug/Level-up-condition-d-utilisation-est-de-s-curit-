@@ -1,212 +1,958 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Game Hub — LevelUp Ecosystem</title>
-<link rel="icon" href="/icon-eco.svg" type="image/svg+xml">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#10b981">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#09090b;--surf:rgba(255,255,255,.04);--bdr:rgba(255,255,255,.08);
-  --txt:#f4f4f5;--muted:rgba(255,255,255,.45);
-  --accent:#10b981;--accent-lo:rgba(16,185,129,.12);
-  --sans:'Inter',sans-serif;--display:'Syne',sans-serif;
-  --r8:8px;--r12:12px;--r16:16px;
-}
-html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased}
-body{display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;top:-20%;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(16,185,129,.08) 0%,transparent 70%);pointer-events:none;z-index:0}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Game Hub — Écosystème LevelUp</title>
+  <link class="eco-icon" rel="icon" href="/icon-eco.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#10b981">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 
-/* ── Nav ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;background:rgba(9,9,11,.92);border-bottom:1px solid var(--bdr);backdrop-filter:blur(14px);display:flex;align-items:center;padding:0 24px;gap:16px}
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt);font-weight:800;font-family:var(--display);font-size:1rem;letter-spacing:-.02em}
-.nav-brand svg{width:18px;height:18px}
-.nav-sep{width:1px;height:18px;background:var(--bdr)}
-.nav-hub{font-size:.85rem;font-weight:700;color:var(--accent)}
-.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.nav-back{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r8);background:var(--surf);border:1px solid var(--bdr);color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;font-family:var(--sans)}
-.nav-back:hover{background:rgba(255,255,255,.08);color:var(--txt)}
-.nav-user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:100px;background:var(--surf);border:1px solid var(--bdr)}
-.nav-ava{width:26px;height:26px;border-radius:50%;background:var(--accent-lo);border:1px solid rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--accent);overflow:hidden}
-.nav-ava img{width:100%;height:100%;object-fit:cover}
-.nav-uname{font-size:.78rem;font-weight:600;color:var(--txt)}
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg: #09090b;
+      --surf: rgba(255, 255, 255, 0.04);
+      --bdr: rgba(255, 255, 255, 0.08);
+      --txt: #f4f4f5;
+      --muted: rgba(255, 255, 255, 0.45);
+      --accent: #10b981; /* Vert Gaming */
+      --accent-lo: rgba(16, 185, 129, 0.12);
+      --sans: 'Inter', sans-serif;
+      --display: 'Syne', sans-serif;
+      --r8: 8px;
+      --r12: 12px;
+      --r16: 16px;
+      
+      /* GESTION DES ENCOCHES DES TÉLÉPHONES NATIFS (Safe Areas) */
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
 
-/* ── Page loader ── */
-#pageLoader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
-#pageLoader.out{opacity:0;pointer-events:none}
-.ld-icon{width:52px;height:52px;border-radius:14px;background:var(--accent-lo);border:1px solid rgba(16,185,129,.25);display:flex;align-items:center;justify-content:center;margin-bottom:16px;animation:ldpulse 2s ease-in-out infinite}
-@keyframes ldpulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.3)}50%{box-shadow:0 0 0 10px rgba(16,185,129,0)}}
-.ld-spinner{width:32px;height:32px;border:2px solid rgba(16,185,129,.15);border-top-color:var(--accent);border-radius:50%;animation:ldspin .7s linear infinite}
-@keyframes ldspin{to{transform:rotate(360deg)}}
-.ld-txt{margin-top:12px;font-size:.82rem;color:var(--muted);font-weight:500}
+    html, body {
+      height: 100%;
+      background-color: var(--bg);
+      color: var(--txt);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
 
-/* ── Auth gate ── */
-#authGate{display:none;position:fixed;inset:0;background:var(--bg);z-index:9998;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:24px;text-align:center}
-#authGate.show{display:flex}
-.gate-icon{font-size:2.5rem;margin-bottom:4px}
-.gate-title{font-family:var(--display);font-size:1.3rem;font-weight:800;margin-bottom:6px}
-.gate-sub{font-size:.85rem;color:var(--muted);max-width:320px;line-height:1.6;margin-bottom:20px}
-.gate-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:var(--r12);background:var(--accent);border:none;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;text-decoration:none}
-.gate-btn:hover{background:#0ea870}
-.gate-btn-sec{background:var(--surf);border:1px solid var(--bdr);color:var(--txt);margin-top:8px}
-.gate-btn-sec:hover{background:rgba(255,255,255,.08)}
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: transparent;
+    }
 
-/* ── Hub content ── */
-#hubWrap{padding-top:60px;min-height:100vh;display:flex;flex-direction:column}
-.hub-header{padding:28px 24px 20px;border-bottom:1px solid var(--bdr)}
-.hub-title{font-family:var(--display);font-size:1.6rem;font-weight:800;letter-spacing:-.03em;display:flex;align-items:center;gap:12px}
-.hub-title-icon{width:42px;height:42px;border-radius:12px;background:var(--accent-lo);border:1px solid rgba(16,185,129,.25);display:flex;align-items:center;justify-content:center}
-.hub-sub{font-size:.85rem;color:var(--muted);margin-top:6px;margin-left:54px}
-.hub-body{flex:1;padding:24px;position:relative;z-index:1}
+    body::before {
+      content: ''; position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
 
-/* ── Cards ── */
-.svc-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.hub-split-section{margin-bottom:24px}
-.hub-split-label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-.hub-split-divider{height:1px;background:var(--bdr);margin:20px 0}
+    /* ===== ARRIÈRE-PLAN DE L'APPLICATION INTERNE (Ubisoft+) ===== */
+    .main-bg-img {
+      position: fixed;
+      inset: 0;
+      background: url('https://static.actugaming.net/media/2022/05/ubisoft-plus.jpg') center 25%/cover no-repeat;
+      z-index: -2;
+      opacity: 0.28;
+      pointer-events: none;
+    }
+    .main-bg-fade {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(9, 9, 11, 0.2) 0%, rgba(9, 9, 11, 0.95) 50%, var(--bg) 100%);
+      z-index: -1;
+      pointer-events: none;
+    }
 
-/* Coming soon */
-.tools-coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center}
-.tcs-glow{width:72px;height:72px;border-radius:50%;background:var(--accent-lo);border:1px solid rgba(16,185,129,.25);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-.tcs-glow-inner{font-size:1.8rem;color:var(--accent)}
-.tcs-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;background:var(--accent-lo);border:1px solid rgba(16,185,129,.25);font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:12px}
-.tcs-title{font-family:var(--display);font-size:1.2rem;font-weight:800;margin-bottom:8px}
-.tcs-sub{font-size:.85rem;color:var(--muted);max-width:300px;line-height:1.6}
+    /* Navigation adaptable mobile avec Safe Areas - Masquée par défaut */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      height: calc(60px + var(--sat));
+      background: rgba(9, 9, 11, 0.85);
+      border-bottom: 1px solid var(--bdr);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: none; /* Totalement invisible au chargement initial */
+      align-items: center;
+      padding: var(--sat) 24px 0 24px;
+      gap: 16px;
+    }
+    nav.active {
+      display: flex; /* Activé uniquement après vérification de session */
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--txt);
+      font-weight: 800;
+      font-family: var(--display);
+      font-size: 1rem;
+      letter-spacing: -.02em;
+    }
+    .nav-brand svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .nav-sep { width: 1px; height: 18px; background: var(--bdr); }
+    .nav-hub { font-size: .85rem; font-weight: 700; color: var(--accent); }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 
-@media(max-width:600px){
-  .hub-header{padding:20px 16px 16px}
-  .hub-body{padding:16px}
-  .hub-sub{margin-left:0;margin-top:8px}
-  .svc-cards-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
-}
-</style>
+    .nav-user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px 5px 5px;
+      border-radius: 100px;
+      background: var(--surf);
+      border: 1px solid var(--bdr);
+    }
+    .nav-ava {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent-lo);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--accent);
+      overflow: hidden;
+    }
+    .nav-ava img { width: 100%; height: 100%; object-fit: cover; }
+    .nav-uname { font-size: .78rem; font-weight: 600; color: var(--txt); }
+
+    /* ===== ANIMATION DE DEMARRAGE SÉCURISÉE ===== */
+    #pageLoader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity .4s ease-out;
+    }
+    #pageLoader.out { opacity: 0; pointer-events: none; }
+
+    /* Spinner rotatif vert gaming minimaliste */
+    .ld-spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(16, 185, 129, 0.1);
+      border-top: 3px solid var(--accent);
+      border-radius: 50%;
+      animation: ldspin 0.8s cubic-bezier(0.5, 0.15, 0.45, 0.85) infinite;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+    }
+    @keyframes ldspin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .ld-txt {
+      margin-top: 18px;
+      font-size: .75rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ===== BARRE DE NAVIGATION INFÉRIEURE MOBILE ===== */
+    .mobile-bottom-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(65px + var(--sab));
+      background: rgba(9, 9, 11, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--bdr);
+      z-index: 99;
+      align-items: center;
+      justify-content: space-around;
+      padding-bottom: var(--sab);
+      padding-left: 16px;
+      padding-right: 16px;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+    }
+
+    .bar-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      height: 100%;
+      font-family: var(--sans);
+    }
+    .bar-btn:hover, .bar-btn:active {
+      color: var(--accent);
+    }
+    .bar-btn i {
+      font-size: 1.15rem;
+    }
+
+    /* ===== STRUCTURE DE L'OVERLAY DU HUB ===== */
+    .tools-overlay {
+      position: fixed;
+      inset: 0;
+      background: transparent;
+      display: none; /* Totalement invisible au chargement initial */
+      flex-direction: column;
+      z-index: 99;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tools-overlay.active {
+      display: flex; /* Activé uniquement après vérification de session */
+    }
+
+    /* Grille et Contenu */
+    .tools-grid-wrap {
+      flex: 1;
+      padding-top: calc(60px + var(--sat));
+      position: relative;
+    }
+
+    .hub-grid-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 24px calc(24px + var(--sab));
+    }
+
+    .hub-split-section {
+      margin-bottom: 24px;
+    }
+
+    .hub-split-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .svc-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 18px;
+    }
+
+    .hub-split-divider {
+      height: 1px;
+      background: var(--bdr);
+      margin: 24px 0;
+    }
+
+    /* ===== ÉCRAN DE CONNEXION SÉCURISÉ (Arrière-plan Assassin's Creed personnalisé) ===== */
+    #authGate {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(9, 9, 11, 0.75), rgba(9, 9, 11, 0.98)), url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6a1ceIwOVZWK-oi8AqzJo0NN-DKkzLaGldQ&s') center/cover no-repeat;
+      z-index: 9998;
+      align-items: center;
+      justify-content: center;
+      padding: calc(24px + var(--sat)) 24px calc(24px + var(--sab));
+    }
+    #authGate.show { display: flex; }
+
+    .gate-content-box {
+      background: rgba(9, 9, 11, 0.6);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 40px 30px;
+      max-width: 420px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    .gate-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      color: var(--accent);
+      filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.6));
+    }
+    .gate-title { font-family: var(--display); font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; color: #fff; }
+    .gate-sub { font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); line-height: 1.6; margin-bottom: 28px; }
+    .gate-btn {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 24px;
+      border-radius: var(--r12); background: linear-gradient(135deg, #10b981, #059669); border: none;
+      color: #fff; font-size: .95rem; font-weight: 700; cursor: pointer; font-family: var(--sans);
+      transition: all 0.2s; text-decoration: none; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+    .gate-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); }
+    .gate-btn:active { transform: scale(0.98); }
+    
+    .gate-btn-sec {
+      background: var(--surf); border: 1px solid var(--bdr); color: var(--txt); margin-top: 12px; box-shadow: none;
+      cursor: pointer; width: 100%; font-family: var(--sans); font-size: .95rem; font-weight: 700; border-radius: var(--r12);
+      padding: 14px 24px; transition: all .2s;
+    }
+    .gate-btn-sec:hover { background: rgba(255, 255, 255, .08); box-shadow: none; }
+
+    /* ===== CARTES D'APPLICATIONS PREMIUM ===== */
+    .app-card {
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+    }
+    .app-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0; transition: opacity 0.3s ease; z-index: 2;
+    }
+    .app-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(16, 185, 129, 0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(16, 185, 129, 0.15);
+    }
+    .app-card:hover::before { opacity: 1; }
+
+    .app-cover {
+      width: 100%;
+      height: 130px;
+      background: var(--accent-lo);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; color: var(--accent);
+      overflow: hidden;
+      position: relative;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .app-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+    .app-card:hover .app-cover img { transform: scale(1.05); }
+
+    .app-info {
+      display: flex; flex-direction: column; flex: 1;
+      padding: 16px;
+    }
+    .app-name { font-family: var(--display); font-weight: 700; color: #fff; font-size: 1.15rem; margin-bottom: 6px; }
+    .app-desc-container { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+    .app-desc { display: inline; }
+    .more-link { 
+      color: var(--accent); cursor: pointer; font-weight: 600; white-space: nowrap; margin-left: 4px;
+      transition: color 0.2s;
+    }
+    .more-link:hover { color: #fff; text-decoration: underline; }
+
+    .app-open-btn {
+      margin-top: auto;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 0;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+    .app-open-btn:hover {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      color: #fff;
+    }
+
+    /* ===== MODAL DETAIL APPLICATION ET BLOCAGE INVITE ===== */
+    #appModal, #loginRequiredModal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+      z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px;
+    }
+    #appModal.show, #loginRequiredModal.show { display: flex; animation: fadeIn 0.2s ease; }
+
+    #loginRequiredModal { z-index: 10100; }
+
+    .app-modal-content {
+      background: rgba(9, 9, 11, 0.9); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 24px; width: 100%; max-width: 440px;
+      position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+      animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+    .close-modal {
+      position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+      border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+      color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; z-index: 10; backdrop-filter: blur(5px);
+    }
+    .close-modal:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
+    
+    #modalCover {
+      height: 180px; margin: -24px -24px 20px -24px; border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0; background: var(--bg);
+    }
+    #modalTitle { font-size: 1.6rem; text-align: left; }
+    #modalDesc { font-size: 0.95rem; color: var(--txt); text-align: left; margin-bottom: 24px; max-height: 250px; overflow-y: auto; padding-right: 8px;}
+    #modalDesc::-webkit-scrollbar { width: 4px; }
+    #modalDesc::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+    /* Contenu indisponible */
+    .tools-coming-soon {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 60px 24px; text-align: center; width: 100%;
+    }
+    .tcs-glow {
+      width: 72px; height: 72px; border-radius: 50%; background: var(--accent-lo);
+      border: 1px solid rgba(16, 185, 129, 0.25); display: flex; align-items: center;
+      justify-content: center; margin-bottom: 16px;
+    }
+    .tcs-glow-inner { font-size: 1.8rem; color: var(--accent); }
+    .tcs-badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+      border-radius: 100px; background: var(--accent-lo); border: 1px solid rgba(16, 185, 129, 0.25);
+      font-size: .72rem; font-weight: 700; color: var(--accent); margin-bottom: 12px;
+    }
+    .tcs-title { font-family: var(--display); font-size: 1.2rem; font-weight: 800; margin-bottom: 8px; }
+    .tcs-sub { font-size: .85rem; color: var(--muted); max-width: 300px; line-height: 1.6; }
+
+    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+    @keyframes slideUp { from {opacity:0; transform: translateY(20px)} to {opacity:1; transform: translateY(0)} }
+
+    /* ==================================
+       OPTIMISATIONS MAQUETTE MOBILE
+       ================================== */
+    @media(max-width:600px){
+      .main-bg-img {
+        display: block !important;
+        opacity: 0.18;
+      }
+      .main-bg-fade {
+        background: linear-gradient(to bottom, rgba(9, 9, 11, 0.45) 0%, rgba(9, 9, 11, 0.96) 60%, var(--bg) 100%) !important;
+      }
+      
+      .mobile-bottom-bar {
+        display: flex;
+      }
+      
+      .hub-grid-inner {
+        padding-bottom: calc(85px + var(--sab)) !important;
+      }
+      
+      .svc-cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      }
+    }
+  </style>
 </head>
 <body>
 
-<!-- Loader -->
-<div id="pageLoader">
-  <div class="ld-icon"><i class="fa-solid fa-gamepad" style="color:var(--accent);font-size:1.3rem"></i></div>
-  <div class="ld-spinner"></div>
-  <div class="ld-txt">Chargement du Game Hub…</div>
-</div>
+  <!-- Éléments d'arrière-plan de l'application -->
+  <div class="main-bg-img"></div>
+  <div class="main-bg-fade"></div>
 
-<!-- Auth gate (affiché si non connecté) -->
-<div id="authGate">
-  <div class="gate-icon">🎮</div>
-  <div class="gate-title">Game Hub — Accès membres</div>
-  <div class="gate-sub">Connecte-toi à ton compte LevelUp pour accéder au Game Hub et à toutes les ressources gaming.</div>
-  <a href="/login" class="gate-btn"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</a>
-  <a href="/" class="gate-btn gate-btn-sec"><i class="fa-solid fa-house"></i> Retour à l'accueil</a>
-</div>
+  <!-- Écran de chargement initial -->
+  <div id="pageLoader">
+    <div class="ld-spinner"></div>
+    <div class="ld-txt">Chargement du Game Hub…</div>
+  </div>
 
-<!-- Nav -->
-<nav>
-  <a href="/" class="nav-brand">
-    <svg viewBox="0 0 576 512" fill="#10b981"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-    LevelUp
-  </a>
-  <div class="nav-sep"></div>
-  <span class="nav-hub"><i class="fa-solid fa-gamepad" style="margin-right:5px"></i>Game Hub</span>
-  <div class="nav-right">
-    <a href="/dashboard" class="nav-back"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
-    <div class="nav-user-pill" id="navUserPill" style="display:none">
-      <div class="nav-ava" id="navAva"></div>
-      <span class="nav-uname" id="navUname"></span>
+  <!-- Écran de connexion (S'affiche si non connecté ou clé absente) -->
+  <div id="authGate">
+    <div class="gate-content-box">
+      <i class="fa-solid fa-gamepad gate-icon"></i>
+      <div class="gate-title">Accès au Game Hub</div>
+      <div class="gate-sub">Connectez-vous avec votre compte LevelUp pour déverrouiller l'accès exclusif à notre collection de jeux et applications externes.</div>
+      <a href="/login" class="gate-btn"><i class="fa-solid fa-right-to-bracket"></i> Se connecter à LevelUp</a>
+      <button id="btnBrowseGuest" class="gate-btn gate-btn-sec"><i class="fa-solid fa-eye"></i> Explorer en tant qu'invité</button>
     </div>
   </div>
-</nav>
 
-<!-- Hub principal -->
-<div id="hubWrap" style="display:none">
-  <div class="hub-header">
-    <div class="hub-title">
-      <div class="hub-title-icon"><i class="fa-solid fa-gamepad" style="color:var(--accent)"></i></div>
-      Game Hub
+  <!-- Barre de navigation inférieure mobile -->
+  <div id="mobileBottomBar" class="mobile-bottom-bar"></div>
+
+  <!-- Pop-up de détails de l'application -->
+  <div id="appModal">
+    <div class="app-modal-content">
+      <button class="close-modal" onclick="window.closeAppModal()"><i class="fa-solid fa-xmark"></i></button>
+      <div id="modalCover" class="app-cover"></div>
+      <h2 id="modalTitle" class="gate-title"></h2>
+      <p id="modalDesc" class="gate-sub"></p>
+      <button id="modalOpenBtn" class="gate-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir l'application</button>
     </div>
-    <div class="hub-sub">Gaming, ressources & communautés — sélection LevelUp</div>
   </div>
-  <div class="hub-body">
 
-    <!-- ══════════════════════════════════════════════════════
-         COLLE ICI le contenu interne du Game Hub
-         depuis index.html lignes 2962 à 3001
-         (uniquement ce qui est à l'intérieur de <div class="tools-grid-wrap">)
-         Tu peux aussi laisser la version "coming soon" ci-dessous
-         ══════════════════════════════════════════════════════ -->
-
-    <div id="gameSecInternal" style="display:none">
-      <div class="hub-split-label">🔵 Nos Applications</div>
-      <div class="svc-cards-grid" id="gameHubInternal"></div>
+  <!-- Pop-up de blocage pour les invités -->
+  <div id="loginRequiredModal">
+    <div class="app-modal-content" style="max-width: 380px; text-align: center;">
+      <button class="close-modal" onclick="window.closeLoginRequired()"><i class="fa-solid fa-xmark"></i></button>
+      <div class="gate-icon" style="margin-top: 10px; margin-bottom: 20px;">
+        <i class="fa-solid fa-lock text-4xl" style="color: var(--accent);"></i>
+      </div>
+      <h2 class="gate-title" style="font-size: 1.4rem; margin-bottom: 12px;">Connexion requise</h2>
+      <p class="gate-sub" style="font-size: 0.9rem; margin-bottom: 24px; color: rgba(255,255,255,0.7); line-height: 1.6;">
+        Vous explorez actuellement en tant qu'invité. Veuillez vous connecter avec votre compte LevelUp pour accéder à cette application de jeu.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+        <a href="/login" class="gate-btn"><i class="fa-solid fa-right-to-bracket"></i> Se connecter à LevelUp</a>
+        <button onclick="window.closeLoginRequired()" class="gate-btn gate-btn-sec">Annuler</button>
+      </div>
     </div>
-    <div class="hub-split-divider" id="gameSplitDiv" style="display:none"></div>
-    <div id="gameSecExternal" style="display:none">
-      <div class="hub-split-label">🔗 Apps Externes</div>
-      <div class="svc-cards-grid" id="gameHubExternal"></div>
-    </div>
-    <div id="gameSecAll" style="display:none">
-      <div class="svc-cards-grid" id="gameHubGrid"></div>
-    </div>
-
-    <div class="tools-coming-soon" id="gameHubEmpty">
-      <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-gamepad"></i></div></div>
-      <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0"></span> Bientôt disponible</div>
-      <div class="tcs-title">Game Hub</div>
-      <p class="tcs-sub">Les applications gaming arrivent. Revenez bientôt.</p>
-    </div>
-
   </div>
-</div>
 
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
-import { getAuth, onAuthStateChanged, browserLocalPersistence, setPersistence } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+  <!-- Barre de navigation principale supérieure -->
+  <nav>
+    <a href="/" class="nav-brand">
+      <svg viewBox="0 0 576 512" fill="#10b981"><path d="M316.9 18C311.6 7 300.4 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
+      LevelUp
+    </a>
+    <div class="nav-sep"></div>
+    <span class="nav-hub"><i class="fa-solid fa-gamepad" style="margin-right:5px"></i>Game Hub</span>
+    <div class="nav-right">
+      <div class="nav-user-pill" id="navUserPill">
+        <div class="nav-ava" id="navAva"><i class="fa-regular fa-circle-user text-zinc-400"></i></div>
+        <span class="nav-uname" id="navUname">Invité</span>
+      </div>
+    </div>
+  </nav>
 
-const cfg = {
-  apiKey: 'AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM',
-  authDomain: 'levelup-ecosystem.com',
-  projectId: 'levelup-ia',
-  storageBucket: 'levelup-ia.firebasestorage.app',
-  messagingSenderId: '229420004282',
-  appId: '1:229420004282:web:6735f059a947f0936ae383'
-};
+  <!-- Overlay de la grille d'applications -->
+  <div id="otakuHubOverlay" class="tools-overlay">
+    <div class="tools-grid-wrap" style="overflow-y:auto">
+      <div class="hub-grid-inner">
+        
+        <div class="hub-split-section" id="gameSecInternal" style="display:none">
+          <div class="hub-split-label"><i class="fa-solid fa-circle text-emerald-500 text-[10px]"></i> Nos Applications</div>
+          <div class="svc-cards-grid" id="gameHubInternal"></div>
+        </div>
+        
+        <div class="hub-split-divider" id="gameSplitDiv" style="display:none"></div>
+        
+        <div class="hub-split-section" id="gameSecExternal" style="display:none">
+          <div class="hub-split-label"><i class="fa-solid fa-link text-zinc-400 text-[10px]"></i> Applications Externes</div>
+          <div class="svc-cards-grid" id="gameHubExternal"></div>
+        </div>
 
-const app = initializeApp(cfg);
-const auth = getAuth(app);
-try { await setPersistence(auth, browserLocalPersistence); } catch(_) {}
+        <!-- Section de secours si aucun jeu n'est chargé -->
+        <div class="tools-coming-soon" id="gameHubEmpty" style="display:none">
+          <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-gamepad"></i></div></div>
+          <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0"></span> Bientôt disponible</div>
+          <div class="tcs-title">Game Hub</div>
+          <p class="tcs-sub">Les applications de jeu arrivent bientôt. Revenez vite.</p>
+        </div>
 
-const loader   = document.getElementById('pageLoader');
-const authGate = document.getElementById('authGate');
-const hubWrap  = document.getElementById('hubWrap');
-const navPill  = document.getElementById('navUserPill');
-const navAva   = document.getElementById('navAva');
-const navUname = document.getElementById('navUname');
+      </div>
+    </div>
+  </div>
 
-onAuthStateChanged(auth, (user) => {
-  if (user && !user.isAnonymous) {
-    // Connecté — afficher le hub
-    const name = user.displayName?.split(' ')[0] || 'Membre';
-    navUname.textContent = name;
-    if (user.photoURL) {
-      navAva.innerHTML = `<img src="${user.photoURL}" alt="${name}">`;
-    } else {
-      navAva.textContent = name[0].toUpperCase();
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, browserLocalPersistence, setPersistence, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
+    const cfg = {
+      apiKey: 'AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM',
+      authDomain: 'levelup-ecosystem.com',
+      projectId: 'levelup-ia',
+      storageBucket: 'levelup-ia.firebasestorage.app',
+      messagingSenderId: '229420004282',
+      appId: '1:229420004282:web:6735f059a947f0936ae383'
+    };
+    
+    const app = initializeApp(cfg);
+    const auth = getAuth(app);
+    const db = getFirestore(app); 
+
+    try { await setPersistence(auth, browserLocalPersistence); } catch(_) {}
+
+    const loader   = document.getElementById('pageLoader');
+    const authGate = document.getElementById('authGate');
+    const navAva   = document.getElementById('navAva');
+    const navUname = document.getElementById('navUname');
+    const overlay  = document.getElementById('otakuHubOverlay');
+
+    window.isGuest = true;
+    window.loadedAppsData = {};
+
+    // Définition des images personnalisées demandées par l'utilisateur (Assassin's Creed et Ubisoft+)
+    const bgUrlInternal = 'https://static.actugaming.net/media/2022/05/ubisoft-plus.jpg';
+    const bgUrlGate = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6a1ceIwOVZWK-oi8AqzJo0NN-DKkzLaGldQ&s';
+
+    // Fonction asynchrone pour précharger les images et éviter le clignotement noir
+    function preloadImage(url) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); 
+        img.src = url;
+      });
     }
-    navPill.style.display = 'flex';
-    hubWrap.style.display = 'flex';
-    loader.classList.add('out');
-  } else {
-    // Non connecté — afficher l'auth gate
-    loader.classList.add('out');
-    authGate.classList.add('show');
-  }
-});
-</script>
+
+    // ==========================================
+    // BARRE DE NAVIGATION INFÉRIEURE MOBILE
+    // ==========================================
+    function updateMobileBottomBar() {
+      const bar = document.getElementById('mobileBottomBar');
+      if (!bar) return;
+      
+      if (window.isGuest) {
+        bar.innerHTML = `
+          <button onclick="window.location.href='/login'" class="bar-btn">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Connexion</span>
+          </button>
+          <button onclick="window.handleGoHome()" class="bar-btn">
+            <i class="fa-solid fa-house"></i>
+            <span>Accueil</span>
+          </button>
+          <button onclick="window.handleRefresh()" class="bar-btn">
+            <i class="fa-solid fa-rotate"></i>
+            <span>Actualiser</span>
+          </button>
+        `;
+      } else {
+        bar.innerHTML = `
+          <button onclick="window.handleGoHome()" class="bar-btn">
+            <i class="fa-solid fa-house"></i>
+            <span>Accueil</span>
+          </button>
+          <button onclick="window.handleRefresh()" class="bar-btn">
+            <i class="fa-solid fa-rotate"></i>
+            <span>Actualiser</span>
+          </button>
+        `;
+      }
+    }
+
+    // ==========================================
+    // ACTIONS LIÉES À LA NAVIGATION MOBILE
+    // ==========================================
+    window.handleGoHome = function() {
+      window.closeAppModal();
+      window.closeLoginRequired();
+      
+      if (window.isGuest) {
+        if (overlay) overlay.classList.remove('active');
+        const nav = document.querySelector('nav');
+        if (nav) nav.classList.remove('active');
+        if (authGate) authGate.classList.add('show');
+      } else {
+        window.handleRefresh();
+      }
+    };
+
+    window.handleRefresh = async function() {
+      window.closeAppModal();
+      window.closeLoginRequired();
+      if (loader) loader.classList.remove('out');
+      
+      try {
+        await loadGameApps();
+      } catch (e) {
+        console.error("Erreur de rafraîchissement :", e);
+      }
+      
+      setTimeout(() => {
+        if (loader) loader.classList.add('out');
+      }, 600);
+    };
+
+    // ==========================================
+    // INTERCEPTIONS DE LA CLÉ D'ÉCOSYSTÈME (SSO)
+    // ==========================================
+    function checkAndHandleSSOKey() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ssoKey = urlParams.get('lvl_key');
+      
+      if (ssoKey && /^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/i.test(ssoKey)) {
+        localStorage.setItem('lvl_sec_k', btoa(ssoKey));
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+        window.isGuest = false; 
+        return true;
+      }
+      return false;
+    }
+
+    function getActiveEcosystemKey() {
+      const encoded = localStorage.getItem('lvl_sec_k');
+      if (encoded) {
+        try { return atob(encoded); } catch(e) { return null; }
+      }
+      return null;
+    }
+
+    // ==========================================
+    // OUVERTURE DES APPLICATIONS SÉCURISÉES
+    // ==========================================
+    window.handleOpenApp = function(appId) {
+      if (window.isGuest) {
+        window.showLoginRequiredModal();
+      } else {
+        const app = window.loadedAppsData[appId];
+        if (!app) return;
+        let finalUrl = app.url || '#';
+        const ecosystemKey = getActiveEcosystemKey();
+        if (ecosystemKey && finalUrl !== '#') {
+          try {
+            const parsedUrl = new URL(finalUrl);
+            parsedUrl.searchParams.set('lvl_key', ecosystemKey);
+            finalUrl = parsedUrl.toString();
+          } catch(e) {}
+        }
+        window.open(finalUrl, '_blank');
+      }
+    };
+
+    // ==========================================
+    // DIALOGUES ET MODALES DE DÉTAILS
+    // ==========================================
+    window.showLoginRequiredModal = function() {
+      document.getElementById('loginRequiredModal').classList.add('show');
+    };
+
+    window.closeLoginRequired = function() {
+      document.getElementById('loginRequiredModal').classList.remove('show');
+    };
+
+    window.openAppModal = function(appId) {
+      const app = window.loadedAppsData[appId];
+      if (!app) return;
+      document.getElementById('modalCover').innerHTML = app.iconHtml;
+      document.getElementById('modalTitle').innerText = app.name;
+      document.getElementById('modalDesc').innerText = app.fullDesc || "Aucune description disponible.";
+      
+      const openBtn = document.getElementById('modalOpenBtn');
+      openBtn.onclick = function() {
+        window.handleOpenApp(appId);
+      };
+      
+      document.getElementById('appModal').classList.add('show');
+    };
+
+    window.closeAppModal = function() {
+      document.getElementById('appModal').classList.remove('show');
+    };
+
+    document.getElementById('appModal').addEventListener('click', function(e) {
+      if (e.target === this) window.closeAppModal();
+    });
+
+    document.getElementById('loginRequiredModal').addEventListener('click', function(e) {
+      if (e.target === this) window.closeLoginRequired();
+    });
+
+    // ==========================================
+    // RÉCUPÉRATION DES APPLICATIONS DEPUIS FIRESTORE
+    // ==========================================
+    async function loadGameApps() {
+      try {
+        const docRef = doc(db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'game_hub');
+        const docSnap = await getDoc(docRef);
+        
+        const internalGrid = document.getElementById('gameHubInternal');
+        const externalGrid = document.getElementById('gameHubExternal');
+        const emptyState = document.getElementById('gameHubEmpty');
+        
+        let internalCount = 0;
+        let externalCount = 0;
+
+        internalGrid.innerHTML = '';
+        externalGrid.innerHTML = '';
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          let appsArray = [];
+
+          Object.keys(data).sort().forEach(key => {
+            const item = data[key];
+            if (item && typeof item === 'object' && (item.name || item.title)) {
+              appsArray.push(item);
+            }
+          });
+
+          appsArray.forEach((appData, index) => {
+            const appName = appData.name || appData.title || 'Application';
+            const appIconUrl = appData.iconUrl || appData.image;
+            const appDesc = appData.description || '';
+            const appType = appData.type || 'internal'; 
+            
+            const appId = 'hub_app_' + index;
+            const iconHtml = appIconUrl ? `<img src="${appIconUrl}" alt="${appName}">` : `<i class="${appData.iconClass || 'fa-solid fa-gamepad'}"></i>`;
+            
+            window.loadedAppsData[appId] = {
+                name: appName,
+                fullDesc: appDesc,
+                iconHtml: iconHtml,
+                url: appData.url
+            };
+
+            let displayDesc = appDesc;
+            let showMore = false;
+            if (displayDesc.length > 70) {
+                displayDesc = displayDesc.substring(0, 70) + '...';
+                showMore = true;
+            }
+
+            const cardHtml = `
+              <div class="app-card">
+                <div class="app-cover">
+                  ${iconHtml}
+                </div>
+                <div class="app-info">
+                  <div class="app-name">${appName}</div>
+                  <div class="app-desc-container">
+                    <span class="app-desc">${displayDesc}</span>
+                    ${showMore ? `<span class="more-link" onclick="window.openAppModal('${appId}')">...voir plus</span>` : ''}
+                  </div>
+                  <button onclick="window.handleOpenApp('${appId}')" class="app-open-btn">
+                    <i class="fa-solid fa-play" style="font-size: 0.75rem;"></i> Ouvrir
+                  </button>
+                </div>
+              </div>
+            `;
+
+            if (appType === 'external') {
+              externalGrid.insertAdjacentHTML('beforeend', cardHtml);
+              externalCount++;
+            } else {
+              internalGrid.insertAdjacentHTML('beforeend', cardHtml);
+              internalCount++;
+            }
+          });
+        }
+
+        if (internalCount === 0 && externalCount === 0) {
+          emptyState.style.display = 'flex';
+          document.getElementById('gameSecInternal').style.display = 'none';
+          document.getElementById('gameSecExternal').style.display = 'none';
+          document.getElementById('gameSplitDiv').style.display = 'none';
+        } else {
+          emptyState.style.display = 'none';
+          if (internalCount > 0) document.getElementById('gameSecInternal').style.display = 'block';
+          if (externalCount > 0) document.getElementById('gameSecExternal').style.display = 'block';
+          if (internalCount > 0 && externalCount > 0) document.getElementById('gameSplitDiv').style.display = 'block';
+        }
+
+      } catch (error) {
+        console.error("❌ Erreur critique lors de la récupération des cartes gaming :", error);
+        document.getElementById('gameHubEmpty').style.display = 'flex';
+      }
+    }
+
+    // Gestion de l'exploration Invité
+    document.getElementById('btnBrowseGuest').addEventListener('click', () => {
+      window.isGuest = true; 
+      authGate.classList.remove('show');
+      navAva.innerHTML = '<i class="fa-regular fa-circle-user text-zinc-400" style="font-size: 1.1rem;"></i>';
+      navUname.textContent = 'Invité';
+      
+      overlay.classList.add('active');
+      document.querySelector('nav').classList.add('active');
+      
+      updateMobileBottomBar();
+    });
+
+    // Écoute de l'authentification et lancement asynchrone sécurisé
+    checkAndHandleSSOKey();
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        try {
+          await signInAnonymously(auth);
+          return; 
+        } catch(e) {
+          console.error("L'authentification silencieuse a échoué.", e);
+        }
+      }
+
+      const ecosystemKey = getActiveEcosystemKey();
+
+      if (ecosystemKey) {
+        window.isGuest = false;
+        navAva.innerHTML = '<div class="nav-ava" style="background:var(--accent-lo); color:var(--accent); font-weight:800; border:1px solid var(--accent)">P</div>';
+        navUname.textContent = 'Partenaire';
+        authGate.classList.remove('show');
+        
+        overlay.classList.add('active');
+        document.querySelector('nav').classList.add('active');
+      } else if (user && !user.isAnonymous) {
+        window.isGuest = false;
+        const name = user.displayName?.split(' ')[0] || 'Membre';
+        navUname.textContent = name;
+        if (user.photoURL) {
+          navAva.innerHTML = `<img src="${user.photoURL}" alt="${name}">`;
+        } else {
+          navAva.innerHTML = `<div class="nav-ava" style="background:var(--accent-lo); color:var(--accent)">${name[0].toUpperCase()}</div>`;
+        }
+        authGate.classList.remove('show');
+        
+        overlay.classList.add('active');
+        document.querySelector('nav').classList.add('active');
+      } else {
+        window.isGuest = true;
+        authGate.classList.add('show');
+        
+        overlay.classList.remove('active');
+        document.querySelector('nav').classList.remove('active');
+      }
+      
+      updateMobileBottomBar();
+      
+      // Téléchargement des données Firebase et préchargement simultané des deux images d'arrière-plan personnalisées
+      await Promise.all([
+        preloadImage(bgUrlInternal),
+        preloadImage(bgUrlGate),
+        loadGameApps()
+      ]);
+      
+      // On cache l'écran de chargement une fois que tout est prêt et en cache
+      loader.classList.add('out');
+    });
+  </script>
 </body>
 </html>
