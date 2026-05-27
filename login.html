@@ -155,10 +155,9 @@ body::before{content:'';position:fixed;top:-30%;left:50%;transform:translateX(-5
     <a href="mailto:support@levelup-ecosystem.com">Support</a>
   </div>
 </div>
-
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
-import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, browserLocalPersistence, setPersistence } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, browserLocalPersistence, setPersistence, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 
 const cfg = {
   apiKey: 'AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM',
@@ -173,15 +172,6 @@ const app = initializeApp(cfg);
 const auth = getAuth(app);
 const gProv = new GoogleAuthProvider();
 gProv.setCustomParameters({ prompt: 'select_account' });
-
-try { await setPersistence(auth, browserLocalPersistence); } catch(_) {}
-
-// Gérer le retour de redirection (mobile/PWA)
-try {
-  await getRedirectResult(auth);
-} catch(e) {
-  // Ignorer l'erreur de fermeture popup
-}
 
 const loader = document.getElementById('pageLoader');
 const alertEl = document.getElementById('loginAlert');
@@ -201,19 +191,33 @@ function setLoading(btnId, loading) {
   }
 }
 
-// ── LA SEULE ÉCOUTE D'ÉTAT ──
+// 1. On écoute l'état TOUT DE SUITE pour ne jamais bloquer l'UI
 onAuthStateChanged(auth, (user) => {
-  // Si c'est un vrai utilisateur (pas un compte anonyme en fond)
   if (user && !user.isAnonymous) {
-    // Redirige vers la racine (qui est gérée par index.html pour afficher le dashboard)
     window.location.replace('/');
     return;
   }
-  // Sinon, on enlève l'écran de chargement et on reste sagement sur la page /login
   loader.classList.add('out');
 });
 
-// Connexion Google
+// 2. On lance les configurations en arrière-plan (sans "await" bloquant)
+setPersistence(auth, browserLocalPersistence).catch(() => {});
+getRedirectResult(auth).catch(() => {});
+
+// 3. NOUVEAU : Gérer le Custom Token retourné par Discord/Twitch via l'URL
+const urlParams = new URLSearchParams(window.location.search);
+const customToken = urlParams.get('token'); 
+
+if (customToken) {
+  loader.classList.remove('out'); // On remet le loader pendant la validation du token
+  signInWithCustomToken(auth, customToken).catch((err) => {
+    console.error("Erreur avec le token :", err);
+    showAlert('Erreur lors de la connexion via la plateforme tierce.', 'error');
+    loader.classList.add('out');
+  });
+}
+
+// --- Fonctions de connexion ---
 window.signInGoogle = async function() {
   setLoading('btnGoogle', true);
   alertEl.style.display = 'none';
@@ -225,24 +229,24 @@ window.signInGoogle = async function() {
       return;
     }
     await signInWithPopup(auth, gProv);
-    // Après succès, onAuthStateChanged prend le relais et redirige
   } catch (err) {
     setLoading('btnGoogle', false);
     if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
-    showAlert('Connexion Google échouée. Vérifiez votre connexion et réessayez.', 'error');
+    showAlert('Connexion Google échouée. Vérifiez votre réseau.', 'error');
   }
 };
 
 window.signInDiscord = function() {
-  const btn = document.getElementById('btnDiscord');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="btn-spinner"></div><span>Redirection vers Discord…</span>';
-  window.location.href = '/api/discord'; // CORRIGÉ
+  const btn = document.getElementById('btnDiscord');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="btn-spinner"></div><span>Redirection vers Discord…</span>';
+  window.location.href = '/api/discord'; 
 };
 
 window.signInTwitch = function() {
-  const btn = document.getElementById('btnTwitch');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="btn-spinner"></div><span>Redirection vers Twitch…</span>';
-  window.location.href = '/api/twitch'; // CORRIGÉ
+  const btn = document.getElementById('btnTwitch');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="btn-spinner"></div><span>Redirection vers Twitch…</span>';
+  window.location.href = '/api/twitch'; 
 };
+</script>
