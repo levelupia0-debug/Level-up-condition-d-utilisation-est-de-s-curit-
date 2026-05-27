@@ -175,6 +175,10 @@
         
         .scan-line { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: rgba(168, 85, 247, 0.8); box-shadow: 0 0 8px rgba(168, 85, 247, 0.8); animation: scan 1.5s ease-in-out infinite alternate; }
         @keyframes scan { 0% { transform: translateY(0); } 100% { transform: translateY(60px); } }
+
+        /* Disparition des suggestions */
+        .suggestion-container { transition: opacity 0.3s ease; }
+        .suggestion-container.fade-out { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body class="bg-main">
@@ -848,13 +852,12 @@
             };
 
             // ==========================================
-            // MENU ATTACH & WEB SEARCH
+            // MENU ATTACH & WEB SEARCH (THE GLOBE)
             // ==========================================
             const attachBtn = document.getElementById('attachBtn');
             const attachMenu = document.getElementById('attachMenu');
             const menuAttachImg = document.getElementById('menuAttachImg');
             const menuWebSearch = document.getElementById('menuWebSearch');
-            const webSearchToggle = document.getElementById('webSearchToggle');
             const imgInput = document.getElementById('imgInput');
             
             attachBtn.onclick = (e) => {
@@ -902,6 +905,7 @@
                 const check = document.getElementById('webSearchCheck');
                 
                 if (isWebSearchEnabled) {
+                    // LA FAMEUSE BULLE GLOBE BLEUE (sans changer le thème du site)
                     icon.classList.replace('text-zinc-400', 'text-blue-400');
                     text.classList.replace('text-zinc-300', 'text-white');
                     check.classList.remove('opacity-0');
@@ -1001,9 +1005,8 @@
             // ==========================================
             // ACTION PARSING ET INTELLIGENCE (LE CERVEAU DE DONA)
             // ==========================================
-            let currentKeyIndex = null; // On initialise à null pour forcer l'aléatoire au démarrage
+            let currentKeyIndex = null; 
 
-            // PLUS DE CACHE: Dona lit la DB en temps réel à chaque message !
             async function fetchSystemConfig() {
                 try {
                     const configRef = window.firestoreUtils.doc(window.db, 'artifacts', 'level-ia-premium', 'system', 'config');
@@ -1011,8 +1014,6 @@
                     if (configSnap.exists()) {
                         const data = configSnap.data();
                         let keys = data.gemini_api_keys || [];
-                        
-                        // Cherche global_prompt, mais tolère aussi d'autres noms pour être ultra robuste
                         let dbPrompt = data.global_prompt || data.prompt || data.prompt_fr || data.system_prompt || "";
                         
                         return {
@@ -1027,15 +1028,11 @@
             async function callGeminiAPI(payload, allKeys) {
                 if (!allKeys || allKeys.length === 0) return { error: true, text: "Access to the AI infrastructure is temporarily unavailable. Please verify the stability of your network connection." };
 
-                // FIX 1 : LOAD BALANCING (Répartition de charge)
-                // Si c'est le premier message de l'utilisateur, on lui assigne une clé au hasard parmi les 13.
-                // Cela évite que les 10 utilisateurs frappent la clé 0 en même temps !
                 if (currentKeyIndex === null) {
                     currentKeyIndex = Math.floor(Math.random() * allKeys.length);
                 }
 
                 for (let keyAttempt = 0; keyAttempt < allKeys.length; keyAttempt++) {
-                    // On tourne en boucle proprement sur toutes les clés
                     const keyIdx = (currentKeyIndex + keyAttempt) % allKeys.length;
                     const apiKey = allKeys[keyIdx];
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
@@ -1051,17 +1048,14 @@
                         if (response.ok) {
                             const data = await response.json();
                             const aiText = data.candidates[0].content.parts[0].text;
-                            currentKeyIndex = keyIdx; // On sauvegarde la clé qui fonctionne
+                            currentKeyIndex = keyIdx; 
                             return { error: false, text: aiText };
                         }
 
-                        // FIX 2 : BASCULEMENT INTELLIGENT
-                        // Si la clé est saturée (429), bloquée (403), ou si les serveurs galèrent (500, 503)
                         if (response.status === 429 || response.status === 403 || response.status >= 500) {
                             console.warn(`[Failover] Clé ${keyIdx} saturée ou erreur (${response.status}). Passage à la suivante...`);
-                            // On ajoute 200ms de pause avant d'attaquer l'autre clé pour stabiliser le réseau
                             await new Promise(resolve => setTimeout(resolve, 200));
-                            continue; // On laisse le for() faire le +1, on ne touche plus à currentKeyIndex ici !
+                            continue; 
                         }
 
                         continue;
@@ -1072,11 +1066,9 @@
                     }
                 }
 
-                // Si on arrive ici, c'est que l'IA a fait le tour des 13 clés et qu'aucune ne marche
                 return { error: true, text: "Our secure servers are currently processing an exceptional volume of requests. Please wait a few moments before submitting a new request." };
             }
 
-            // CERVEAU BLINDÉ CONTRE LES FUITES ET AVEC SUGGESTIONS & SOURCES PRO
             const DEFAULT_PERSONA = `Your name is Dona. You are the official AI Assistant of the LevelUp Ecosystem.
 
 IDENTITY & FORMATTING:
@@ -1104,7 +1096,8 @@ MOVIE, SERIES & ANIME RECOMMENDATIONS (CRITICAL):
 When asked for popular movies, recommendations, or top lists:
 1. Act like a true cinephile friend. ALWAYS provide a real, curated list (e.g., Top 5 or Top 10).
 2. Write a brief, passionate pitch for each title.
-3. You MUST include the exact tag [ACTION:SHOW_MOVIE:Exact Title] for EVERY single movie or series you mention. 
+3. You MUST include the exact tag [ACTION:SHOW_MOVIE:Exact Title] for EVERY single movie or series you mention.
+4. ALWAYS pick ONE absolute favorite ("Coup de cœur") among your recommendations and use the exact tag [ACTION:FAV_MOVIE:Exact Title]. Speak PASSONATELY and dynamically about your favorite before or after the tag! Be alive and expressive! 
 
 CRITICAL RULE FOR ACTION TAGS (NO LEAKS):
 You MUST use these EXACT tags. NEVER add custom text inside brackets except for OPEN_LINK, CALL, SOURCES and REMEMBER.
@@ -1113,6 +1106,7 @@ You MUST use these EXACT tags. NEVER add custom text inside brackets except for 
 - [ACTION:OPEN_APP:music]
 - [ACTION:CONTACT_SUPPORT]
 - [ACTION:SHOW_MOVIE:Title]
+- [ACTION:FAV_MOVIE:Title]
 - [ACTION:CALL:number|Title]
 - [ACTION:OPEN_LINK:https://url.com|Button Title]
 
@@ -1208,7 +1202,6 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
             };
 
             async function parseActionTags(text) {
-                // SYSTEME DE MEMOIRE ACTIVE (Habitudes)
                 const rememberRegex = /\[ACTION:REMEMBER:(.*?)\]/g;
                 let rememberMatches = [...text.matchAll(rememberRegex)];
                 if (rememberMatches.length > 0) {
@@ -1222,7 +1215,6 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     text = text.replace(/\[ACTION:REMEMBER:.*?\]/g, '');
                 }
 
-                // Extraction des suggestions AVANT de parser le markdown
                 const suggestionRegex = /\[SUGGESTION:(.*?)\]/g;
                 let suggestions = [];
                 let match;
@@ -1233,7 +1225,6 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
 
                 let html = marked.parse(text); 
 
-                // NETTOYAGE AGRESSIF ET SÉCURISATION DES LIENS
                 html = html.replace(/\[ACTION:CONTACT_SUPPORT[^\]]*\]/g, `
                     <div class="mt-4 flex flex-col gap-2.5 w-full max-w-sm">
                         <a href="mailto:support@levelup-ecosystem.com" class="flex items-center gap-3 p-3 bg-[#3b82f6]/10 border border-[#3b82f6]/30 rounded-xl hover:bg-[#3b82f6]/20 transition-all text-white text-sm" style="text-decoration: none;">
@@ -1247,28 +1238,24 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     </div>
                 `);
 
-                // SECURITE ABSOLUE POUR LES URLS (Transformation en liens textuels discrets et élégants)
                 html = html.replace(/\[ACTION:OPEN_LINK:\s*([^\|]+?)\s*\|\s*([^\]]+?)\s*\]/gi, (match, url, linkText) => {
                     const cleanUrl = url.replace(/<[^>]*>?/gm, '').trim();
                     const cleanText = linkText.replace(/<[^>]*>?/gm, '').trim();
                     return `<a href="${cleanUrl}" target="_blank" class="text-[#d8b4fe] hover:text-[#f3e8ff] font-bold underline underline-offset-4 decoration-[#a855f7]/50 hover:decoration-[#d8b4fe] transition-all inline-flex items-center gap-1 px-1">${cleanText}<i class="fas fa-external-link-alt text-[9px] opacity-70 mb-[1px]"></i></a>`;
                 });
 
-                // FALLBACK ULTRA-ROBUSTE: Capture ton format inventé pour le transformer en lien texte
                 html = html.replace(/\[BUTTON:\s*([^\|]+?)\s*\|\s*([^\]]+?)\s*\]/gi, (match, linkText, url) => {
                     const cleanUrl = url.replace(/<[^>]*>?/gm, '').trim();
                     const cleanText = linkText.replace(/<[^>]*>?/gm, '').trim();
                     return `<a href="${cleanUrl}" target="_blank" class="text-[#d8b4fe] hover:text-[#f3e8ff] font-bold underline underline-offset-4 decoration-[#a855f7]/50 hover:decoration-[#d8b4fe] transition-all inline-flex items-center gap-1 px-1">${cleanText}<i class="fas fa-external-link-alt text-[9px] opacity-70 mb-[1px]"></i></a>`;
                 });
 
-                // BOUTONS D'APPEL D'URGENCE (ROUGE, INTERACTIF)
                 html = html.replace(/\[ACTION:CALL:\s*([^\|]+?)\s*\|\s*([^\]]+?)\s*\]/gi, (match, number, title) => {
                     const cleanNum = number.replace(/<[^>]*>?/gm, '').trim();
                     const cleanTitle = title.replace(/<[^>]*>?/gm, '').trim();
                     return `<a href="tel:${cleanNum}" class="mt-3 w-full max-w-sm flex items-center justify-center gap-3 p-4 bg-red-600/20 border border-red-500/50 rounded-xl hover:bg-red-600/30 transition-all text-red-50 font-bold text-sm shadow-[0_0_20px_rgba(239,68,68,0.2)] no-underline group"><i class="fas fa-phone-alt text-red-400 group-hover:animate-pulse"></i> <span class="flex flex-col items-center"><span class="text-xs text-red-300 uppercase tracking-widest font-black">${cleanTitle}</span><span class="text-lg tracking-widest">${cleanNum}</span></span></a>`;
                 });
 
-                // LIENS ECOSYSTEME ET APPS INTELLIGENTS & MULTILINGUES
                 html = html.replace(/\[ACTION:OPEN_ECOSYSTEM[^\]]*\]/gi, () => {
                     const ecoText = currentLang === 'fr' ? "Découvrir l'écosystème LevelUp" : "Discover the LevelUp Ecosystem";
                     return `<a href="https://levelup-ecosystem.com/" target="_blank" class="text-[#d8b4fe] hover:text-[#f3e8ff] font-bold underline underline-offset-4 decoration-[#a855f7]/50 hover:decoration-[#d8b4fe] transition-all inline-flex items-center gap-1 px-1">${ecoText}<i class="fas fa-globe text-[9px] opacity-70 mb-[1px]"></i></a>`;
@@ -1285,11 +1272,12 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     return `<a href="${url}" target="_blank" class="text-[#d8b4fe] hover:text-[#f3e8ff] font-bold underline underline-offset-4 decoration-[#a855f7]/50 hover:decoration-[#d8b4fe] transition-all inline-flex items-center gap-1 px-1">${actionText} ${name}<i class="fas ${icon} text-[9px] opacity-70 mb-[1px]"></i></a>`;
                 });
 
-                const movieRegex = /\[ACTION:SHOW_MOVIE:([^\]\|]+)[^\]]*\]/g;
+                const movieRegex = /\[ACTION:(SHOW_MOVIE|FAV_MOVIE):([^\]\|]+)[^\]]*\]/g;
                 const matches = [...html.matchAll(movieRegex)];
                 for (const match of matches) {
                     const fullTag = match[0];
-                    const movieQuery = match[1].replace(/<[^>]*>?/gm, '').trim();
+                    const isFav = match[1] === 'FAV_MOVIE';
+                    const movieQuery = match[2].replace(/<[^>]*>?/gm, '').trim();
                     try {
                         const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(movieQuery)}`);
                         const data = await res.json();
@@ -1305,10 +1293,25 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                             const descEscaped = fullDesc.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
                             const titleEscaped = title.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                             
+                            const favBadge = isFav ? `
+                                <div class="absolute -top-3 -right-2 bg-gradient-to-r from-[#ec4899] to-[#a855f7] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.5)] z-30 flex items-center gap-1.5 border border-white/20">
+                                    <i class="fas fa-heart animate-pulse"></i> ${currentLang === 'fr' ? 'Coup de Cœur' : 'Top Pick'}
+                                </div>
+                            ` : '';
+
+                            const cardClasses = isFav 
+                                ? "mt-6 rounded-xl bg-[#111116] border border-[#ec4899]/50 shadow-[0_0_25px_rgba(236,72,153,0.15)] w-full max-w-md relative overflow-visible" 
+                                : "mt-4 rounded-xl bg-[#111116] border border-white/10 shadow-2xl w-full max-w-md overflow-hidden relative";
+
+                            const topBorderColor = isFav ? "from-[#ec4899] to-[#a855f7]" : "from-[#a855f7] to-[#3b82f6]";
+                            const imageContainerClasses = isFav ? "h-48 w-full relative rounded-t-xl overflow-hidden" : "h-48 w-full relative";
+                            const btnPlayClasses = isFav ? "from-[#ec4899] to-[#d946ef] shadow-[0_0_15px_rgba(236,72,153,0.3)] border border-pink-500/50" : "from-[#a855f7] to-[#9333ea] shadow-[0_0_15px_rgba(168,85,247,0.3)] border border-purple-500/50";
+
                             const movieCardHtml = `
-                                <div class="mt-4 rounded-xl bg-[#111116] border border-white/10 shadow-2xl w-full max-w-md overflow-hidden relative">
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#a855f7] to-[#3b82f6] z-10"></div>
-                                    <div class="h-48 w-full relative">
+                                <div class="${cardClasses}">
+                                    ${favBadge}
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${topBorderColor} z-10 ${isFav ? 'rounded-t-xl' : ''}"></div>
+                                    <div class="${imageContainerClasses}">
                                         <img src="${TMDB_IMAGE_BASE_URL}${movie.backdrop_path || movie.poster_path}" class="block w-full h-full object-cover" alt="Cover">
                                         <div class="absolute inset-0 bg-gradient-to-t from-[#111116] to-transparent"></div>
                                         <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-white text-[10px] font-black tracking-widest border border-white/10 flex items-center gap-1.5 shadow-lg">
@@ -1323,7 +1326,7 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                                         ${shortDesc ? `<p class="text-[11px] text-zinc-400 mb-2 leading-relaxed">${shortDesc}</p>` : ''}
                                         ${fullDesc.length > 90 ? `<button onclick="window.showMovieFullDesc('${descEscaped}')" class="text-[10px] text-[#a855f7] font-bold mb-3 hover:text-purple-400 bg-transparent border-none cursor-pointer p-0 transition-colors">Read more →</button>` : ''}
                                         <div class="grid grid-cols-3 gap-2 mt-2">
-                                            <button onclick="window.open('https://movie.levelup-ecosystem.com/', '_blank')" class="col-span-1 py-2.5 bg-gradient-to-r from-[#a855f7] to-[#9333ea] hover:brightness-110 rounded-lg text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 shadow-[0_0_15px_rgba(168,85,247,0.3)] outline-none border border-purple-500/50">
+                                            <button onclick="window.open('https://movie.levelup-ecosystem.com/', '_blank')" class="col-span-1 py-2.5 bg-gradient-to-r ${btnPlayClasses} hover:brightness-110 rounded-lg text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 outline-none">
                                                 <i class="fas fa-play text-[9px]"></i> Play
                                             </button>
                                             <button onclick="window.showMovieTrailer('${movie.id}', '${movie.media_type}')" class="col-span-1 py-2.5 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 rounded-lg text-red-400 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 border border-[#ef4444]/30 outline-none">
@@ -1455,25 +1458,43 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 }
             }
 
+            // MODIFICATION ICI: AFFICHAGE DE L'IMAGE DANS UN WIDGET SÉPARÉ
             function displayUserMessage(text, base64Image = null) {
                 const safeText = text ? text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
-                const div = document.createElement('div'); div.className = "flex justify-end w-full overflow-hidden";
                 
-                let imgHtml = '';
+                const container = document.createElement('div');
+                container.className = "flex flex-col items-end w-full gap-2 mb-2 overflow-hidden";
+                
                 if (base64Image) {
-                    imgHtml = `<img src="data:image/jpeg;base64,${base64Image}" class="w-full max-w-[200px] rounded-xl object-cover mb-2 border border-white/10 shadow-sm">`;
+                    const imgDiv = document.createElement('div');
+                    imgDiv.className = "flex items-center gap-3 bg-white/5 border border-white/10 p-2 pr-4 rounded-2xl shadow-md backdrop-blur-md max-w-[88%]";
+                    imgDiv.innerHTML = `
+                        <div class="w-12 h-12 rounded-xl overflow-hidden relative border border-white/10 shrink-0">
+                            <img src="data:image/jpeg;base64,${base64Image}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-white text-[11px] font-bold uppercase tracking-widest truncate">${currentLang === 'fr' ? 'Image jointe' : 'Attached Image'}</span>
+                            <span class="text-white/40 text-[9px] font-mono truncate">${currentLang === 'fr' ? 'Analyse visuelle' : 'Visual analysis'}</span>
+                        </div>
+                    `;
+                    container.appendChild(imgDiv);
                 }
 
-                div.innerHTML = `<div class="bg-[#a855f7]/20 border border-[#a855f7]/30 px-5 py-3.5 rounded-3xl text-[15px] message-bubble text-white shadow-md flex flex-col gap-2 overflow-hidden">
-                    ${imgHtml}
-                    ${safeText ? `<span class="leading-relaxed font-medium whitespace-pre-wrap break-words max-w-full">${safeText}</span>` : ''}
-                </div>`;
-                document.getElementById('conversationContainer').appendChild(div); document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+                if (safeText) {
+                    const textDiv = document.createElement('div');
+                    textDiv.className = "bg-[#a855f7]/20 border border-[#a855f7]/30 px-5 py-3.5 rounded-3xl text-[15px] message-bubble text-white shadow-md max-w-[88%] flex flex-col gap-2 overflow-hidden";
+                    textDiv.innerHTML = `<span class="leading-relaxed font-medium whitespace-pre-wrap break-words max-w-full">${safeText}</span>`;
+                    container.appendChild(textDiv);
+                }
+
+                document.getElementById('conversationContainer').appendChild(container); 
+                document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
             }
 
             function displayAIMessage(textOrHtml, animate, isRawHtml = false) {
                 const wrap = document.createElement('div'); wrap.className = "flex flex-col gap-2 w-full group pl-1 overflow-hidden";
-                const content = document.createElement('div'); content.className = "prose prose-invert prose-slate text-[15px] max-w-full message-bubble leading-relaxed tracking-normal prose-p:my-3 prose-headings:font-bold prose-headings:text-white prose-strong:text-white prose-strong:font-bold break-words overflow-hidden";
+                const content = document.createElement('div'); 
+                content.className = "prose prose-invert prose-slate text-[15px] max-w-full message-bubble leading-relaxed tracking-normal prose-p:my-3 prose-headings:font-bold prose-headings:text-white prose-strong:text-white prose-strong:font-bold break-words overflow-hidden";
                 wrap.appendChild(content); document.getElementById('conversationContainer').appendChild(wrap);
                 
                 if (isRawHtml) {
@@ -1487,15 +1508,15 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
             }
 
             function streamText(container, text, callback) {
-                let i = 8; // Commence avec le premier morceau pour éviter le clignotement
-                document.getElementById('aiTyping').classList.add('hidden'); // Cache l'animation pile à ce moment
+                let i = 8; 
+                document.getElementById('aiTyping').classList.add('hidden'); 
                 container.innerHTML = sanitizeHTML(marked.parse(text.substring(0, i)));
 
                 if (typingInterval) clearInterval(typingInterval);
                 typingInterval = setInterval(() => {
                     if (!isGenerating) { clearInterval(typingInterval); if(callback) callback(); return; }
                     if (i < text.length) { 
-                        i += 12; // Un peu plus rapide pour la fluidité
+                        i += 12; 
                         container.innerHTML = sanitizeHTML(marked.parse(text.substring(0, i))); 
                         document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight; 
                     } else { 
@@ -1523,9 +1544,8 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 const iconWrapper = document.getElementById('aiTypingIconWrapper');
                 if (!typingTextEl) return;
                 
-                // Mots-clés élargis et professionnels
                 const isCrisisMessage = /danger|urgence|hôpital|hospital|suicide|mourir|police|ambulance|agress|au secours|help/i.test(promptText);
-                const isCrisis = isCrisisMessage || window.activeCrisisMode; // Maintient l'état visuel de crise
+                const isCrisis = isCrisisMessage || window.activeCrisisMode; 
                 
                 const isRealTime = /actu|news|meteo|météo|weather|aujourd'?hui|today|récent|recent|score|match|info|maintenant|now|temps r(?:é|e)el/i.test(promptText);
                 const isMovie = /film|movie|série|series|cinema|netflix|acteur|réalisateur/i.test(promptText);
@@ -1533,17 +1553,14 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 const isMusic = /music|musique|chanson|song|audio|playlist|spotify|apple/i.test(promptText);
                 const isGame = /jeu|game|jouer|playstation|xbox|nintendo|steam|esport/i.test(promptText);
                 
-                // --- CHANGER L'ICONE DYNAMIQUEMENT ---
                 if (iconWrapper) {
                     if (isCrisis) {
-                        // LOGO MEDICAL ROUGE (CROIX)
                         iconWrapper.innerHTML = `
                             <svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse">
                                 <path fill="#ef4444" d="M19 10h-5V5c0-1.1-.9-2-2-2s-2 .9-2 2v5H5c-1.1 0-2 .9-2 2s.9 2 2 2h5v5c0 1.1.9 2 2 2s2-.9 2-2v-5h5c1.1 0 2-.9 2-2s-.9-2-2-2z"/>
                             </svg>
                         `;
                     } else if (isWebSearchEnabled || isRealTime) {
-                        // LOGO GOOGLE OFFICIEL POUR LA RECHERCHE / TEMPS REEL
                         iconWrapper.innerHTML = `
                             <svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] animate-pulse">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1581,7 +1598,6 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     }
                 }
 
-                // --- TEXTES DYNAMIQUES SEQUENTIELS (ULTRA-PROFESSIONNELS) ---
                 const pools = {
                     fr: {
                         img: ["Analyse photographique...", "Identification des éléments visuels...", "Génération du rapport détaillé..."],
@@ -1606,7 +1622,7 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 };
 
                 let selectedPool = pools[currentLang].general;
-                let colorClass = "text-[#a855f7]/70"; // Défaut violet
+                let colorClass = "text-[#a855f7]/70"; 
 
                 if (isCrisis) { selectedPool = pools[currentLang].crisis; colorClass = "text-red-500/90"; }
                 else if (hasImage) { selectedPool = pools[currentLang].img; colorClass = "text-blue-400/80"; }
@@ -1618,7 +1634,6 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
 
                 typingTextEl.className = `text-[10px] ${colorClass} font-bold uppercase tracking-widest pl-1 transition-opacity duration-300 opacity-0`;
 
-                // Ordre séquentiel strict (pas de hasard, pour un vrai effet de progression)
                 let phrases = [...selectedPool];
                 phrases.push(currentLang === 'fr' ? "Finalisation..." : "Finalizing...");
 
@@ -1642,11 +1657,22 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 }, 2500); 
             }
 
+            // MODIFICATION ICI: FONCTION POUR CACHER LES SUGGESTIONS
+            function clearSuggestions() {
+                document.querySelectorAll('.suggestion-container').forEach(el => {
+                    el.classList.add('fade-out');
+                    setTimeout(() => el.remove(), 300); // Disparition fluide
+                });
+            }
+
             window.sendMsg = function(overrideText = null, btnElement = null) {
                 const input = document.getElementById('userInput');
                 if (overrideText) {
                     input.value = overrideText;
                 }
+                
+                clearSuggestions(); // Enlève les suggestions au clic/envoi
+
                 if (isGenerating) stopGeneration();
                 else send();
             };
@@ -1658,7 +1684,6 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 const welcomeBlock = document.getElementById('welcomeBlock');
                 if(welcomeBlock) welcomeBlock.classList.add('hidden');
 
-                // COUPER L'AUDIO SI L'UTILISATEUR POSE UNE NOUVELLE QUESTION
                 const allAudios = document.getElementsByTagName('audio');
                 for (let i = 0; i < allAudios.length; i++) {
                     allAudios[i].pause();
@@ -1670,14 +1695,12 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
 
                 displayUserMessage(val, imageBase64ToSend);
 
-                // PROTOCOLE DE CRISE : DÉTECTION ET GÉOLOCALISATION
                 const isCrisisMessage = /danger|urgence|hôpital|hospital|suicide|mourir|police|ambulance|agress|au secours|help|localise/i.test(val);
                 let crisisContext = "";
                 
                 if (isCrisisMessage && !window.crisisGeoContext.includes('YOU KNOW THEIR LOCATION')) {
-                    window.activeCrisisMode = true; // VERROUILLAGE DU MODE URGENCE POUR LA SESSION
+                    window.activeCrisisMode = true; 
                     try {
-                        // Tentative 1 : GeoJS (Ultra-rapide, zelda-tier, rarement bloquée par les AdBlockers)
                         const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
                         if (geoRes.ok) {
                             const geoData = await geoRes.json();
@@ -1685,25 +1708,21 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                         } else { throw new Error('geojs limit'); }
                     } catch (e) {
                         try {
-                            // Tentative 2 : ipapi.co
                             const geoRes2 = await fetch('https://ipapi.co/json/');
                             if (geoRes2.ok) {
                                 const geoData2 = await geoRes2.json();
                                 window.crisisGeoContext = `\n\n[EMERGENCY GEO-CONTEXT: The user is in an active emergency in or near ${geoData2.city}, ${geoData2.country_name}. YOU KNOW THEIR LOCATION. NEVER say you cannot locate them. IMMEDIATELY provide the specific local emergency numbers for ${geoData2.country_name} using the tag [ACTION:CALL:number|Title].]`;
                             } else { throw new Error('ipapi limit'); }
                         } catch (e2) {
-                            // Tentative 3 : Fallback Absolu sans excuses robotiques
                             window.crisisGeoContext = `\n\n[EMERGENCY GEO-CONTEXT: The user appears to be in an emergency. Automatic geolocation failed due to their network/adblock settings. DO NOT say "I am an AI and cannot locate you". Say EXACTLY: "Ma tentative de géolocalisation sécurisée a échoué à cause de votre réseau. Pourriez-vous me dire rapidement dans quel pays vous êtes ?" Provide general international emergency advice using the tag [ACTION:CALL:112|Urgences Europe] or [ACTION:CALL:911|Urgences Amérique].]`;
                         }
                     }
                 }
 
-                // INJECTION PERMANENTE SI LA SESSION EST EN CRISE
                 if (window.activeCrisisMode) {
                     crisisContext = window.crisisGeoContext;
                 }
 
-                // Analyse profonde invisible pour l'utilisateur
                 let systemText = val;
                 if (hasImage) {
                     systemText += "\n\n[SYSTEM DIRECTIVE: The user has attached an image. Perform a thorough, deep, and detailed visual analysis of this image to answer accurately.]";
@@ -1730,7 +1749,6 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 try {
                     const config = await fetchSystemConfig();
                     
-                    // LECTURE DIRECTE: Sans condition Premium. Elle respectera le global_prompt quoi qu'il arrive.
                     const globalPromptContext = config.globalPrompt 
                         ? `\n\n[CRITICAL ECOSYSTEM DATA (YOU MUST MEMORIZE AND USE THIS INFORMATION)]:\n${config.globalPrompt}` 
                         : "";
@@ -1740,7 +1758,6 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     const now = new Date();
                     const timeContext = `\n\n[REAL-TIME CONTEXT: The current exact date and time is ${now.toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'long' })}. The user's timezone is ${Intl.DateTimeFormat().resolvedOptions().timeZone}. ALWAYS use this exact data to answer any question about time, day, or date.]`;
                     
-                    // INJECTION DE LA MEMOIRE (Habitudes Utilisateur)
                     let savedHabitsStr = localStorage.getItem('dona_user_habits');
                     let habitContext = "";
                     if (savedHabitsStr) {
@@ -1765,12 +1782,10 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     
                     const isRealTimeSearch = /actu|news|meteo|météo|weather|aujourd'?hui|today|récent|recent|score|match|info|maintenant|now|temps r(?:é|e)el/i.test(val);
 
-                    // EXTREMEMENT IMPORTANT : Connecte VRAIMENT l'IA au Web si on parle d'actualités, même sans le bouton cliqué !
                     if (isWebSearchEnabled || isRealTimeSearch) {
                         payload.tools = [{ "google_search": {} }];
                     }
 
-                    // On passe directement les clés API récupérées
                     const result = await callGeminiAPI(payload, config.keys);
                     
                     if (result.error) {
@@ -1782,13 +1797,11 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                             : "I am currently syncing my data with the ecosystem. Could you repeat your request in a moment?";
                         displayAIMessage(politeError, true, false);
                     } else {
-                        // S'il y a des tags d'actions OU des suggestions, on parse PUIS on cache le Typing
                         if (result.text.includes('[ACTION:') || result.text.includes('[SUGGESTION:')) {
                             const parsedHtml = await parseActionTags(result.text);
                             document.getElementById('aiTyping').classList.add('hidden');
                             displayAIMessage(parsedHtml, false, true); 
                         } else {
-                            // On cache juste avant d'afficher
                             document.getElementById('aiTyping').classList.add('hidden');
                             displayAIMessage(result.text, true, false); 
                         }
@@ -1812,6 +1825,8 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 const val = document.getElementById('userInput').value.trim();
                 if (!val && !currentImageBase64) return;
                 
+                clearSuggestions(); // MODIFICATION ICI AUSSI
+
                 if (!isAuthenticatedByKey) {
                     if (freeMsgCount >= 20) {
                         document.getElementById('limitModal').classList.remove('hidden');
