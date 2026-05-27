@@ -3,7 +3,7 @@ const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const BASE_URL = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : 'https://levelup-ecosystem.com';
-const REDIRECT_URI = `${BASE_URL}/api/auth/discord`;
+const REDIRECT_URI = `${BASE_URL}/api/discord`;
 
 let _adminApp;
 function getAdminApp() {
