@@ -3,8 +3,7 @@ const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
 const BASE_URL = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : 'https://levelup-ecosystem.com';
-const REDIRECT_URI = `${BASE_URL}/api/auth/twitch`;
-
+const REDIRECT_URI = `${BASE_URL}/api/twitch`;
 let _adminApp;
 function getAdminApp() {
   if (_adminApp) return _adminApp;
