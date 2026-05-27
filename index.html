@@ -1055,14 +1055,6 @@ nav{padding:12px 5%}
 .push-perm-card{padding:16px 16px 14px}
 .push-perm-title{font-size:.92rem}
 }
-/* Mobile : cartes services 1 colonne larges */
-@media(max-width:820px){
-.svc-cards-grid{grid-template-columns:1fr!important;gap:14px}
-.svc-card-img,.svc-card-img-placeholder{height:200px}
-.svc-card-body{padding:18px 16px}
-.svc-card-title{font-size:1rem}
-.svc-card-desc{font-size:.82rem}
-}
 @media(display-mode:standalone){
 .fab-wrap{bottom:100px}
 .mobile-nav{padding-bottom:max(env(safe-area-inset-bottom),12px)}
@@ -1259,29 +1251,13 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 /* ══════════════════════════════════════════
    IA FULL MODAL
 ══════════════════════════════════════════ */
-#iaFullModal{position:fixed;inset:0;z-index:9600;display:flex;flex-direction:column;background:#06020a}
+#iaFullModal{position:fixed;inset:0;z-index:9600;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(20px)}
 #iaFullModal.hidden{display:none!important}
-#iaFullModal>div{flex:1;display:flex;flex-direction:column;width:100%;height:100%}
+.ia-full-inner{width:100%;max-width:540px;height:100%;max-height:100vh;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--bdr)}
+@media(min-width:541px){.ia-full-inner{height:90vh;max-height:820px;border-radius:20px}}
 .ia-full-head{display:flex;align-items:center;justify-content:space-between;padding:max(14px,calc(12px + env(safe-area-inset-top,0px))) 18px 14px;border-bottom:1px solid var(--bdr);flex-shrink:0}
 .ia-full-head-info{display:flex;align-items:center;gap:10px}
-.ia-full-frame{flex:1;border:none;width:100%;min-height:0;background:#06020a}
-
-/* ══════════════════════════════════════════
-   HUB BACKGROUND IMAGE & SPLIT SECTIONS
-══════════════════════════════════════════ */
-.hub-bg-full{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;background-repeat:no-repeat;filter:blur(22px) brightness(.28) saturate(1.3);transform:scale(1.08);pointer-events:none;display:none}
-.hub-split-section{display:none;padding:14px 14px 4px}
-.hub-split-section.active{display:block}
-.hub-split-label{display:inline-flex;align-items:center;gap:7px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.5);margin-bottom:12px;padding:5px 11px;border-radius:100px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
-.hub-split-divider{height:1px;background:rgba(255,255,255,.08);margin:6px 0 14px;display:none}
-.hub-sec-all{padding:0}
-/* ══ Toggle switch ══ */
-.toggle-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
-.toggle-switch input{opacity:0;width:0;height:0;position:absolute}
-.toggle-track{position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:100px;cursor:pointer;transition:background .2s;border:1px solid rgba(255,255,255,.1)}
-.toggle-switch input:checked+.toggle-track{background:var(--purple);border-color:transparent}
-.toggle-track::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:2px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
-.toggle-switch input:checked+.toggle-track::before{transform:translateX(18px)}
+.ia-full-frame{flex:1;border:none;width:100%;height:100%;min-height:0;background:var(--bg)}
 
 /* ══════════════════════════════════════════
    FAQ PRO ACCORDION
@@ -2174,7 +2150,7 @@ Créer un compte gratuit
 </section>
 
 <!-- ── INSTALL APP ── -->
-<section id="installSection" class="sec" style="border-top:1px solid var(--bdr);background:rgba(255,255,255,.01)">
+<section class="sec" style="border-top:1px solid var(--bdr);background:rgba(255,255,255,.01)">
 <div class="ctn">
 <div class="sec-head reveal text-center mx-auto" style="max-width:650px">
 <div class="sec-label"><i class="fa-solid fa-mobile-screen-button"></i>&nbsp; Application mobile</div>
@@ -2524,54 +2500,6 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 </div>
 
-<div class="set-sec">
-<div class="set-title">Notifications par email</div>
-<div class="set-row">
-  <div class="set-info"><h5>🔐 Nouvelle connexion suspecte</h5><p>Alerte si une connexion depuis un nouvel appareil ou IP est détectée</p></div>
-  <label class="toggle-switch"><input type="checkbox" id="notifLoginToggle" onchange="window._saveNotifPref('notif_login',this.checked)"><span class="toggle-track"></span></label>
-</div>
-<div class="set-row">
-  <div class="set-info"><h5>🎬 Nouveautés Movie Hub</h5><p>Email quand un nouveau film ou service est ajouté</p></div>
-  <label class="toggle-switch"><input type="checkbox" id="notifMovieToggle" onchange="window._saveNotifPref('notif_movie',this.checked)"><span class="toggle-track"></span></label>
-</div>
-<div class="set-row">
-  <div class="set-info"><h5>🎵 Nouveautés Music Hub</h5><p>Email quand une nouvelle application musicale est ajoutée</p></div>
-  <label class="toggle-switch"><input type="checkbox" id="notifMusicToggle" onchange="window._saveNotifPref('notif_music',this.checked)"><span class="toggle-track"></span></label>
-</div>
-<div class="set-row">
-  <div class="set-info"><h5>⛩️ Nouveautés Otaku Zone</h5><p>Email quand un anime ou manga est ajouté</p></div>
-  <label class="toggle-switch"><input type="checkbox" id="notifOtakuToggle" onchange="window._saveNotifPref('notif_otaku',this.checked)"><span class="toggle-track"></span></label>
-</div>
-<div class="set-row">
-  <div class="set-info"><h5>🎮 Nouveautés Game Hub</h5><p>Email quand un nouveau jeu ou outil gaming est ajouté</p></div>
-  <label class="toggle-switch"><input type="checkbox" id="notifGameToggle" onchange="window._saveNotifPref('notif_game',this.checked)"><span class="toggle-track"></span></label>
-</div>
-<div class="set-row">
-  <div class="set-info"><h5>🛠️ Nouveaux outils LevelUp</h5><p id="notifToolsDesc">Email quand un nouvel outil est ajouté à l'écosystème</p></div>
-  <label class="toggle-switch"><input type="checkbox" id="notifToolsToggle" onchange="window._saveNotifPref('notif_tools',this.checked)"><span class="toggle-track"></span></label>
-</div>
-</div>
-
-<div class="set-sec">
-<div class="set-title">Notifications Push</div>
-<div class="set-row">
-  <div class="set-info"><h5>Alertes temps réel</h5><p>Reçois des alertes même quand l'app est fermée — nouvelles sorties, outils IA, mises à jour</p></div>
-  <label class="toggle-switch"><input type="checkbox" id="notifPushToggle" onchange="window._togglePushNotif&&window._togglePushNotif(this.checked)"><span class="toggle-track"></span></label>
-</div>
-</div>
-
-<div class="set-sec">
-<div class="set-title">Préférences d'affichage</div>
-<div class="set-row">
-  <div class="set-info"><h5>🌐 Langue d'interface</h5><p id="setLangLabel">Français</p></div>
-  <button class="btn btn-g btn-xs" onclick="window._toggleLang&&window._toggleLang()"><i class="fa-solid fa-globe"></i> Changer</button>
-</div>
-<div class="set-row">
-  <div class="set-info"><h5>🎨 Thème</h5><p>Mode sombre activé en permanence pour une meilleure immersion</p></div>
-  <div style="font-size:.72rem;color:var(--purple);font-weight:600;display:flex;align-items:center;gap:5px"><i class="fa-solid fa-moon"></i> Dark mode</div>
-</div>
-</div>
-
 <!-- ADMIN — Section super admins uniquement -->
 <div class="set-sec" id="adminCmsSection" style="display:none">
 <div class="set-title" style="display:flex;align-items:center;gap:8px"><i class="fa-solid fa-shield-halved" style="color:#a855f7;font-size:.8rem"></i> Administration</div>
@@ -2754,7 +2682,55 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <!-- ═══════════════════════════════════════
 AUTH OVERLAY
 ═══════════════════════════════════════ -->
-<!-- authOverlay supprimé — connexion via /login -->
+<div class="overlay hidden" id="authOverlay" onclick="bgClose(event,'authOverlay')">
+<!-- NOUVEAU : On applique l'ID directement sur la carte pour éviter de casser le design -->
+<div class="auth-card" id="authCardWrapper">
+<button class="auth-close" onclick="closeAuth()"><i class="fa-solid fa-xmark"></i></button>
+<div class="auth-logo">
+<svg width="24" height="24" viewBox="0 0 576 512" fill="url(#pg)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
+</div>
+
+<h2 id="authTitle">Rejoindre LevelUp</h2>
+<p id="authDesc">Connectez-vous avec Google pour accéder à tout l'écosystème et générer votre clé d'accès gratuite.</p>
+
+<button class="google-signin-btn" id="gSignInBtn" onclick="window.googleSignIn()">
+    <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+    <span id="gBtnTxt">Continue with Google</span>
+</button>
+
+<button class="discord-signin-btn" onclick="window.loginWithDiscord()">
+    <i class="fa-brands fa-discord" style="font-size: 1.15rem;"></i> Continuer avec Discord
+</button>
+
+<button class="twitch-signin-btn" onclick="window.loginWithTwitch()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+    Continuer avec Twitch
+</button>
+
+<div id="authDevSection" class="hidden">
+<div style="display:flex;align-items:center;gap:10px;margin:24px 0;">
+<div style="flex:1;height:1px;background:var(--bdr)"></div>
+<span style="font-size:0.8rem;color:var(--dim);font-weight:700">OU</span>
+<div style="flex:1;height:1px;background:var(--bdr)"></div>
+</div>
+
+<button id="showKeyInputBtn" class="btn btn-g" style="width:100%; justify-content:center; padding:12px 20px; border-radius:var(--r12); font-size:0.92rem; font-weight:500;" onclick="document.getElementById('keyInputWrap').classList.remove('hidden'); this.classList.add('hidden');">
+<i class="fa-solid fa-key" style="color:var(--purple)"></i> Se connecter avec une clé LVL
+</button>
+
+<div id="keyInputWrap" class="hidden" style="display:flex;gap:8px;animation:tFade 0.3s ease;">
+<div style="position:relative;flex:1">
+<input type="password" id="devKeyInput" placeholder="LVL-XXXXX-XXXXX" style="width:100%;background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 42px 10px 14px;color:#fff;font-size:0.85rem;font-family:monospace;outline:none;box-sizing:border-box;transition:border-color .2s" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9-]/g,'').substring(0,30)" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--bdr)'">
+<button style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;padding:4px 2px;font-size:.82rem;outline:none;transition:color .2s;line-height:1" title="Afficher / Masquer" onmouseover="this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.color='rgba(255,255,255,.35)'" onclick="const inp=document.getElementById('devKeyInput');const isP=inp.type==='password';inp.type=isP?'text':'password';this.querySelector('i').className=isP?'fa-solid fa-eye-slash':'fa-solid fa-eye'"><i class="fa-solid fa-eye"></i></button>
+</div>
+<button class="btn btn-p" onclick="window.loginWithKey()" style="padding:10px 16px;border-radius:var(--r8)"><i class="fa-solid fa-arrow-right"></i></button>
+</div>
+</div>
+
+<p class="auth-note" style="line-height:1.6">En continuant, vous acceptez nos <a href="https://levelup-ecosystem.com/terms" target="_blank" style="color:var(--purple);text-decoration:underline">Conditions d'utilisation</a> et nos <a href="https://levelup-ecosystem.com/privacy" target="_blank" style="color:var(--purple);text-decoration:underline">Règles de confidentialité</a>. Vos données ne sont jamais partagées ni revendues.</p>
+<div style="text-align:center;margin-top:16px;font-size:.6rem;color:rgba(255,255,255,.1);letter-spacing:.08em;font-family:monospace;user-select:none">v2.6 &nbsp;·&nbsp; LevelUp</div>
+</div>
+</div>
 
 <!-- ═══════════════════════════════════════
 PIN MODAL (NATIF)
@@ -2894,26 +2870,18 @@ TOOLS HUB OVERLAY
     </button>
   </div>
   <div class="tools-grid-wrap" style="overflow-y:auto">
-    <div class="hub-bg-full" id="movieBgFull"></div>
-    <div class="hub-grid-inner" style="overflow-y:auto">
-      <div class="hub-split-section" id="movieSecInternal">
-        <div class="hub-split-label">🔵 Nos Applications</div>
-        <div class="svc-cards-grid" id="movieHubInternal"></div>
-      </div>
-      <div class="hub-split-divider" id="movieSplitDiv"></div>
-      <div class="hub-split-section" id="movieSecExternal">
-        <div class="hub-split-label">🔗 Apps Externes</div>
-        <div class="svc-cards-grid" id="movieHubExternal"></div>
-      </div>
-      <div class="hub-split-section hub-sec-all active" id="movieSecAll">
-        <div class="svc-cards-grid" id="movieHubGrid"></div>
-      </div>
-      <div class="tools-coming-soon" id="movieHubEmpty">
-        <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-film"></i></div></div>
-        <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#3b82f6;flex-shrink:0"></span> En chargement…</div>
-        <div class="tcs-title">Movie Hub</div>
-        <p class="tcs-sub">Les applications cinéma arrivent. Revenez bientôt.</p>
-      </div>
+    <div class="hub-bg-catalogue" id="movieBgCatalogue">
+      <div class="hub-bg-row" id="movieBgRow1"></div>
+      <div class="hub-bg-row" id="movieBgRow2"></div>
+    </div>
+    <div class="hub-grid-inner">
+    <div class="svc-cards-grid" id="movieHubGrid"></div>
+    <div class="tools-coming-soon" id="movieHubEmpty">
+      <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-film"></i></div></div>
+      <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#3b82f6;flex-shrink:0"></span> En chargement…</div>
+      <div class="tcs-title">Movie Hub</div>
+      <p class="tcs-sub">Les applications cinéma arrivent. Revenez bientôt.</p>
+    </div>
     </div>
   </div>
 </div>
@@ -2935,26 +2903,18 @@ TOOLS HUB OVERLAY
     </button>
   </div>
   <div class="tools-grid-wrap" style="overflow-y:auto">
-    <div class="hub-bg-full" id="musicBgFull"></div>
-    <div class="hub-grid-inner" style="overflow-y:auto">
-      <div class="hub-split-section" id="musicSecInternal">
-        <div class="hub-split-label">🔵 Nos Applications</div>
-        <div class="svc-cards-grid" id="musicHubInternal"></div>
-      </div>
-      <div class="hub-split-divider" id="musicSplitDiv"></div>
-      <div class="hub-split-section" id="musicSecExternal">
-        <div class="hub-split-label">🔗 Apps Externes</div>
-        <div class="svc-cards-grid" id="musicHubExternal"></div>
-      </div>
-      <div class="hub-split-section hub-sec-all active" id="musicSecAll">
-        <div class="svc-cards-grid" id="musicHubGrid"></div>
-      </div>
-      <div class="tools-coming-soon" id="musicHubEmpty">
-        <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-music"></i></div></div>
-        <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#a855f7;flex-shrink:0"></span> En chargement…</div>
-        <div class="tcs-title">Music Hub</div>
-        <p class="tcs-sub">Les applications musicales arrivent. Revenez bientôt.</p>
-      </div>
+    <div class="hub-bg-catalogue">
+      <div class="hub-bg-row" id="musicBgRow1"></div>
+      <div class="hub-bg-row" id="musicBgRow2"></div>
+    </div>
+    <div class="hub-grid-inner">
+    <div class="svc-cards-grid" id="musicHubGrid"></div>
+    <div class="tools-coming-soon" id="musicHubEmpty">
+      <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-music"></i></div></div>
+      <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#a855f7;flex-shrink:0"></span> En chargement…</div>
+      <div class="tcs-title">Music Hub</div>
+      <p class="tcs-sub">Les applications musicales arrivent. Revenez bientôt.</p>
+    </div>
     </div>
   </div>
 </div>
@@ -2976,26 +2936,18 @@ TOOLS HUB OVERLAY
     </button>
   </div>
   <div class="tools-grid-wrap" style="overflow-y:auto">
-    <div class="hub-bg-full" id="gameBgFull"></div>
-    <div class="hub-grid-inner" style="overflow-y:auto">
-      <div class="hub-split-section" id="gameSecInternal">
-        <div class="hub-split-label">🔵 Nos Applications</div>
-        <div class="svc-cards-grid" id="gameHubInternal"></div>
-      </div>
-      <div class="hub-split-divider" id="gameSplitDiv"></div>
-      <div class="hub-split-section" id="gameSecExternal">
-        <div class="hub-split-label">🔗 Apps Externes</div>
-        <div class="svc-cards-grid" id="gameHubExternal"></div>
-      </div>
-      <div class="hub-split-section hub-sec-all active" id="gameSecAll">
-        <div class="svc-cards-grid" id="gameHubGrid"></div>
-      </div>
-      <div class="tools-coming-soon" id="gameHubEmpty">
-        <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-gamepad"></i></div></div>
-        <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#10b981;flex-shrink:0"></span> En chargement…</div>
-        <div class="tcs-title">Game Hub</div>
-        <p class="tcs-sub">Les applications gaming arrivent. Revenez bientôt.</p>
-      </div>
+    <div class="hub-bg-catalogue">
+      <div class="hub-bg-row" id="gameBgRow1"></div>
+      <div class="hub-bg-row" id="gameBgRow2"></div>
+    </div>
+    <div class="hub-grid-inner">
+    <div class="svc-cards-grid" id="gameHubGrid"></div>
+    <div class="tools-coming-soon" id="gameHubEmpty">
+      <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-gamepad"></i></div></div>
+      <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#10b981;flex-shrink:0"></span> En chargement…</div>
+      <div class="tcs-title">Game Hub</div>
+      <p class="tcs-sub">Les applications gaming arrivent. Revenez bientôt.</p>
+    </div>
     </div>
   </div>
 </div>
@@ -3017,26 +2969,18 @@ TOOLS HUB OVERLAY
     </button>
   </div>
   <div class="tools-grid-wrap" style="overflow-y:auto">
-    <div class="hub-bg-full" id="otakuBgFull"></div>
-    <div class="hub-grid-inner" style="overflow-y:auto">
-      <div class="hub-split-section" id="otakuSecInternal">
-        <div class="hub-split-label">🔵 Nos Applications</div>
-        <div class="svc-cards-grid" id="otakuHubInternal"></div>
-      </div>
-      <div class="hub-split-divider" id="otakuSplitDiv"></div>
-      <div class="hub-split-section" id="otakuSecExternal">
-        <div class="hub-split-label">🔗 Apps Externes</div>
-        <div class="svc-cards-grid" id="otakuHubExternal"></div>
-      </div>
-      <div class="hub-split-section hub-sec-all active" id="otakuSecAll">
-        <div class="svc-cards-grid" id="otakuHubGrid"></div>
-      </div>
-      <div class="tools-coming-soon" id="otakuHubEmpty">
-        <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-torii-gate"></i></div></div>
-        <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#ec4899;flex-shrink:0"></span> En chargement…</div>
-        <div class="tcs-title">Otaku Zone</div>
-        <p class="tcs-sub">Les applications anime & manga arrivent. Revenez bientôt.</p>
-      </div>
+    <div class="hub-bg-catalogue">
+      <div class="hub-bg-row" id="otakuBgRow1"></div>
+      <div class="hub-bg-row" id="otakuBgRow2"></div>
+    </div>
+    <div class="hub-grid-inner">
+    <div class="svc-cards-grid" id="otakuHubGrid"></div>
+    <div class="tools-coming-soon" id="otakuHubEmpty">
+      <div class="tcs-glow"><div class="tcs-glow-inner"><i class="fa-solid fa-torii-gate"></i></div></div>
+      <div class="tcs-badge"><span style="width:6px;height:6px;border-radius:50%;background:#ec4899;flex-shrink:0"></span> En chargement…</div>
+      <div class="tcs-title">Otaku Zone</div>
+      <p class="tcs-sub">Les applications anime & manga arrivent. Revenez bientôt.</p>
+    </div>
     </div>
   </div>
 </div>
@@ -3227,8 +3171,8 @@ SMART FAB & IA ASSISTANT
 ═══════════════════════════════════════ -->
 <!-- ═══ IA FULL MODAL ═══ -->
 <div id="iaFullModal" class="hidden">
-  <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;background:#06020a">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:max(14px,calc(10px + env(safe-area-inset-top,0px))) 18px 14px;background:rgba(10,5,20,.98);border-bottom:1px solid rgba(168,85,247,.2);flex-shrink:0">
+  <div style="position:relative;width:100%;max-width:900px;height:90vh;max-height:860px;border-radius:24px;overflow:hidden;border:1px solid rgba(168,85,247,.3);box-shadow:0 30px 80px rgba(0,0,0,.8);display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(15,10,26,.97);border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:32px;height:32px;border-radius:9px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center">
           <i class="fa-solid fa-star" style="color:#c084fc;font-size:.8rem"></i>
@@ -3238,11 +3182,11 @@ SMART FAB & IA ASSISTANT
           <div style="font-size:.65rem;color:rgba(168,85,247,.8)">Propulsé par LevelUp AI</div>
         </div>
       </div>
-      <button onclick="window.closeIAModal()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;outline:none;transition:all .2s" onmouseover="this.style.background='rgba(239,68,68,.18)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.6)'">
+      <button onclick="window.closeIAModal()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;outline:none;transition:all .2s" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.6)'">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <iframe id="iaFrame" src="" frameborder="0" allow="microphone" style="flex:1;width:100%;height:0;background:#06020a;border:none;min-height:0"></iframe>
+    <iframe id="iaFrame" src="" frameborder="0" style="flex:1;width:100%;background:#06020a;border:none"></iframe>
   </div>
 </div>
 
@@ -3694,16 +3638,16 @@ if(e.code !== 'auth/popup-closed-by-user') toast_('Erreur de connexion — rées
 // ALIAS POUR RÉTROCOMPATIBILITÉ : Permet aux boutons Firebase qui utilisent handleGoogleLogin de fonctionner
 window.handleGoogleLogin = window.googleSignIn;
 
-// Discord OAuth — redirige vers la page de login (production)
+// Discord OAuth — redirige vers /api/auth/discord
 window.loginWithDiscord = function(){
     try{ localStorage.removeItem('lm_key'); }catch(_){}
-    window.location.href = 'https://levelup-ecosystem.com/api/auth/discord';
+    window.location.href = '/api/auth/discord';
 };
 
-// Twitch OAuth — redirige vers la page de login (production)
+// Twitch OAuth — redirige vers /api/auth/twitch
 window.loginWithTwitch = function(){
     try{ localStorage.removeItem('lm_key'); }catch(_){}
-    window.location.href = 'https://levelup-ecosystem.com/api/auth/twitch';
+    window.location.href = '/api/auth/twitch';
 };
 
 // INTELLIGENCE ARTIFICIELLE DE DÉTECTION DE BOUTONS (Corrigée)
@@ -4564,18 +4508,6 @@ window.saveNotifPref = function(type, enabled) {
         toast_(enabled ? 'Notifications activées ✓' : 'Notifications désactivées', 'info');
     } catch(_) {}
 };
-// Alias avec underscore pour les toggles du panel settings
-window._saveNotifPref = function(type, val) {
-    window.saveNotifPref(type, val);
-};
-window._togglePushNotif = function(checked) {
-    if (checked) {
-        window.showPushPermPopup && window.showPushPermPopup();
-    } else {
-        window._setPushPref && window._setPushPref('later');
-        toast_('Notifications push désactivées', 'info');
-    }
-};
 window.getNotifPref = function(type) {
     try {
         const prefs = JSON.parse(localStorage.getItem('lvl_notif_prefs') || '{}');
@@ -4583,21 +4515,10 @@ window.getNotifPref = function(type) {
     } catch(_) { return true; }
 };
 window.loadNotifPrefs = function() {
-    const ids = ['notifLoginToggle','notifMovieToggle','notifMusicToggle','notifOtakuToggle','notifGameToggle','notifToolsToggle'];
-    const keys = ['notif_login','notif_movie','notif_music','notif_otaku','notif_game','notif_tools'];
-    ids.forEach((id, i) => {
-        const el = document.getElementById(id);
-        if (el) el.checked = window.getNotifPref(keys[i]);
-    });
-    // push toggle
-    const pushEl = document.getElementById('notifPushToggle');
-    if (pushEl) {
-        const v = localStorage.getItem('lvl_push_pref');
-        pushEl.checked = (v === 'granted');
-    }
-    // langue label
-    const langEl = document.getElementById('setLangLabel');
-    if (langEl) langEl.textContent = (localStorage.getItem('lvl_lang') === 'en') ? 'English' : 'Français';
+    const loginEl = document.getElementById('notifLoginToggle');
+    const toolsEl = document.getElementById('notifToolsToggle');
+    if (loginEl) loginEl.checked = window.getNotifPref('login');
+    if (toolsEl) toolsEl.checked = window.getNotifPref('tools');
 };
 
 
@@ -4720,38 +4641,15 @@ if (window._emailQuota) {
 
 const secRef = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
 const secSnap = await getDoc(secRef);
-
 if(secSnap.exists()) {
-    const sData = secSnap.data();
-    window._ud.apiKey = sData.apiKey || sData.key;
-    window._ud.keyCreatedAt = sData.keyCreatedAt;
-    window._ud.pinHash = sData.pinHash;
+const sData = secSnap.data();
+window._ud.apiKey = sData.apiKey || sData.key;
+window._ud.keyCreatedAt = sData.keyCreatedAt;
+window._ud.pinHash = sData.pinHash;
 
-    // SAUVEGARDE CRUCIALE POUR ÉVITER LA DÉCONNEXION EN CAS DE CONFLIT ANONYME
-    localStorage.setItem('lm_key', window._ud.apiKey);
-    localStorage.setItem('lm_uid', u.uid);
-
-    // 🟢 NOUVEAU : On prévient l'interface HTML que la clé existe !
-    const secExisting = document.getElementById('sec-existing');
-    const secGen = document.getElementById('sec-generate');
-    if (secExisting && secGen) {
-        secGen.style.display = 'none';
-        secExisting.classList.remove('hidden');
-        secExisting.style.display = 'block';
-    }
-    
-    // On met à jour les stats rapides du header
-    const hKV = document.getElementById('hKV');
-    const hKS = document.getElementById('hKS');
-    if (hKV) hKV.textContent = "LVL-•••••-•••••"; 
-    if (hKS) hKS.textContent = "Active ✓";
-    
-    // On affiche la date de création sur la carte de la clé
-    const kDate = document.getElementById('kDate');
-    if (kDate && window._ud.keyCreatedAt) {
-        const dateObj = new Date(window._ud.keyCreatedAt);
-        kDate.textContent = dateObj.toLocaleDateString('fr-FR');
-    }
+// SAUVEGARDE CRUCIALE POUR ÉVITER LA DÉCONNEXION EN CAS DE CONFLIT ANONYME
+localStorage.setItem('lm_key', window._ud.apiKey);
+localStorage.setItem('lm_uid', u.uid);
 }
 
 // Mise en cache
@@ -4762,7 +4660,6 @@ localStorage.setItem('lm_login_mode', 'google');
 await window.loadAppStatus();
 closeAuth();
 showDash(u);
-
 // Vérifier si onboarding complété
 window._checkOnboarding && window._checkOnboarding(u);
 
@@ -5455,8 +5352,8 @@ function _sendWelcomeNotification() {
         if (localStorage.getItem('lvl_welcome_notif_sent')) return;
         localStorage.setItem('lvl_welcome_notif_sent', '1');
         navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification('Welcome to LevelUp Ecosystem 🌟', {
-                body: 'Thanks for joining! You\'ll be notified of every update, new release, and exclusive feature on the platform.',
+            reg.showNotification('Bienvenue sur LevelUp Ecosystem 🌟', {
+                body: 'Grâce à ce système de notifications, vous serez informé de chaque changement, nouvelle sortie et mise à jour exclusive sur notre plateforme.',
                 icon: '/icon.svg',
                 badge: '/icon.svg',
                 vibrate: [200, 80, 200],
@@ -5963,10 +5860,28 @@ if (window.location.pathname === '/dashboard') {
 }
 };
 
-// AUTH — redirige vers la page de connexion dédiée
+// AUTH
 window.openAuth = function(mode = 'create') {
-    if(window._user) { window.openDashboard(); return; }
-    window.location.href = '/login';
+if(window._user) { window.openDashboard(); return; }
+
+const title = document.getElementById('authTitle');
+const desc = document.getElementById('authDesc');
+const devSec = document.getElementById('authDevSection');
+
+// On vérifie que ces éléments existent toujours (au cas où tu as mis ton propre design)
+if (title && desc) {
+if (mode === 'login') {
+title.textContent = 'Connexion';
+desc.textContent = 'Connectez-vous pour accéder à votre tableau de bord.';
+if (devSec) devSec.classList.remove('hidden');
+} else {
+title.textContent = 'Créer un compte';
+desc.textContent = "Rejoignez l'écosystème avec Google et générez votre clé gratuite.";
+if (devSec) devSec.classList.add('hidden');
+}
+}
+
+document.getElementById('authOverlay').classList.remove('hidden');
 };
 
 function closeAuth(){
@@ -6290,23 +6205,14 @@ function faqProT(el){
 window._aiLandingSend = function(){
   const inp = document.getElementById('aiLandingInput');
   const q = (inp ? inp.value.trim() : '') || '';
-  if (!q) return;
   if(inp) inp.value = '';
   window.toggleIA && window.toggleIA(null);
-  const frame = document.getElementById('iaFrame');
-  if (!frame) return;
-  function sendMsg(){
-    try { frame.contentWindow.postMessage({type:'prefill',text:q},'*'); } catch(_){}
-  }
-  // Si l'iframe est déjà chargée, envoyer après un court délai
-  if (frame.src && frame.src !== '' && !frame.src.includes('about:blank')) {
-    setTimeout(sendMsg, 500);
-  } else {
-    // Attendre le load event puis envoyer
-    const onLoad = () => { frame.removeEventListener('load', onLoad); setTimeout(sendMsg, 300); };
-    frame.addEventListener('load', onLoad);
-    setTimeout(sendMsg, 1400); // fallback si l'event ne se déclenche pas
-  }
+  setTimeout(()=>{
+    const frame = document.getElementById('iaFrame');
+    if(frame && q){
+      try{ frame.contentWindow.postMessage({type:'prefill',text:q},'*'); }catch(_){}
+    }
+  }, 800);
 };
 
 // DESC POPUP — "voir plus" pour les cartes hub
@@ -6780,18 +6686,6 @@ async function _loadHubItems(hubType, gridId, emptyId) {
         const empty = document.getElementById(emptyId);
         if (!snap.exists() || !grid) { if (empty) empty.style.display = ''; return; }
         const data = snap.data();
-
-        // ── Image de fond depuis Firestore ──────────────────────────
-        const bgEl = document.getElementById(`${hubType}BgFull`);
-        const bgUrl = data.backgroundImage || data.bg_image || data.bgImage || '';
-        if (bgEl && bgUrl) {
-            bgEl.style.backgroundImage = `url('${bgUrl}')`;
-            bgEl.style.display = 'block';
-            const overlayEl = document.getElementById(`${hubType}HubOverlay`);
-            if (overlayEl) overlayEl.style.background = 'rgba(0,0,0,0)';
-        }
-
-        // ── Collecte des items ──────────────────────────────────────
         const items = [];
         const seen = new Set();
         for (let i = 1; i <= 60; i++) {
@@ -6803,10 +6697,9 @@ async function _loadHubItems(hubType, gridId, emptyId) {
         }
         if (items.length === 0) { if (empty) empty.style.display = ''; return; }
         if (empty) empty.style.display = 'none';
-
-        // ── Fonction de rendu d'une carte ───────────────────────────
+        grid.innerHTML = '';
         const lang = localStorage.getItem('lvl_lang') || 'fr';
-        function renderCard(item, targetGrid) {
+        items.forEach(item => {
             const title = (lang === 'en' && item.title_en) ? item.title_en : (item.title || item.name || 'App');
             const desc = (lang === 'en' && item.desc_en) ? item.desc_en : (item.desc || item.description || '');
             const imageUrl = (item.image || item.logo_url || item.photo || '').replace(/"/g, '&quot;');
@@ -6816,16 +6709,15 @@ async function _loadHubItems(hubType, gridId, emptyId) {
             const hasKey = !!window._ud?.key;
             const card = document.createElement('div');
             card.className = 'svc-card';
-            card.dataset.hub = hubType;
-            if (item.type) card.dataset.type = item.type;
             const imgHtml = imageUrl
-                ? `<img class="svc-card-img" src="${imageUrl}" alt="${title.replace(/"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.parentElement.querySelector('.svc-card-img-placeholder').style.display='flex';this.style.display='none'"><div class="svc-card-img-placeholder" style="display:none"><i class="fa-solid fa-link" style="font-size:1.5rem;opacity:.3"></i></div>`
+                ? `<img class="svc-card-img" src="${imageUrl}" alt="${title.replace(/"/g,'&quot;')}" loading="lazy" onerror="this.parentElement.querySelector('.svc-card-img-placeholder').style.display='flex';this.style.display='none'"><div class="svc-card-img-placeholder" style="display:none"><i class="fa-solid fa-link" style="font-size:1.5rem;opacity:.3"></i></div>`
                 : `<div class="svc-card-img-placeholder"><i class="fa-solid fa-link" style="font-size:1.5rem;opacity:.3"></i></div>`;
             const TRUNC = 90;
             const descShort = desc.length > TRUNC ? desc.slice(0, TRUNC).trimEnd() + '…' : desc;
             const descHtml = desc
                 ? `<div class="svc-card-desc svc-desc-short">${descShort}${desc.length > TRUNC ? `<span class="svc-desc-more" onclick="event.stopPropagation();window._showDescPopup('${title.replace(/'/g,'&#39;')}','${desc.replace(/'/g,'&#39;').replace(/\n/g,' ')}')"> voir plus</span>` : ''}</div>`
                 : '';
+            card.dataset.hub = hubType;
             if (isLocked && !hasKey) {
                 card.innerHTML = `${imgHtml}<div class="svc-card-body"><div class="svc-card-title">${title}</div>${descHtml}<button class="svc-card-open" style="opacity:.5;cursor:not-allowed" onclick="event.stopPropagation();window.toast_&&toast_('Clé LevelUp requise','warn')"><i class="fa-solid fa-lock" style="font-size:.72rem"></i> Clé requise</button></div>`;
                 card.style.opacity = '.65';
@@ -6834,45 +6726,8 @@ async function _loadHubItems(hubType, gridId, emptyId) {
                 card.innerHTML = `${imgHtml}<div class="svc-card-body"><div class="svc-card-title">${title}${badge ? `<span style="font-size:.58rem;padding:2px 7px;border-radius:100px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:#c084fc;font-weight:700;margin-left:5px">${badge}</span>` : ''}</div>${descHtml}<button class="svc-card-open" onclick="event.stopPropagation();window.open('${safeUrl}','_blank')"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.72rem"></i> Ouvrir</button></div>`;
                 if (url) card.onclick = () => window.open(url, '_blank');
             }
-            targetGrid.appendChild(card);
-        }
-
-        // ── Split interne / externe ─────────────────────────────────
-        const internal = items.filter(it => it.type === 'internal');
-        const external = items.filter(it => it.type === 'external');
-        const untyped  = items.filter(it => !it.type);
-        const hasTypes = internal.length > 0 || external.length > 0;
-
-        const internalGrid = document.getElementById(`${hubType}HubInternal`);
-        const externalGrid = document.getElementById(`${hubType}HubExternal`);
-        const secInternal  = document.getElementById(`${hubType}SecInternal`);
-        const secExternal  = document.getElementById(`${hubType}SecExternal`);
-        const secAll       = document.getElementById(`${hubType}SecAll`);
-        const splitDiv     = document.getElementById(`${hubType}SplitDiv`);
-
-        if (hasTypes && internalGrid && externalGrid) {
-            // Mode split : 2 colonnes
-            if (secAll) { secAll.classList.remove('active'); secAll.style.display = 'none'; }
-            const internalAll = [...internal, ...untyped];
-            if (internalAll.length > 0 && secInternal) {
-                secInternal.classList.add('active');
-                internalGrid.innerHTML = '';
-                internalAll.forEach(it => renderCard(it, internalGrid));
-            }
-            if (external.length > 0 && secExternal) {
-                secExternal.classList.add('active');
-                externalGrid.innerHTML = '';
-                external.forEach(it => renderCard(it, externalGrid));
-            }
-            if (splitDiv && internalAll.length > 0 && external.length > 0) {
-                splitDiv.style.display = 'block';
-            }
-        } else {
-            // Mode normal : toutes les cartes dans la grille principale
-            if (secAll) secAll.classList.add('active');
-            grid.innerHTML = '';
-            items.forEach(it => renderCard(it, grid));
-        }
+            grid.appendChild(card);
+        });
     } catch(e) {
         console.warn(`${hubType} Hub Firebase:`, e);
         window[`_${hubType}HubLoaded`] = false;
@@ -6934,206 +6789,6 @@ window.closeOtakuHub = function() {
     if (ov) ov.classList.add('hidden');
     document.body.style.overflow = '';
 };
-
-// ══════════════════════════════════════════════════════════════
-// DÉTECTION PWA — masquer section install si app déjà installée
-// ══════════════════════════════════════════════════════════════
-(function(){
-    function hidePwaSection(){const el=document.getElementById('installSection');if(el)el.style.display='none';}
-    if(window.matchMedia('(display-mode:standalone)').matches||window.navigator.standalone===true){hidePwaSection();}
-    window.matchMedia('(display-mode:standalone)').addEventListener('change',e=>{if(e.matches)hidePwaSection();});
-})();
-
-// HUB CATALOGUE APIs — supprimé, remplacé par images Firebase
-(function(){ // placeholder IIFE fermé ci-dessous
-const TMDB_KEY = ''; // conservé pour éviter les erreurs de référence
-const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
-const TMDB_IMG_WIDE = 'https://image.tmdb.org/t/p/w780';
-
-// ─── HELPERS ───────────────────────────────────────────────────
-function loadingDots(){ return '<div class="cat-loading"><div class="cat-loading-dot"></div><div class="cat-loading-dot"></div><div class="cat-loading-dot"></div></div>'; }
-function catCard(imgSrc, imgClass, title, sub, score, link){
-    const scoreHtml = score ? `<div class="cat-score"><i class="fa-solid fa-star" style="font-size:.58rem"></i>${score}</div>` : '';
-    return `<div class="cat-card" onclick="window.open('${link}','_blank','noopener')" title="${title}">
-        <img class="${imgClass}" src="${imgSrc}" loading="lazy" alt="${title}" onerror="this.parentElement.style.display='none'">
-        <div class="cat-card-info">
-            <div class="cat-card-title">${title}</div>
-            ${sub ? `<div class="cat-card-meta">${sub}</div>` : ''}
-            ${scoreHtml}
-        </div>
-    </div>`;
-}
-
-// ─── Catalogue supprimé — les hubs utilisent Firebase directement ──
-let _movieLoaded = false;
-async function loadMovieCatalogue(){
-    if (_movieLoaded) return;
-    const g1 = document.getElementById('movieCatGrid');
-    const g2 = document.getElementById('movieCatGrid2');
-    if (!g1) return;
-
-    if (!TMDB_KEY) {
-        const notice = `<div class="cat-setup-notice"><p>🎬 Pour afficher le catalogue de films, configure ta clé TMDB gratuite dans le code.<br><a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">→ Obtenir une clé gratuite</a></p></div>`;
-        g1.innerHTML = notice;
-        if (g2) g2.innerHTML = '';
-        return;
-    }
-
-    try {
-        const [popRes, trendRes] = await Promise.all([
-            fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}&language=fr-FR&page=1`),
-            fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}&language=fr-FR`)
-        ]);
-        const pop = await popRes.json();
-        const trend = await trendRes.json();
-
-        if (g1 && pop.results) {
-            g1.innerHTML = pop.results.slice(0,20).map(m => catCard(
-                m.poster_path ? TMDB_IMG + m.poster_path : '',
-                'cat-card-poster', m.title,
-                m.release_date ? m.release_date.slice(0,4) : '',
-                m.vote_average ? m.vote_average.toFixed(1) : '',
-                `https://www.themoviedb.org/movie/${m.id}`
-            )).join('');
-        }
-        if (g2 && trend.results) {
-            g2.innerHTML = trend.results.slice(0,20).map(m => catCard(
-                m.backdrop_path ? TMDB_IMG_WIDE + m.backdrop_path : (m.poster_path ? TMDB_IMG + m.poster_path : ''),
-                'cat-card-poster', m.title || m.name,
-                m.release_date ? m.release_date.slice(0,4) : '',
-                m.vote_average ? m.vote_average.toFixed(1) : '',
-                `https://www.themoviedb.org/movie/${m.id}`
-            )).join('');
-        }
-        _movieLoaded = true;
-    } catch(e) {
-        if (g1) g1.innerHTML = `<div class="cat-setup-notice"><p>Impossible de charger les films. Vérifie ta clé TMDB.</p></div>`;
-        console.warn('TMDB error', e);
-    }
-}
-
-// ─── OTAKU HUB — Jikan API (MyAnimeList, gratuit, sans clé) ────
-let _otakuLoaded = false;
-async function loadOtakuCatalogue(){
-    if (_otakuLoaded) return;
-    const g1 = document.getElementById('otakuCatGrid');
-    const g2 = document.getElementById('otakuCatGrid2');
-    if (!g1) return;
-
-    try {
-        const [seasonRes, topRes] = await Promise.all([
-            fetch('https://api.jikan.moe/v4/seasons/now?limit=24'),
-            fetch('https://api.jikan.moe/v4/top/anime?limit=24&filter=bypopularity')
-        ]);
-        const season = await seasonRes.json();
-        const top = await topRes.json();
-
-        if (g1 && season.data) {
-            g1.innerHTML = season.data.slice(0,24).map(a => catCard(
-                a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || '',
-                'cat-card-poster',
-                a.title_french || a.title,
-                a.type ? a.type + (a.episodes ? ` · ${a.episodes} eps` : '') : '',
-                a.score ? a.score.toFixed(1) : '',
-                a.url || `https://myanimelist.net/anime/${a.mal_id}`
-            )).join('');
-        }
-        if (g2 && top.data) {
-            g2.innerHTML = top.data.slice(0,24).map(a => catCard(
-                a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || '',
-                'cat-card-poster',
-                a.title_french || a.title,
-                a.type ? a.type + (a.episodes ? ` · ${a.episodes} eps` : '') : '',
-                a.score ? a.score.toFixed(1) : '',
-                a.url || `https://myanimelist.net/anime/${a.mal_id}`
-            )).join('');
-        }
-        _otakuLoaded = true;
-    } catch(e) {
-        if (g1) g1.innerHTML = `<div class="cat-setup-notice"><p>Impossible de charger les animes. Réessaie dans quelques secondes.</p></div>`;
-        console.warn('Jikan error', e);
-    }
-}
-
-// ─── MUSIC HUB — iTunes RSS (Apple, gratuit, sans clé) ─────────
-let _musicLoaded = false;
-async function loadMusicCatalogue(){
-    if (_musicLoaded) return;
-    const g1 = document.getElementById('musicCatGrid');
-    const g2 = document.getElementById('musicCatGrid2');
-    if (!g1) return;
-
-    try {
-        const [albumRes, songRes] = await Promise.all([
-            fetch('https://itunes.apple.com/fr/rss/topalbums/limit=24/json'),
-            fetch('https://itunes.apple.com/fr/rss/topsongs/limit=24/json')
-        ]);
-        const albums = await albumRes.json();
-        const songs = await songRes.json();
-
-        const albumFeed = albums?.feed?.entry || [];
-        const songFeed = songs?.feed?.entry || [];
-
-        if (g1 && albumFeed.length) {
-            g1.innerHTML = albumFeed.map(a => catCard(
-                (a['im:image']?.[2]?.label || '').replace('100x100', '300x300'),
-                'cat-card-square',
-                a['im:name']?.label || '',
-                a['im:artist']?.label || '',
-                '',
-                a.link?.attributes?.href || 'https://music.apple.com'
-            )).join('');
-        }
-        if (g2 && songFeed.length) {
-            g2.innerHTML = songFeed.map(s => catCard(
-                (s['im:image']?.[2]?.label || '').replace('100x100', '300x300'),
-                'cat-card-square',
-                s['im:name']?.label || '',
-                s['im:artist']?.label || '',
-                '',
-                s.link?.attributes?.href || 'https://music.apple.com'
-            )).join('');
-        }
-        _musicLoaded = true;
-    } catch(e) {
-        if (g1) g1.innerHTML = `<div class="cat-setup-notice"><p>Impossible de charger les musiques. Réessaie plus tard.</p></div>`;
-        console.warn('iTunes error', e);
-    }
-}
-
-// ─── HOOK SUR LES OUVERTURES DE HUBS ───────────────────────────
-const _origOpenMovie = window.openMovieHub;
-window.openMovieHub = function(){
-    if(_origOpenMovie) _origOpenMovie();
-    else {
-        const ov = document.getElementById('movieHubOverlay');
-        if(ov){ ov.classList.remove('hidden'); document.body.style.overflow='hidden'; }
-    }
-    setTimeout(loadMovieCatalogue, 120);
-};
-
-const _origOpenOtaku = window.openOtakuHub;
-window.openOtakuHub = function(){
-    if(_origOpenOtaku) _origOpenOtaku();
-    else {
-        const ov = document.getElementById('otakuHubOverlay');
-        if(ov){ ov.classList.remove('hidden'); document.body.style.overflow='hidden'; }
-    }
-    setTimeout(loadOtakuCatalogue, 120);
-};
-
-const _origOpenMusic = window.openMusicHub;
-window.openMusicHub = function(){
-    if(_origOpenMusic) _origOpenMusic();
-    else {
-        const ov = document.getElementById('musicHubOverlay');
-        if(ov){ ov.classList.remove('hidden'); document.body.style.overflow='hidden'; }
-    }
-    setTimeout(loadMusicCatalogue, 120);
-};
-
-// ─── DÉTECTION PWA — cacher la section "Installer l'app" ───────
-})(); // fin placeholder IIFE catalogue
 
 // APPS MINI MENU (mobile nav Applications button)
 window.toggleAppsMiniMenu = function(e) {
@@ -8176,7 +7831,7 @@ var ID_MAP = {
     mediaHubEmpty: {childText: null},
     /* Help panel */
     helpCard1Title: {text:'\uD83D\uDD11 G\u00e9rer mes cl\u00e9s d\u2019acc\u00e8s'},
-    helpCard1Body: {text:'Allez dans \u201cCl\u00e9s d\u2019acc\u00e8s\u201d et cliquez \u201cG\u00e9n\u00e9rer ma cl\u00e9\u201d. C\u2019est instantan\u00e9 et gratuit. Copiez la cl\u00e9 depuis cette page puis collez-la dans n\u2019importe quel hub LevelUp pour d\u00e9bloquer toutes les fonctionnalit\u00e9s. Configurez un PIN pour s\u00e9curiser l\u2019affichage.'},
+    helpCard1Body: {text:'Allez dans \u201cCl\u00e9s d\u2019acc\u00e8s\u201d et cliquez \u201cG\u00e9n\u00e9rer ma cl\u00e9\u201d. C\u2019est instantan\u00e9 et gratuit. Copiez la cl\u00e9 depuis cette page puis collez-la dans n'importe quel hub LevelUp pour d\u00e9bloquer toutes les fonctionnalit\u00e9s. Configurez un PIN pour s\u00e9curiser l\u2019affichage.'},
     helpCard2Title: {text:'\uD83C\uDFAC Ma cl\u00e9 ne fonctionne pas dans LevelMovie'},
     helpCard2Body: {text:'Copiez la cl\u00e9 compl\u00e8te depuis \u201cCl\u00e9s d\u2019acc\u00e8s\u201d (bouton \u201cCopier\u201d). V\u00e9rifiez le format \u201cLVL-XXXXX-XXXXX\u201d. Si le probl\u00e8me persiste, r\u00e9g\u00e9n\u00e9rez-la depuis le tableau de bord.'},
     helpCard3Title: {text:'\uD83D\uDD12 J\u2019ai oubli\u00e9 mon PIN'},
