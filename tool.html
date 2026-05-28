@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>LevelUp Tool Hub — Vos Outils d'Écosystème</title>
+  
+  <!-- Tailwind CSS CDN pour un design moderne ultra-rapide -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome pour charger tes icônes de base de données -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Polices Google Fonts Premium -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Syne', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg: #09090b;
+      --accent: #a855f7;
+      --accent-lo: rgba(168, 85, 247, 0.12);
+      --bdr: rgba(255, 255, 255, 0.08);
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+    
+    body {
+      background-color: var(--bg);
+      color: #f4f4f5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Fond décoratif cinéma */
+    .tech-bg-img {
+      position: fixed;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80') center center/cover no-repeat;
+      z-index: -2;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    .tech-bg-fade {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(9, 9, 11, 0.4) 0%, rgba(9, 9, 11, 0.96) 60%, var(--bg) 100%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Cartes d'application vitre floutée */
+    .app-card {
+      background: rgba(255, 255, 255, 0.015);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .app-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .app-card:hover {
+      background: rgba(255, 255, 255, 0.035);
+      border-color: rgba(168, 85, 247, 0.35);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(168, 85, 247, 0.1);
+    }
+    .app-card:hover::before {
+      opacity: 1;
+    }
+
+    /* Évite la barre de défilement horizontale sur les iframes mobiles */
+    iframe {
+      color-scheme: dark;
+    }
+  </style>
+</head>
+<body class="font-sans min-h-screen selection:bg-purple-500/30 selection:text-white">
+
+  <!-- Arrière-plans d'ambiance violet cinéma -->
+  <div class="tech-bg-img"></div>
+  <div class="tech-bg-fade"></div>
+
+  <!-- 1. Écran de chargement initial -->
+  <div id="appLoader" class="fixed inset-0 bg-[#09090b] z-[9999] flex flex-col items-center justify-center transition-opacity duration-300">
+    <div class="w-12 h-12 border-4 border-purple-500/10 border-t-purple-500 rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.2)]"></div>
+    <span class="mt-4 text-xs font-bold text-slate-400 tracking-widest uppercase">Chargement de Tool Hub...</span>
+  </div>
+
+  <!-- 2. Barre de Navigation Supérieure -->
+  <nav class="fixed top-0 left-0 right-0 z-50 h-[60px] bg-black/85 border-b border-white/5 backdrop-blur-xl flex items-center px-6 gap-4">
+    <a href="/" class="flex items-center gap-2.5 text-white font-extrabold font-display text-base tracking-tight decoration-none">
+      <svg class="w-5 h-5 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" viewBox="0 0 576 512" fill="#a855f7">
+        <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
+      </svg>
+      LevelUp
+    </a>
+    <div class="w-[1px] h-4 bg-white/10"></div>
+    <span class="text-xs font-bold text-[#a855f7] uppercase tracking-wider font-display">Tool Hub</span>
+    
+    <div class="ml-auto flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+        <div class="w-5 h-5 bg-[#a855f7]/10 text-[#a855f7] border border-[#a855f7]/20 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-user text-[10px]"></i>
+        </div>
+        <span id="navUsername" class="text-xs font-semibold text-slate-300">Invité</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 3. Conteneur principal et Grille des Outils -->
+  <main class="pt-[85px] pb-24 px-6 md:px-12 max-w-7xl mx-auto min-h-screen flex flex-col">
+    <div class="mb-8">
+      <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <span class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>
+        Applications Actives
+      </div>
+      <h1 class="font-display text-2xl md:text-3xl font-extrabold text-white tracking-tight">Vos utilitaires d'écosystème</h1>
+    </div>
+
+    <!-- Grille des outils -->
+    <div id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Les cartes d'outils s'injecteront ici de manière dynamique -->
+    </div>
+
+    <!-- État vide (Fallback) -->
+    <div id="emptyState" class="hidden flex-col items-center justify-center py-24 text-center">
+      <div class="w-16 h-16 bg-purple-500/10 text-[#a855f7] border border-purple-500/20 rounded-2xl flex items-center justify-center mb-4">
+        <i class="fa-solid fa-sliders text-2xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white mb-2">Aucun outil actif</h3>
+      <p class="text-sm text-slate-400 max-w-xs mx-auto">Les utilitaires et solutions de l'écosystème sont en cours d'initialisation. Revenez plus tard !</p>
+    </div>
+  </main>
+
+  <!-- 4. Visionneuse d'Outils Plein Écran (Iframe Viewer) -->
+  <div id="iframeOverlay" class="hidden fixed inset-0 bg-[#09090b] z-[200] flex flex-col animate-fade-in">
+    <!-- Barre supérieure de contrôle -->
+    <div class="h-14 bg-[#110c1f] border-b border-[#a855f7]/20 flex items-center justify-between px-6">
+      <div class="flex items-center gap-3">
+        <button id="closeIframeBtn" class="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 hover:text-white transition-all rounded-lg">
+          <i class="fa-solid fa-arrow-left"></i> Retour
+        </button>
+        <div class="h-4 w-[1px] bg-white/10"></div>
+        <span id="activeToolTitle" class="text-xs font-bold text-slate-300 tracking-wider uppercase font-sans">
+          Outil Actif
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Recharger l'iframe -->
+        <button id="reloadIframeBtn" class="p-2 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-purple-400 rounded-lg transition-all" title="Actualiser l'outil">
+          <i id="reloadIcon" class="fa-solid fa-rotate-right text-xs"></i>
+        </button>
+        <!-- Ouvrir nouvel onglet -->
+        <button id="externalLinkBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[#a855f7] hover:bg-[#b566ff] text-white rounded-lg transition-all">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> <span class="hidden sm:inline">Nouvel Onglet</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Zone de rendu Iframe -->
+    <div class="flex-1 w-full bg-[#09090b] relative overflow-hidden">
+      <!-- Indicateur de chargement dédié à l'iframe -->
+      <div id="iframeLoader" class="absolute inset-0 bg-[#09090b] flex flex-col items-center justify-center z-20">
+        <div class="w-10 h-10 border-3 border-purple-500/10 border-t-purple-500 rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.2)]"></div>
+        <span class="mt-3 text-[10px] font-bold text-slate-500 tracking-widest uppercase">Lancement de l'outil...</span>
+      </div>
+      <iframe id="toolIframe" class="w-full h-full border-0 bg-transparent" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- 5. Modale d'informations de l'outil (Détails) -->
+  <div id="detailModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000] flex items-center justify-center p-6">
+    <div class="bg-[#0e0a16] border border-[#a855f7]/30 rounded-3xl p-6 max-w-md w-full relative shadow-2xl animate-scale-in">
+      <button id="closeDetailBtn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 border border-white/10 text-slate-300 flex items-center justify-center hover:bg-white/10 transition-all">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+      
+      <div class="w-full h-32 bg-[#a855f7]/5 border-b border-white/5 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
+        <div id="detailIconContainer"></div>
+      </div>
+
+      <h3 id="detailTitle" class="text-xl font-bold text-white mb-2 font-display">Titre de l'outil</h3>
+      <p id="detailDescription" class="text-sm text-slate-300 mb-8 leading-relaxed max-h-[200px] overflow-y-auto pr-2">Description...</p>
+      
+      <button id="detailLaunchBtn" class="w-full py-3 bg-[#a855f7] hover:bg-[#b566ff] text-white font-bold rounded-xl transition-all shadow-[0_4px_15px_rgba(168,85,247,0.2)]">
+        Ouvrir l'application
+      </button>
+    </div>
+  </div>
+
+  <!-- 6. Modale de restriction d'accès (Connexion requise) -->
+  <div id="loginRequiredModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-[1100] flex items-center justify-center p-6">
+    <div class="bg-[#0e0a16] border border-red-500/30 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl animate-scale-in">
+      <button id="closeLoginReqBtn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 border border-white/10 text-slate-300 flex items-center justify-center hover:bg-white/10 transition-all">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+
+      <div class="w-14 h-14 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+        <i class="fa-solid fa-lock text-xl"></i>
+      </div>
+
+      <h3 class="text-lg font-black text-white mb-2 uppercase font-display tracking-wide">Connexion requise</h3>
+      <p class="text-sm text-slate-400 mb-8 leading-relaxed">Vous naviguez actuellement en tant qu'invité. Veuillez vous connecter avec votre compte professionnel LevelUp pour débloquer cet outil.</p>
+      
+      <div class="flex flex-col gap-2">
+        <a href="/login" class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-center transition-all shadow-[0_4px_15px_rgba(168,85,247,0.2)]">
+          Se connecter à LevelUp
+        </a>
+        <button id="cancelLoginReqBtn" class="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all">
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Console de débogage Firestore rétractable -->
+  <div class="debug-terminal">
+    <div id="debugHeader" class="debug-header">
+      <span class="flex items-center gap-2 text-[10px] font-bold text-white uppercase tracking-wider">
+        <i class="fa-solid fa-terminal text-[#a855f7]"></i>
+        Console Statut Firestore
+      </span>
+      <i id="debugToggleIcon" class="fa-solid fa-chevron-up text-slate-400 text-[10px]"></i>
+    </div>
+    <div id="debugContent" class="debug-content hidden">
+      <!-- Les lignes de log de la console s'injecteront ici -->
+    </div>
+  </div>
+
+  <!-- 8. Barre d'actions mobile du bas (Mobile Bottom Bar) -->
+  <div class="mobile-bottom-bar">
+    <button id="mobileHomeBtn" class="bar-btn">
+      <i class="fa-solid fa-house"></i>
+      <span>Accueil</span>
+    </button>
+    <button id="mobileRefreshBtn" class="bar-btn">
+      <i class="fa-solid fa-arrows-rotate"></i>
+      <span>Actualiser</span>
+    </button>
+    <a href="/login" id="mobileLoginBtn" class="bar-btn">
+      <i class="fa-solid fa-user-lock"></i>
+      <span>Connexion</span>
+    </a>
+  </div>
+
+
+  <!-- 9. SCRIPT ENGINE (MODULES DE SERVICES & FIREBASE INTEGRATION) -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { 
+      getAuth, 
+      onAuthStateChanged, 
+      browserLocalPersistence, 
+      setPersistence, 
+      signInAnonymously,
+      signInWithCustomToken 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Chargement de l'environnement Firebase global ou fallback
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: 'AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM',
+      authDomain: 'levelup-ecosystem.com',
+      projectId: 'levelup-ia',
+      storageBucket: 'levelup-ia.firebasestorage.app',
+      messagingSenderId: '229420004282',
+      appId: '1:229420004282:web:6735f059a947f0936ae383'
+    };
+
+    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Identifiant de base de données figé et strict
+    const appId = 'level-ia-premium';
+
+    // État local de l'application
+    const state = {
+      isGuest: true,
+      user: null,
+      tools: [],
+      selectedTool: null,
+      debugLogs: [],
+      showDebugPanel: false
+    };
+
+    // Logger de Débogage sur la console virtuelle
+    function logDebug(message, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      state.debugLogs.push({ time, message, type });
+      if (state.debugLogs.length > 30) state.debugLogs.shift();
+      
+      const container = document.getElementById('debugContent');
+      if (container) {
+        container.innerHTML = state.debugLogs.map(log => {
+          let colorClass = 'text-cyan-300';
+          if (log.type === 'error') colorClass = 'text-red-400 font-bold';
+          if (log.type === 'warn') colorClass = 'text-amber-400';
+          if (log.type === 'success') colorClass = 'text-emerald-400';
+          
+          return `<div class="debug-line">
+            <span class="text-purple-400">[${log.time}]</span> 
+            <span class="${colorClass}">${log.message}</span>
+          </div>`;
+        }).join('');
+        container.scrollTop = container.scrollHeight;
+      }
+      
+      // Console système classique
+      if (type === 'error') console.error(`[ToolHub] ${message}`);
+      else if (type === 'warn') console.warn(`[ToolHub] ${message}`);
+      else console.log(`[ToolHub] ${message}`);
+    }
+
+    // Gestion de la clé de connexion unique d'Écosystème (lvl_key)
+    function checkAndHandleSSOKey() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ssoKey = urlParams.get('lvl_key');
+      
+      if (ssoKey && /^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/i.test(ssoKey)) {
+        logDebug(`Clé SSO détectée : ${ssoKey}`, 'info');
+        localStorage.setItem('lvl_sec_k', btoa(ssoKey));
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+        return true;
+      }
+      return false;
+    }
+
+    function getActiveEcosystemKey() {
+      const encoded = localStorage.getItem('lvl_sec_k');
+      if (encoded) {
+        try { return atob(encoded); } catch(e) { return null; }
+      }
+      return null;
+    }
+
+    // Rendu dynamique de l'icône de l'outil
+    function getIconHTML(tool) {
+      if (tool.logo_url) {
+        return `<img src="${tool.logo_url}" alt="${tool.title}" class="w-14 h-14 object-contain filter drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">`;
+      }
+      const iconClass = tool.icon || 'fa-solid fa-screwdriver-wrench';
+      const cleanIcon = iconClass.includes('fa-') ? iconClass : `fa-solid ${iconClass}`;
+      return `<div class="w-14 h-14 flex items-center justify-center text-[#a855f7] filter drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]">
+        <i class="${cleanIcon} text-4xl"></i>
+      </div>`;
+    }
+
+    // Rendu complet de la grille des outils
+    function renderTools() {
+      const grid = document.getElementById('toolsGrid');
+      const emptyState = document.getElementById('emptyState');
+      
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const displayedTools = state.isGuest ? state.tools.slice(0, 3) : state.tools;
+
+      if (displayedTools.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      // 1. Rendu des cartes d'applications autorisées
+      displayedTools.forEach((tool, index) => {
+        const card = document.createElement('div');
+        card.className = 'app-card relative rounded-2xl overflow-hidden flex flex-col justify-between h-[300px]';
+        card.innerHTML = `
+          <div class="app-cover h-28 bg-[#a855f7]/5 border-b border-white/5 flex items-center justify-center">
+            ${getIconHTML(tool)}
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="text-white font-bold font-display text-base mb-1.5">${tool.title}</h3>
+              <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                ${tool.description}
+              </p>
+            </div>
+            <button class="launch-btn w-full mt-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-gradient-to-r hover:from-purple-600 hover:to-indigo-600 hover:border-transparent text-xs font-bold transition-all shadow-sm">
+              Ouvrir l'outil
+            </button>
+          </div>
+        `;
+
+        // Écouteurs de clics
+        card.querySelector('.launch-btn').addEventListener('click', () => {
+          handleOpenTool(tool);
+        });
+        
+        // Clic sur l'en-tête de la carte pour voir les détails
+        card.querySelector('.app-cover').addEventListener('click', () => {
+          openDetailModal(tool);
+        });
+
+        grid.appendChild(card);
+      });
+
+      // 2. Rendu de la carte "Mur de sécurité" pour les invités (Guest)
+      if (state.isGuest && state.tools.length > 3) {
+        const lockCard = document.createElement('div');
+        lockCard.className = 'app-card relative rounded-2xl border border-dashed border-[#a855f7]/20 bg-[#120a22]/10 overflow-hidden flex flex-col justify-between h-[300px]';
+        lockCard.innerHTML = `
+          <div class="app-cover h-28 bg-red-500/5 border-b border-white/5 flex items-center justify-center">
+            <div class="w-14 h-14 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+              <i class="fa-solid fa-lock text-xl"></i>
+            </div>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="text-red-400 font-bold font-display text-base mb-1.5">Mur de sécurité</h3>
+              <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                Connectez-vous avec votre compte professionnel LevelUp pour déverrouiller le catalogue complet d'outils.
+              </p>
+            </div>
+            <button class="lock-trigger-btn w-full mt-3 py-2.5 rounded-lg bg-red-600/10 border border-red-500/20 text-red-400 hover:bg-red-600 hover:text-white hover:border-transparent text-xs font-bold transition-all shadow-sm">
+              S'identifier maintenant
+            </button>
+          </div>
+        `;
+
+        lockCard.querySelector('.lock-trigger-btn').addEventListener('click', () => {
+          document.getElementById('loginRequiredModal').classList.remove('hidden');
+        });
+
+        grid.appendChild(lockCard);
+      }
+    }
+
+    // Gestion de l'ouverture et du chargement des outils
+    function handleOpenTool(tool) {
+      if (state.isGuest && state.tools.indexOf(tool) >= 3) {
+        document.getElementById('loginRequiredModal').classList.remove('hidden');
+        return;
+      }
+
+      let finalUrl = tool.url || '#';
+      const ecosystemKey = getActiveEcosystemKey();
+      
+      // Injection transparente de la clé SSO si présente
+      if (ecosystemKey && finalUrl !== '#') {
+        try {
+          const parsedUrl = new URL(finalUrl);
+          parsedUrl.searchParams.set('lvl_key', ecosystemKey);
+          finalUrl = parsedUrl.toString();
+        } catch(e) {
+          logDebug("Erreur lors de l'injection de la clé SSO.", "error");
+        }
+      }
+
+      logDebug(`Ouverture de l'outil : "${tool.title}"`, 'info');
+      
+      const iframe = document.getElementById('toolIframe');
+      const loader = document.getElementById('iframeLoader');
+      const overlay = document.getElementById('iframeOverlay');
+      const titleSpan = document.getElementById('activeToolTitle');
+
+      titleSpan.textContent = tool.title;
+      loader.classList.remove('hidden');
+      iframe.src = finalUrl;
+      overlay.classList.remove('hidden');
+    }
+
+    // Modale de détails
+    function openDetailModal(tool) {
+      state.selectedTool = tool;
+      document.getElementById('detailTitle').textContent = tool.title;
+      document.getElementById('detailDescription').textContent = tool.description;
+      
+      const iconContainer = document.getElementById('detailIconContainer');
+      iconContainer.innerHTML = getIconHTML(tool);
+
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    // Outils locaux de fallback de l'aperçu si Firestore est verrouillé
+    function loadFallbackTools() {
+      logDebug("Utilisation des outils locaux de secours pour l'aperçu.", "info");
+      state.tools = [
+        {
+          id: 'tool_1',
+          title: 'AI Text Assistant',
+          description: 'Un assistant d\'intelligence artificielle de pointe pour rédiger, traduire et optimiser vos écrits professionnels.',
+          url: 'https://levelup-ecosystem.com/ai-assistant',
+          icon: 'fa-robot',
+          logo_url: null,
+          active: true
+        },
+        {
+          id: 'tool_2',
+          title: 'Code Playground',
+          description: 'Un bac à sable de développement en ligne pour tester vos scripts HTML/CSS/JS instantanément.',
+          url: 'https://levelup-ecosystem.com/playground',
+          icon: 'fa-code',
+          logo_url: null,
+          active: true
+        },
+        {
+          id: 'tool_3',
+          title: 'File Secure Convert',
+          description: 'Un outil de conversion de fichiers sécurisé avec chiffrement renforcé pour vos documents.',
+          url: 'https://levelup-ecosystem.com/converter',
+          icon: 'fa-file-shield',
+          logo_url: null,
+          active: true
+        }
+      ];
+      renderTools();
+    }
+
+    // Événements d'interface générale
+    document.addEventListener('DOMContentLoaded', () => {
+      // Écouteur de fin de chargement d'iframe
+      const iframe = document.getElementById('toolIframe');
+      if (iframe) {
+        iframe.addEventListener('load', () => {
+          document.getElementById('iframeLoader').classList.add('hidden');
+        });
+      }
+
+      // Fermer l'iframe
+      document.getElementById('closeIframeBtn').addEventListener('click', () => {
+        document.getElementById('iframeOverlay').classList.add('hidden');
+        document.getElementById('toolIframe').src = '';
+      });
+
+      // Rafraîchir l'iframe
+      document.getElementById('reloadIframeBtn').addEventListener('click', () => {
+        const loader = document.getElementById('iframeLoader');
+        loader.classList.remove('hidden');
+        const icon = document.getElementById('reloadIcon');
+        icon.classList.add('animate-spin');
+        iframe.src = iframe.src;
+        setTimeout(() => icon.classList.remove('animate-spin'), 1000);
+      });
+
+      // Ouvrir lien externe
+      document.getElementById('externalLinkBtn').addEventListener('click', () => {
+        if (iframe.src) window.open(iframe.src, '_blank');
+      });
+
+      // Fermer détails
+      document.getElementById('closeDetailBtn').addEventListener('click', () => {
+        document.getElementById('detailModal').classList.add('hidden');
+      });
+
+      document.getElementById('detailLaunchBtn').addEventListener('click', () => {
+        document.getElementById('detailModal').classList.add('hidden');
+        if (state.selectedTool) handleOpenTool(state.selectedTool);
+      });
+
+      // Fermer modales connexion requise
+      document.getElementById('closeLoginReqBtn').addEventListener('click', () => {
+        document.getElementById('loginRequiredModal').classList.add('hidden');
+      });
+      document.getElementById('cancelLoginReqBtn').addEventListener('click', () => {
+        document.getElementById('loginRequiredModal').classList.add('hidden');
+      });
+
+      // Actions Mobile Bottom Bar
+      document.getElementById('mobileHomeBtn').addEventListener('click', () => {
+        document.getElementById('iframeOverlay').classList.add('hidden');
+        document.getElementById('toolIframe').src = '';
+      });
+      document.getElementById('mobileRefreshBtn').addEventListener('click', () => {
+        window.location.reload();
+      });
+
+      // Gestion et pliage de la console de débogage
+      const debugHeader = document.getElementById('debugHeader');
+      debugHeader.addEventListener('click', () => {
+        state.showDebugPanel = !state.showDebugPanel;
+        const content = document.getElementById('debugContent');
+        const icon = document.getElementById('debugToggleIcon');
+        if (state.showDebugPanel) {
+          content.classList.remove('hidden');
+          icon.className = "fa-solid fa-chevron-down text-slate-400 text-[10px]";
+        } else {
+          content.classList.add('hidden');
+          icon.className = "fa-solid fa-chevron-up text-slate-400 text-[10px]";
+        }
+      });
+    });
+
+    // Initialisation globale de la base de données & Authentification
+    const initAppProcess = async () => {
+      logDebug("Initialisation de l'authentification Firebase...", "info");
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        checkAndHandleSSOKey();
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          logDebug("Connexion via Custom Token d'écosystème...", "info");
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          logDebug("Connexion en mode Invité sécurisé...", "info");
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        logDebug(`Échec de l'authentification : ${err.message}`, "error");
+      }
+
+      // Écouteur d'état utilisateur
+      onAuthStateChanged(auth, (currentUser) => {
+        const ssoActive = getActiveEcosystemKey();
+
+        if (ssoActive) {
+          state.isGuest = false;
+          state.user = { displayName: 'Partenaire', photoURL: null, role: 'partner' };
+          logDebug("Mode Partenaire validé par clé SSO.", "success");
+        } else if (currentUser && !currentUser.isAnonymous) {
+          state.isGuest = false;
+          state.user = {
+            displayName: currentUser.displayName?.split(' ')[0] || 'Membre',
+            role: 'member'
+          };
+          logDebug(`Utilisateur membre connecté (UID : ${currentUser.uid})`, "success");
+        } else {
+          state.isGuest = true;
+          state.user = null;
+          logDebug("Navigation active en mode Invité (limite active).", "warn");
+        }
+
+        // Mise à jour de l'UI Header
+        const nameSpan = document.getElementById('navUsername');
+        if (nameSpan) nameSpan.textContent = state.user ? state.user.displayName : 'Invité';
+
+        // Lancement de l'écouteur des outils Firestore
+        initToolsListener();
+        
+        // Cache le chargeur global de l'application
+        document.getElementById('appLoader').classList.add('opacity-0');
+        setTimeout(() => document.getElementById('appLoader').classList.add('hidden'), 300);
+      });
+    };
+
+    // Connexion en temps réel à ton document de configuration
+    function initToolsListener() {
+      const hubPath = `artifacts/${appId}/public/data/config/tools_hub`;
+      logDebug(`Connexion au document à l'adresse : ${hubPath}`, 'info');
+
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'tools_hub');
+
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          logDebug("Document 'tools_hub' trouvé avec succès ! Lecture de vos outils...", "success");
+          const loadedTools = [];
+
+          Object.keys(data).forEach((key) => {
+            if (key.startsWith('tool_')) {
+              const item = data[key];
+              if (item && item.active === true) {
+                loadedTools.push({
+                  id: key,
+                  title: item.title || item.name || 'Outil sans nom',
+                  description: item.description || 'Aucune description disponible.',
+                  url: item.url || '#',
+                  icon: item.icon || 'fa-solid fa-screwdriver-wrench',
+                  logo_url: item.logo_url || null,
+                  active: item.active
+                });
+              }
+            }
+          });
+
+          // Tri séquentiel
+          loadedTools.sort((a, b) => {
+            const numA = parseInt(a.id.replace('tool_', ''), 10) || 0;
+            const numB = parseInt(b.id.replace('tool_', ''), 10) || 0;
+            return numA - numB;
+          });
+
+          logDebug(`${loadedTools.length} outils actifs récupérés.`, "success");
+          state.tools = loadedTools;
+          renderTools();
+        } else {
+          logDebug(`Le document 'tools_hub' n'existe pas encore à l'adresse : ${hubPath}`, "warn");
+          loadFallbackTools();
+        }
+      }, (error) => {
+        logDebug(`Sécurité de l'aperçu : ${error.message}`, "warn");
+        loadFallbackTools();
+      });
+    }
+
+    // Exécution du script principal
+    initAppProcess();
+  </script>
+</body>
+</html>
