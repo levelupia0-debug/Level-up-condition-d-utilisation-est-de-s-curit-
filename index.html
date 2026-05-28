@@ -720,6 +720,96 @@ LOGOUT ANIMATION OVERLAY
 .mobile-nav.vis { display: block; }
 }
 
+/* ══════════════════════════════════════════════════════
+   MOBILE PWA ARCHITECTURE
+══════════════════════════════════════════════════════ */
+
+/* ─── INSTALL WALL ─────────────────────────── */
+#mobileInstallWall{position:fixed;inset:0;z-index:9999;background:#080412;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+#mobileInstallWall.hidden{display:none!important}
+.miw-hero{padding:max(60px,calc(env(safe-area-inset-top,0px) + 40px)) 24px 24px;text-align:center;background:radial-gradient(ellipse 100% 55% at 50% 0%,rgba(168,85,247,.22) 0%,transparent 65%);flex-shrink:0}
+.miw-logo{font-family:var(--display);font-size:.95rem;font-weight:800;letter-spacing:.14em;color:#e9d5ff;display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:26px}
+.miw-star-ico{width:34px;height:34px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(168,85,247,.5)}
+.miw-title{font-family:var(--display);font-size:1.85rem;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.15;margin-bottom:10px}
+.miw-title span{background:linear-gradient(135deg,#d8b4fe,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.miw-sub{font-size:.84rem;color:rgba(255,255,255,.42);line-height:1.7;max-width:300px;margin:0 auto 28px}
+.miw-body{padding:0 20px 0;flex-shrink:0}
+.miw-device-label{font-size:.67rem;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;text-align:center}
+.miw-device-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
+.miw-device-btn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.45);font-size:.72rem;font-weight:600;text-align:center}
+.miw-device-btn i{font-size:1.5rem}
+.miw-device-btn.active{background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.4);color:#c084fc;box-shadow:0 0 20px rgba(168,85,247,.12)}
+.miw-tuto{display:none;padding-top:4px}
+.miw-tuto.visible{display:block}
+.miw-tuto-title{font-size:.73rem;font-weight:700;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.09em;margin-bottom:16px}
+.miw-step{display:flex;gap:13px;margin-bottom:18px;align-items:flex-start}
+.miw-step-num{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+.miw-step-body{flex:1}
+.miw-step-title{font-size:.84rem;font-weight:700;color:#fff;margin-bottom:3px}
+.miw-step-desc{font-size:.74rem;color:rgba(255,255,255,.4);line-height:1.6}
+.miw-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);border-radius:6px;padding:2px 7px;font-size:.7rem;color:rgba(255,255,255,.65);font-weight:600;margin:3px 2px 0;vertical-align:middle}
+.miw-pill i{font-size:.65rem}
+.miw-footer{padding:16px 20px calc(20px + env(safe-area-inset-bottom));flex-shrink:0;background:linear-gradient(0deg,#080412 80%,transparent);border-top:1px solid rgba(255,255,255,.05);margin-top:20px}
+.miw-footer-note{font-size:.68rem;color:rgba(255,255,255,.18);text-align:center;line-height:1.7}
+
+/* ─── MOBILE TOP BAR (PWA mode) ──────────────── */
+#mobTopBar{display:none;position:fixed;top:0;left:0;right:0;z-index:820;height:56px;background:rgba(8,4,18,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(168,85,247,.1);align-items:center;justify-content:space-between;padding:0 14px;padding-top:env(safe-area-inset-top,0px)}
+body.pwa-mobile #mobTopBar{display:flex}
+.mtb-btn{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.6);font-size:.95rem;transition:all .2s;flex-shrink:0}
+.mtb-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.mtb-logo{font-family:var(--display);font-size:.8rem;font-weight:800;letter-spacing:.13em;color:#e9d5ff;display:flex;align-items:center;gap:6px}
+
+/* ─── PWA BOTTOM NAV ──────────────────────────── */
+#pwaBottomNav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:820;background:rgba(8,4,18,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(168,85,247,.1);padding-bottom:env(safe-area-inset-bottom,0px)}
+body.pwa-mobile #pwaBottomNav{display:block}
+body.pwa-mobile .mobile-nav{display:none!important}
+body.pwa-mobile .fab-wrap{display:none!important}
+.pbn-wrap{display:flex;align-items:flex-end;justify-content:space-around;padding:5px 4px 3px}
+.pbn-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.3);font-size:.55rem;font-weight:600;cursor:pointer;transition:all .2s;padding:5px 8px 2px;min-width:48px}
+.pbn-item.active{color:#c084fc}
+.pbn-item i{font-size:1.1rem;transition:transform .2s}
+.pbn-item.active i{transform:scale(1.12)}
+.pbn-dona-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;margin-top:-20px;padding:0 4px 2px}
+.pbn-dona{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(168,85,247,.55),0 0 0 3px #080412;transition:all .25s}
+.pbn-dona:hover,.pbn-dona:active{transform:scale(1.06);box-shadow:0 6px 32px rgba(168,85,247,.75),0 0 0 3px #080412}
+.pbn-dona i{font-size:1.25rem;color:#fff}
+.pbn-dona-lbl{font-size:.53rem;font-weight:700;color:rgba(168,85,247,.8);text-align:center}
+
+/* ─── MOBILE SIDEBAR (LEFT) ──────────────────── */
+#mobSidebarOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1090;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;opacity:0;transition:opacity .3s}
+#mobSidebarOverlay.open{display:block;opacity:1}
+#mobSidebar{position:fixed;top:0;left:-285px;width:272px;height:100%;background:linear-gradient(180deg,#0c0719 0%,#090415 100%);border-right:1px solid rgba(168,85,247,.12);z-index:1100;transition:left .3s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
+#mobSidebar.open{left:0}
+.msb-head{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.msb-logo{font-family:var(--display);font-size:.88rem;font-weight:800;letter-spacing:.1em;color:#e9d5ff;display:flex;align-items:center;gap:8px}
+.msb-close-btn{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:all .2s}
+.msb-close-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.msb-scroll{flex:1;overflow-y:auto;padding:6px 8px calc(20px + env(safe-area-inset-bottom,0px))}
+.msb-sec-label{font-size:.62rem;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.1em;margin:14px 8px 7px;display:block}
+.msb-row{display:flex;align-items:center;gap:12px;padding:10px 10px;border-radius:11px;cursor:pointer;color:rgba(255,255,255,.6);font-size:.82rem;font-weight:600;transition:all .2s;margin-bottom:2px;text-decoration:none}
+.msb-row:hover{background:rgba(255,255,255,.05);color:#fff}
+.msb-row i{font-size:.98rem;color:rgba(168,85,247,.8);width:18px;text-align:center}
+.msb-info-box{margin:12px 6px 0;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.13);border-radius:13px;padding:13px}
+.msb-info-title{font-size:.77rem;font-weight:700;color:#c084fc;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.msb-info-text{font-size:.71rem;color:rgba(255,255,255,.37);line-height:1.65}
+.msb-socials{display:flex;gap:7px;margin-top:10px}
+.msb-soc-btn{flex:1;padding:7px 4px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.45);font-size:.68rem;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;display:block;transition:all .2s}
+.msb-soc-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+
+/* ─── AUTH BOTTOM SHEET (mobile) ──────────────── */
+@media(max-width:820px){
+#authOverlay{align-items:flex-end!important;padding:0!important}
+.auth-card{border-radius:22px 22px 0 0!important;max-width:100%!important;width:100%!important;margin:0!important;animation:slideUpSheet .38s cubic-bezier(.32,.72,0,1)!important;padding-bottom:env(safe-area-inset-bottom,0px)!important}
+@keyframes slideUpSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.auth-topbar{padding-top:24px!important;position:relative!important}
+.auth-topbar::before{content:'';position:absolute;top:9px;left:50%;transform:translateX(-50%);width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.18)}
+}
+
+/* ─── PWA PADDING ADJUSTMENTS ─────────────────── */
+body.pwa-mobile #landing{padding-top:calc(56px + env(safe-area-inset-top,0px))}
+body.pwa-mobile #dashboard{padding-top:calc(56px + env(safe-area-inset-top,0px))!important}
+body.pwa-mobile .hero{padding-top:36px!important}
+body.pwa-mobile .db-main{padding-bottom:max(92px,calc(74px + env(safe-area-inset-bottom,0px)))}
 
 /* ── BADGE NAVIGATION OUTILS ── */
 .lvl-nav-badge { position:absolute; top:2px; right:4px; width:8px; height:8px; border-radius:50%; background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 0 6px rgba(239,68,68,.7); animation:badgePulse 1.8s ease infinite; pointer-events:none; }
@@ -2729,7 +2819,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 </main>
 
-<!-- MOBILE NAVIGATION (DASHBOARD ONLY) -->
+<!-- MOBILE NAVIGATION (DASHBOARD ONLY — web mode) -->
 <div class="mobile-nav" id="mobileNav">
 <div class="mn-in">
 <div class="mn-item on" onclick="pnl('home')" id="mbn-home"><i class="fa-solid fa-house"></i><span data-i18n="nav.home">Accueil</span></div>
@@ -2741,14 +2831,190 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 </div>
 
+<!-- ══ MOBILE INSTALL WALL ══ -->
+<div id="mobileInstallWall" class="hidden">
+  <div class="miw-hero">
+    <div class="miw-logo">
+      <div class="miw-star-ico"><i class="fa-solid fa-star" style="color:#fff;font-size:.8rem"></i></div>
+      LEVELUP
+    </div>
+    <div class="miw-title">L'app mobile<br><span>LevelUp Ecosystem</span></div>
+    <p class="miw-sub">Pour vivre l'expérience complète, installe l'application directement sur ton écran d'accueil. Gratuit, sans store, en 30 secondes.</p>
+  </div>
+  <div class="miw-body">
+    <div class="miw-device-label">Quel est ton appareil ?</div>
+    <div class="miw-device-grid">
+      <div class="miw-device-btn" id="miwBtnIphone" onclick="miwSelectDevice('iphone')">
+        <i class="fa-brands fa-apple"></i>iPhone
+      </div>
+      <div class="miw-device-btn" id="miwBtnAndroid" onclick="miwSelectDevice('android')">
+        <i class="fa-brands fa-android"></i>Android
+      </div>
+      <div class="miw-device-btn" id="miwBtnIpad" onclick="miwSelectDevice('ipad')">
+        <i class="fa-solid fa-tablet-screen-button"></i>iPad
+      </div>
+    </div>
+
+    <!-- iPhone tutorial -->
+    <div class="miw-tuto" id="miwTutoIphone">
+      <div class="miw-tuto-title">Installation sur iPhone — Safari</div>
+      <div class="miw-step">
+        <div class="miw-step-num">1</div>
+        <div class="miw-step-body">
+          <div class="miw-step-title">Ouvre ce site dans Safari</div>
+          <div class="miw-step-desc">L'installation ne fonctionne qu'avec Safari.<br><span class="miw-pill"><i class="fa-brands fa-safari"></i> Safari requis</span></div>
+        </div>
+      </div>
+      <div class="miw-step">
+        <div class="miw-step-num">2</div>
+        <div class="miw-step-body">
+          <div class="miw-step-title">Appuie sur le bouton Partager</div>
+          <div class="miw-step-desc"><span class="miw-pill"><i class="fa-solid fa-arrow-up-from-bracket"></i> Partager</span> en bas de l'écran, puis fais défiler la liste d'actions.</div>
+        </div>
+      </div>
+      <div class="miw-step">
+        <div class="miw-step-num">3</div>
+        <div class="miw-step-body">
+          <div class="miw-step-title">Appuie sur "Sur l'écran d'accueil"</div>
+          <div class="miw-step-desc">Puis tape <span class="miw-pill">Ajouter</span> en haut à droite. L'app apparaît sur ton écran d'accueil !</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Android tutorial -->
+    <div class="miw-tuto" id="miwTutoAndroid">
+      <div class="miw-tuto-title">Installation sur Android — Chrome</div>
+      <div class="miw-step">
+        <div class="miw-step-num">1</div>
+        <div class="miw-step-body">
+          <div class="miw-step-title">Ouvre Chrome sur ce site</div>
+          <div class="miw-step-desc">Utilise Chrome pour la meilleure compatibilité d'installation.</div>
+        </div>
+      </div>
+      <div class="miw-step">
+        <div class="miw-step-num">2</div>
+        <div class="miw-step-body">
+          <div class="miw-step-title">Appuie sur <span class="miw-pill"><i class="fa-solid fa-ellipsis-vertical"></i> Menu</span></div>
+          <div class="miw-step-desc">Les trois points en haut à droite de Chrome.</div>
+        </div>
+      </div>
+      <div class="miw-step">
+        <div class="miw-step-num">3</div>
+        <div class="miw-step-body">
+          <div class="miw-step-title">Appuie sur "Installer l'application"</div>
+          <div class="miw-step-desc">Ou <span class="miw-pill">Ajouter à l'écran d'accueil</span>. Confirme et c'est fait !</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- iPad tutorial -->
+    <div class="miw-tuto" id="miwTutoIpad">
+      <div class="miw-tuto-title">Installation sur iPad — Safari</div>
+      <div class="miw-step">
+        <div class="miw-step-num">1</div>
+        <div class="miw-step-body">
+          <div class="miw-step-title">Ouvre ce site dans Safari</div>
+          <div class="miw-step-desc"><span class="miw-pill"><i class="fa-brands fa-safari"></i> Safari uniquement</span> — pas Chrome ni Firefox.</div>
+        </div>
+      </div>
+      <div class="miw-step">
+        <div class="miw-step-num">2</div>
+        <div class="miw-step-body">
+          <div class="miw-step-title">Appuie sur <span class="miw-pill"><i class="fa-solid fa-arrow-up-from-bracket"></i></span> dans la barre d'adresse</div>
+          <div class="miw-step-desc">Le bouton Partager se trouve dans la barre d'outils en haut à droite.</div>
+        </div>
+      </div>
+      <div class="miw-step">
+        <div class="miw-step-num">3</div>
+        <div class="miw-step-body">
+          <div class="miw-step-title">Appuie sur "Sur l'écran d'accueil" puis Ajouter</div>
+          <div class="miw-step-desc">L'application s'installe comme une vraie app native !</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="miw-footer">
+    <p class="miw-footer-note">LevelUp Ecosystem · Application gratuite · Aucun téléchargement depuis un store<br>Compatible iPhone, iPad et Android</p>
+  </div>
+</div>
+
+<!-- ══ MOBILE TOP BAR (PWA app mode) ══ -->
+<div id="mobTopBar">
+  <button class="mtb-btn" onclick="window.mobSidebarOpen()" aria-label="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+  <div class="mtb-logo">
+    <svg width="16" height="16" viewBox="0 0 576 512" fill="url(#pg)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
+    LEVELUP
+  </div>
+  <button class="mtb-btn" onclick="window.openSearch()" aria-label="Rechercher">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+</div>
+
+<!-- ══ PWA BOTTOM NAV ══ -->
+<div id="pwaBottomNav">
+  <div class="pbn-wrap">
+    <div class="pbn-item active" id="pbnHome" onclick="window.pbnNav('home')">
+      <i class="fa-solid fa-house"></i>
+      <span>Accueil</span>
+    </div>
+    <div class="pbn-item" id="pbnApp" onclick="window.pbnNav('app')">
+      <i class="fa-solid fa-border-all"></i>
+      <span>App</span>
+    </div>
+    <div class="pbn-dona-wrap" onclick="window.open('dona.html','_blank')">
+      <div class="pbn-dona"><i class="fa-solid fa-star"></i></div>
+      <div class="pbn-dona-lbl">Dona</div>
+    </div>
+    <div class="pbn-item" id="pbnInfo" onclick="window.pbnNav('info')">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>Info</span>
+    </div>
+    <div class="pbn-item" id="pbnCompte" onclick="window.pbnNav('compte')">
+      <i class="fa-solid fa-circle-user"></i>
+      <span>Compte</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MOBILE LEFT SIDEBAR ══ -->
+<div id="mobSidebarOverlay" onclick="window.mobSidebarClose()"></div>
+<div id="mobSidebar">
+  <div class="msb-head">
+    <div class="msb-logo">
+      <svg width="16" height="16" viewBox="0 0 576 512" fill="url(#pg)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
+      LEVELUP
+    </div>
+    <button class="msb-close-btn" onclick="window.mobSidebarClose()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="msb-scroll">
+    <span class="msb-sec-label">Navigation</span>
+    <div class="msb-row" onclick="window.pbnNav('home');window.mobSidebarClose()"><i class="fa-solid fa-house"></i> Accueil</div>
+    <div class="msb-row" onclick="window.pbnNav('app');window.mobSidebarClose()"><i class="fa-solid fa-border-all"></i> Applications</div>
+    <div class="msb-row" onclick="window.openSearch();window.mobSidebarClose()"><i class="fa-solid fa-magnifying-glass"></i> Recherche</div>
+
+    <span class="msb-sec-label">Outils</span>
+    <div class="msb-row" onclick="window.pbnNav('compte');window.mobSidebarClose()"><i class="fa-solid fa-circle-user"></i> Mon Compte</div>
+    <div class="msb-row" onclick="if(window.showPushPermPopup)window.showPushPermPopup();window.mobSidebarClose()"><i class="fa-solid fa-bell"></i> Notifications</div>
+    <div class="msb-row" onclick="window.pbnNav('info');window.mobSidebarClose()"><i class="fa-solid fa-circle-info"></i> À propos</div>
+
+    <div class="msb-info-box">
+      <div class="msb-info-title"><i class="fa-solid fa-globe"></i> Mode Web</div>
+      <div class="msb-info-text">Tu utilises LevelUp en mode application installée. La version web complète est accessible depuis un ordinateur.<br><br>Tous tes hubs (Movie, Music, Game, Otaku, Outils) sont disponibles depuis l'accueil.</div>
+      <div class="msb-socials">
+        <a href="https://twitter.com/levelupecosystem" target="_blank" class="msb-soc-btn"><i class="fa-brands fa-x-twitter"></i> Twitter</a>
+        <a href="https://discord.gg/levelup" target="_blank" class="msb-soc-btn"><i class="fa-brands fa-discord"></i> Discord</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════════
 AUTH OVERLAY
 ═══════════════════════════════════════ -->
 <div class="overlay hidden" id="authOverlay" onclick="bgClose(event,'authOverlay')">
 <div class="auth-card" id="authCardWrapper">
-
-  <!-- Close -->
-  <button class="auth-close" onclick="closeAuth()"><i class="fa-solid fa-xmark"></i></button>
 
   <!-- Top bar -->
   <div class="auth-topbar">
@@ -3798,7 +4064,17 @@ window.twitterSignIn = async function() {
         }
         await signInWithPopup(auth, twitterProv);
     } catch(e) {
-        if (e.code !== 'auth/popup-closed-by-user') toast_('Erreur connexion X — réessayez', 'err');
+        if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
+        const msgs = {
+            'auth/operation-not-allowed': 'Connexion X non activée — contacte le support.',
+            'auth/popup-blocked': 'Popup bloquée par le navigateur. Autorise les popups et réessaye.',
+            'auth/network-request-failed': 'Erreur réseau — vérifie ta connexion.',
+            'auth/account-exists-with-different-credential': 'Ce compte existe déjà avec un autre fournisseur (Google, Discord…).',
+            'auth/user-disabled': 'Ce compte a été désactivé.',
+        };
+        const msg = msgs[e.code] || `Erreur X (${e.code || 'inconnue'}) — réessaye.`;
+        toast_(msg, 'err');
+        console.error('[Twitter Auth]', e.code, e.message);
     }
 };
 
@@ -9111,6 +9387,256 @@ if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
 window.scrollTo(0, 0);
+</script>
+
+<!-- ══════════════════════════════════════════════
+     MOBILE PWA ARCHITECTURE — DETECTION & LOGIC
+══════════════════════════════════════════════ -->
+<script>
+(function() {
+    'use strict';
+
+    // ─── DETECTION ────────────────────────────────────────────────────────────
+    var ua = navigator.userAgent;
+    var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isAndroid = /Android/i.test(ua);
+    var isMobileOrTablet = isIOS || isAndroid;
+    var isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    // ─── APPLY BODY CLASS ─────────────────────────────────────────────────────
+    if (isMobileOrTablet) {
+        if (isPWA) {
+            document.body.classList.add('pwa-mobile');
+        } else {
+            document.body.classList.add('mobile-browser');
+            // Show the install wall
+            var wall = document.getElementById('mobileInstallWall');
+            if (wall) wall.classList.remove('hidden');
+            // Auto-detect device type for tutorial
+            var isIPad = /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 && !/iPhone|iPod/.test(ua));
+            if (isIPad) miwSelectDevice('ipad');
+            else if (isIOS) miwSelectDevice('iphone');
+            else miwSelectDevice('android');
+        }
+    }
+
+    // ─── INSTALL WALL — DEVICE SELECTOR ──────────────────────────────────────
+    window.miwSelectDevice = function(device) {
+        ['iphone','android','ipad'].forEach(function(d) {
+            var btn = document.getElementById('miwBtn' + d.charAt(0).toUpperCase() + d.slice(1));
+            var tuto = document.getElementById('miwTuto' + d.charAt(0).toUpperCase() + d.slice(1));
+            if (btn) btn.classList.toggle('active', d === device);
+            if (tuto) tuto.classList.toggle('visible', d === device);
+        });
+    };
+
+    // ─── MOBILE SIDEBAR ──────────────────────────────────────────────────────
+    window.mobSidebarOpen = function() {
+        var sb = document.getElementById('mobSidebar');
+        var ov = document.getElementById('mobSidebarOverlay');
+        if (sb) sb.classList.add('open');
+        if (ov) { ov.classList.add('open'); ov.style.display = 'block'; }
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.mobSidebarClose = function() {
+        var sb = document.getElementById('mobSidebar');
+        var ov = document.getElementById('mobSidebarOverlay');
+        if (sb) sb.classList.remove('open');
+        if (ov) {
+            ov.classList.remove('open');
+            setTimeout(function() { ov.style.display = 'none'; }, 300);
+        }
+        document.body.style.overflow = '';
+    };
+
+    // Swipe to close sidebar
+    var _sbTouchStartX = 0;
+    var sb = document.getElementById('mobSidebar');
+    if (sb) {
+        sb.addEventListener('touchstart', function(e) { _sbTouchStartX = e.touches[0].clientX; }, { passive: true });
+        sb.addEventListener('touchend', function(e) {
+            if (_sbTouchStartX - e.changedTouches[0].clientX > 60) window.mobSidebarClose();
+        }, { passive: true });
+    }
+
+    // ─── PWA BOTTOM NAV ──────────────────────────────────────────────────────
+    window.pbnNav = function(tab) {
+        // Update active state
+        ['home','app','info','compte'].forEach(function(t) {
+            var el = document.getElementById('pbn' + t.charAt(0).toUpperCase() + t.slice(1));
+            if (el) el.classList.toggle('active', t === tab);
+        });
+
+        switch (tab) {
+            case 'home':
+                // Go to home / landing
+                if (typeof pnl === 'function') {
+                    var dash = document.getElementById('dashboard');
+                    var land = document.getElementById('landing');
+                    if (dash && !dash.classList.contains('hidden')) {
+                        pnl('home');
+                    } else if (land) {
+                        land.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+                break;
+            case 'app':
+                if (typeof toggleAppsMiniMenu === 'function') {
+                    toggleAppsMiniMenu({ currentTarget: document.getElementById('pbnApp') || document.body });
+                } else if (typeof pnl === 'function') {
+                    pnl('apps');
+                }
+                break;
+            case 'info':
+                window.mobSidebarOpen();
+                break;
+            case 'compte':
+                if (typeof pnl === 'function') pnl('settings');
+                else document.getElementById('authOverlay') && document.getElementById('authOverlay').classList.remove('hidden');
+                break;
+        }
+    };
+
+    // ─── SYNC PWA NAV WITH DASHBOARD PANELS ──────────────────────────────────
+    // Hook into existing pnl() to keep bottom nav in sync
+    var _origPnl = window.pnl;
+    if (typeof _origPnl === 'function') {
+        window.pnl = function(panel) {
+            _origPnl(panel);
+            if (!document.body.classList.contains('pwa-mobile')) return;
+            var map = { home: 'home', keys: 'app', tools: 'app', apps: 'app', settings: 'compte' };
+            var tab = map[panel] || 'home';
+            ['home','app','info','compte'].forEach(function(t) {
+                var el = document.getElementById('pbn' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (el) el.classList.toggle('active', t === tab);
+            });
+        };
+    }
+
+})();
+</script>
+
+<!-- ══ SMART SEARCH EXTENSION (Hubs + Apps) ══ -->
+<script>
+(function() {
+    // Hub & app static index for fast local search
+    var HUB_INDEX = [
+        { type: 'hub', id: 'movie',  name: 'Movie Hub',   desc: 'Films, séries, cinéma',        icon: 'fa-film',       color: '#3b82f6', action: function() { if(window.openMovieHub) window.openMovieHub(); } },
+        { type: 'hub', id: 'music',  name: 'Music Hub',   desc: 'Musique, albums, artistes',     icon: 'fa-music',      color: '#a855f7', action: function() { if(window.openMusicHub) window.openMusicHub(); } },
+        { type: 'hub', id: 'game',   name: 'Game Hub',    desc: 'Jeux vidéo, gaming',            icon: 'fa-gamepad',    color: '#10b981', action: function() { if(window.openGameHub) window.openGameHub(); } },
+        { type: 'hub', id: 'otaku',  name: 'Otaku Zone',  desc: 'Anime, manga, otaku culture',   icon: 'fa-dragon',     color: '#ec4899', action: function() { if(window.openOtakuHub) window.openOtakuHub(); } },
+        { type: 'hub', id: 'tools',  name: 'Outils',      desc: 'Outils intelligents, utilitaires', icon: 'fa-wrench',  color: '#22c55e', action: function() { if(window.openToolsHub) window.openToolsHub(); } },
+        { type: 'app', id: 'dona',   name: 'Dona',        desc: 'Assistante IA LevelUp',         icon: 'fa-star',       color: '#a855f7', action: function() { window.open('dona.html','_blank'); } },
+        { type: 'app', id: 'keys',   name: 'Mes Clés',    desc: 'Clés d\'accès et licences',     icon: 'fa-key',        color: '#f59e0b', action: function() { if(typeof pnl==='function') pnl('keys'); } },
+        { type: 'app', id: 'settings',name: 'Réglages',   desc: 'Paramètres et profil',          icon: 'fa-gear',       color: '#6b7280', action: function() { if(typeof pnl==='function') pnl('settings'); } },
+    ];
+
+    // Add Hubs tab to search if not already present
+    var searchHeader = document.querySelector('.search-tabs');
+    if (searchHeader && !document.getElementById('srTabHubs')) {
+        var tabHubs = document.createElement('button');
+        tabHubs.className = 'search-tab';
+        tabHubs.id = 'srTabHubs';
+        tabHubs.innerHTML = '<i class="fa-solid fa-border-all"></i> Hubs & Apps';
+        tabHubs.onclick = function() { window.switchSearchTab('hubs'); };
+        searchHeader.appendChild(tabHubs);
+    }
+
+    // Override switchSearchTab to support 'hubs'
+    var _origSwitch = window.switchSearchTab;
+    window.switchSearchTab = function(tab) {
+        if (tab !== 'hubs') {
+            // Remove hubs active state
+            var h = document.getElementById('srTabHubs');
+            if (h) h.classList.remove('active');
+            if (_origSwitch) _origSwitch(tab);
+            return;
+        }
+        // Hubs tab active
+        var srTabMovies = document.getElementById('srTabMovies');
+        var srTabMusic = document.getElementById('srTabMusic');
+        var srTabHubs = document.getElementById('srTabHubs');
+        if (srTabMovies) srTabMovies.classList.remove('active');
+        if (srTabMusic) srTabMusic.classList.remove('active');
+        if (srTabHubs) srTabHubs.classList.add('active');
+        window._srTab = 'hubs';
+        var inp = document.getElementById('searchInput');
+        if (inp) inp.placeholder = 'Rechercher un hub, une app…';
+        var val = inp ? inp.value.trim() : '';
+        if (val.length > 0) _searchHubs(val);
+        else _showAllHubs();
+    };
+
+    // Override debounceSearch to support hubs tab
+    var _origDebounce = window.debounceSearch;
+    window.debounceSearch = function(val) {
+        if (window._srTab === 'hubs') {
+            var btn = document.getElementById('srClearBtn');
+            if (btn) btn.style.display = val ? '' : 'none';
+            if (!val || !val.trim()) { _showAllHubs(); return; }
+            _searchHubs(val.trim());
+            return;
+        }
+        if (_origDebounce) _origDebounce(val);
+    };
+
+    function _showAllHubs() {
+        var el = document.getElementById('searchResults');
+        if (!el) return;
+        el.innerHTML = HUB_INDEX.map(function(item) {
+            return _renderHubResult(item);
+        }).join('');
+    }
+
+    function _searchHubs(q) {
+        var el = document.getElementById('searchResults');
+        if (!el) return;
+        var lq = q.toLowerCase();
+        var results = HUB_INDEX.filter(function(item) {
+            return item.name.toLowerCase().includes(lq) || item.desc.toLowerCase().includes(lq);
+        });
+        if (!results.length) {
+            el.innerHTML = '<div class="search-empty">Aucun résultat pour "' + q + '"</div>';
+            return;
+        }
+        el.innerHTML = results.map(function(item) { return _renderHubResult(item); }).join('');
+    }
+
+    function _renderHubResult(item) {
+        return '<div class="search-result-item" onclick="window._hubResultClick(\'' + item.id + '\')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s" onmouseenter="this.style.background=\'rgba(255,255,255,.04)\'" onmouseleave="this.style.background=\'\'">'
+            + '<div style="width:42px;height:42px;border-radius:12px;background:rgba(' + _hexToRgb(item.color) + ',.12);border:1px solid rgba(' + _hexToRgb(item.color) + ',.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+            + '<i class="fa-solid ' + item.icon + '" style="color:' + item.color + ';font-size:1rem"></i>'
+            + '</div>'
+            + '<div style="flex:1;min-width:0">'
+            + '<div style="font-size:.87rem;font-weight:700;color:#fff;margin-bottom:2px">' + item.name + '</div>'
+            + '<div style="font-size:.73rem;color:rgba(255,255,255,.4)">' + item.desc + '</div>'
+            + '</div>'
+            + '<div style="font-size:.65rem;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.06em">' + (item.type === 'hub' ? 'Hub' : 'App') + '</div>'
+            + '</div>';
+    }
+
+    window._hubResultClick = function(id) {
+        var item = HUB_INDEX.find(function(i) { return i.id === id; });
+        if (item && item.action) { window.closeSearch(); item.action(); }
+    };
+
+    function _hexToRgb(hex) {
+        var r = parseInt(hex.slice(1,3),16);
+        var g = parseInt(hex.slice(3,5),16);
+        var b = parseInt(hex.slice(5,7),16);
+        return r + ',' + g + ',' + b;
+    }
+
+    // Auto-open hubs tab on mobile PWA
+    if (document.body.classList.contains('pwa-mobile')) {
+        var _origOpenSearch = window.openSearch;
+        window.openSearch = function() {
+            if (_origOpenSearch) _origOpenSearch();
+            setTimeout(function() { window.switchSearchTab('hubs'); }, 50);
+        };
+    }
+})();
 </script>
 </body>
 </html>
