@@ -3974,23 +3974,48 @@ FIREBASE & APP LOGIC
 ═══════════════════════════════════════ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, TwitterAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence, getAdditionalUserInfo } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, TwitterAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence, getAdditionalUserInfo, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, collection, query, where, onSnapshot, addDoc, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js";
 
 const cfg = {
-apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-authDomain: "levelup-ecosystem.com",
-projectId: "levelup-ia",
-storageBucket: "levelup-ia.firebasestorage.app",
-messagingSenderId: "229420004282",
-appId: "1:229420004282:web:6735f059a947f0936ae383"
+  apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+  authDomain: "levelup-ecosystem.com",
+  projectId: "levelup-ia",
+  storageBucket: "levelup-ia.firebasestorage.app",
+  messagingSenderId: "229420004282",
+  appId: "1:229420004282:web:6735f059a947f0936ae383"
 };
 const fbApp = initializeApp(cfg);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 const gProv = new GoogleAuthProvider();
 
+// ── INTERCEPTION DU LOGIN DISCORD / TWITCH (À COLLER ICI) ──
+const urlParams = new URLSearchParams(window.location.search);
+const customToken = urlParams.get('customToken');
+
+if (customToken) {
+  // On connecte l'utilisateur avec le token généré par Vercel
+  signInWithCustomToken(auth, customToken)
+    .then((userCredential) => {
+      // Connexion réussie ! On nettoie l'URL pour faire propre (enlève le ?customToken=...)
+      window.history.replaceState({}, document.title, window.location.pathname);
+      toast_('Connexion réussie via ' + (urlParams.get('provider') || 'social'), 'ok');
+    })
+    .catch((error) => {
+      console.error("Erreur de connexion Custom Token:", error);
+      toast_('Échec de la connexion. Veuillez réessayer.', 'err');
+    });
+}
+
+// Gestion des erreurs (si l'utilisateur annule sur Discord/Twitch)
+if (urlParams.get('error')) {
+  toast_('Connexion annulée ou échouée.', 'err');
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+// ──────────────────────────────────────────────────────────
+    
 // ── FCM MESSAGING ──
 // VAPID key : Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → Generate key pair
 const VAPID_KEY = 'BPc3w8mDuNONg6Wl5TyU_x-l8KfUAtd_D868u3PaPpgrM7HUBMJ5qmuCCmR_U05YZlzGdYfFHPoQEzCakFaTjGM';
