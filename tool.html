@@ -163,6 +163,16 @@
       background: #110c1f;
       border-bottom: 1px solid rgba(168, 85, 247, 0.2);
     }
+
+    /* Cible et redimensionne n'importe quel code SVG brut provenant de Firestore de manière parfaite */
+    .svg-icon-container svg {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      display: block !important;
+      margin: auto !important;
+    }
   </style>
 </head>
 <body class="font-sans min-h-screen selection:bg-purple-500/30 selection:text-white">
@@ -268,7 +278,7 @@
       </button>
       
       <div class="w-full h-32 bg-[#a855f7]/5 border-b border-white/5 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
-        <div id="detailIconContainer" class="flex items-center justify-center"></div>
+        <div id="detailIconContainer" class="flex items-center justify-center w-full h-full"></div>
       </div>
 
       <h3 id="detailTitle" class="text-xl font-bold text-white mb-2 font-display">Titre de l'outil</h3>
@@ -369,17 +379,12 @@
       return null;
     }
 
-    // Rendu dynamique de l'icône de l'outil avec gestion prioritaire du SVG de la base de données
+    // Rendu dynamique de l'icône de l'outil avec gestion prioritaire du SVG de la base de données (non altéré !)
     function getIconHTML(tool) {
-      // Priorité 1 : Vérification de la présence d'un code SVG brut dans la base de données
+      // Priorité 1 : Rendu du code SVG brut directement dans un conteneur qui force la taille par CSS
       if (tool.svg && tool.svg.includes('<svg')) {
-        let cleanedSvg = tool.svg
-          .replace(/class="[^"]*"/, 'class="w-14 h-14 text-[#a855f7]"')
-          .replace(/stroke="[^"]*"/g, 'stroke="currentColor"')
-          .replace(/fill="[^"]*"/g, 'fill="none"');
-        
-        return `<div class="w-14 h-14 flex items-center justify-center text-[#a855f7] filter drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]">
-          ${cleanedSvg}
+        return `<div class="w-14 h-14 flex items-center justify-center svg-icon-container text-[#a855f7] filter drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]">
+          ${tool.svg}
         </div>`;
       }
 
@@ -396,7 +401,7 @@
       </div>`;
     }
 
-    // Rendu complet de la grille des outils sans restriction d'accès
+    // Rendu complet de la grille des outils sans restriction d'accès ni outils fallbacks par défaut
     function renderTools() {
       const grid = document.getElementById('toolsGrid');
       const emptyState = document.getElementById('emptyState');
@@ -404,7 +409,7 @@
       if (!grid) return;
       grid.innerHTML = '';
 
-      const displayedTools = state.tools; // Affichage de TOUS les outils sans restriction
+      const displayedTools = state.tools; // Affichage strict et exclusif des outils de Firestore
 
       if (displayedTools.length === 0) {
         emptyState.classList.remove('hidden');
@@ -448,7 +453,7 @@
       });
     }
 
-    // Gestion de l'ouverture et du chargement des outils sans aucun blocage d'accès
+    // Gestion de l'ouverture et du chargement des outils
     function handleOpenTool(tool) {
       let finalUrl = tool.url || '#';
       const ecosystemKey = getActiveEcosystemKey();
@@ -487,38 +492,6 @@
       iconContainer.innerHTML = getIconHTML(tool);
 
       document.getElementById('detailModal').classList.remove('hidden');
-    }
-
-    // Outils locaux de fallback avec des vraies icônes SVG si Firestore est indisponible
-    function loadFallbackTools() {
-      logDebug("Utilisation des outils locaux de secours pour l'aperçu.", "info");
-      state.tools = [
-        {
-          id: 'tool_1',
-          title: 'AI Text Assistant',
-          description: 'Un assistant d\'intelligence artificielle de pointe pour rédiger, traduire et optimiser vos écrits professionnels.',
-          url: 'https://levelup-ecosystem.com/ai-assistant',
-          svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-14 h-14"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>',
-          active: true
-        },
-        {
-          id: 'tool_2',
-          title: 'Code Playground',
-          description: 'Un bac à sable de développement en ligne pour tester vos scripts HTML/CSS/JS instantanément.',
-          url: 'https://levelup-ecosystem.com/playground',
-          svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-14 h-14"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
-          active: true
-        },
-        {
-          id: 'tool_3',
-          title: 'File Secure Convert',
-          description: 'Un outil de conversion de fichiers sécurisé avec chiffrement renforcé pour vos documents.',
-          url: 'https://levelup-ecosystem.com/converter',
-          svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-14 h-14"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 3-3 3 3"/></svg>',
-          active: true
-        }
-      ];
-      renderTools();
     }
 
     // Événements d'interface générale
@@ -583,7 +556,7 @@
           logDebug("Connexion via Custom Token d'écosystème...", "info");
           await signInWithCustomToken(auth, __initial_auth_token);
         } else {
-          logDebug("Connexion en mode Invité sécurisé...", "info");
+          logDebug("Connexion en mode Anonyme...", "info");
           await signInAnonymously(auth);
         }
       } catch (err) {
@@ -647,7 +620,7 @@
                   description: item.description || 'Aucune description disponible.',
                   url: item.url || '#',
                   icon: item.icon || null,
-                  svg: item.svg || null, // Capture prioritaire du SVG brut
+                  svg: item.svg || null, // Capture du SVG brut sans aucune modification destructive
                   logo_url: item.logo_url || null,
                   active: item.active
                 });
@@ -667,11 +640,13 @@
           renderTools();
         } else {
           logDebug(`Le document 'tools_hub' n'existe pas encore à l'adresse : ${hubPath}`, "warn");
-          loadFallbackTools();
+          state.tools = [];
+          renderTools();
         }
       }, (error) => {
         logDebug(`Sécurité de l'aperçu : ${error.message}`, "warn");
-        loadFallbackTools();
+        state.tools = [];
+        renderTools();
       });
     }
 
