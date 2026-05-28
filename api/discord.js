@@ -95,6 +95,7 @@ module.exports = async (req, res) => {
     return res.redirect(`/?customToken=${encodeURIComponent(customToken)}&provider=discord`);
   } catch (err) {
     console.error('Discord auth error:', err);
-   return res.redirect('/?error=discord_failed');
+    // On bloque la redirection et on affiche l'erreur en plein écran !
+    return res.status(500).send("🚨 ERREUR FATALE : " + err.message + " | Détails : " + err.stack);
   }
 };
