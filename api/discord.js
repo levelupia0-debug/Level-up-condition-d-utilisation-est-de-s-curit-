@@ -27,8 +27,7 @@ module.exports = async (req, res) => {
   const { code, error } = req.query;
 
   if (error) {
-    return res.redirect('/login?error=discord_denied');
-  }
+ return res.redirect('/?error=discord_denied');  }
 
   if (!code) {
     if (!DISCORD_CLIENT_ID) {
@@ -93,9 +92,9 @@ module.exports = async (req, res) => {
       username: discordUser.username,
     });
 
-    return res.redirect(`/login?customToken=${encodeURIComponent(customToken)}&provider=discord`);
+    return res.redirect(`/?customToken=${encodeURIComponent(customToken)}&provider=discord`);
   } catch (err) {
     console.error('Discord auth error:', err);
-    return res.redirect('/login?error=discord_failed');
+   return res.redirect('/?error=discord_failed');
   }
 };
