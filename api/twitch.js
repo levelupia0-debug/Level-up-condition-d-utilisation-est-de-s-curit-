@@ -26,8 +26,7 @@ module.exports = async (req, res) => {
   const { code, error } = req.query;
 
   if (error) {
-    return res.redirect('/login?error=twitch_denied');
-  }
+return res.redirect('/?error=twitch_denied');  }
 
   if (!code) {
     if (!TWITCH_CLIENT_ID) {
@@ -93,9 +92,8 @@ module.exports = async (req, res) => {
       login: twitchUser.login,
     });
 
-    return res.redirect(`/login?customToken=${encodeURIComponent(customToken)}&provider=twitch`);
-  } catch (err) {
+  return res.redirect(`/?customToken=${encodeURIComponent(customToken)}&provider=twitch`);  } catch (err) {
     console.error('Twitch auth error:', err);
-    return res.redirect('/login?error=twitch_failed');
+    return res.redirect('/?error=twitch_failed');
   }
 };
