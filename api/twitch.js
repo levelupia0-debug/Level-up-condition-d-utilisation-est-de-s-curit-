@@ -92,8 +92,10 @@ return res.redirect('/?error=twitch_denied');  }
       login: twitchUser.login,
     });
 
-  return res.redirect(`/?customToken=${encodeURIComponent(customToken)}&provider=twitch`);  } catch (err) {
+  return res.redirect(`/?customToken=${encodeURIComponent(customToken)}&provider=twitch`);
+ } catch (err) {
     console.error('Twitch auth error:', err);
-    return res.redirect('/?error=twitch_failed');
+    // On bloque la redirection et on affiche l'erreur Twitch en plein écran !
+    return res.status(500).send("🚨 ERREUR FATALE TWITCH : " + err.message + " | Détails : " + err.stack);
   }
 };
