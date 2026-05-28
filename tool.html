@@ -33,8 +33,6 @@
       --accent: #a855f7;
       --accent-lo: rgba(168, 85, 247, 0.12);
       --bdr: rgba(255, 255, 255, 0.08);
-      --sat: env(safe-area-inset-top, 0px);
-      --sab: env(safe-area-inset-bottom, 0px);
     }
     
     body {
@@ -91,6 +89,80 @@
     iframe {
       color-scheme: dark;
     }
+
+    /* Barre de navigation supérieure adaptative pour le notch */
+    nav {
+      height: calc(60px + env(safe-area-inset-top, 0px));
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* Main container adaptatif */
+    main {
+      padding-top: calc(75px + env(safe-area-inset-top, 0px));
+      padding-bottom: 40px; /* Par défaut sur ordinateur */
+    }
+
+    /* Gestion rigoureuse de la barre d'action mobile du bas */
+    .mobile-bottom-bar {
+      display: none; /* Masquée sur PC */
+    }
+
+    @media (max-width: 768px) {
+      main {
+        /* On augmente la marge du bas sur mobile pour ne pas chevaucher la bottom-bar */
+        padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      }
+      .mobile-bottom-bar {
+        display: flex; /* Visible uniquement sur mobile */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(65px + env(safe-area-inset-bottom, 0px));
+        background: rgba(9, 9, 11, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--bdr);
+        z-index: 99;
+        align-items: center;
+        justify-content: space-around;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: 16px;
+        padding-right: 16px;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
+      }
+    }
+
+    .bar-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: rgba(255, 255, 255, 0.45);
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      height: 100%;
+    }
+    .bar-btn:hover, .bar-btn:active {
+      color: var(--accent);
+    }
+    .bar-btn i {
+      font-size: 18px;
+    }
+
+    /* Correction de l'iframe de l'outil pour respecter le notch */
+    .iframe-topbar {
+      height: calc(56px + env(safe-area-inset-top, 0px));
+      padding-top: env(safe-area-inset-top, 0px);
+      background: #110c1f;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+    }
   </style>
 </head>
 <body class="font-sans min-h-screen selection:bg-purple-500/30 selection:text-white">
@@ -105,8 +177,8 @@
     <span class="mt-4 text-xs font-bold text-slate-400 tracking-widest uppercase">Chargement de Tool Hub...</span>
   </div>
 
-  <!-- 2. Barre de Navigation Supérieure -->
-  <nav class="fixed top-0 left-0 right-0 z-50 h-[60px] bg-black/85 border-b border-white/5 backdrop-blur-xl flex items-center px-6 gap-4">
+  <!-- 2. Barre de Navigation Supérieure (Notch safe) -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-black/85 border-b border-white/5 backdrop-blur-xl flex items-center px-6 gap-4">
     <a href="/" class="flex items-center gap-2.5 text-white font-extrabold font-display text-base tracking-tight decoration-none">
       <svg class="w-5 h-5 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" viewBox="0 0 576 512" fill="#a855f7">
         <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
@@ -127,7 +199,7 @@
   </nav>
 
   <!-- 3. Conteneur principal et Grille des Outils -->
-  <main class="pt-[85px] pb-24 px-6 md:px-12 max-w-7xl mx-auto min-h-screen flex flex-col">
+  <main class="px-6 md:px-12 max-w-7xl mx-auto min-h-screen flex flex-col">
     <div class="mb-8">
       <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
         <span class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>
@@ -151,10 +223,10 @@
     </div>
   </main>
 
-  <!-- 4. Visionneuse d'Outils Plein Écran (Iframe Viewer) -->
+  <!-- 4. Visionneuse d'Outils Plein Écran (Iframe Viewer - Notch safe) -->
   <div id="iframeOverlay" class="hidden fixed inset-0 bg-[#09090b] z-[200] flex flex-col animate-fade-in">
     <!-- Barre supérieure de contrôle -->
-    <div class="h-14 bg-[#110c1f] border-b border-[#a855f7]/20 flex items-center justify-between px-6">
+    <div class="iframe-topbar flex items-center justify-between px-6">
       <div class="flex items-center gap-3">
         <button id="closeIframeBtn" class="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 hover:text-white transition-all rounded-lg">
           <i class="fa-solid fa-arrow-left"></i> Retour
@@ -196,7 +268,7 @@
       </button>
       
       <div class="w-full h-32 bg-[#a855f7]/5 border-b border-white/5 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
-        <div id="detailIconContainer"></div>
+        <div id="detailIconContainer" class="flex items-center justify-center"></div>
       </div>
 
       <h3 id="detailTitle" class="text-xl font-bold text-white mb-2 font-display">Titre de l'outil</h3>
@@ -208,47 +280,8 @@
     </div>
   </div>
 
-  <!-- 6. Modale de restriction d'accès (Connexion requise) -->
-  <div id="loginRequiredModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-[1100] flex items-center justify-center p-6">
-    <div class="bg-[#0e0a16] border border-red-500/30 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl animate-scale-in">
-      <button id="closeLoginReqBtn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 border border-white/10 text-slate-300 flex items-center justify-center hover:bg-white/10 transition-all">
-        <i class="fa-solid fa-xmark text-xs"></i>
-      </button>
-
-      <div class="w-14 h-14 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
-        <i class="fa-solid fa-lock text-xl"></i>
-      </div>
-
-      <h3 class="text-lg font-black text-white mb-2 uppercase font-display tracking-wide">Connexion requise</h3>
-      <p class="text-sm text-slate-400 mb-8 leading-relaxed">Vous naviguez actuellement en tant qu'invité. Veuillez vous connecter avec votre compte professionnel LevelUp pour débloquer cet outil.</p>
-      
-      <div class="flex flex-col gap-2">
-        <a href="/login" class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-center transition-all shadow-[0_4px_15px_rgba(168,85,247,0.2)]">
-          Se connecter à LevelUp
-        </a>
-        <button id="cancelLoginReqBtn" class="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl transition-all">
-          Annuler
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 7. Console de débogage Firestore rétractable -->
-  <div class="debug-terminal">
-    <div id="debugHeader" class="debug-header">
-      <span class="flex items-center gap-2 text-[10px] font-bold text-white uppercase tracking-wider">
-        <i class="fa-solid fa-terminal text-[#a855f7]"></i>
-        Console Statut Firestore
-      </span>
-      <i id="debugToggleIcon" class="fa-solid fa-chevron-up text-slate-400 text-[10px]"></i>
-    </div>
-    <div id="debugContent" class="debug-content hidden">
-      <!-- Les lignes de log de la console s'injecteront ici -->
-    </div>
-  </div>
-
-  <!-- 8. Barre d'actions mobile du bas (Mobile Bottom Bar) -->
-  <div class="mobile-bottom-bar">
+  <!-- 6. Barre d'actions mobile du bas (Mobile Bottom Bar - Uniquement visible sur Mobile) -->
+  <div class="mobile-bottom-bar animate-in slide-in-from-bottom duration-300">
     <button id="mobileHomeBtn" class="bar-btn">
       <i class="fa-solid fa-house"></i>
       <span>Accueil</span>
@@ -264,7 +297,7 @@
   </div>
 
 
-  <!-- 9. SCRIPT ENGINE (MODULES DE SERVICES & FIREBASE INTEGRATION) -->
+  <!-- 7. SCRIPT ENGINE (MODULES DE SERVICES & FIREBASE INTEGRATION) -->
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { 
@@ -303,34 +336,11 @@
       isGuest: true,
       user: null,
       tools: [],
-      selectedTool: null,
-      debugLogs: [],
-      showDebugPanel: false
+      selectedTool: null
     };
 
-    // Logger de Débogage sur la console virtuelle
+    // Logger de Débogage sur la console développeur standard
     function logDebug(message, type = 'info') {
-      const time = new Date().toLocaleTimeString();
-      state.debugLogs.push({ time, message, type });
-      if (state.debugLogs.length > 30) state.debugLogs.shift();
-      
-      const container = document.getElementById('debugContent');
-      if (container) {
-        container.innerHTML = state.debugLogs.map(log => {
-          let colorClass = 'text-cyan-300';
-          if (log.type === 'error') colorClass = 'text-red-400 font-bold';
-          if (log.type === 'warn') colorClass = 'text-amber-400';
-          if (log.type === 'success') colorClass = 'text-emerald-400';
-          
-          return `<div class="debug-line">
-            <span class="text-purple-400">[${log.time}]</span> 
-            <span class="${colorClass}">${log.message}</span>
-          </div>`;
-        }).join('');
-        container.scrollTop = container.scrollHeight;
-      }
-      
-      // Console système classique
       if (type === 'error') console.error(`[ToolHub] ${message}`);
       else if (type === 'warn') console.warn(`[ToolHub] ${message}`);
       else console.log(`[ToolHub] ${message}`);
@@ -359,11 +369,26 @@
       return null;
     }
 
-    // Rendu dynamique de l'icône de l'outil
+    // Rendu dynamique de l'icône de l'outil avec gestion prioritaire du SVG de la base de données
     function getIconHTML(tool) {
+      // Priorité 1 : Vérification de la présence d'un code SVG brut dans la base de données
+      if (tool.svg && tool.svg.includes('<svg')) {
+        let cleanedSvg = tool.svg
+          .replace(/class="[^"]*"/, 'class="w-14 h-14 text-[#a855f7]"')
+          .replace(/stroke="[^"]*"/g, 'stroke="currentColor"')
+          .replace(/fill="[^"]*"/g, 'fill="none"');
+        
+        return `<div class="w-14 h-14 flex items-center justify-center text-[#a855f7] filter drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]">
+          ${cleanedSvg}
+        </div>`;
+      }
+
+      // Priorité 2 : Image logo_url personnalisée
       if (tool.logo_url) {
         return `<img src="${tool.logo_url}" alt="${tool.title}" class="w-14 h-14 object-contain filter drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">`;
       }
+
+      // Priorité 3 : Icône FontAwesome classique
       const iconClass = tool.icon || 'fa-solid fa-screwdriver-wrench';
       const cleanIcon = iconClass.includes('fa-') ? iconClass : `fa-solid ${iconClass}`;
       return `<div class="w-14 h-14 flex items-center justify-center text-[#a855f7] filter drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]">
@@ -371,7 +396,7 @@
       </div>`;
     }
 
-    // Rendu complet de la grille des outils
+    // Rendu complet de la grille des outils sans restriction d'accès
     function renderTools() {
       const grid = document.getElementById('toolsGrid');
       const emptyState = document.getElementById('emptyState');
@@ -379,7 +404,7 @@
       if (!grid) return;
       grid.innerHTML = '';
 
-      const displayedTools = state.isGuest ? state.tools.slice(0, 3) : state.tools;
+      const displayedTools = state.tools; // Affichage de TOUS les outils sans restriction
 
       if (displayedTools.length === 0) {
         emptyState.classList.remove('hidden');
@@ -388,12 +413,12 @@
         emptyState.classList.add('hidden');
       }
 
-      // 1. Rendu des cartes d'applications autorisées
-      displayedTools.forEach((tool, index) => {
+      // Rendu des cartes d'applications autorisées pour tout le monde
+      displayedTools.forEach((tool) => {
         const card = document.createElement('div');
         card.className = 'app-card relative rounded-2xl overflow-hidden flex flex-col justify-between h-[300px]';
         card.innerHTML = `
-          <div class="app-cover h-28 bg-[#a855f7]/5 border-b border-white/5 flex items-center justify-center">
+          <div class="app-cover h-28 bg-[#a855f7]/5 border-b border-white/5 flex items-center justify-center cursor-pointer">
             ${getIconHTML(tool)}
           </div>
           <div class="p-5 flex-1 flex flex-col justify-between">
@@ -409,7 +434,7 @@
           </div>
         `;
 
-        // Écouteurs de clics
+        // Écouteurs de clics pour le lancement
         card.querySelector('.launch-btn').addEventListener('click', () => {
           handleOpenTool(tool);
         });
@@ -421,45 +446,10 @@
 
         grid.appendChild(card);
       });
-
-      // 2. Rendu de la carte "Mur de sécurité" pour les invités (Guest)
-      if (state.isGuest && state.tools.length > 3) {
-        const lockCard = document.createElement('div');
-        lockCard.className = 'app-card relative rounded-2xl border border-dashed border-[#a855f7]/20 bg-[#120a22]/10 overflow-hidden flex flex-col justify-between h-[300px]';
-        lockCard.innerHTML = `
-          <div class="app-cover h-28 bg-red-500/5 border-b border-white/5 flex items-center justify-center">
-            <div class="w-14 h-14 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
-              <i class="fa-solid fa-lock text-xl"></i>
-            </div>
-          </div>
-          <div class="p-5 flex-1 flex flex-col justify-between">
-            <div>
-              <h3 class="text-red-400 font-bold font-display text-base mb-1.5">Mur de sécurité</h3>
-              <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                Connectez-vous avec votre compte professionnel LevelUp pour déverrouiller le catalogue complet d'outils.
-              </p>
-            </div>
-            <button class="lock-trigger-btn w-full mt-3 py-2.5 rounded-lg bg-red-600/10 border border-red-500/20 text-red-400 hover:bg-red-600 hover:text-white hover:border-transparent text-xs font-bold transition-all shadow-sm">
-              S'identifier maintenant
-            </button>
-          </div>
-        `;
-
-        lockCard.querySelector('.lock-trigger-btn').addEventListener('click', () => {
-          document.getElementById('loginRequiredModal').classList.remove('hidden');
-        });
-
-        grid.appendChild(lockCard);
-      }
     }
 
-    // Gestion de l'ouverture et du chargement des outils
+    // Gestion de l'ouverture et du chargement des outils sans aucun blocage d'accès
     function handleOpenTool(tool) {
-      if (state.isGuest && state.tools.indexOf(tool) >= 3) {
-        document.getElementById('loginRequiredModal').classList.remove('hidden');
-        return;
-      }
-
       let finalUrl = tool.url || '#';
       const ecosystemKey = getActiveEcosystemKey();
       
@@ -499,7 +489,7 @@
       document.getElementById('detailModal').classList.remove('hidden');
     }
 
-    // Outils locaux de fallback de l'aperçu si Firestore est verrouillé
+    // Outils locaux de fallback avec des vraies icônes SVG si Firestore est indisponible
     function loadFallbackTools() {
       logDebug("Utilisation des outils locaux de secours pour l'aperçu.", "info");
       state.tools = [
@@ -508,8 +498,7 @@
           title: 'AI Text Assistant',
           description: 'Un assistant d\'intelligence artificielle de pointe pour rédiger, traduire et optimiser vos écrits professionnels.',
           url: 'https://levelup-ecosystem.com/ai-assistant',
-          icon: 'fa-robot',
-          logo_url: null,
+          svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-14 h-14"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>',
           active: true
         },
         {
@@ -517,8 +506,7 @@
           title: 'Code Playground',
           description: 'Un bac à sable de développement en ligne pour tester vos scripts HTML/CSS/JS instantanément.',
           url: 'https://levelup-ecosystem.com/playground',
-          icon: 'fa-code',
-          logo_url: null,
+          svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-14 h-14"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
           active: true
         },
         {
@@ -526,8 +514,7 @@
           title: 'File Secure Convert',
           description: 'Un outil de conversion de fichiers sécurisé avec chiffrement renforcé pour vos documents.',
           url: 'https://levelup-ecosystem.com/converter',
-          icon: 'fa-file-shield',
-          logo_url: null,
+          svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-14 h-14"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 3-3 3 3"/></svg>',
           active: true
         }
       ];
@@ -575,14 +562,6 @@
         if (state.selectedTool) handleOpenTool(state.selectedTool);
       });
 
-      // Fermer modales connexion requise
-      document.getElementById('closeLoginReqBtn').addEventListener('click', () => {
-        document.getElementById('loginRequiredModal').classList.add('hidden');
-      });
-      document.getElementById('cancelLoginReqBtn').addEventListener('click', () => {
-        document.getElementById('loginRequiredModal').classList.add('hidden');
-      });
-
       // Actions Mobile Bottom Bar
       document.getElementById('mobileHomeBtn').addEventListener('click', () => {
         document.getElementById('iframeOverlay').classList.add('hidden');
@@ -590,21 +569,6 @@
       });
       document.getElementById('mobileRefreshBtn').addEventListener('click', () => {
         window.location.reload();
-      });
-
-      // Gestion et pliage de la console de débogage
-      const debugHeader = document.getElementById('debugHeader');
-      debugHeader.addEventListener('click', () => {
-        state.showDebugPanel = !state.showDebugPanel;
-        const content = document.getElementById('debugContent');
-        const icon = document.getElementById('debugToggleIcon');
-        if (state.showDebugPanel) {
-          content.classList.remove('hidden');
-          icon.className = "fa-solid fa-chevron-down text-slate-400 text-[10px]";
-        } else {
-          content.classList.add('hidden');
-          icon.className = "fa-solid fa-chevron-up text-slate-400 text-[10px]";
-        }
       });
     });
 
@@ -644,7 +608,7 @@
         } else {
           state.isGuest = true;
           state.user = null;
-          logDebug("Navigation active en mode Invité (limite active).", "warn");
+          logDebug("Navigation active en mode Invité.", "warn");
         }
 
         // Mise à jour de l'UI Header
@@ -682,7 +646,8 @@
                   title: item.title || item.name || 'Outil sans nom',
                   description: item.description || 'Aucune description disponible.',
                   url: item.url || '#',
-                  icon: item.icon || 'fa-solid fa-screwdriver-wrench',
+                  icon: item.icon || null,
+                  svg: item.svg || null, // Capture prioritaire du SVG brut
                   logo_url: item.logo_url || null,
                   active: item.active
                 });
@@ -697,7 +662,7 @@
             return numA - numB;
           });
 
-          logDebug(`${loadedTools.length} outils actifs récupérés.`, "success");
+          logDebug(`${loadedTools.length} de tes outils actifs chargés depuis Firestore.`, "success");
           state.tools = loadedTools;
           renderTools();
         } else {
