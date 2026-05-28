@@ -1,0 +1,791 @@
+html
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Célébration Tabaski | Levelup Ecosystem</title>
+    
+    <!-- Importation de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Importation des polices Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Importation de FontAwesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Importation de la librairie Canvas Confetti pour les feux d'artifice -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0a1912',   // Vert très foncé/noir
+                            green: '#1a3b2b',  // Vert émeraude profond
+                            gold: '#d4af37',   // Or
+                            light: '#f9f6f0',  // Blanc cassé chaleureux
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0a1912;
+            color: #f9f6f0;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #d4af37, #f3e5ab, #d4af37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn-gold {
+            background: linear-gradient(135deg, #d4af37 0%, #b5952f 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-gold:hover {
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            transform: translateY(-2px);
+        }
+        .fade-in-up {
+            animation: fadeInUp 1s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.5); border-radius: 10px; }
+        .neon-text {
+            text-shadow: 0 0 15px rgba(212,175,55,0.8), 0 0 30px rgba(212,175,55,0.6), 0 0 45px rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-20 right-4 bg-brand-gold text-brand-dark px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 translate-x-[150%] z-[100] font-bold flex items-center space-x-2">
+        <i class="fa-solid fa-check"></i>
+        <span id="toast-message">Lien copié !</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-effect border-b-0 border-brand-gold/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex-shrink-0 flex items-center">
+                    <i class="fa-solid fa-star text-purple-500 text-2xl mr-2"></i>
+                    <span class="font-serif text-2xl font-bold text-white tracking-wider">LEVELUP</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#accueil" class="text-sm uppercase tracking-widest text-gray-300 hover:text-brand-gold transition-colors">Accueil</a>
+                    <a href="#message" class="text-sm uppercase tracking-widest text-gray-300 hover:text-brand-gold transition-colors">Vœux</a>
+                    <a href="#publication" class="text-sm uppercase tracking-widest text-gray-300 hover:text-brand-gold transition-colors">Social</a>
+                    <a href="#media" class="text-sm uppercase tracking-widest text-gray-300 hover:text-brand-gold transition-colors">Galerie</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Section Accueil (Hero) -->
+    <section id="accueil" class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        <!-- Décorations de fond -->
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-green/40 via-brand-dark to-brand-dark"></div>
+        <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]"></div>
+        
+        <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-20 flex flex-col items-center justify-center w-full">
+            <div class="flex flex-col items-center mb-10 md:mb-0 w-full max-w-3xl">
+                <span class="block text-brand-gold font-serif italic text-xl md:text-2xl mb-4 fade-in-up" style="animation-delay: 0.2s;">Barka da Sallah</span>
+                <h1 class="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-6 tracking-tight fade-in-up text-center" style="animation-delay: 0.4s;">
+                    Aïd <span class="text-gradient">Moubarak</span>
+                </h1>
+                
+                <!-- Compte à rebours dynamique -->
+                <div class="glass-effect rounded-2xl p-6 md:p-8 inline-block mb-10 fade-in-up shadow-2xl w-full max-w-2xl" style="animation-delay: 0.6s;">
+                    <h3 class="text-brand-gold font-serif italic text-xl mb-4">Fermeture du site dans :</h3>
+                    <div class="flex space-x-4 md:space-x-8 justify-center text-center">
+                        <div class="flex flex-col">
+                            <span id="days" class="text-3xl md:text-5xl font-bold text-white">00</span>
+                            <span class="text-xs md:text-sm text-gray-400 uppercase tracking-widest mt-1">Jours</span>
+                        </div>
+                        <div class="text-3xl md:text-5xl font-bold text-brand-gold/50">:</div>
+                        <div class="flex flex-col">
+                            <span id="hours" class="text-3xl md:text-5xl font-bold text-white">00</span>
+                            <span class="text-xs md:text-sm text-gray-400 uppercase tracking-widest mt-1">Heures</span>
+                        </div>
+                        <div class="text-3xl md:text-5xl font-bold text-brand-gold/50">:</div>
+                        <div class="flex flex-col">
+                            <span id="minutes" class="text-3xl md:text-5xl font-bold text-white">00</span>
+                            <span class="text-xs md:text-sm text-gray-400 uppercase tracking-widest mt-1">Minutes</span>
+                        </div>
+                        <div class="text-3xl md:text-5xl font-bold text-brand-gold/50">:</div>
+                        <div class="flex flex-col">
+                            <span id="seconds" class="text-3xl md:text-5xl font-bold text-brand-gold">00</span>
+                            <span class="text-xs md:text-sm text-brand-gold/70 uppercase tracking-widest mt-1">Secondes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center items-center w-full fade-in-up" style="animation-delay: 0.8s;">
+                    <button id="btn-artifice" class="glass-effect inline-flex items-center justify-center px-6 py-2 text-brand-gold font-semibold rounded-full text-sm hover:bg-white/10 transition-all duration-300 hover:shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                        ✨ Celebrate
+                    </button>
+                </div>
+            </div>
+            
+            <!-- (Le mouton a été déplacé dans son propre espace modal) -->
+        </div>
+    </section>
+
+    <!-- Section Message Personnel -->
+    <section id="message" class="py-24 bg-brand-green/20 relative">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <i class="fa-solid fa-moon text-4xl text-brand-gold mb-8 opacity-50"></i>
+            <div class="glass-effect p-8 md:p-16 rounded-3xl relative">
+                <i class="fa-solid fa-quote-left absolute top-8 left-8 text-4xl text-brand-gold/20"></i>
+                <h2 class="text-3xl md:text-4xl font-serif font-bold text-white mb-8">Nos Vœux les plus sincères</h2>
+                <p class="text-lg md:text-xl text-gray-300 leading-relaxed font-light mb-6">
+                    En ce jour béni de la Tabaski, nous vous adressons nos vœux de santé, de bonheur et de prospérité. Que l'esprit de partage, de sacrifice et de solidarité qui caractérise cette fête illumine votre foyer.
+                </p>
+                <p class="text-lg md:text-xl text-gray-300 leading-relaxed font-light">
+                    Que vos prières soient exaucées et que ces moments précieux partagés avec vos proches soient remplis d'amour et de paix.
+                </p>
+                <div class="mt-12 pt-8 border-t border-brand-gold/20">
+                    <p class="text-white font-serif text-xl italic">Toute l'équipe vous souhaite une merveilleuse fête,</p>
+                    <p class="text-white font-bold text-xl mt-2 tracking-wider">LEVELUP ECOSYSTEM</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Publication Sociale Interactive -->
+    <section id="publication" class="py-16 bg-brand-dark border-t border-brand-gold/10">
+        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10 fade-in-up">
+                <span class="text-brand-gold font-serif italic text-lg">Partagez la joie</span>
+                <h2 class="text-3xl md:text-5xl font-serif font-bold text-white mt-2">Célébration en direct</h2>
+            </div>
+
+            <div class="bg-brand-dark/50 border border-brand-gold/20 rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(212,175,55,0.1)]">
+                <!-- Header Publication -->
+                <div class="p-4 flex items-center justify-between border-b border-brand-gold/10">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-star text-purple-500 text-xl"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-white font-bold flex items-center">
+                                Levelup Ecosystem
+                                <i class="fa-solid fa-circle-check text-purple-500 ml-2 text-sm"></i>
+                            </p>
+                            <p class="text-xs text-brand-gold/70"><span id="post-date">Chargement...</span> • Public</p>
+                        </div>
+                    </div>
+                    <i id="btn-download-img" class="fa-solid fa-ellipsis text-gray-500 cursor-pointer hover:text-white" title="Télécharger l'image"></i>
+                </div>
+
+                <!-- Image Publication -->
+                <div class="relative group">
+                    <img src="https://fathala.com/wp-content/uploads/2022/07/Bonne-fete-de-tabaski.png.webp" alt="Bonne Fête de Tabaski" class="w-full h-auto object-cover">
+                    <!-- Overlay interactif au survol (coeur géant optionnel) -->
+                    <div id="big-heart" class="absolute inset-0 flex items-center justify-center opacity-0 transform scale-50 transition-all duration-300 pointer-events-none">
+                        <i class="fa-solid fa-heart text-white text-8xl drop-shadow-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="p-4 border-b border-brand-gold/10">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex space-x-6">
+                            <button id="btn-like" class="group flex items-center space-x-2 text-gray-300 hover:text-red-500 transition-colors">
+                                <i id="icon-like" class="fa-regular fa-heart text-2xl group-hover:scale-110 transition-transform"></i>
+                                <span id="count-likes" class="font-bold text-lg">106</span>
+                            </button>
+                            <button class="group flex items-center space-x-2 text-gray-300 hover:text-brand-gold transition-colors">
+                                <i class="fa-regular fa-comment text-2xl group-hover:scale-110 transition-transform"></i>
+                                <span id="count-comments" class="font-bold text-lg">13</span>
+                            </button>
+                        </div>
+                        <button id="btn-share" class="group flex items-center space-x-2 text-brand-gold hover:text-white transition-colors glass-effect px-4 py-2 rounded-full">
+                            <i class="fa-solid fa-share-nodes text-xl group-hover:scale-110 transition-transform"></i>
+                            <span class="font-semibold text-sm">Partager</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section Commentaires -->
+                <div class="p-4 bg-black/40">
+                    <div id="comments-list" class="space-y-4 mb-4 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+                        <!-- Les commentaires seront injectés ici par Firebase -->
+                        <div class="text-center text-gray-500 text-sm py-4 italic">Chargement des vœux...</div>
+                    </div>
+                    
+                    <div class="flex gap-3 relative mt-4">
+                        <div class="w-10 h-10 rounded-full bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-star text-purple-500 text-sm"></i>
+                        </div>
+                        <div class="flex-1 relative">
+                            <input type="text" id="input-comment" placeholder="Ajoutez vos vœux..." class="w-full bg-white/5 border border-white/10 rounded-full pl-4 pr-12 py-2.5 text-white text-sm focus:outline-none focus:border-brand-gold transition-colors placeholder-gray-500">
+                            <button id="btn-submit-comment" class="absolute right-2 top-1/2 -translate-y-1/2 text-brand-gold hover:text-yellow-400 w-8 h-8 flex items-center justify-center transition-transform hover:scale-110 disabled:opacity-50">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Galerie & Vidéo -->
+    <section id="media" class="py-24 bg-brand-dark relative border-t border-brand-gold/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 fade-in-up">
+                <span class="text-brand-gold font-serif italic text-lg">Célébration</span>
+                <h2 class="text-3xl md:text-5xl font-serif font-bold text-white mt-2">Moments Forts</h2>
+            </div>
+            
+            <!-- Vidéo YouTube (Fix Mobile) -->
+            <div class="flex justify-center mb-16 fade-in-up">
+                <div class="w-full max-w-4xl relative pt-[56.25%] rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(212,175,55,0.15)] border border-brand-gold/20">
+                    <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/dDM0EN65Cb4?si=vDHxwmZDYPx-7CC6" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <!-- Galerie Photos (Fix Mobile) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 fade-in-up">
+                <div class="rounded-xl overflow-hidden relative pt-[75%] group border border-white/10 shadow-lg cursor-pointer">
+                    <img src="https://img.lemde.fr/2019/06/04/0/0/5184/3456/1440/960/60/0/ad63821_-JOv5urq-_-r2CdZuWlOniq9.jpg" alt="Prière Tabaski" class="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                </div>
+                <div class="rounded-xl overflow-hidden relative pt-[75%] group border border-white/10 shadow-lg cursor-pointer">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjM0OUl15Y9r4smq30rO0bthnnjdRqf_2wyw&s" alt="Ambiance Tabaski" class="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                </div>
+                <div class="rounded-xl overflow-hidden relative pt-[75%] group border border-white/10 shadow-lg cursor-pointer">
+                    <img src="https://gambiana.com/wp-content/uploads/2022/06/6ED98564-EDF6-4D3F-936D-CE86C68FFE09.jpeg" alt="Mouton Tabaski" class="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black py-8 border-t border-brand-gold/20">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-2">© 2026. Tous droits réservés.</p>
+            <p class="text-brand-gold/70 text-xs uppercase tracking-widest flex items-center justify-center gap-2">
+                Powered by <span class="font-bold text-white">Levelup Ecosystem</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- BOUTON SECRET ADMIN -->
+    <div id="secret-trigger" class="fixed bottom-0 right-0 w-12 h-12 cursor-default z-[90] opacity-0 bg-red-500"></div>
+
+    <!-- MODAL ADMIN -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-[#111] border border-brand-gold p-6 rounded-2xl w-96 max-w-[90vw] shadow-[0_0_50px_rgba(212,175,55,0.2)]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-brand-gold text-xl font-bold uppercase tracking-wider">Console Admin</h3>
+                <i id="admin-close" class="fa-solid fa-xmark text-gray-400 hover:text-white cursor-pointer text-xl"></i>
+            </div>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2 uppercase tracking-wide">Modifier les J'aime</label>
+                    <input type="number" id="admin-likes" class="w-full bg-black border border-brand-gold/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2 uppercase tracking-wide">Modifier le compteur de commentaires</label>
+                    <input type="number" id="admin-comments-count" class="w-full bg-black border border-brand-gold/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold">
+                </div>
+                <div class="pt-4 border-t border-white/10 flex justify-end">
+                    <button id="admin-save" class="px-6 py-3 bg-brand-gold text-brand-dark rounded-lg font-bold hover:bg-yellow-400 transition-colors w-full">
+                        Sauvegarder les stats
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MOUTON -->
+    <div id="mouton-modal" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center backdrop-blur-md transition-opacity">
+        <div class="bg-brand-green/10 border border-brand-gold/30 p-8 rounded-3xl w-[90vw] max-w-md shadow-[0_0_50px_rgba(212,175,55,0.15)] relative text-center">
+            <i id="mouton-close" class="fa-solid fa-xmark absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer text-2xl"></i>
+            
+            <h3 class="text-2xl font-serif text-brand-gold mb-6 italic">Le Mouton Levelup</h3>
+            
+            <div class="flex justify-center mb-6 animate-float bg-white/5 rounded-full p-8 shadow-inner border border-white/5">
+                <svg width="200" height="200" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Corps (Laine) -->
+                    <circle cx="50" cy="55" r="25" fill="#f9f6f0"/>
+                    <circle cx="35" cy="45" r="15" fill="#f9f6f0"/>
+                    <circle cx="65" cy="45" r="15" fill="#f9f6f0"/>
+                    <circle cx="40" cy="65" r="12" fill="#f9f6f0"/>
+                    <circle cx="60" cy="65" r="12" fill="#f9f6f0"/>
+                    <circle cx="50" cy="35" r="15" fill="#f9f6f0"/>
+                    <!-- Tête -->
+                    <ellipse cx="70" cy="50" rx="12" ry="16" fill="#1a3b2b" transform="rotate(20 70 50)"/>
+                    <!-- Oreille -->
+                    <ellipse cx="78" cy="45" rx="4" ry="10" fill="#1a3b2b" transform="rotate(45 78 45)"/>
+                    <!-- Oeil -->
+                    <circle cx="72" cy="48" r="2" fill="#d4af37"/>
+                    <!-- Pattes -->
+                    <rect x="40" y="75" width="4" height="15" rx="2" fill="#1a3b2b"/>
+                    <rect x="55" y="75" width="4" height="15" rx="2" fill="#1a3b2b"/>
+                </svg>
+            </div>
+            
+            <p class="text-gray-300 font-light">Prêt pour la fête ! 🌟</p>
+        </div>
+    </div>
+
+    <!-- LOGIQUE FIREBASE & INTERACTIVITÉ -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Ta configuration Firebase personnalisée
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFNuErJ2ToXYJ9vg0YwAneeOSty6mtXNg",
+            authDomain: "thiab-s-ia.firebaseapp.com",
+            projectId: "thiab-s-ia",
+            storageBucket: "thiab-s-ia.firebasestorage.app",
+            messagingSenderId: "685257281739",
+            appId: "1:685257281739:web:76f60907cd9c87d2c04b4e",
+            measurementId: "G-Z1T4LLG22Z"
+        };
+        
+        // Identifiant correspondant à tes règles Firestore: /artifacts/level-ia-premium/public/data/...
+        const appId = 'level-ia-premium';
+        
+        let app, auth, db, stateDocRef;
+        // On récupère le statut du like depuis le stockage local du navigateur
+        let isLikedLocally = localStorage.getItem('tabaski_liked') === 'true';
+        
+        // Initialisation de Firebase avec ta base de données
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        // On passe à 'main-v3' pour forcer le reset du compte à rebours et être sûr qu'il démarre
+        stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'tabaski_state', 'main-v3');
+        
+        initAuth();
+
+        async function initAuth() {
+            try {
+                // Connexion anonyme pour respecter ta règle : allow read, write: if request.auth != null;
+                await signInAnonymously(auth);
+                initCloudLogic();
+            } catch (error) {
+                console.error("Erreur d'authentification Firebase:", error);
+            }
+        }
+
+        async function initCloudLogic() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            // 1. Initialiser le document si c'est la toute première fois (avec 13 faux commentaires)
+            const snap = await getDoc(stateDocRef);
+            if (!snap.exists()) {
+                const initialComments = [
+                    { text: "Bonne fête de Tabaski à toute l'équipe ! Que la paix soit avec vous. 🙏", time: Date.now() - 1000000 },
+                    { text: "Aïd Moubarak ! Merci pour cette belle initiative de Levelup.", time: Date.now() - 900000 },
+                    { text: "Dewenati à tous ! Santé, longévité et prospérité.", time: Date.now() - 800000 },
+                    { text: "Barka da Sallah ! Que Dieu accepte nos prières et nos sacrifices.", time: Date.now() - 700000 },
+                    { text: "Très belle fête de l'Aïd à toute la communauté. 🌟", time: Date.now() - 600000 },
+                    { text: "Que cette journée vous apporte bonheur et bénédictions. Aïd Moubarak !", time: Date.now() - 500000 },
+                    { text: "Merci beaucoup Levelup, bonne fête à vous aussi !", time: Date.now() - 400000 },
+                    { text: "Puisse Allah nous accorder sa miséricorde. Bonne fête.", time: Date.now() - 300000 },
+                    { text: "Je vous souhaite une excellente fête de Tabaski entourés de vos proches.", time: Date.now() - 200000 },
+                    { text: "Aïd Saeed ! Profitez bien de la viande ! 🥩😂", time: Date.now() - 150000 },
+                    { text: "Que l'amour et la paix remplissent vos foyers aujourd'hui.", time: Date.now() - 100000 },
+                    { text: "Tabaski Moubarak ! Un grand coucou depuis la diaspora.", time: Date.now() - 50000 },
+                    { text: "Magnifique site, merci pour les vœux ! Bonne fête à tous.", time: Date.now() - 10000 }
+                ];
+
+                await setDoc(stateDocRef, {
+                    // Fixe la fin du compte à rebours à exactement 7 jours (1 semaine) après la création
+                    countdownEnd: Date.now() + (7 * 24 * 60 * 60 * 1000), 
+                    createdAt: Date.now(),
+                    likes: 106,
+                    commentsCount: 13,
+                    comments: initialComments
+                });
+            }
+
+            // 2. Écouter les changements en temps réel
+            onSnapshot(stateDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    updateSocialUI(data, user.uid);
+                    
+                    // Lancer le compte à rebours s'il n'est pas déjà lancé
+                    if (data.countdownEnd && !window.countdownInterval) {
+                        startCountdown(data.countdownEnd);
+                    }
+                }
+            }, (error) => {
+                console.error("Erreur de synchronisation:", error);
+            });
+        }
+
+        function updateSocialUI(data, uid) {
+            // Mise à jour de la date de publication
+            if (data.createdAt) {
+                const dateObj = new Date(data.createdAt);
+                const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+                document.getElementById('post-date').innerText = dateObj.toLocaleDateString('fr-FR', options);
+            } else {
+                document.getElementById('post-date').innerText = "Récemment";
+            }
+
+            // Restaurer l'état visuel du Like (Vérifie Firebase ET LocalStorage)
+            const icon = document.getElementById('icon-like');
+            
+            if ((data.likedBy && data.likedBy.includes(uid)) || localStorage.getItem('tabaski_liked') === 'true') {
+                isLikedLocally = true;
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid', 'text-red-500');
+            } else {
+                isLikedLocally = false;
+                icon.classList.remove('fa-solid', 'text-red-500');
+                icon.classList.add('fa-regular');
+            }
+
+            // Mise à jour des compteurs
+            document.getElementById('count-likes').innerText = data.likes;
+            document.getElementById('count-comments').innerText = data.commentsCount;
+            
+            // Mise à jour de la modale Admin
+            document.getElementById('admin-likes').value = data.likes;
+            document.getElementById('admin-comments-count').value = data.commentsCount;
+
+            // Mise à jour de la liste des commentaires
+            const commentsList = document.getElementById('comments-list');
+            commentsList.innerHTML = '';
+            
+            if (data.comments && data.comments.length > 0) {
+                // On affiche les plus récents en premier (si on veut) ou dans l'ordre
+                data.comments.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = 'flex space-x-3 mb-3 animate-[fadeInUp_0.3s_ease-out]';
+                    div.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-gray-800 flex-shrink-0 flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-star text-purple-500 text-xs"></i>
+                        </div>
+                        <div class="bg-white/10 rounded-2xl rounded-tl-none px-4 py-2 text-sm text-gray-200">
+                            <span class="font-bold text-brand-gold block text-xs mb-0.5">Anonyme</span>
+                            ${escapeHTML(c.text)}
+                        </div>
+                    `;
+                    commentsList.appendChild(div);
+                });
+                // Défilement vers le bas
+                commentsList.scrollTop = commentsList.scrollHeight;
+            } else {
+                commentsList.innerHTML = '<div class="text-gray-500 text-sm italic py-2 text-center">Soyez le premier à laisser un vœu !</div>';
+            }
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag]));
+        }
+
+        // --- ACTIONS UTILISATEURS ---
+
+        // Fonction J'aime
+        document.getElementById('btn-like').addEventListener('click', async () => {
+            const icon = document.getElementById('icon-like');
+            const user = auth.currentUser;
+            
+            if (!db || !stateDocRef || !user) return;
+
+            if (!isLikedLocally) {
+                // Action: Liker
+                isLikedLocally = true;
+                localStorage.setItem('tabaski_liked', 'true'); // Enregistrement local
+                
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid', 'text-red-500', 'scale-125');
+                setTimeout(() => icon.classList.remove('scale-125'), 200);
+
+                // Gérer un petit coeur géant sur l'image
+                const bigHeart = document.getElementById('big-heart');
+                bigHeart.classList.remove('opacity-0', 'scale-50');
+                bigHeart.classList.add('opacity-100', 'scale-100');
+                setTimeout(() => {
+                    bigHeart.classList.add('opacity-0', 'scale-50');
+                    bigHeart.classList.remove('opacity-100', 'scale-100');
+                }, 800);
+
+                await updateDoc(stateDocRef, { 
+                    likes: increment(1),
+                    likedBy: arrayUnion(user.uid)
+                });
+            } else {
+                // Action: Retirer le Like
+                isLikedLocally = false;
+                localStorage.setItem('tabaski_liked', 'false'); // Retrait local
+                
+                icon.classList.remove('fa-solid', 'text-red-500');
+                icon.classList.add('fa-regular');
+                
+                await updateDoc(stateDocRef, { 
+                    likes: increment(-1),
+                    likedBy: arrayRemove(user.uid)
+                });
+            }
+        });
+
+        // Fonction Commentaire
+        document.getElementById('btn-submit-comment').addEventListener('click', async () => {
+            const input = document.getElementById('input-comment');
+            const text = input.value.trim();
+            const btn = document.getElementById('btn-submit-comment');
+            
+            if (text && db && stateDocRef && auth.currentUser) {
+                btn.disabled = true;
+                input.value = '';
+                await updateDoc(stateDocRef, {
+                    commentsCount: increment(1),
+                    comments: arrayUnion({ text: text, time: Date.now() })
+                });
+                btn.disabled = false;
+            }
+        });
+
+        // Appui sur "Entrée" pour commenter
+        document.getElementById('input-comment').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('btn-submit-comment').click();
+        });
+
+        // Fonction Partage (Presse-papier)
+        document.getElementById('btn-share').addEventListener('click', () => {
+            const url = "levelup-ecosystem.com/tabaski";
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Lien copié");
+            }).catch(err => {
+                // Fallback pour iFrame
+                const textArea = document.createElement("textarea");
+                textArea.value = url;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("Lien copié");
+                } catch (err) {
+                    console.error('Oops, unable to copy');
+                }
+                document.body.removeChild(textArea);
+            });
+        });
+
+        // Fonction pour télécharger l'image depuis les 3 points (Correction de l'erreur de fetch)
+        document.getElementById('btn-download-img').addEventListener('click', () => {
+            const imgUrl = "https://fathala.com/wp-content/uploads/2022/07/Bonne-fete-de-tabaski.png.webp";
+            // Pour éviter l'erreur "Failed to fetch" due aux sécurités des iframes (CORS), 
+            // on ouvre simplement l'image dans un nouvel onglet, permettant à l'utilisateur de l'enregistrer manuellement.
+            window.open(imgUrl, '_blank');
+            showToast("Ouverture de l'image...");
+        });
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('translate-x-[150%]');
+            setTimeout(() => {
+                toast.classList.add('translate-x-[150%]');
+            }, 3000);
+        }
+
+        // --- ADMINISTRATION SECRÈTE ---
+        const adminModal = document.getElementById('admin-modal');
+        
+        document.getElementById('secret-trigger').addEventListener('click', () => {
+            adminModal.classList.remove('hidden');
+        });
+        
+        document.getElementById('admin-close').addEventListener('click', () => {
+            adminModal.classList.add('hidden');
+        });
+
+        document.getElementById('admin-save').addEventListener('click', async () => {
+            const newLikes = parseInt(document.getElementById('admin-likes').value);
+            const newCommentsCount = parseInt(document.getElementById('admin-comments-count').value);
+            
+            if (!isNaN(newLikes) && !isNaN(newCommentsCount) && db && stateDocRef && auth.currentUser) {
+                await updateDoc(stateDocRef, {
+                    likes: newLikes,
+                    commentsCount: newCommentsCount
+                });
+                adminModal.classList.add('hidden');
+                showToast("Stats modifiées !");
+            }
+        });
+
+        // --- GESTION DU MODAL MOUTON ---
+        const moutonModal = document.getElementById('mouton-modal');
+        document.getElementById('btn-open-mouton')?.addEventListener('click', () => {
+            moutonModal.classList.remove('hidden');
+        });
+        document.getElementById('mouton-close')?.addEventListener('click', () => {
+            moutonModal.classList.add('hidden');
+        });
+        // Fermer au clic à l'extérieur
+        moutonModal.addEventListener('click', (e) => {
+            if (e.target === moutonModal) moutonModal.classList.add('hidden');
+        });
+
+        // --- COMPTE À REBOURS GLOBAL ---
+        function startCountdown(endTimeTimestamp) {
+            if (window.countdownInterval) clearInterval(window.countdownInterval);
+            
+            const daysEl = document.getElementById('days');
+            const hoursEl = document.getElementById('hours');
+            const minutesEl = document.getElementById('minutes');
+            const secondsEl = document.getElementById('seconds');
+
+            const updateTimer = () => {
+                const now = Date.now();
+                const timeLeft = endTimeTimestamp - now;
+
+                if (timeLeft <= 0) {
+                    clearInterval(window.countdownInterval);
+                    // Fermeture automatique du site : Remplacement de tout l'écran
+                    document.body.innerHTML = `
+                        <div class="min-h-screen bg-brand-dark flex flex-col items-center justify-center text-center p-4">
+                            <i class="fa-solid fa-moon text-brand-gold text-6xl mb-6 opacity-80"></i>
+                            <h1 class="text-4xl md:text-5xl font-serif text-white mb-4 font-bold">L'événement est terminé</h1>
+                            <p class="text-gray-400 text-lg max-w-lg mx-auto">Merci d'avoir célébré la Tabaski avec <span class="text-purple-500 font-bold">Levelup Ecosystem</span>.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                daysEl.innerText = days.toString().padStart(2, '0');
+                hoursEl.innerText = hours.toString().padStart(2, '0');
+                minutesEl.innerText = minutes.toString().padStart(2, '0');
+                secondsEl.innerText = seconds.toString().padStart(2, '0');
+            };
+
+            updateTimer(); // Exécute le calcul immédiatement sans attendre 1 seconde
+            window.countdownInterval = setInterval(updateTimer, 1000);
+        }
+
+        // --- FEUX D'ARTIFICE ULTRA RÉALISTES ---
+        const btnArtifice = document.getElementById('btn-artifice');
+        if (btnArtifice) {
+            btnArtifice.addEventListener('click', () => {
+                // Afficher le message lumineux et le mouton
+                const luminousOverlay = document.createElement('div');
+                luminousOverlay.className = 'fixed inset-0 pointer-events-none z-[110] flex flex-col items-center justify-center transition-all duration-1000 opacity-0 scale-50';
+                luminousOverlay.innerHTML = `
+                    <h1 class="text-5xl md:text-9xl font-serif font-bold text-white neon-text mb-4 tracking-wider text-center">
+                        TABASKI
+                    </h1>
+                    <div class="text-5xl md:text-9xl animate-bounce drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">
+                        🐑
+                    </div>
+                `;
+                document.body.appendChild(luminousOverlay);
+
+                // Animation d'apparition
+                setTimeout(() => {
+                    luminousOverlay.classList.remove('opacity-0', 'scale-50');
+                    luminousOverlay.classList.add('opacity-100', 'scale-100');
+                }, 50);
+
+                // Animation de disparition
+                setTimeout(() => {
+                    luminousOverlay.classList.remove('opacity-100', 'scale-100');
+                    luminousOverlay.classList.add('opacity-0', 'scale-150');
+                    setTimeout(() => luminousOverlay.remove(), 1000);
+                }, 3500);
+
+                // Lancement des feux d'artifice
+                const duration = 4000; // 4 secondes de show réaliste
+                const animationEnd = Date.now() + duration;
+                const defaults = { startVelocity: 30, spread: 360, ticks: 100, zIndex: 100, colors: ['#d4af37', '#a855f7', '#ffffff'] };
+
+                function randomInRange(min, max) {
+                    return Math.random() * (max - min) + min;
+                }
+
+                const interval = setInterval(function() {
+                    const timeLeft = animationEnd - Date.now();
+
+                    if (timeLeft <= 0) {
+                        return clearInterval(interval);
+                    }
+
+                    const particleCount = 50 * (timeLeft / duration);
+                    
+                    // Tir côté gauche
+                    confetti(Object.assign({}, defaults, { 
+                        particleCount, 
+                        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } 
+                    }));
+                    // Tir côté droit
+                    confetti(Object.assign({}, defaults, { 
+                        particleCount, 
+                        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } 
+                    }));
+                }, 250);
+                
+                // Final burst d'étoiles
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 120,
+                        spread: 120,
+                        origin: { y: 0.6, x: 0.5 },
+                        colors: ['#a855f7', '#d4af37'],
+                        shapes: ['star'],
+                        zIndex: 100
+                    });
+                }, 2500);
+            });
+        }
+    </script>
+</body>
+</html>
