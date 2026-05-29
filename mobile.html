@@ -4,130 +4,153 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>LevelUp Ecosystem — Version Mobile</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Cloudflare Turnstile -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <script>
     window._turnstileToken = null;
     window._turnstileWidgetId = undefined;
     window._renderTurnstile = function() {
-        try {
-            const container = document.getElementById('cfTurnstile');
-            if (!container) return;
-            if (window._turnstileWidgetId !== undefined) return;
-            if (!window.turnstile) {
-                setTimeout(window._renderTurnstile, 300);
-                return;
-            }
-            window._turnstileWidgetId = window.turnstile.render(container, {
-                sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
-                theme: 'dark',
-                size: 'flexible',
-                callback: function(token) { window._turnstileToken = token; },
-                'expired-callback': function() { window._turnstileToken = null; },
-                'error-callback': function() { window._turnstileToken = '__bypass__'; }
-            });
-        } catch(e) { console.warn("Turnstile Error", e); }
+      try {
+        const container = document.getElementById('cfTurnstile');
+        if (!container) return;
+        if (window._turnstileWidgetId !== undefined) return;
+        if (!window.turnstile) { setTimeout(window._renderTurnstile, 300); return; }
+        window._turnstileWidgetId = window.turnstile.render(container, {
+          sitekey: '0x4AAAAAADMY4-j7dozqyHdf', theme: 'dark', size: 'flexible',
+          callback: function(t) { window._turnstileToken = t; },
+          'expired-callback': function() { window._turnstileToken = null; },
+          'error-callback': function() { window._turnstileToken = '__bypass__'; }
+        });
+      } catch(e) {}
     };
   </script>
-
   <script>
     tailwind.config = {
       darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Syne', 'sans-serif'],
-          },
-          colors: {
-            brand: '#a855f7',
-            darkbg: '#050505',
-            panel: '#121214'
-          }
-        }
-      }
+      theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'], display: ['Syne','sans-serif'] }, colors: { brand: '#a855f7', darkbg: '#050505', panel: '#121214' } } }
     }
   </script>
 
   <style>
-    body {
-      background-color: theme('colors.darkbg');
-      color: white;
-      -webkit-font-smoothing: antialiased;
-      overflow: hidden; 
-    }
-
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    .glass-effect {
-      background: rgba(20, 20, 20, 0.75);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .safe-top { padding-top: max(0.8rem, env(safe-area-inset-top)); }
-    .safe-bottom { padding-bottom: max(1.2rem, env(safe-area-inset-bottom)); }
-
-    .tab-enter { animation: tabFadeIn 0.3s ease-out forwards; }
-    @keyframes tabFadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .modal-enter { animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-    .modal-exit { animation: slideDown 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    @keyframes slideDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
-
-    .animate-slide-up { animation: appSlideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-    @keyframes appSlideUp {
-      from { opacity: 0; transform: translateY(30px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    /* Auth Buttons */
-    .login-btn {
-      width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px;
-      padding: 13px 20px; border-radius: 14px; font-size: .88rem; font-weight: 700;
-      cursor: pointer; transition: all .2s; border: 1px solid; letter-spacing: .01em;
-      margin-bottom: 10px; position: relative; overflow: hidden;
-    }
-    .login-btn:disabled { opacity: .5; cursor: not-allowed; }
-    .login-btn:active:not(:disabled) { transform: scale(.98); }
-    .btn-google { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); color: #f4f4f5; }
-    .btn-google:hover:not(:disabled) { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.25); }
-    .btn-x { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); color: #f4f4f5; }
-    .btn-x:hover:not(:disabled) { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); }
-
-    .btn-spinner {
-      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.2);
-      border-top-color: currentColor; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    body { background-color:#050505; color:white; -webkit-font-smoothing:antialiased; overflow:hidden; }
+    .hide-scrollbar::-webkit-scrollbar { display:none; }
+    .hide-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+    .glass-effect { background:rgba(20,20,20,.75); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,.08); }
+    .safe-top { padding-top:max(0.8rem,env(safe-area-inset-top)); }
+    .safe-bottom { padding-bottom:max(1.2rem,env(safe-area-inset-bottom)); }
+    .tab-enter { animation:tabFadeIn .3s ease-out forwards; }
+    @keyframes tabFadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .modal-enter { animation:slideUp .3s cubic-bezier(.2,.8,.2,1) forwards; }
+    @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    @keyframes slideDown { from{transform:translateY(0)} to{transform:translateY(100%)} }
+    .animate-slide-up { animation:appSlideUp .35s cubic-bezier(.2,.8,.2,1) forwards; }
+    @keyframes appSlideUp { from{opacity:0;transform:translateY(30px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .login-btn { width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:13px 20px;border-radius:14px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;border:1px solid;letter-spacing:.01em;margin-bottom:10px;position:relative;overflow:hidden; }
+    .login-btn:disabled { opacity:.5;cursor:not-allowed; }
+    .login-btn:active:not(:disabled) { transform:scale(.98); }
+    .btn-google { background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#f4f4f5; }
+    .btn-google:hover:not(:disabled) { background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25); }
+    .btn-x { background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#f4f4f5; }
+    .btn-x:hover:not(:disabled) { background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3); }
+    .btn-spinner { width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0; }
+    @keyframes spin { to{transform:rotate(360deg)} }
     @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+    @keyframes bellRing { 0%,100%{transform:rotate(0)} 15%{transform:rotate(18deg)} 30%{transform:rotate(-16deg)} 45%{transform:rotate(12deg)} 60%{transform:rotate(-8deg)} 75%{transform:rotate(4deg)} }
+
+    /* ─── NOTIFICATION PANEL ─── */
+    #notifPanel { position:fixed;top:0;right:0;bottom:0;width:85vw;max-width:340px;background:#09090b;border-left:1px solid rgba(255,255,255,.08);z-index:200;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1); }
+    #notifPanel.open { transform:translateX(0); }
+    #notifBackdrop { position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);opacity:0;transition:opacity .3s;pointer-events:none; }
+    #notifBackdrop.open { opacity:1;pointer-events:all; }
+    .notif-item { padding:14px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .15s; }
+    .notif-item:hover { background:rgba(255,255,255,.03); }
+    .notif-item.unread { background:rgba(168,85,247,.04);border-left:2px solid rgba(168,85,247,.5); }
+    .notif-item-row { display:flex;align-items:flex-start;gap:10px; }
+    .notif-item-ico { width:32px;height:32px;border-radius:10px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;color:#c084fc; }
+    .notif-item-ico.ico-security { background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:#f87171; }
+    .notif-item-ico.ico-key { background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.2);color:#fbbf24; }
+    .notif-item-ico.ico-info { background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.2);color:#60a5fa; }
+    .notif-item-content { flex:1;min-width:0; }
+    .notif-item-title { font-size:.8rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:2px; }
+    .notif-item-body2 { font-size:.72rem;color:rgba(255,255,255,.45);line-height:1.5;display:none; }
+    .notif-item.expanded .notif-item-body2 { display:block; }
+    .notif-item-meta { display:flex;align-items:center;justify-content:space-between;margin-top:4px; }
+    .notif-item-time { font-size:.65rem;color:rgba(255,255,255,.25); }
+    .notif-item-del { background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;padding:2px 4px;font-size:.65rem;transition:color .15s; }
+    .notif-item-del:hover { color:#f87171; }
+    .notif-item-actions { display:flex;gap:6px;margin-top:8px;flex-wrap:wrap; }
+    .notif-action-btn { padding:4px 10px;border-radius:7px;font-size:.65rem;font-weight:700;cursor:pointer;border:1px solid;transition:all .15s; }
+    .notif-action-open { background:rgba(168,85,247,.08);border-color:rgba(168,85,247,.3);color:#c084fc; }
+    .notif-action-security { background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:#f87171; }
+    .notif-item-image { margin-top:8px;border-radius:8px;overflow:hidden; }
+    .notif-item-image img { width:100%;max-height:100px;object-fit:cover; }
+    .notif-empty { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:rgba(255,255,255,.2);font-size:.82rem;gap:10px; }
+    .notif-empty i { font-size:2rem; }
+
+    /* ─── ADMIN SEND ─── */
+    .notif-admin-hdr { display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:rgba(168,85,247,.04);border-bottom:1px solid rgba(168,85,247,.12);border-top:1px solid rgba(168,85,247,.12); }
+    .notif-admin-body { max-height:0;overflow:hidden;transition:max-height .3s; }
+    .notif-admin-body.open { max-height:600px; }
+    .notif-admin-input { width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:9px 12px;color:#fff;font-size:.78rem;outline:none;transition:border-color .2s;font-family:Inter,sans-serif;margin-bottom:8px; }
+    .notif-admin-input:focus { border-color:rgba(168,85,247,.4); }
+    .notif-type-btn { padding:5px 12px;border-radius:7px;font-size:.68rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);transition:all .15s; }
+    .notif-type-btn.active { background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.4);color:#c084fc; }
+    .btn-send-notif { width:100%;padding:10px;border-radius:10px;background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(168,85,247,.15));border:1px solid rgba(168,85,247,.4);color:#d8b4fe;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s; }
+    .btn-send-notif:hover { background:linear-gradient(135deg,rgba(168,85,247,.35),rgba(168,85,247,.25)); }
+
+    /* ─── PUSH PERMISSION POPUP (iOS) ─── */
+    #pushPermModal { position:fixed;bottom:0;left:0;right:0;z-index:9000;transform:translateY(120%);transition:transform .4s cubic-bezier(.2,.8,.2,1);pointer-events:none; }
+    #pushPermModal.show { transform:translateY(0);pointer-events:all; }
+    .push-perm-card { background:#111;border:1px solid rgba(255,255,255,.08);border-bottom:none;border-radius:24px 24px 0 0;padding:20px;box-shadow:0 -20px 60px rgba(0,0,0,.8); }
+    .push-perm-inner { display:flex;align-items:flex-start;gap:14px;margin-bottom:16px; }
+    .push-perm-logo { width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(168,85,247,.3),rgba(168,85,247,.1));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;color:#c084fc;font-size:1.2rem;flex-shrink:0; }
+    .push-perm-badge { display:inline-flex;align-items:center;gap:6px;font-size:.65rem;font-weight:700;color:#c084fc;margin-bottom:4px; }
+    .push-perm-badge span { width:5px;height:5px;border-radius:50%;background:#c084fc;display:block; }
+    .push-perm-title { font-size:.92rem;font-weight:800;color:#fff;margin-bottom:3px; }
+    .push-perm-desc { font-size:.75rem;color:rgba(255,255,255,.45);line-height:1.5; }
+    .push-perm-btns { display:flex;gap:10px; }
+    .push-perm-yes { flex:1;padding:11px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px; }
+    .push-perm-no { padding:11px 18px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:.82rem;font-weight:600;cursor:pointer; }
+
+    /* ─── PUSH BANNER (Android/PWA) ─── */
+    #pushNotifBanner { position:fixed;bottom:0;left:0;right:0;z-index:9000;transform:translateY(120%);transition:transform .35s cubic-bezier(.2,.8,.2,1);pointer-events:none; }
+    #pushNotifBanner.show { transform:translateY(0);pointer-events:all; }
+    .push-banner-inner { background:#111;border-top:1px solid rgba(255,255,255,.08);padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 -10px 40px rgba(0,0,0,.6); }
+    .push-banner-ico { width:36px;height:36px;border-radius:10px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .push-banner-txt { flex:1;min-width:0; }
+    .push-banner-txt strong { display:block;font-size:.78rem;font-weight:700;color:#fff; }
+    .push-banner-txt span { font-size:.7rem;color:rgba(255,255,255,.4); }
+    .push-banner-btn { padding:7px 14px;border-radius:9px;background:linear-gradient(135deg,rgba(168,85,247,.3),rgba(168,85,247,.15));border:1px solid rgba(168,85,247,.4);color:#d8b4fe;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0; }
+    .push-banner-close { width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);border:none;color:rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+
+    /* ─── SECURITY ALERT MODAL ─── */
+    #securityAlertModal { position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:24px; }
+    .sec-alert-card { background:linear-gradient(160deg,#0f0a1a,#130d20);border:1px solid rgba(239,68,68,.25);border-radius:22px;max-width:420px;width:100%;overflow:hidden;animation:appSlideUp .32s cubic-bezier(.2,.8,.2,1); }
+
+    /* ─── NOTIF BADGE ─── */
+    #notifMobBadge { position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;background:#a855f7;border-radius:100px;font-size:10px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid #050505;padding:0 3px; }
+
+    /* ─── TOGGLE SWITCH ─── */
+    .pref-toggle { position:relative;width:42px;height:24px;flex-shrink:0; }
+    .pref-toggle input { opacity:0;width:0;height:0;position:absolute; }
+    .pref-toggle-slider { position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:100px;transition:.2s;cursor:pointer; }
+    .pref-toggle-slider:before { position:absolute;content:'';width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s; }
+    .pref-toggle input:checked + .pref-toggle-slider { background:#a855f7; }
+    .pref-toggle input:checked + .pref-toggle-slider:before { transform:translateX(18px); }
   </style>
 </head>
 
 <body class="h-[100dvh] w-screen flex flex-col relative bg-[#050505]">
 
-  <!-- CONTAINER DES NOTIFICATIONS TOAST -->
+  <!-- TOASTS -->
   <div id="toastContainer" class="fixed top-safe right-4 left-4 z-[9999] flex flex-col gap-2 pointer-events-none mt-2"></div>
 
-  <!-- ZONE 1 : INTERFACE PRINCIPALE -->
+  <!-- ZONE PRINCIPALE -->
   <div id="mainInterface" class="flex-1 flex flex-col min-h-0 relative z-10 w-full transition-opacity duration-300">
-    
+
     <!-- HEADER -->
     <header class="shrink-0 px-4 safe-top py-3 flex justify-between items-center bg-[#050505]/95 backdrop-blur-md border-b border-white/5 shadow-md shadow-black/50 relative z-40">
       <div class="flex items-center gap-1.5 z-10">
@@ -137,21 +160,54 @@
         <h1 class="font-display font-bold text-[16px] tracking-tight text-white">LevelUp</h1>
       </div>
       <div class="flex items-center gap-2 shrink-0 z-10">
-        <button onclick="openModal('searchModal')" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors border border-white/5">
-          <i class="fa-solid fa-magnifying-glass text-[13px]"></i>
-        </button>
-        <button onclick="openNotifSidebar()" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors relative border border-white/5 shrink-0">
+        <button onclick="openNotifPanel()" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors relative border border-white/5 shrink-0">
           <i class="fa-solid fa-bell text-[13.5px]"></i>
-          <span class="absolute top-2 right-2.5 w-1.5 h-1.5 bg-brand rounded-full shadow-[0_0_5px_rgba(168,85,247,0.8)] border border-[#050505]"></span>
+          <span id="notifMobBadge" class="hidden"></span>
         </button>
       </div>
     </header>
 
     <!-- CONTENU PRINCIPAL -->
     <main class="flex-1 flex flex-col overflow-y-auto hide-scrollbar relative z-0 scroll-smooth" id="mainContent">
-      
+
       <!-- ONGLET ACCUEIL -->
-      <section id="tab-accueil" class="app-section flex flex-col gap-4 px-4 py-6 pb-8 tab-enter"></section>
+      <section id="tab-accueil" class="app-section flex flex-col gap-4 px-4 py-6 pb-8 tab-enter">
+        <div class="w-full rounded-[20px] p-5 glass-effect border border-white/5 relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-brand/10 blur-3xl rounded-full"></div>
+          <div class="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center mb-3 text-lg border border-brand/20">
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">Bienvenue sur LevelUp</h3>
+          <p class="text-sm text-slate-300 leading-relaxed mb-4">Votre hub central. Connectez-vous pour accéder à LevelMovie, LevelMusic et Level IA via SSO.</p>
+          <div id="homeConnectBtn" class="flex gap-3 flex-wrap">
+            <button onclick="openLoginSheet()" class="py-2.5 px-5 bg-brand hover:bg-brand/80 text-white font-bold rounded-xl transition-all text-sm shadow-[0_0_12px_rgba(168,85,247,0.3)]">
+              <i class="fa-solid fa-lock-open mr-2"></i>Se connecter
+            </button>
+          </div>
+        </div>
+
+        <div class="w-full rounded-[20px] p-5 glass-effect border border-white/5">
+          <h4 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-grid-2 text-brand text-xs"></i> Applications</h4>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="openAppWithSSO('movie','https://movie.levelup-ecosystem.com')" class="flex flex-col items-center gap-2 p-4 rounded-[16px] bg-blue-500/5 border border-blue-500/15 hover:bg-blue-500/10 transition-all">
+              <i class="fa-solid fa-film text-2xl text-blue-400"></i>
+              <span class="text-[11px] font-bold text-white">LevelMovie</span>
+            </button>
+            <button onclick="openAppWithSSO('music','https://music.levelup-ecosystem.com')" class="flex flex-col items-center gap-2 p-4 rounded-[16px] bg-green-500/5 border border-green-500/15 hover:bg-green-500/10 transition-all">
+              <i class="fa-solid fa-music text-2xl text-green-400"></i>
+              <span class="text-[11px] font-bold text-white">LevelMusic</span>
+            </button>
+            <button onclick="openAppWithSSO('ia','/dona.html')" class="flex flex-col items-center gap-2 p-4 rounded-[16px] bg-brand/5 border border-brand/15 hover:bg-brand/10 transition-all">
+              <i class="fa-solid fa-star text-2xl text-brand"></i>
+              <span class="text-[11px] font-bold text-white">Dona IA</span>
+            </button>
+            <button onclick="window.open('https://levelup-ecosystem.com/tool.html','_blank')" class="flex flex-col items-center gap-2 p-4 rounded-[16px] bg-orange-500/5 border border-orange-500/15 hover:bg-orange-500/10 transition-all">
+              <i class="fa-solid fa-wrench text-2xl text-orange-400"></i>
+              <span class="text-[11px] font-bold text-white">Outils</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
       <!-- ONGLET ACTUS -->
       <section id="tab-actus" class="app-section hidden flex-col gap-4 px-4 py-6 pb-8 tab-enter">
@@ -164,18 +220,17 @@
             <p class="text-xs text-slate-400">Restez à jour sur l'écosystème.</p>
           </div>
         </div>
-        <div class="w-full rounded-[20px] p-5 glass-effect border border-white/5 relative overflow-hidden group cursor-pointer">
-          <div class="absolute top-0 right-0 w-24 h-24 bg-brand/10 blur-2xl rounded-full"></div>
+        <div class="w-full rounded-[20px] p-5 glass-effect border border-white/5 relative overflow-hidden">
           <div class="flex items-center gap-2 mb-3">
             <span class="px-2 py-0.5 bg-brand/20 text-brand text-[9px] font-bold uppercase rounded">Système</span>
             <span class="text-[10px] text-slate-400">Aujourd'hui</span>
           </div>
-          <h3 class="text-lg font-bold text-white mb-2">Firebase intégré !</h3>
-          <p class="text-sm text-slate-300 leading-relaxed">L'application mobile est maintenant directement connectée à votre base de données centrale LevelUp Ecosystem.</p>
+          <h3 class="text-lg font-bold text-white mb-2">Notifications intégrées</h3>
+          <p class="text-sm text-slate-300 leading-relaxed">Système de notifications push, alertes sécurité et préférences entièrement intégré à l'app mobile.</p>
         </div>
       </section>
 
-      <!-- ONGLET DONA -->
+      <!-- ONGLET DONA (iframe) -->
       <section id="tab-dona" class="app-section hidden absolute inset-0 w-full h-full bg-[#050505] z-10">
         <div id="donaLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
           <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
@@ -192,8 +247,29 @@
           </div>
           <div>
             <h2 class="text-xl font-display font-bold text-white">L'Univers LevelUp</h2>
-            <p class="text-xs text-slate-400">Infrastructure Cloud.</p>
+            <p class="text-xs text-slate-400">Infrastructure Cloud · Sécurisé</p>
           </div>
+        </div>
+        <div class="w-full rounded-[20px] p-5 glass-effect border border-white/5">
+          <div class="flex items-center gap-3 mb-3">
+            <i class="fa-brands fa-google text-blue-400"></i>
+            <span class="text-sm font-bold text-white">Firebase + Google Cloud</span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">Authentification OAuth, base de données Firestore en temps réel, et notifications FCM. Vos données sont synchronisées instantanément sur tous vos appareils.</p>
+        </div>
+        <div class="w-full rounded-[20px] p-5 glass-effect border border-brand/15 bg-brand/5">
+          <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-brand text-xs"></i> Sécurité</h4>
+          <ul class="space-y-2 text-xs text-slate-400">
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand text-[10px]"></i> Clés d'accès chiffrées (LVL-XXXXX-XXXXX)</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand text-[10px]"></i> PIN de protection local</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand text-[10px]"></i> Alertes de connexion suspecte</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand text-[10px]"></i> Surveillance compte en temps réel</li>
+          </ul>
+        </div>
+        <div class="flex gap-3 flex-wrap">
+          <a href="https://levelup-ecosystem.com/terms" target="_blank" class="py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all">Conditions</a>
+          <a href="https://levelup-ecosystem.com/privacy" target="_blank" class="py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all">Confidentialité</a>
+          <a href="mailto:support@levelup-ecosystem.com" class="py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all">Support</a>
         </div>
       </section>
 
@@ -217,6 +293,45 @@
             <button onclick="openLoginSheet()" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm shadow-[0_0_15px_rgba(168,85,247,0.3)]">
               S'identifier avec Google
             </button>
+          </div>
+        </div>
+
+        <!-- Préférences notifications (visible quand connecté) -->
+        <div id="notifPrefsSection" class="hidden w-full rounded-[20px] glass-effect border border-white/5 overflow-hidden">
+          <div class="px-5 py-4 border-b border-white/5">
+            <h4 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-bell text-brand text-xs"></i> Préférences notifications</h4>
+          </div>
+          <div class="divide-y divide-white/5">
+            <div class="flex items-center justify-between px-5 py-3.5">
+              <div>
+                <p class="text-sm font-semibold text-white">Notifications push</p>
+                <p id="notifPushStatus" class="text-[11px] text-slate-400 mt-0.5">Activez pour recevoir des alertes.</p>
+              </div>
+              <label class="pref-toggle">
+                <input type="checkbox" id="notifPushToggle" onchange="window.togglePushNotif(this.checked)">
+                <span class="pref-toggle-slider"></span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between px-5 py-3.5">
+              <div>
+                <p class="text-sm font-semibold text-white">Alertes connexion</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">Email si nouvelle IP détectée</p>
+              </div>
+              <label class="pref-toggle">
+                <input type="checkbox" id="notifLoginToggle" checked onchange="window._saveEmailNotifPref('login',this.checked)">
+                <span class="pref-toggle-slider"></span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between px-5 py-3.5">
+              <div>
+                <p class="text-sm font-semibold text-white">Mises à jour outils</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">Nouveautés des hubs LevelUp</p>
+              </div>
+              <label class="pref-toggle">
+                <input type="checkbox" id="notifUpdatesToggle" checked onchange="window._saveEmailNotifPref('updates',this.checked)">
+                <span class="pref-toggle-slider"></span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -258,7 +373,7 @@
     </main>
   </div>
 
-  <!-- ZONE 2 : MODALE POUR IFRAMES SSO -->
+  <!-- VIEWER SSO -->
   <div id="appViewerModal" class="hidden flex-1 flex-col w-full bg-[#050505] relative z-20 animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
     <div class="w-full bg-[#050505] border-b border-white/5 py-3 px-4 safe-top flex justify-between items-center shrink-0">
       <button onclick="closeAppViewer()" class="text-slate-300 hover:text-brand flex items-center justify-center w-8 h-8 bg-white/5 rounded-full transition-all">
@@ -281,7 +396,7 @@
     </div>
   </div>
 
-  <!-- BARRE DE NAVIGATION EN BAS -->
+  <!-- NAVIGATION -->
   <nav class="shrink-0 w-full glass-effect rounded-t-[2rem] rounded-b-none !border-x-0 !border-b-0 border-t border-white/10 flex justify-between items-center px-6 pt-5 safe-bottom z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.7)] relative bg-[#050505]/80">
     <button onclick="switchTab('accueil')" id="nav-btn-accueil" class="nav-btn flex flex-col items-center gap-1.5 text-white scale-110 transition-all">
       <i class="fa-solid fa-house text-lg drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"></i>
@@ -305,20 +420,17 @@
     </button>
   </nav>
 
-  <!-- MODAL LOGIN / INSCRIPTION -->
+  <!-- ═══ LOGIN SHEET ═══ -->
   <div id="loginSheetModal" class="fixed inset-0 z-[110] hidden">
     <div id="loginSheetBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="closeLoginSheet()"></div>
-    
     <div id="loginSheetContent" class="absolute bottom-0 left-0 w-full bg-[#09090b] rounded-t-[32px] border-t border-white/10 flex flex-col translate-y-full transition-transform duration-300 shadow-[0_-15px_40px_rgba(0,0,0,1)] pb-8 pt-2 safe-bottom">
       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-brand/20 blur-[60px] pointer-events-none rounded-full"></div>
       <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto my-3 relative z-10"></div>
-      
       <div class="px-6 pb-4 pt-4 relative z-10 flex flex-col items-center w-full">
-        
+
         <div id="authLoginStep" class="w-full max-w-[400px]">
           <h1 class="font-display text-2xl font-bold text-center mb-2 text-white">Rejoindre LevelUp</h1>
           <p class="text-sm text-slate-400 text-center mb-6 leading-relaxed">Connectez-vous pour accéder à l'écosystème.</p>
-
           <button id="gSignInBtn" onclick="window.googleSignIn()" class="login-btn btn-google">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -328,59 +440,47 @@
             </svg>
             <span id="gBtnTxt">Continuer avec Google</span>
           </button>
-
           <button id="xSignInBtn" onclick="window.xSignInSimul()" class="login-btn btn-x">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-[18px] h-[18px]"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             <span id="xBtnTxt">Continuer avec X</span>
           </button>
-
           <div class="mt-4 w-full" id="turnstileWrap"><div id="cfTurnstile"></div></div>
         </div>
 
         <div id="authRegisterStep" class="w-full max-w-[400px] hidden flex-col gap-4 text-left">
           <h1 class="font-display text-2xl font-bold text-center text-white">Créer votre profil</h1>
           <p class="text-xs text-slate-400 text-center mb-2">Bienvenue ! Finalisez votre inscription.</p>
-
           <div>
             <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase tracking-wide">Nom d'utilisateur</label>
             <input type="text" id="regNameInput" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-brand transition-colors" oninput="window.checkRegForm()">
           </div>
-          
           <div>
             <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase tracking-wide">Âge</label>
             <select id="regAgeInput" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-brand transition-colors appearance-none" onchange="window.checkRegForm()">
-                <option value="" disabled selected>Sélectionnez votre âge...</option>
-                <option value="16">16 ans</option>
-                <option value="17">17 ans</option>
-                <option value="18">18 ans</option>
-                <option value="19">19 ans</option>
-                <option value="20">20 ans</option>
-                <option value="21+">21 ans et plus</option>
+              <option value="" disabled selected>Sélectionnez votre âge...</option>
+              <option value="16">16 ans</option><option value="17">17 ans</option><option value="18">18 ans</option>
+              <option value="19">19 ans</option><option value="20">20 ans</option><option value="21+">21 ans et plus</option>
             </select>
           </div>
-
-          <label class="flex items-start gap-3 mt-2 cursor-pointer group">
+          <label class="flex items-start gap-3 mt-2 cursor-pointer">
             <input type="checkbox" id="regTermsCheckbox" class="mt-1 accent-brand w-4 h-4 cursor-pointer" onchange="window.checkRegForm()">
-            <span class="text-[11px] text-slate-400 leading-relaxed">
-              J'accepte les <a href="https://levelup-ecosystem.com/terms" target="_blank" class="text-brand font-semibold hover:underline">conditions</a> et la <a href="https://levelup-ecosystem.com/privacy" target="_blank" class="text-brand font-semibold hover:underline">politique de confidentialité</a>.
-            </span>
+            <span class="text-[11px] text-slate-400 leading-relaxed">J'accepte les <a href="https://levelup-ecosystem.com/terms" target="_blank" class="text-brand font-semibold">conditions</a> et la <a href="https://levelup-ecosystem.com/privacy" target="_blank" class="text-brand font-semibold">confidentialité</a>.</span>
           </label>
-
-          <button id="regCompleteBtn" onclick="window.completeRegistration()" disabled class="w-full py-3.5 mt-2 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm shadow-[0_0_15px_rgba(168,85,247,0.3)] disabled:opacity-50 disabled:cursor-not-allowed">
+          <button id="regCompleteBtn" onclick="window.completeRegistration()" disabled class="w-full py-3.5 mt-2 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed">
             Terminer l'inscription
           </button>
         </div>
 
         <div class="text-center mt-6 text-[0.78rem] text-slate-400 flex flex-wrap justify-center gap-x-3 gap-y-2 w-full">
-          <a href="https://levelup-ecosystem.com/terms" target="_blank" class="text-brand font-semibold hover:text-[#c084fc]">Conditions</a> ·
-          <a href="https://levelup-ecosystem.com/privacy" target="_blank" class="text-brand font-semibold hover:text-[#c084fc]">Confidentialité</a> ·
-          <a href="mailto:support@levelup-ecosystem.com" class="text-brand font-semibold hover:text-[#c084fc]">Support</a>
+          <a href="https://levelup-ecosystem.com/terms" target="_blank" class="text-brand font-semibold">Conditions</a> ·
+          <a href="https://levelup-ecosystem.com/privacy" target="_blank" class="text-brand font-semibold">Confidentialité</a> ·
+          <a href="mailto:support@levelup-ecosystem.com" class="text-brand font-semibold">Support</a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- PIN MODAL -->
+  <!-- ═══ PIN MODAL ═══ -->
   <div id="pinOverlay" class="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4">
     <div class="w-full max-w-[320px] bg-[#121214] border border-white/10 rounded-[24px] p-6 text-center shadow-2xl relative animate-slide-up">
       <button onclick="closePin()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -388,12 +488,14 @@
       <h3 id="pinTitle" class="text-lg font-bold text-white mb-1">Code PIN</h3>
       <p id="pinSub" class="text-xs text-slate-400 mb-5">Entrez votre code de sécurité</p>
       <div id="pinErrorTxt" class="hidden text-red-400 text-xs font-bold mb-3"></div>
-      <input type="password" id="nativePinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" class="w-full text-center text-3xl tracking-[12px] py-4 bg-black/40 border border-white/10 rounded-xl text-white focus:outline-none focus:border-brand mb-4 transition-colors" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length===4) window.handlePinNative();">
+      <input type="password" id="nativePinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••"
+        class="w-full text-center text-3xl tracking-[12px] py-4 bg-black/40 border border-white/10 rounded-xl text-white focus:outline-none focus:border-brand mb-4 transition-colors"
+        oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length===4) window.handlePinNative();">
       <button onclick="closePin()" class="w-full py-3 bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-bold rounded-xl transition-colors">Annuler</button>
     </div>
   </div>
 
-  <!-- REGEN CONFIRM -->
+  <!-- ═══ REGEN CONFIRM ═══ -->
   <div id="regenOv" class="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4">
     <div class="w-full max-w-[320px] bg-[#121214] border border-red-500/30 rounded-[24px] p-6 text-center shadow-2xl animate-slide-up">
       <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mx-auto mb-4 text-red-500 text-xl"><i class="fa-solid fa-rotate"></i></div>
@@ -406,577 +508,1180 @@
     </div>
   </div>
 
-  <div id="searchModal" class="fixed inset-0 bg-[#050505] z-[100] flex flex-col hidden translate-y-full">
-    <div class="shrink-0 px-4 safe-top py-3 flex items-center gap-3 bg-[#050505]/95 backdrop-blur-md border-b border-white/5">
-      <button onclick="closeModal('searchModal')" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
-      <div class="flex-1 relative">
-        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
-        <input type="text" placeholder="Rechercher..." class="w-full bg-[#121214] border border-white/10 rounded-full py-2.5 pl-9 pr-4 text-sm text-white focus:outline-none">
+  <!-- ═══ PANNEAU NOTIFICATIONS ═══ -->
+  <div id="notifBackdrop" onclick="closeNotifPanel()"></div>
+  <div id="notifPanel">
+    <!-- Header -->
+    <div class="shrink-0 px-4 safe-top py-4 border-b border-white/5 flex items-center justify-between">
+      <h2 class="text-lg font-display font-bold text-white">Notifications</h2>
+      <div class="flex items-center gap-2">
+        <button onclick="window.notifMarkAllRead()" class="text-[11px] font-semibold text-brand px-2 py-1 rounded-lg hover:bg-brand/10 transition-colors">Tout lire</button>
+        <button onclick="closeNotifPanel()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
       </div>
     </div>
-    <div class="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center text-center"><p class="text-slate-500 text-sm">Recherche non configurée ici.</p></div>
-  </div>
 
-  <div id="notifModal" class="fixed inset-0 z-[100] hidden">
-    <div id="notifBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity" onclick="closeNotifSidebar()"></div>
-    <div id="notifSidebar" class="absolute top-0 right-0 bottom-0 w-[80vw] max-w-[320px] bg-[#09090b] border-l border-white/10 flex flex-col translate-x-full transition-transform duration-300">
-      <div class="shrink-0 px-4 safe-top py-4 border-b border-white/5"><h2 class="text-lg font-display font-bold text-white">Notifications</h2></div>
-      <div class="flex-1 p-4 flex flex-col items-center justify-center text-center"><h3 class="text-white font-bold text-lg mb-1">Aucune notification</h3></div>
+    <!-- Admin send section (super-admins uniquement) -->
+    <div id="notifAdminSection" style="display:none">
+      <div class="notif-admin-hdr" onclick="window._toggleAdminPanel()">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-satellite-dish text-brand text-xs"></i>
+          <span class="text-xs font-bold text-brand">Envoyer une notification</span>
+          <span class="text-[9px] font-bold text-brand/60 uppercase tracking-wider">Admin</span>
+        </div>
+        <i id="notifAdminToggle" class="fa-solid fa-chevron-down text-brand/60 text-xs transition-transform"></i>
+      </div>
+      <div id="notifAdminBody" class="notif-admin-body">
+        <div class="px-4 py-3 space-y-2">
+          <input type="text" id="notifSendTitle" placeholder="Titre de la notification" class="notif-admin-input">
+          <textarea id="notifSendBody" placeholder="Corps du message..." rows="2" class="notif-admin-input resize-none"></textarea>
+          <input type="url" id="notifSendImage" placeholder="URL image (optionnel)" class="notif-admin-input">
+          <select id="notifSendDest" class="notif-admin-input" onchange="document.getElementById('notifSendCustomUrl').style.display=this.value==='custom'?'block':'none'">
+            <option value="">Destination (URL)</option>
+            <option value="https://levelup-ecosystem.com">Accueil LevelUp</option>
+            <option value="https://movie.levelup-ecosystem.com">LevelMovie</option>
+            <option value="https://music.levelup-ecosystem.com">LevelMusic</option>
+            <option value="custom">URL personnalisée...</option>
+          </select>
+          <input type="url" id="notifSendCustomUrl" placeholder="URL personnalisée..." class="notif-admin-input" style="display:none">
+          <div class="flex gap-2 mb-2">
+            <button class="notif-type-btn active" onclick="window._setNotifType('both',this)">Push + In-app</button>
+            <button class="notif-type-btn" onclick="window._setNotifType('push',this)">Push</button>
+            <button class="notif-type-btn" onclick="window._setNotifType('inapp',this)">In-app</button>
+          </div>
+          <button class="btn-send-notif" onclick="window.sendPushNotif()">
+            <i class="fa-solid fa-rocket mr-1.5"></i> Envoyer à tous
+          </button>
+          <button onclick="window.deleteAllNotifs()" class="w-full py-2 text-[11px] font-semibold text-red-400/70 hover:text-red-400 transition-colors">
+            <i class="fa-solid fa-trash-can mr-1"></i> Supprimer toutes les notifs
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste notifications -->
+    <div id="notifList" class="flex-1 overflow-y-auto hide-scrollbar">
+      <div class="notif-empty">
+        <i class="fa-regular fa-bell-slash"></i>
+        <p>Aucune notification pour le moment</p>
+      </div>
     </div>
   </div>
 
-  <!-- JAVASCRIPT LOGIC (FIREBASE & SSO & UI) -->
+  <!-- ═══ PUSH PERMISSION — iOS ═══ -->
+  <div id="pushPermModal">
+    <div class="push-perm-card">
+      <div class="push-perm-inner">
+        <div class="push-perm-logo"><i class="fa-solid fa-bell"></i></div>
+        <div class="push-perm-texts">
+          <div class="push-perm-badge"><span></span>LevelUp Ecosystem</div>
+          <div class="push-perm-title">Activer les notifications</div>
+          <div class="push-perm-desc">Restez informé des nouvelles sorties, mises à jour et annonces exclusives de l'écosystème.</div>
+        </div>
+      </div>
+      <div class="push-perm-btns">
+        <button class="push-perm-yes" onclick="window.acceptPushPerm()"><i class="fa-solid fa-bell"></i> Activer</button>
+        <button class="push-perm-no" onclick="window.declinePushPerm()">Plus tard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PUSH BANNER — Android/PWA ═══ -->
+  <div id="pushNotifBanner">
+    <div class="push-banner-inner">
+      <div class="push-banner-ico">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="push-banner-txt">
+        <strong>Restez dans la boucle</strong>
+        <span>Activez les notifications push</span>
+      </div>
+      <button class="push-banner-btn" onclick="window.acceptPushPerm()">Activer</button>
+      <button class="push-banner-close" onclick="window.declinePushPerm()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- ═══ SECURITY ALERT MODAL ═══ -->
+  <div id="securityAlertModal">
+    <div class="sec-alert-card">
+      <div style="padding:24px 24px 20px;background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04));border-bottom:1px solid rgba(239,68,68,.12);display:flex;align-items:center;gap:14px">
+        <div style="width:44px;height:44px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="fa-solid fa-shield-halved" style="color:#f87171;font-size:1.1rem"></i>
+        </div>
+        <div>
+          <div style="font-size:.95rem;font-weight:700;color:#fff">Connexion suspecte détectée</div>
+          <div style="font-size:.72rem;color:rgba(239,68,68,.7);margin-top:2px">Nouvelle connexion depuis un emplacement inconnu</div>
+        </div>
+      </div>
+      <div style="padding:20px 24px">
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+            <i class="fa-solid fa-network-wired" style="color:rgba(255,255,255,.3);font-size:.8rem;flex-shrink:0"></i>
+            <div><div style="font-size:.62rem;color:rgba(255,255,255,.25);margin-bottom:1px;text-transform:uppercase;letter-spacing:.08em">Adresse IP</div><div id="secAlertIp" style="font-size:.8rem;color:#fff;font-weight:600;font-family:monospace">—</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+            <i class="fa-solid fa-location-dot" style="color:rgba(255,255,255,.3);font-size:.8rem;flex-shrink:0"></i>
+            <div><div style="font-size:.62rem;color:rgba(255,255,255,.25);margin-bottom:1px;text-transform:uppercase;letter-spacing:.08em">Localisation</div><div id="secAlertCity" style="font-size:.8rem;color:#fff;font-weight:600">—</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+            <i class="fa-regular fa-clock" style="color:rgba(255,255,255,.3);font-size:.8rem;flex-shrink:0"></i>
+            <div><div style="font-size:.62rem;color:rgba(255,255,255,.25);margin-bottom:1px;text-transform:uppercase;letter-spacing:.08em">Date & heure</div><div id="secAlertDate" style="font-size:.8rem;color:#fff;font-weight:600">—</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+            <i class="fa-solid fa-laptop" style="color:rgba(255,255,255,.3);font-size:.8rem;flex-shrink:0"></i>
+            <div><div style="font-size:.62rem;color:rgba(255,255,255,.25);margin-bottom:1px;text-transform:uppercase;letter-spacing:.08em">Appareil</div><div id="secAlertDevice" style="font-size:.72rem;color:rgba(255,255,255,.5);word-break:break-all">—</div></div>
+          </div>
+        </div>
+        <p style="font-size:.75rem;color:rgba(255,255,255,.35);line-height:1.6;margin-bottom:16px;text-align:center">Reconnaissez-vous cette connexion ? Si ce n'était pas vous, contactez le support.</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button onclick="window._closeSecAlert()" style="width:100%;padding:11px;border-radius:11px;background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.1));border:1px solid rgba(34,197,94,.3);color:#4ade80;font-size:.83rem;font-weight:700;cursor:pointer">
+            <i class="fa-solid fa-check"></i> Oui, c'était bien moi
+          </button>
+          <button onclick="window._secAlertContact()" style="width:100%;padding:11px;border-radius:11px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:.83rem;font-weight:700;cursor:pointer">
+            <i class="fa-solid fa-envelope"></i> Non, contacter le support
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ JAVASCRIPT PRINCIPAL ═══ -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-    // Variables globales
-    window._auth = null;
-    window._db = null;
-    window._user = null;
-    window._ud = null;
-    window._pendingCreds = null;
+    // ── GLOBALS ──
+    window._auth = null; window._db = null; window._user = null; window._ud = null;
+    window._pendingCreds = null; window._kVis = false;
 
-    // Configuration par défaut et initialisation
+    const SUPER_ADMINS = ['levelup.ia0@gmail.com', 'richelieubonte@gmail.com'];
+    const NOTIF_COLL = ['artifacts', 'levelup-ecosystem', 'public', 'data', 'notifications'];
+    const LAST_SEEN_KEY = 'lvl_notif_last_seen';
+    const PUSH_PREF_KEY = 'lvl_push_pref';
+    const VAPID_KEY = 'BPc3w8mDuNONg6Wl5TyU_x-l8KfUAtd_D868u3PaPpgrM7HUBMJ5qmuCCmR_U05YZlzGdYfFHPoQEzCakFaTjGM';
+    let _messaging = null;
+    let _fcmRegistering = false;
+    const _FCM_REG_KEY = 'lvl_fcm_last_reg';
+    const _FCM_TOKEN_KEY = 'lvl_fcm_token';
+
+    // ── FIREBASE INIT ──
     const cfg = {
-        apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-        authDomain: "levelup-ecosystem.com",
-        projectId: "levelup-ia",
-        storageBucket: "levelup-ia.firebasestorage.app",
-        messagingSenderId: "229420004282",
-        appId: "1:229420004282:web:6735f059a947f0936ae383"
+      apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+      authDomain: "levelup-ecosystem.com",
+      projectId: "levelup-ia",
+      storageBucket: "levelup-ia.firebasestorage.app",
+      messagingSenderId: "229420004282",
+      appId: "1:229420004282:web:6735f059a947f0936ae383"
     };
 
+    let app, auth, db;
     try {
-        const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : cfg;
-        const app = initializeApp(config);
-        window._auth = getAuth(app);
-        window._db = getFirestore(app);
-        
-        // ENVIRONNEMENT CANVAS : Sécurisation initiale requise
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(window._auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(window._auth);
-                }
-            } catch (e) { console.warn("Canvas Auth Fallback Failed", e); }
-        };
-        initAuth();
+      const config = (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : cfg;
+      app = initializeApp(config);
+      auth = getAuth(app); window._auth = auth;
+      db = getFirestore(app); window._db = db;
+      try { _messaging = getMessaging(app); } catch(_) {}
+      window._fb = { doc, setDoc, getDoc, signOut, collection, addDoc };
+      try {
+        const { getAuth: ga, browserLocalPersistence, setPersistence } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+        await setPersistence(auth, browserLocalPersistence).catch(()=>{});
+      } catch(_) {}
+      getRedirectResult(auth).catch(()=>{});
+      // Canvas init
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth).catch(()=>{});
+        }
+      } catch(_) {}
+    } catch(e) { console.error("Firebase init:", e); }
 
-    } catch (e) {
-        console.error("Firebase init error:", e);
-    }
-
-    // UTILS
+    // ── UTILS ──
     window.toast_ = function(msg, type='info') {
-        const c = document.getElementById('toastContainer');
-        const el = document.createElement('div');
-        const ic = {ok:'fa-check-circle text-green-400', err:'fa-circle-xmark text-red-400', info:'fa-circle-info text-brand', warn:'fa-triangle-exclamation text-yellow-400'};
-        el.className = `bg-[#121214] border border-white/10 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-3 shadow-2xl transition-all duration-300 transform translate-x-full text-white`;
-        el.innerHTML = `<i class="fa-solid ${ic[type]||ic.info} text-lg"></i> <span>${msg}</span>`;
-        c.appendChild(el);
-        requestAnimationFrame(() => el.classList.remove('translate-x-full'));
-        setTimeout(() => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(-10px)';
-            setTimeout(() => el.remove(), 300);
-        }, 3000);
+      const c = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      const ic = {ok:'fa-check-circle text-green-400', err:'fa-circle-xmark text-red-400', info:'fa-circle-info text-brand', warn:'fa-triangle-exclamation text-yellow-400'};
+      el.className = 'bg-[#121214] border border-white/10 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-3 shadow-2xl transition-all duration-300 transform translate-x-full text-white';
+      el.innerHTML = `<i class="fa-solid ${ic[type]||ic.info} text-lg flex-shrink-0"></i><span>${msg}</span>`;
+      c.appendChild(el);
+      requestAnimationFrame(() => el.classList.remove('translate-x-full'));
+      setTimeout(() => { el.style.opacity='0'; el.style.transform='translateY(-10px)'; setTimeout(()=>el.remove(),300); }, 3500);
     };
-
     window.sHash = function(s) { let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0; return h.toString(16); };
     window.mkKey = function() {
-        const c='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; let k='LVL-';
-        for(let i=0;i<5;i++) k+=c.charAt(Math.floor(Math.random()*c.length)); k+='-';
-        for(let i=0;i<5;i++) k+=c.charAt(Math.floor(Math.random()*c.length)); return k;
+      const c='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; let k='LVL-';
+      for(let i=0;i<5;i++) k+=c.charAt(Math.floor(Math.random()*c.length)); k+='-';
+      for(let i=0;i<5;i++) k+=c.charAt(Math.floor(Math.random()*c.length)); return k;
     };
-
-    // --- AUTHENTIFICATION ---
-    window.googleSignIn = async function() {
-        if (!window._auth) return;
-        const btn = document.getElementById('gSignInBtn');
-        const token = window._turnstileToken;
-        if (!token) {
-            window.toast_('Veuillez compléter le captcha de sécurité.', 'warn');
-            return;
-        }
-
-        btn.disabled = true;
-        document.getElementById('gBtnTxt').textContent = 'Connexion...';
-        
-        try {
-            const gProv = new GoogleAuthProvider();
-            gProv.setCustomParameters({ prompt: 'select_account' });
-            await signInWithPopup(window._auth, gProv);
-        } catch(e) {
-            // SI BLOQUÉ PAR L'ENVIRONNEMENT D'APERÇU (CORS/Popups), ON SIMULE POUR PERMETTRE LE TEST
-            if (e.code === 'auth/unauthorized-domain' || e.message.includes('popup')) {
-                window.toast_('Aperçu détecté : Connexion simulée.', 'info');
-                const pseudoUser = window._auth.currentUser || { uid: `canvas_${Date.now()}` };
-                
-                window._pendingCreds = { uid: pseudoUser.uid, displayName: 'Test Utilisateur', email: 'test@levelup.com' };
-                document.getElementById('authLoginStep').classList.add('hidden');
-                const regStep = document.getElementById('authRegisterStep');
-                regStep.classList.remove('hidden');
-                regStep.classList.add('flex');
-                document.getElementById('regNameInput').value = 'Test Utilisateur';
-                window.checkRegForm();
-                
-            } else {
-                btn.disabled = false;
-                document.getElementById('gBtnTxt').textContent = 'Continuer avec Google';
-                if(window.turnstile && window._turnstileWidgetId) window.turnstile.reset(window._turnstileWidgetId);
-                if(e.code !== 'auth/popup-closed-by-user') window.toast_('Erreur de connexion', 'err');
-            }
-        }
-    };
-
-    // Simulation bouton X
-    window.xSignInSimul = function() {
-        const btn = document.getElementById('xSignInBtn');
-        btn.disabled = true;
-        document.getElementById('xBtnTxt').textContent = 'Connexion X...';
-        setTimeout(() => {
-            btn.disabled = false;
-            document.getElementById('xBtnTxt').textContent = 'Continuer avec X';
-            window.toast_("L'API X (Twitter) n'est pas encore configurée. Veuillez utiliser Google.", 'warn');
-        }, 1500);
-    };
-
-    // --- LISTENER D'ÉTAT & INSCRIPTION EN 2 ÉTAPES ---
-    if (window._auth) {
-        onAuthStateChanged(window._auth, async (u) => {
-            if (u && !u.isAnonymous) {
-                window._user = u;
-                try {
-                    const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
-                    const snap = await getDoc(ref);
-                    
-                    if (snap.exists()) {
-                        window._ud = snap.data();
-                        const secRef = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
-                        const secSnap = await getDoc(secRef);
-                        if(secSnap.exists()) {
-                            window._ud.apiKey = secSnap.data().apiKey || secSnap.data().key;
-                            window._ud.pinHash = secSnap.data().pinHash;
-                        }
-                        
-                        window.refreshProfileUI();
-                        window.closeLoginSheet();
-                        window.toast_(`Bienvenue de retour, ${window._ud.displayName.split(' ')[0]}!`, 'ok');
-                        
-                    } else {
-                        window._pendingCreds = u;
-                        document.getElementById('authLoginStep').classList.add('hidden');
-                        const regStep = document.getElementById('authRegisterStep');
-                        regStep.classList.remove('hidden');
-                        regStep.classList.add('flex');
-                        document.getElementById('regNameInput').value = u.displayName || 'Utilisateur LevelUp';
-                        window.checkRegForm();
-                    }
-                } catch(e) {
-                    console.error("Auth DB Erreur", e);
-                    window.toast_("Erreur lors de la lecture du profil.", 'err');
-                }
-            } else if (!window._pendingCreds) {
-                window._user = null;
-                window._ud = null;
-                window.refreshProfileUI();
-            }
-        });
+    function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function _relTime(date) {
+      const diff = Math.floor((Date.now()-date.getTime())/1000);
+      if(diff<60) return 'À l\'instant';
+      if(diff<3600) return `Il y a ${Math.floor(diff/60)} min`;
+      if(diff<86400) return `Il y a ${Math.floor(diff/3600)} h`;
+      return `Il y a ${Math.floor(diff/86400)} j`;
     }
 
-    // Validation form inscription
-    window.checkRegForm = function() {
-        const terms = document.getElementById('regTermsCheckbox').checked;
-        const age = document.getElementById('regAgeInput').value !== "";
-        const name = document.getElementById('regNameInput').value.trim().length > 1;
-        document.getElementById('regCompleteBtn').disabled = !(terms && age && name);
+    // ── EMAIL QUOTA SYSTEM ──
+    window._emailQuota = {
+      send: function(payload) {
+        try {
+          const monthKey = `lvl_email_quota_${new Date().toISOString().slice(0,7)}_${payload.type}`;
+          const used = parseInt(localStorage.getItem(monthKey)||'0', 10);
+          const LIMITS = { WELCOME:1, NEW_LOGIN:3, SUSPENDED:1, DELETED:1 };
+          const limit = LIMITS[payload.type] || 2;
+          if(used >= limit) return;
+          localStorage.setItem(monthKey, String(used+1));
+          fetch('/api/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }).catch(()=>{});
+        } catch(_) {}
+      }
     };
 
-    // Finaliser inscription Firestore
-    window.completeRegistration = async function() {
-        const btn = document.getElementById('regCompleteBtn');
-        btn.innerHTML = `<div class="btn-spinner mx-auto"></div>`;
-        btn.disabled = true;
+    // ── FETCH USER LOCATION ──
+    async function fetchUserLocation() {
+      try {
+        const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+        if(!r.ok) return null;
+        const d = await r.json();
+        return { ip: d.ip||'', country: d.country_name||'', city: d.city||'' };
+      } catch(_) { return null; }
+    }
 
-        const u = window._pendingCreds;
-        if(!u) return;
+    // ── NOTIFICATION PREFERENCES ──
+    window.getNotifPref = function(type) {
+      const saved = localStorage.getItem('lvl_notif_email_'+type);
+      return saved === null ? true : saved === '1';
+    };
+    window._saveEmailNotifPref = function(type, val) {
+      try { localStorage.setItem('lvl_notif_email_'+type, val?'1':'0'); } catch(_) {}
+      const u = window._user;
+      if(u && window._db) {
+        setDoc(doc(db,'artifacts','level-ia-premium','users',u.uid,'profile','data'), {['notif_email_'+type]:val},{merge:true}).catch(()=>{});
+      }
+    };
 
-        const finalName = document.getElementById('regNameInput').value.trim();
+    // ── LOAD NOTIF PREFS UI ──
+    function loadNotifPrefsUI() {
+      const loginEl = document.getElementById('notifLoginToggle');
+      const updatesEl = document.getElementById('notifUpdatesToggle');
+      if(loginEl) loginEl.checked = window.getNotifPref('login');
+      if(updatesEl) updatesEl.checked = window.getNotifPref('updates');
+      _updatePushToggleUI();
+      if(window._user) {
+        const sec = document.getElementById('notifPrefsSection');
+        if(sec) sec.classList.remove('hidden');
+      }
+    }
 
-        try {
-            const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
-            window._ud = {
-                displayName: finalName,
-                email: u.email || '',
-                photoURL: u.photoURL || '',
-                createdAt: new Date().toISOString(),
-                uid: u.uid
-            };
-            await setDoc(ref, window._ud);
+    // ── PUSH SYSTEM ──
+    function _getPushPref() { return localStorage.getItem(PUSH_PREF_KEY)||''; }
+    function _setPushPref(v) { localStorage.setItem(PUSH_PREF_KEY, v); }
+    function _isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1); }
+    function _isAndroidOrPWA() {
+      const isA=/Android/.test(navigator.userAgent);
+      const isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+      return (isA||isPWA)&&!_isIOS();
+    }
 
-            try {
-                fetch('/api/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: u.email, name: finalName, type: 'WELCOME' })
-                }).catch(()=>{});
-            } catch(e){}
+    window._pushPopupShown = false;
+    function showPushPermPopup() {
+      if(window._pushPopupShown) return;
+      if(_getPushPref()==='granted'||_getPushPref()==='denied') return;
+      if(!('Notification' in window)) return;
+      if(Notification.permission==='granted') { _setPushPref('granted'); return; }
+      if(Notification.permission==='denied') { _setPushPref('denied'); return; }
+      window._pushPopupShown = true;
+      if(_isIOS()) {
+        const m = document.getElementById('pushPermModal');
+        if(m) setTimeout(()=>m.classList.add('show'), 500);
+      } else if(_isAndroidOrPWA()) {
+        const b = document.getElementById('pushNotifBanner');
+        if(b) setTimeout(()=>b.classList.add('show'), 700);
+      } else {
+        setTimeout(async()=>{
+          try {
+            const perm = await Notification.requestPermission();
+            if(perm==='granted') { _setPushPref('granted'); await _registerFCM(); _updatePushToggleUI(); _sendWelcomeNotif(); }
+            else { _setPushPref(perm==='denied'?'denied':'later'); _updatePushToggleUI(); }
+          } catch(_) {}
+        }, 1500);
+      }
+    }
+    window.showPushPermPopup = showPushPermPopup;
 
-            window._user = u;
-            window._pendingCreds = null;
+    window.acceptPushPerm = async function() {
+      document.getElementById('pushPermModal')?.classList.remove('show');
+      document.getElementById('pushNotifBanner')?.classList.remove('show');
+      _setPushPref('granted');
+      await _registerFCM();
+      _updatePushToggleUI();
+      setTimeout(_sendWelcomeNotif, 2000);
+    };
+    window.declinePushPerm = function() {
+      document.getElementById('pushPermModal')?.classList.remove('show');
+      document.getElementById('pushNotifBanner')?.classList.remove('show');
+      _setPushPref('later');
+      _updatePushToggleUI();
+    };
+    window.togglePushNotif = async function(enabled) {
+      if(enabled) {
+        if(Notification.permission==='denied') {
+          _showPushBlockedMsg(); const el=document.getElementById('notifPushToggle'); if(el) el.checked=false; return;
+        }
+        _setPushPref('granted');
+        await _registerFCM();
+      } else { _setPushPref('denied'); }
+      _updatePushToggleUI();
+    };
+    function _showPushBlockedMsg() {
+      const st = document.getElementById('notifPushStatus');
+      if(st) { st.style.color='#f87171'; st.textContent='Notifications bloquées par le navigateur. Autorisez-les dans les réglages.'; }
+    }
+    function _updatePushToggleUI() {
+      const el = document.getElementById('notifPushToggle');
+      const st = document.getElementById('notifPushStatus');
+      if(!el) return;
+      const pref = _getPushPref();
+      if(!('Notification' in window)) { el.checked=false; if(st){st.style.color='rgba(255,255,255,.3)';st.textContent='Notifications non supportées sur cet appareil.';} return; }
+      if(Notification.permission==='granted'&&pref==='granted') {
+        el.checked=true;
+        if(st){st.style.color='#4ade80';st.textContent='Notifications push actives — alertes même app fermée.';}
+      } else if(Notification.permission==='denied') {
+        el.checked=false; _showPushBlockedMsg();
+      } else {
+        el.checked=false;
+        if(st){st.style.color='rgba(255,255,255,.35)';st.textContent='Activez pour recevoir des notifications push en temps réel.';}
+      }
+    }
+
+    async function _registerFCM() {
+      if(!_messaging||!VAPID_KEY||VAPID_KEY==='YOUR_VAPID_KEY_HERE') return;
+      if(_fcmRegistering) return;
+      const lastReg = parseInt(localStorage.getItem(_FCM_REG_KEY)||'0',10);
+      if(Date.now()-lastReg<3600000) { _attachFCMListeners(); _updatePushToggleUI(); return; }
+      _fcmRegistering = true;
+      try {
+        let swReg = null;
+        if('serviceWorker' in navigator) {
+          swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js',{scope:'/'});
+          await navigator.serviceWorker.ready;
+        }
+        const perm = await Notification.requestPermission();
+        if(perm!=='granted') { _setPushPref(perm==='denied'?'denied':'later'); _updatePushToggleUI(); _fcmRegistering=false; return; }
+        _setPushPref('granted');
+        const token = await getToken(_messaging,{vapidKey:VAPID_KEY,serviceWorkerRegistration:swReg});
+        if(!token) { _fcmRegistering=false; return; }
+        const prevToken = localStorage.getItem(_FCM_TOKEN_KEY);
+        const uid = window._user?.uid;
+        if(uid) {
+          try { await setDoc(doc(db,'artifacts','levelup-ecosystem','public','data','fcm_tokens',uid),{token,uid,email:window._ud?.email||'',updatedAt:new Date().toISOString()},{merge:true}); } catch(_) {}
+        }
+        if(token!==prevToken) {
+          try { await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})}); localStorage.setItem(_FCM_TOKEN_KEY,token); } catch(_) {}
+        }
+        localStorage.setItem(_FCM_REG_KEY, String(Date.now()));
+        _attachFCMListeners(); _updatePushToggleUI();
+      } catch(err) { console.warn('[FCM]', err); } finally { _fcmRegistering=false; }
+    }
+
+    function _attachFCMListeners() {
+      if(!_messaging) return;
+      if(!window._fcmFgListenerSet) {
+        window._fcmFgListenerSet = true;
+        onMessage(_messaging, (payload) => _handleFCMPayload(payload));
+      }
+      if('serviceWorker' in navigator && !window._swMsgListenerSet) {
+        window._swMsgListenerSet = true;
+        navigator.serviceWorker.addEventListener('message',(e)=>{
+          if(e.data?.type==='NOTIF_CLICK'&&e.data?.url) window.open(e.data.url,'_blank');
+        });
+      }
+    }
+
+    function _handleFCMPayload(payload) {
+      const msgId = payload?.messageId||payload?.data?.sentAt||payload?.notification?.title||'';
+      const lk='lvl_fcm_last_msg';
+      if(msgId&&sessionStorage.getItem(lk)===msgId) return;
+      if(msgId) { sessionStorage.setItem(lk,msgId); setTimeout(()=>{try{sessionStorage.removeItem(lk);}catch(_){}},8000); }
+      const title = payload?.notification?.title||payload?.data?.title||'LevelUp';
+      const body  = payload?.notification?.body||payload?.data?.body||'';
+      const icon  = payload?.data?.icon||'/icon.svg';
+      const url   = payload?.data?.url||'/';
+      navigator.serviceWorker?.controller?.postMessage({type:'PAGE_HANDLED_NOTIF',key:`${title}|${body}|${Math.floor(Date.now()/15000)}`});
+      if(Notification.permission==='granted') {
+        navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body,icon,badge:icon,vibrate:[200,80,200],data:{url}}));
+      }
+      _addNotifToPanel({title,body,url,createdAt:new Date()});
+    }
+
+    function _sendWelcomeNotif() {
+      try {
+        if(Notification.permission!=='granted') return;
+        if(localStorage.getItem('lvl_welcome_notif_sent')) return;
+        localStorage.setItem('lvl_welcome_notif_sent','1');
+        navigator.serviceWorker.ready.then(r=>r.showNotification('Bienvenue sur LevelUp Ecosystem 🌟',{
+          body:'Vous serez informé de chaque mise à jour, nouvelle sortie et annonce exclusive.',
+          icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,80,200],data:{url:'/'}
+        }));
+      } catch(_) {}
+    }
+    window._sendWelcomeNotification = _sendWelcomeNotif;
+
+    // ── NOTIFICATION PANEL (Firestore real-time) ──
+    function initNotifPanel(u) {
+      const isSuperAdmin = SUPER_ADMINS.includes(u?.email||window._ud?.email||'');
+      const adminSec = document.getElementById('notifAdminSection');
+      if(adminSec&&isSuperAdmin) adminSec.style.display='';
+      if(isSuperAdmin) {
+        setTimeout(()=>{
+          const body=document.getElementById('notifAdminBody');
+          const tog=document.getElementById('notifAdminToggle');
+          if(body&&!body.classList.contains('open')) { body.classList.add('open'); if(tog) tog.style.transform='rotate(180deg)'; }
+        },400);
+      }
+
+      let _globalNotifs=[], _userNotifs=[];
+      const _merge = ()=>{
+        const merged=[..._userNotifs,..._globalNotifs];
+        merged.sort((a,b)=>{
+          const ta=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0);
+          const tb=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0);
+          return tb-ta;
+        });
+        _renderNotifList(merged.slice(0,40));
+      };
+
+      try {
+        const colRef = collection(db,...NOTIF_COLL);
+        const q = query(colRef, orderBy('createdAt','desc'), limit(20));
+        window._notifUnsub && window._notifUnsub();
+        window._notifUnsub = onSnapshot(q,(snap)=>{
+          _globalNotifs=[];
+          snap.forEach(d=>_globalNotifs.push({id:d.id,...d.data()}));
+          _merge();
+        });
+      } catch(e) { console.warn('[notif] Firestore global:', e); }
+
+      // User-specific notifications
+      try {
+        if(u?.uid) {
+          const userColRef = collection(db,'artifacts','level-ia-premium','users',u.uid,'notifications');
+          const uq = query(userColRef, orderBy('createdAt','desc'), limit(20));
+          window._userNotifUnsub && window._userNotifUnsub();
+          window._userNotifUnsub = onSnapshot(uq,(snap)=>{
+            _userNotifs=[];
+            snap.forEach(d=>_userNotifs.push({id:'u_'+d.id,...d.data()}));
+            _merge();
+          });
+        }
+      } catch(_) {}
+    }
+
+    function _getDeletedNotifIds() { try{return new Set(JSON.parse(localStorage.getItem('lvl_notif_deleted')||'[]'));}catch(_){return new Set();} }
+    function _saveDeletedNotifId(id) {
+      try { const ids=_getDeletedNotifIds(); ids.add(id); localStorage.setItem('lvl_notif_deleted',JSON.stringify([...ids].slice(-200))); } catch(_) {}
+    }
+
+    function _buildNotifItemHtml(n, isUnread) {
+      const ts = n.createdAt?.toDate?n.createdAt.toDate():(n.createdAt?new Date(n.createdAt):new Date());
+      const timeStr = _relTime(ts);
+      const type = n.type||'';
+      let icoClass='', icoContent='<i class="fa-solid fa-star"></i>';
+      if(type==='security'||type==='device_alert') { icoClass='ico-security'; icoContent='<i class="fa-solid fa-shield-halved"></i>'; }
+      else if(type==='key'||type==='key_created') { icoClass='ico-key'; icoContent='<i class="fa-solid fa-key"></i>'; }
+      else if(type==='info') { icoClass='ico-info'; icoContent='<i class="fa-solid fa-circle-info"></i>'; }
+      const secData = (type==='security') ? encodeURIComponent(JSON.stringify({ip:n.ip||'',city:n.city||'',country:n.country||'',date:n.date||'',device:n.device||''})) : '';
+      let actionsHtml='';
+      if(n.url&&type!=='security') actionsHtml+=`<button class="notif-action-btn notif-action-open" onclick="event.stopPropagation();window.open('${_esc(n.url)}','_blank')"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.6rem"></i> Ouvrir</button>`;
+      if(type==='security') actionsHtml+=`<button class="notif-action-btn notif-action-security" onclick="event.stopPropagation();window._openSecurityAlert('${secData}')"><i class="fa-solid fa-shield-halved" style="font-size:.6rem"></i> Détails</button>`;
+      const idAttr = n.id?`data-id="${_esc(n.id)}"` : '';
+      const delClick = n.id?`event.stopPropagation();window._deleteNotifItem('${n.id}',this.closest('.notif-item'))`:`event.stopPropagation();this.closest('.notif-item').remove()`;
+      return `<div class="notif-item${isUnread?' unread':''}" ${idAttr} onclick="window._toggleNotifItem(this)">
+  <div class="notif-item-row">
+    <div class="notif-item-ico ${icoClass}">${icoContent}</div>
+    <div class="notif-item-content">
+      <div class="notif-item-title">${_esc(n.title||'')}</div>
+      <div class="notif-item-body2">${_esc(n.body||'')}</div>
+      <div class="notif-item-meta">
+        <span class="notif-item-time">${timeStr}</span>
+        <button class="notif-item-del" onclick="${delClick}" title="Supprimer"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    </div>
+  </div>
+  ${n.image?`<div class="notif-item-image"><img src="${_esc(n.image)}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`:''}
+  ${actionsHtml?`<div class="notif-item-actions">${actionsHtml}</div>`:''}
+</div>`;
+    }
+
+    function _renderNotifList(notifs) {
+      const list = document.getElementById('notifList');
+      if(!list) return;
+      const lastSeen = parseInt(localStorage.getItem(LAST_SEEN_KEY)||'0');
+      const deletedIds = _getDeletedNotifIds();
+      let unread=0;
+      const visible = notifs.filter(n=>!n.id||!deletedIds.has(n.id));
+      if(!visible.length) {
+        list.innerHTML='<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Aucune notification pour le moment</p></div>';
+        _updateBadge(0); return;
+      }
+      list.innerHTML = visible.map(n=>{
+        const ts=n.createdAt?.toDate?n.createdAt.toDate():(n.createdAt?new Date(n.createdAt):new Date());
+        const isUnread=ts.getTime()>lastSeen; if(isUnread) unread++;
+        return _buildNotifItemHtml(n,isUnread);
+      }).join('');
+      _updateBadge(unread);
+    }
+
+    function _addNotifToPanel(n) {
+      const list = document.getElementById('notifList');
+      if(!list) return;
+      const empty=list.querySelector('.notif-empty'); if(empty) empty.remove();
+      const tmp=document.createElement('div');
+      tmp.innerHTML=_buildNotifItemHtml(n,true);
+      const item=tmp.firstElementChild;
+      if(item) list.prepend(item);
+      const mob=document.getElementById('notifMobBadge');
+      if(mob) { const cur=parseInt(mob.textContent||'0')+1; mob.textContent=cur>99?'99+':cur; mob.classList.remove('hidden'); }
+    }
+
+    function _updateBadge(count) {
+      const mob=document.getElementById('notifMobBadge');
+      if(count>0) { const l=count>99?'99+':count; if(mob){mob.textContent=l;mob.classList.remove('hidden');} }
+      else { if(mob) mob.classList.add('hidden'); }
+    }
+
+    window._toggleNotifItem = function(el) { if(el) el.classList.toggle('expanded'); };
+    window._deleteNotifItem = function(id, el) {
+      if(id) _saveDeletedNotifId(id);
+      if(el) {
+        el.style.transition='opacity .2s,max-height .25s'; el.style.opacity='0'; el.style.overflow='hidden';
+        el.style.maxHeight=el.offsetHeight+'px';
+        requestAnimationFrame(()=>{el.style.maxHeight='0';el.style.padding='0';});
+        setTimeout(()=>{
+          el.remove();
+          if(!document.querySelector('#notifList .notif-item')) {
+            const l=document.getElementById('notifList');
+            if(l) l.innerHTML='<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Aucune notification pour le moment</p></div>';
+            _updateBadge(0);
+          }
+        },280);
+      }
+    };
+    window.notifMarkAllRead = function() {
+      localStorage.setItem(LAST_SEEN_KEY, Date.now().toString());
+      _updateBadge(0);
+      document.querySelectorAll('.notif-item.unread').forEach(el=>el.classList.remove('unread'));
+    };
+    window._toggleAdminPanel = function() {
+      const body=document.getElementById('notifAdminBody'); if(!body) return;
+      const tog=document.getElementById('notifAdminToggle');
+      const isOpen=body.classList.contains('open');
+      body.classList.toggle('open',!isOpen);
+      if(tog) tog.style.transform=isOpen?'rotate(0)':'rotate(180deg)';
+    };
+
+    // ── SECURITY ALERT ──
+    window._openSecurityAlert = function(encodedData) {
+      let data={}; try{data=JSON.parse(decodeURIComponent(encodedData));}catch(_){}
+      const modal=document.getElementById('securityAlertModal'); if(!modal) return;
+      document.getElementById('secAlertIp').textContent=data.ip||'IP inconnue';
+      document.getElementById('secAlertCity').textContent=(data.city||'')+(data.country?`, ${data.country}`:'');
+      document.getElementById('secAlertDate').textContent=data.date||'Date inconnue';
+      document.getElementById('secAlertDevice').textContent=(data.device||'Appareil inconnu').substring(0,80);
+      modal.style.display='flex';
+      closeNotifPanel();
+    };
+    window._closeSecAlert = function() { const m=document.getElementById('securityAlertModal'); if(m) m.style.display='none'; };
+    window._secAlertContact = function() {
+      const ip=document.getElementById('secAlertIp')?.textContent||'';
+      const date=document.getElementById('secAlertDate')?.textContent||'';
+      const sub=encodeURIComponent(`[Sécurité] Connexion suspecte — ${date} — ${ip}`);
+      const body=encodeURIComponent(`Bonjour,\n\nJ'ai reçu une alerte de connexion suspecte.\n\nIP : ${ip}\nDate : ${date}\n\nJe n'étais pas à l'origine de cette connexion.\n\nCordialement,\n${window._ud?.displayName||''}`);
+      window.open(`mailto:support@levelup-ecosystem.com?subject=${sub}&body=${body}`,'_blank');
+    };
+
+    // ── ADMIN SEND NOTIFICATION ──
+    window._notifSendType = 'both';
+    window._setNotifType = function(type, btn) {
+      window._notifSendType=type;
+      document.querySelectorAll('.notif-type-btn').forEach(b=>b.classList.toggle('active',b===btn));
+    };
+    window.sendPushNotif = async function() {
+      const title=(document.getElementById('notifSendTitle')?.value||'').trim();
+      const body=(document.getElementById('notifSendBody')?.value||'').trim();
+      const image=(document.getElementById('notifSendImage')?.value||'').trim()||undefined;
+      const destSel=document.getElementById('notifSendDest');
+      const customUrl=(document.getElementById('notifSendCustomUrl')?.value||'').trim();
+      let url='https://levelup-ecosystem.com';
+      if(destSel) url=destSel.value==='custom'?(customUrl||url):(destSel.value||url);
+      if(!title||!body) { window.toast_('Titre et message requis','warn'); return; }
+      const sendType=window._notifSendType||'both';
+      const btn=document.querySelector('#notifAdminBody .btn-send-notif');
+      if(btn) { btn.disabled=true; btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Envoi...'; }
+      try {
+        if(sendType==='both'||sendType==='inapp') {
+          const colRef=collection(db,...NOTIF_COLL);
+          await addDoc(colRef,{title,body,url,...(image?{image}:{}),createdAt:serverTimestamp(),sentBy:window._ud?.email||'admin'});
+        }
+        if(sendType==='both'||sendType==='push') {
+          const adminKey=window._appsStatus?.admin_push_key||'';
+          if(!adminKey) { window.toast_('Clé admin introuvable','warn'); }
+          else {
+            const payload={title,body,url}; if(image) payload.image=image;
+            const r=await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify(payload)});
+            const d=await r.json();
+            if(!r.ok) throw new Error(d.error||'Erreur FCM');
+          }
+        }
+        const labels={both:'🚀 Push + In-app',push:'📲 Push natif',inapp:'🔔 In-app'};
+        window.toast_(`${labels[sendType]||'🚀'} Notification envoyée !`,'ok');
+        ['notifSendTitle','notifSendBody','notifSendImage'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+        if(destSel) destSel.value='';
+        const cu=document.getElementById('notifSendCustomUrl'); if(cu){cu.value='';cu.style.display='none';}
+      } catch(e) { window.toast_('Erreur : '+e.message,'err'); }
+      finally { if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-rocket mr-1.5"></i> Envoyer à tous';} }
+    };
+    window.deleteAllNotifs = async function() {
+      const confirmed = await new Promise(res=>{
+        const m=document.createElement('div');
+        m.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)';
+        m.innerHTML=`<div style="background:#111;border:1px solid rgba(239,68,68,.25);border-radius:18px;padding:28px 24px;max-width:320px;width:100%;text-align:center">
+          <div style="font-size:2rem;margin-bottom:10px">🗑️</div>
+          <div style="color:#fff;font-weight:700;font-size:.95rem;margin-bottom:8px">Supprimer toutes les notifications ?</div>
+          <div style="color:rgba(255,255,255,.45);font-size:.77rem;margin-bottom:20px">Supprimera toutes les notifications pour tous les utilisateurs.</div>
+          <div style="display:flex;gap:10px">
+            <button id="_dcancel" style="flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:.82rem">Annuler</button>
+            <button id="_dconfirm" style="flex:1;padding:10px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;cursor:pointer;font-size:.82rem;font-weight:700">Supprimer</button>
+          </div></div>`;
+        document.body.appendChild(m);
+        m.querySelector('#_dcancel').onclick=()=>{m.remove();res(false);};
+        m.querySelector('#_dconfirm').onclick=()=>{m.remove();res(true);};
+      });
+      if(!confirmed) return;
+      try {
+        const {getDocs, deleteDoc} = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        const colRef=collection(db,...NOTIF_COLL);
+        const snap=await getDocs(colRef);
+        await Promise.all(snap.docs.map(d=>deleteDoc(d.ref)));
+        window.toast_(`🗑️ ${snap.size} notification(s) supprimée(s)`,'ok');
+        const list=document.getElementById('notifList');
+        if(list) list.innerHTML='<div class="notif-empty"><i class="fa-regular fa-bell-slash"></i><p>Aucune notification pour le moment</p></div>';
+        _updateBadge(0);
+      } catch(e) { window.toast_('Erreur : '+e.message,'err'); }
+    };
+
+    // ── AUTH STATE ──
+    if(auth) {
+      onAuthStateChanged(auth, async(u) => {
+        if(u && !u.isAnonymous) {
+          window._user = u;
+          document.dispatchEvent(new CustomEvent('lvl_auth_ready',{detail:{uid:u.uid}}));
+
+          // Load app status (admin key etc.)
+          try {
+            const ekRef=doc(db,'artifacts','levelup-ecosystem','public','data','config','apps');
+            const ekSnap=await getDoc(ekRef);
+            if(ekSnap.exists()) { const ekData=ekSnap.data(); window._appsStatus=ekData; }
+          } catch(_) { window._appsStatus={}; }
+
+          try {
+            const ref=doc(db,'artifacts','level-ia-premium','users',u.uid,'profile','data');
+            const snap=await getDoc(ref);
+            const _isNewUser=!snap.exists();
+
+            if(snap.exists()) {
+              window._ud=snap.data();
+              const secRef=doc(db,'artifacts','level-ia-premium','users',u.uid,'security','key');
+              const secSnap=await getDoc(secRef);
+              if(secSnap.exists()) {
+                window._ud.apiKey=secSnap.data().apiKey||secSnap.data().key;
+                window._ud.pinHash=secSnap.data().pinHash;
+                window._ud.keyCreatedAt=secSnap.data().keyCreatedAt;
+              }
+              window.refreshProfileUI();
+              window.closeLoginSheet();
+              window.toast_(`Bienvenue de retour, ${window._ud.displayName?.split(' ')[0]||'!'}`, 'ok');
+
+              // ── Localisation + nouvelle IP ──
+              setTimeout(async()=>{
+                try {
+                  const locData=await fetchUserLocation();
+                  if(locData) {
+                    window._ud.country=locData.country; window._ud.city=locData.city; window._ud.lastIp=locData.ip;
+                    await setDoc(ref,{country:locData.country,city:locData.city,lastIp:locData.ip},{merge:true});
+                    // Nouvelle IP ?
+                    const knownIps=window._ud.knownIps||[];
+                    const currentIp=locData.ip;
+                    const hasLoggedBefore=!!window._ud.lastLoginAt;
+                    const isNewIp=currentIp&&!knownIps.includes(currentIp);
+                    if(isNewIp&&hasLoggedBefore&&window.getNotifPref('login')) {
+                      const now=new Date();
+                      const dateStr=now.toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+                      const timeStr=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+                      const fullDate=`${dateStr} à ${timeStr}`;
+                      const monthKey=`lvl_login_notif_${now.toISOString().slice(0,7)}`;
+                      const emailCount=parseInt(localStorage.getItem(monthKey)||'0',10);
+                      if(emailCount<3) {
+                        window._emailQuota.send({email:u.email||'',name:window._ud.displayName||'',type:'NEW_LOGIN',ip:currentIp,country:locData.country,city:locData.city,device:navigator.userAgent.substring(0,200),date:fullDate});
+                        localStorage.setItem(monthKey,String(emailCount+1));
+                      }
+                      // Notif in-app sécurité
+                      try {
+                        const userNotifRef=collection(db,'artifacts','level-ia-premium','users',u.uid,'notifications');
+                        await addDoc(userNotifRef,{type:'security',title:'🔐 Nouvelle connexion détectée',body:`Connexion depuis ${locData.city||'un nouvel emplacement'} (${currentIp}) — ${fullDate}`,ip:currentIp,city:locData.city||'',country:locData.country||'',device:navigator.userAgent.substring(0,200),date:fullDate,createdAt:serverTimestamp()});
+                      } catch(_) {}
+                    }
+                    // MAJ IPs connues
+                    if(currentIp) {
+                      const updatedIps=knownIps.includes(currentIp)?knownIps:[...knownIps,currentIp].slice(-10);
+                      await setDoc(ref,{knownIps:updatedIps,lastLoginAt:new Date().toISOString()},{merge:true});
+                    }
+                  }
+                } catch(_) {}
+              }, 2000);
+
+            } else {
+              // Nouveau compte
+              window._ud={
+                displayName:u.displayName||u.email?.split('@')[0]||'Utilisateur',
+                email:u.email||'', photoURL:u.photoURL||'',
+                createdAt:new Date().toISOString(), uid:u.uid
+              };
+              if(_isNewUser) {
+                window._pendingCreds=u;
+                document.getElementById('authLoginStep')?.classList.add('hidden');
+                const reg=document.getElementById('authRegisterStep');
+                if(reg){reg.classList.remove('hidden');reg.classList.add('flex');}
+                const inp=document.getElementById('regNameInput');
+                if(inp) inp.value=u.displayName||'Utilisateur LevelUp';
+                window.checkRegForm && window.checkRegForm();
+              }
+            }
+
+            // ── Surveillance compte (suspension/suppression) ──
+            window._accountUnsubscribe && window._accountUnsubscribe();
+            window._accountUnsubscribe = onSnapshot(ref, async(snap)=>{
+              const data=snap.exists()?snap.data():null;
+              const status=data?.status||'';
+              if(status==='suspended'||status==='deleted') {
+                if(document.getElementById('accountBlockedOverlay')) return;
+                if(window._emailQuota) window._emailQuota.send({email:window._ud?.email||u.email||'',name:window._ud?.displayName||'',type:status==='suspended'?'SUSPENDED':'DELETED'});
+                const ov=document.createElement('div');
+                ov.id='accountBlockedOverlay';
+                const isSuspended=status==='suspended';
+                ov.style.cssText='position:fixed;inset:0;z-index:999999;background:#07070d;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center';
+                ov.innerHTML=`<div style="font-size:3rem;margin-bottom:16px">${isSuspended?'⚠️':'🗑️'}</div>
+                  <div style="display:inline-flex;align-items:center;gap:7px;padding:5px 16px;border-radius:100px;background:${isSuspended?'rgba(251,191,36,.08)':'rgba(239,68,68,.08)'};border:1px solid ${isSuspended?'rgba(251,191,36,.25)':'rgba(239,68,68,.25)'};color:${isSuspended?'#fbbf24':'#fca5a5'};font-size:.68rem;font-weight:800;text-transform:uppercase;margin-bottom:18px">
+                    <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:block"></span>
+                    ${isSuspended?'Compte suspendu':'Compte supprimé'}
+                  </div>
+                  <h2 style="color:#fff;font-size:1.4rem;font-weight:800;margin:0 0 10px;letter-spacing:-.02em">${isSuspended?'Ton compte a été suspendu':'Ton compte a été supprimé'}</h2>
+                  <p style="color:rgba(255,255,255,.4);font-size:.85rem;line-height:1.7;max-width:320px;margin:0 0 24px">${isSuspended?'Accès temporairement suspendu. Un email t\'a été envoyé. Contacte le support.':'Ton compte a été définitivement supprimé. Un email de confirmation t\'a été envoyé.'}</p>
+                  <a href="mailto:support@levelup-ecosystem.com?subject=${isSuspended?'Suspension':'Suppression'} compte LevelUp" style="display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:12px;background:${isSuspended?'rgba(251,191,36,.12)':'rgba(168,85,247,.12)'};border:1px solid ${isSuspended?'rgba(251,191,36,.35)':'rgba(168,85,247,.35)'};color:${isSuspended?'#fbbf24':'#d8b4fe'};font-size:.82rem;font-weight:700;text-decoration:none;margin-bottom:12px">
+                    <i class="fa-solid fa-envelope"></i> Contacter le support
+                  </a>
+                  <button onclick="window._accountUnsubscribe&&window._accountUnsubscribe();signOut(window._auth).then(()=>{localStorage.clear();location.reload();})" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:.75rem;cursor:pointer;padding:8px">Se déconnecter</button>`;
+                document.body.appendChild(ov);
+                setTimeout(async()=>{
+                  try { window._accountUnsubscribe&&window._accountUnsubscribe(); await signOut(auth); localStorage.clear(); } catch(_){}
+                },4000);
+              }
+            });
+
+            // ── Init notifications + FCM ──
+            setTimeout(()=>initNotifPanel(u),800);
+            setTimeout(()=>{
+              _updatePushToggleUI();
+              loadNotifPrefsUI();
+              if(_getPushPref()==='granted'&&Notification.permission==='granted') _registerFCM();
+              else setTimeout(showPushPermPopup, 3000);
+            },1500);
+
+          } catch(e) {
+            console.error("Auth DB:", e);
+            window._ud=window._ud||{displayName:u.displayName||'Utilisateur'};
             window.refreshProfileUI();
             window.closeLoginSheet();
-            window.switchTab('compte');
-            window.toast_('Compte créé avec succès !', 'ok');
+          }
 
-        } catch(e) {
-            btn.textContent = "Terminer l'inscription";
-            btn.disabled = false;
-            window.toast_("Erreur lors de la création.", 'err');
+        } else if(!window._pendingCreds) {
+          window._user=null; window._ud=null;
+          window.refreshProfileUI && window.refreshProfileUI();
         }
+      });
+    }
+
+    // ── GOOGLE SIGN IN ──
+    window.googleSignIn = async function() {
+      if(!auth) return;
+      const btn=document.getElementById('gSignInBtn');
+      const token=window._turnstileToken;
+      if(!token) { window.toast_('Veuillez compléter le captcha.','warn'); return; }
+      btn.disabled=true; document.getElementById('gBtnTxt').textContent='Connexion...';
+      try {
+        const gProv=new GoogleAuthProvider();
+        gProv.setCustomParameters({prompt:'select_account'});
+        const isIOSPWA=!!window.navigator.standalone;
+        if(isIOSPWA) { await signInWithRedirect(auth,gProv); return; }
+        await signInWithPopup(auth,gProv);
+      } catch(e) {
+        if(e.code==='auth/unauthorized-domain'||e.message?.includes('popup')) {
+          window.toast_('Aperçu détecté : connexion simulée.','info');
+        } else {
+          btn.disabled=false; document.getElementById('gBtnTxt').textContent='Continuer avec Google';
+          if(window.turnstile&&window._turnstileWidgetId!==undefined) window.turnstile.reset(window._turnstileWidgetId);
+          if(e.code!=='auth/popup-closed-by-user') window.toast_('Erreur de connexion','err');
+        }
+      }
+    };
+    window.xSignInSimul = function() {
+      const btn=document.getElementById('xSignInBtn'); btn.disabled=true;
+      document.getElementById('xBtnTxt').textContent='Connexion X...';
+      setTimeout(()=>{ btn.disabled=false; document.getElementById('xBtnTxt').textContent='Continuer avec X'; window.toast_("L'API X n'est pas encore configurée. Utilisez Google.",'warn'); },1500);
+    };
+
+    // ── REGISTRATION ──
+    window.checkRegForm = function() {
+      const terms=document.getElementById('regTermsCheckbox')?.checked;
+      const age=document.getElementById('regAgeInput')?.value!=='';
+      const name=(document.getElementById('regNameInput')?.value||'').trim().length>1;
+      const btn=document.getElementById('regCompleteBtn'); if(btn) btn.disabled=!(terms&&age&&name);
+    };
+    window.completeRegistration = async function() {
+      const btn=document.getElementById('regCompleteBtn');
+      btn.innerHTML=`<div class="btn-spinner mx-auto"></div>`; btn.disabled=true;
+      const u=window._pendingCreds; if(!u) return;
+      const finalName=(document.getElementById('regNameInput')?.value||'').trim();
+      try {
+        const ref=doc(db,'artifacts','level-ia-premium','users',u.uid,'profile','data');
+        window._ud={displayName:finalName,email:u.email||'',photoURL:u.photoURL||'',createdAt:new Date().toISOString(),uid:u.uid};
+        await setDoc(ref,window._ud);
+        window._emailQuota.send({email:u.email||'',name:finalName,type:'WELCOME'});
+        window._user=u; window._pendingCreds=null;
+        window.refreshProfileUI(); window.closeLoginSheet(); window.switchTab('compte');
+        window.toast_('Compte créé avec succès !','ok');
+      } catch(e) { btn.textContent="Terminer l'inscription"; btn.disabled=false; window.toast_("Erreur lors de la création.",'err'); }
     };
 
     window.execLogout = async function() {
-        try { await signOut(window._auth); } catch(e){}
-        window.location.reload();
+      try { await signOut(auth); } catch(_){}
+      window._user=null; window._ud=null;
+      window._notifUnsub && window._notifUnsub();
+      window._userNotifUnsub && window._userNotifUnsub();
+      window._accountUnsubscribe && window._accountUnsubscribe();
+      window.location.reload();
     };
 
-    // --- UI UPDATES ---
+    // ── UI UPDATE ──
     window.refreshProfileUI = function() {
-        const cont = document.getElementById('profileActionContainer');
-        const nameEl = document.getElementById('profileName');
-        const statEl = document.getElementById('profileStatus');
-        const avaCont = document.getElementById('profileAvatarContainer');
-        const navCompte = document.getElementById('nav-icon-compte');
-        const navTxt = document.getElementById('nav-text-compte');
+      const cont=document.getElementById('profileActionContainer');
+      const nameEl=document.getElementById('profileName');
+      const statEl=document.getElementById('profileStatus');
+      const avaCont=document.getElementById('profileAvatarContainer');
+      const navIco=document.getElementById('nav-icon-compte');
+      const navTxt=document.getElementById('nav-text-compte');
+      const homeBtn=document.getElementById('homeConnectBtn');
 
-        if (window._user && window._ud && !window._pendingCreds) {
-            navCompte.className = 'fa-regular fa-user text-lg';
-            navTxt.textContent = 'Compte';
-            nameEl.textContent = window._ud.displayName;
-            statEl.textContent = 'Membre Écosystème';
-            statEl.className = 'text-sm text-brand mt-1';
-            
-            if(window._ud.photoURL) {
-                avaCont.innerHTML = `<img src="${window._ud.photoURL}" class="w-full h-full object-cover">`;
-            } else {
-                avaCont.innerHTML = `<div class="w-full h-full flex items-center justify-center bg-brand text-white font-bold text-3xl">${window._ud.displayName.charAt(0).toUpperCase()}</div>`;
-            }
-
-            if (window._ud.apiKey) {
-                const tmpl = document.getElementById('tmpl-connected-haskey');
-                cont.innerHTML = tmpl.innerHTML;
-                document.getElementById('pinBtnTxt').textContent = window._ud.pinHash ? 'Modifier PIN' : 'Ajouter PIN';
-                window._kVis = false;
-            } else {
-                const tmpl = document.getElementById('tmpl-connected-nokey');
-                cont.innerHTML = tmpl.innerHTML;
-            }
-        } else if (!window._pendingCreds) {
-            navCompte.className = 'fa-solid fa-right-to-bracket text-lg';
-            navTxt.textContent = 'Connexion';
-            nameEl.textContent = 'Mode Invité';
-            statEl.textContent = "Vous n'êtes pas connecté.";
-            statEl.className = 'text-sm text-slate-400 mt-1';
-            avaCont.innerHTML = `<i class="fa-solid fa-user text-3xl text-slate-500"></i>`;
-            
-            cont.innerHTML = `
-              <div class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
-                <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-lock"></i></div>
-                <h3 class="text-base font-bold text-white mb-2">Déverrouillez l'écosystème</h3>
-                <button onclick="openLoginSheet()" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm mt-4">S'identifier avec Google</button>
-              </div>`;
+      if(window._user&&window._ud&&!window._pendingCreds) {
+        if(navIco) navIco.className='fa-regular fa-user text-lg';
+        if(navTxt) navTxt.textContent='Compte';
+        if(nameEl) nameEl.textContent=window._ud.displayName;
+        if(statEl) { statEl.textContent='Membre Écosystème'; statEl.className='text-sm text-brand mt-1'; }
+        if(avaCont) {
+          if(window._ud.photoURL) avaCont.innerHTML=`<img src="${window._ud.photoURL}" class="w-full h-full object-cover" referrerpolicy="no-referrer">`;
+          else avaCont.innerHTML=`<div class="w-full h-full flex items-center justify-center bg-brand text-white font-bold text-3xl">${window._ud.displayName?.charAt(0)?.toUpperCase()||'?'}</div>`;
         }
+        if(homeBtn) homeBtn.style.display='none';
+        loadNotifPrefsUI();
+        if(cont) {
+          if(window._ud.apiKey) {
+            const tmpl=document.getElementById('tmpl-connected-haskey');
+            cont.innerHTML=tmpl.innerHTML;
+            const pbt=document.getElementById('pinBtnTxt'); if(pbt) pbt.textContent=window._ud.pinHash?'Modifier PIN':'Ajouter PIN';
+            window._kVis=false;
+          } else {
+            const tmpl=document.getElementById('tmpl-connected-nokey');
+            cont.innerHTML=tmpl.innerHTML;
+          }
+        }
+      } else if(!window._pendingCreds) {
+        if(navIco) navIco.className='fa-solid fa-right-to-bracket text-lg';
+        if(navTxt) navTxt.textContent='Connexion';
+        if(nameEl) nameEl.textContent='Mode Invité';
+        if(statEl) { statEl.textContent="Vous n'êtes pas connecté."; statEl.className='text-sm text-slate-400 mt-1'; }
+        if(avaCont) avaCont.innerHTML=`<i class="fa-solid fa-user text-3xl text-slate-500"></i>`;
+        if(homeBtn) homeBtn.style.display='';
+        const sec=document.getElementById('notifPrefsSection'); if(sec) sec.classList.add('hidden');
+        if(cont) cont.innerHTML=`<div class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
+          <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-lock"></i></div>
+          <h3 class="text-base font-bold text-white mb-2">Déverrouillez l'écosystème</h3>
+          <button onclick="openLoginSheet()" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm mt-4">S'identifier avec Google</button>
+        </div>`;
+      }
     };
 
-    // --- GESTION DES CLÉS & PIN ---
+    // ── CLÉS ──
     window.genKey = async function() {
-        if(!window._user) return;
-        const key = window.mkKey();
-        const secRef = doc(window._db, 'artifacts', 'level-ia-premium', 'users', window._user.uid, 'security', 'key');
-        
-        await setDoc(secRef, {
-            apiKey: key, key: key,
-            keyCreatedAt: new Date().toISOString(),
-            uid: window._user.uid,
-            displayName: window._ud.displayName,
-            email: window._ud.email
-        }, {merge: true});
-
-        window._ud.apiKey = key;
-        window.refreshProfileUI();
-        window.toast_("Clé générée avec succès !", "ok");
+      if(!window._user) { window.toast_('Connexion requise','warn'); return; }
+      const key=window.mkKey();
+      const now=new Date().toISOString();
+      const secRef=doc(db,'artifacts','level-ia-premium','users',window._user.uid,'security','key');
+      const d=window._ud||{};
+      await setDoc(secRef,{
+        apiKey:key,key:key,keyCreatedAt:now,uid:window._user.uid,
+        displayName:d.displayName||window._user.displayName||'Utilisateur',
+        name:d.displayName||window._user.displayName||'Utilisateur',
+        photoURL:d.photoURL||window._user.photoURL||'',avatar:d.photoURL||window._user.photoURL||'',
+        email:d.email||window._user.email||'',owner:d.email||window._user.email||'',
+        country:d.country||'',city:d.city||'',lastIp:d.lastIp||'',
+        userAgent:navigator.userAgent.substring(0,300),lastSeen:now
+      },{merge:true});
+      window._ud.apiKey=key; window._ud.keyCreatedAt=now;
+      localStorage.setItem('lm_key',key); localStorage.setItem('lm_uid',window._user.uid);
+      window.refreshProfileUI();
+      const firstName=(d.displayName||window._user.displayName||'').split(' ')[0]||'';
+      window.toast_(`🎉 Félicitations${firstName?' '+firstName:''}! Ta clé LevelUp est prête.`,'ok');
+      // Notif push
+      try { if(navigator.serviceWorker?.controller) navigator.serviceWorker.ready.then(r=>r.showNotification('🔑 Clé LevelUp générée',{body:"Votre clé d'accès vient d'être créée. Ne la partagez jamais.",icon:'/icon.svg',badge:'/icon.svg',vibrate:[100,50,100],data:{url:'/'}})); } catch(_){}
+      // Notif in-app
+      try {
+        const userNotifRef=collection(db,'artifacts','level-ia-premium','users',window._user.uid,'notifications');
+        await addDoc(userNotifRef,{type:'key',title:'🔑 Ta clé LevelUp est prête !',body:`Bienvenue${firstName?' '+firstName:''}! Ta clé d'accès a été générée. Copie-la depuis Clés d'accès puis colle-la dans n'importe quel hub LevelUp.`,url:'https://levelup-ecosystem.com',createdAt:serverTimestamp()});
+      } catch(_){}
     };
-
     window.confirmRegen = function() {
-        document.getElementById('regenOv').classList.remove('hidden');
-        document.getElementById('regenOv').classList.add('flex');
+      document.getElementById('regenOv').classList.remove('hidden');
+      document.getElementById('regenOv').classList.add('flex');
     };
-
     window.regenOk = async function() {
-        document.getElementById('regenOv').classList.add('hidden');
-        document.getElementById('regenOv').classList.remove('flex');
-        await window.genKey();
+      document.getElementById('regenOv').classList.add('hidden');
+      document.getElementById('regenOv').classList.remove('flex');
+      if(!window._user) return;
+      const key=window.mkKey(), now=new Date().toISOString();
+      const secRef=doc(db,'artifacts','level-ia-premium','users',window._user.uid,'security','key');
+      const d=window._ud||{};
+      await setDoc(secRef,{
+        apiKey:key,key:key,keyCreatedAt:now,uid:window._user.uid,
+        displayName:d.displayName||'',name:d.displayName||'',photoURL:d.photoURL||'',
+        avatar:d.photoURL||'',email:d.email||'',owner:d.email||'',
+        country:d.country||'',city:d.city||'',lastIp:d.lastIp||'',
+        userAgent:navigator.userAgent.substring(0,300),lastSeen:now
+      },{merge:true});
+      window._ud.apiKey=key; window._ud.keyCreatedAt=now;
+      localStorage.setItem('lm_key',key); localStorage.setItem('lm_uid',window._user.uid);
+      window._kVis=false; window.refreshProfileUI();
+      window.toast_('Clé régénérée — ancienne clé invalidée','info');
+      try { if(navigator.serviceWorker?.controller) navigator.serviceWorker.ready.then(r=>r.showNotification('🔑 Clé LevelUp régénérée',{body:"Votre ancienne clé a été invalidée. Une nouvelle clé vient d'être créée.",icon:'/icon.svg',badge:'/icon.svg',vibrate:[200,100,200],data:{url:'/'}})); } catch(_){}
     };
-
     window.toggleKey = function() {
-        if(!window._ud?.apiKey) return;
-        if(window._kVis) {
-            window._kVis = false;
-            document.getElementById('kDisplay').textContent = 'LVL-•••••-•••••';
-            document.getElementById('kToggleBtn').innerHTML = '<i class="fa-solid fa-eye"></i>';
-        } else {
-            if(window._ud.pinHash) {
-                window.openPin('view');
-            } else {
-                window._kVis = true;
-                document.getElementById('kDisplay').textContent = window._ud.apiKey;
-                document.getElementById('kToggleBtn').innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
-            }
-        }
+      if(!window._ud?.apiKey) return;
+      const disp=document.getElementById('kDisplay'), tbtn=document.getElementById('kToggleBtn');
+      if(window._kVis) {
+        window._kVis=false; if(disp) disp.textContent='LVL-•••••-•••••'; if(tbtn) tbtn.innerHTML='<i class="fa-solid fa-eye"></i>';
+      } else {
+        if(window._ud.pinHash) window.openPin('view');
+        else { window._kVis=true; if(disp) disp.textContent=window._ud.apiKey; if(tbtn) tbtn.innerHTML='<i class="fa-solid fa-eye-slash"></i>'; }
+      }
     };
-
     window.copyKey = function() {
-        if(!window._ud?.apiKey) return;
-        navigator.clipboard.writeText(window._ud.apiKey).then(()=>window.toast_('Clé copiée !','ok')).catch(()=>window.toast_('Erreur copie','err'));
+      if(!window._ud?.apiKey) return;
+      navigator.clipboard.writeText(window._ud.apiKey).then(()=>window.toast_('Clé copiée !','ok')).catch(()=>{
+        const ta=document.createElement('textarea'); ta.value=window._ud.apiKey; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); window.toast_('Clé copiée !','ok');
+      });
     };
 
-    let _pMode = null, _pFirst = '';
+    // ── PIN ──
+    let _pMode=null, _pFirst='';
     window.openPin = function(mode) {
-        _pMode = mode; _pFirst = '';
-        const inp = document.getElementById('nativePinInput');
-        inp.value = '';
-        document.getElementById('pinErrorTxt').classList.add('hidden');
-        
-        const titles = {
-            view: ['Code PIN requis', 'Entrez votre PIN pour afficher votre clé'],
-            setup_new: ['Créer un PIN', 'Choisissez un code à 4 chiffres'],
-            setup_confirm: ['Confirmer le PIN', 'Saisissez à nouveau votre code']
-        };
-        document.getElementById('pinTitle').textContent = titles[mode][0];
-        document.getElementById('pinSub').textContent = titles[mode][1];
-        
-        const ov = document.getElementById('pinOverlay');
-        ov.classList.remove('hidden'); ov.classList.add('flex');
-        setTimeout(() => inp.focus(), 100);
+      _pMode=mode; _pFirst='';
+      const inp=document.getElementById('nativePinInput'); inp.value='';
+      document.getElementById('pinErrorTxt')?.classList.add('hidden');
+      const titles={view:['Code PIN requis','Entrez votre PIN pour afficher votre clé'],setup_new:['Créer un PIN','Choisissez un code à 4 chiffres'],setup_confirm:['Confirmer le PIN','Saisissez à nouveau votre code']};
+      const [t,s]=titles[mode]||titles.view;
+      document.getElementById('pinTitle').textContent=t; document.getElementById('pinSub').textContent=s;
+      const ov=document.getElementById('pinOverlay'); ov.classList.remove('hidden'); ov.classList.add('flex');
+      setTimeout(()=>inp.focus(),100);
     };
-
     window.closePin = function() {
-        const ov = document.getElementById('pinOverlay');
-        ov.classList.add('hidden'); ov.classList.remove('flex');
-        _pMode = null;
+      const ov=document.getElementById('pinOverlay'); ov.classList.add('hidden'); ov.classList.remove('flex'); _pMode=null;
     };
-
     window.pinFlow = function() { window.openPin('setup_new'); };
-
     window.handlePinNative = async function() {
-        const inp = document.getElementById('nativePinInput');
-        const val = inp.value;
-        if(val.length !== 4) return;
-        
-        const errEl = document.getElementById('pinErrorTxt');
-        errEl.classList.add('hidden');
-
-        if(_pMode === 'view') {
-            if(window.sHash(val) === window._ud.pinHash) {
-                window.closePin();
-                window._kVis = true;
-                document.getElementById('kDisplay').textContent = window._ud.apiKey;
-                document.getElementById('kToggleBtn').innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
-                window.toast_('Clé déverrouillée', 'ok');
-            } else {
-                errEl.textContent = 'PIN incorrect'; errEl.classList.remove('hidden');
-                inp.value = ''; inp.parentElement.style.animation = 'shake .4s ease';
-                setTimeout(()=>inp.parentElement.style.animation='', 400);
-            }
-        } else if(_pMode === 'setup_new') {
-            _pFirst = val; inp.value = ''; _pMode = 'setup_confirm';
-            document.getElementById('pinTitle').textContent = 'Confirmer';
-            document.getElementById('pinSub').textContent = 'Saisissez à nouveau le code';
-        } else if(_pMode === 'setup_confirm') {
-            if(val === _pFirst) {
-                const hash = window.sHash(val);
-                const secRef = doc(window._db, 'artifacts', 'level-ia-premium', 'users', window._user.uid, 'security', 'key');
-                await setDoc(secRef, { pinHash: hash }, {merge: true});
-                window._ud.pinHash = hash;
-                window.closePin();
-                window.refreshProfileUI();
-                window.toast_('Code PIN configuré !', 'ok');
-            } else {
-                errEl.textContent = 'Les codes ne correspondent pas'; errEl.classList.remove('hidden');
-                inp.value = ''; _pFirst = ''; _pMode = 'setup_new';
-                document.getElementById('pinTitle').textContent = 'Créer un PIN';
-                document.getElementById('pinSub').textContent = 'Choisissez un code à 4 chiffres';
-            }
-        }
-    };
-
-    // --- SSO & APP VIEWER ---
-    window.openAppWithSSO = function(appId, urlFallback) {
-        if(!window._user || !window._ud?.apiKey) {
-            window.toast_('Veuillez vous connecter et générer une clé.', 'warn');
-            window.switchTab('compte');
-            return;
-        }
-        
-        const payload = new URLSearchParams({
-            lvl_key: window._ud.apiKey,
-            lvl_uid: window._user.uid,
-            lvl_name: window._ud.displayName,
-            lvl_photo: window._ud.photoURL
-        }).toString();
-        
-        let finalUrl = urlFallback;
-        if(appId === 'movie') finalUrl = 'https://levelup-ecosystem.com/movie';
-        if(appId === 'music') finalUrl = 'https://levelup-ecosystem.com/music';
-        
-        const sep = finalUrl.includes('?') ? '&' : '?';
-        const ssoUrl = finalUrl + sep + payload;
-        
-        if(appId === 'ia') {
-            document.getElementById('donaIframe').src = ssoUrl;
-            window.switchTab('dona');
+      const inp=document.getElementById('nativePinInput'); const val=inp.value;
+      if(val.length!==4) return;
+      const errEl=document.getElementById('pinErrorTxt'); errEl.classList.add('hidden');
+      if(_pMode==='view') {
+        if(window.sHash(val)===window._ud.pinHash) {
+          window.closePin(); window._kVis=true;
+          const d=document.getElementById('kDisplay'); if(d) d.textContent=window._ud.apiKey;
+          const b=document.getElementById('kToggleBtn'); if(b) b.innerHTML='<i class="fa-solid fa-eye-slash"></i>';
+          window.toast_('Clé déverrouillée','ok');
         } else {
-            window.openAppInViewer(ssoUrl, appId.toUpperCase());
+          errEl.textContent='PIN incorrect'; errEl.classList.remove('hidden');
+          inp.value=''; inp.style.animation='shake .4s ease'; setTimeout(()=>inp.style.animation='',400);
         }
+      } else if(_pMode==='setup_new') {
+        _pFirst=val; inp.value=''; _pMode='setup_confirm';
+        document.getElementById('pinTitle').textContent='Confirmer'; document.getElementById('pinSub').textContent='Saisissez à nouveau le code';
+      } else if(_pMode==='setup_confirm') {
+        if(val===_pFirst) {
+          const hash=window.sHash(val);
+          const secRef=doc(db,'artifacts','level-ia-premium','users',window._user.uid,'security','key');
+          await setDoc(secRef,{pinHash:hash},{merge:true});
+          window._ud.pinHash=hash; window.closePin(); window.refreshProfileUI(); window.toast_('Code PIN configuré !','ok');
+        } else {
+          errEl.textContent='Les codes ne correspondent pas'; errEl.classList.remove('hidden');
+          inp.value=''; _pFirst=''; _pMode='setup_new';
+          document.getElementById('pinTitle').textContent='Créer un PIN'; document.getElementById('pinSub').textContent='Choisissez un code à 4 chiffres';
+        }
+      }
     };
 
+    // ── SSO VIEWER ──
+    window.openAppWithSSO = function(appId, urlFallback) {
+      if(!window._user) { window.toast_('Veuillez vous connecter.','warn'); window.switchTab('compte'); return; }
+      if(!window._ud?.apiKey && appId!=='ia') { window.toast_("Générez d'abord votre clé d'accès.",'warn'); window.switchTab('compte'); return; }
+      const payload=new URLSearchParams({
+        lvl_key:window._ud?.apiKey||'', lvl_uid:window._user.uid,
+        lvl_name:window._ud?.displayName||'', lvl_photo:window._ud?.photoURL||''
+      }).toString();
+      let finalUrl=urlFallback||'';
+      if(appId==='movie') finalUrl='https://movie.levelup-ecosystem.com';
+      if(appId==='music') finalUrl='https://music.levelup-ecosystem.com';
+      const sep=finalUrl.includes('?')?'&':'?';
+      const ssoUrl=finalUrl+sep+payload;
+      if(appId==='ia') {
+        document.getElementById('donaIframe').src=ssoUrl;
+        window.switchTab('dona');
+      } else {
+        window.openAppInViewer(ssoUrl, appId.toUpperCase());
+      }
+    };
     window.openAppInViewer = function(url, title) {
-        document.getElementById('appViewerTitle').textContent = title;
-        document.getElementById('mainInterface').classList.add('hidden');
-        document.getElementById('mainInterface').classList.remove('flex');
-        
-        const appModal = document.getElementById('appViewerModal');
-        appModal.classList.remove('hidden'); appModal.classList.add('flex');
-        
-        const iframe = document.getElementById('appIframe');
-        const loader = document.getElementById('iframeLoader');
-        loader.classList.remove('hidden');
-        iframe.src = url;
-        iframe.onload = () => loader.classList.add('hidden');
+      document.getElementById('appViewerTitle').textContent=title;
+      const mi=document.getElementById('mainInterface');
+      mi.classList.add('hidden'); mi.classList.remove('flex');
+      const am=document.getElementById('appViewerModal');
+      am.classList.remove('hidden'); am.classList.add('flex');
+      const iframe=document.getElementById('appIframe');
+      const loader=document.getElementById('iframeLoader');
+      loader.classList.remove('hidden'); iframe.src=url;
+      iframe.onload=()=>loader.classList.add('hidden');
     };
-
     window.closeAppViewer = function() {
-        const appModal = document.getElementById('appViewerModal');
-        appModal.classList.add('hidden'); appModal.classList.remove('flex');
-        document.getElementById('appIframe').src = ''; 
-        
-        const mainUI = document.getElementById('mainInterface');
-        mainUI.classList.remove('hidden'); mainUI.classList.add('flex');
+      const am=document.getElementById('appViewerModal');
+      am.classList.add('hidden'); am.classList.remove('flex');
+      document.getElementById('appIframe').src='';
+      const mi=document.getElementById('mainInterface');
+      mi.classList.remove('hidden'); mi.classList.add('flex');
     };
 
-    // --- ERROR CAPTURE ---
-    window.onerror = function(msg, src, line, col, err) {
-        if(!window._user || !window._db) return false;
-        try {
-            const errObj = {
-                type: 'js_error', msg: String(msg).substring(0,200),
-                uid: window._user.uid, ts: Date.now(), url: 'mobile-app'
-            };
-            const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'public', 'data', 'error_logs', `${Date.now()}_${Math.random().toString(36).substr(2,5)}`);
-            setDoc(ref, errObj).catch(()=>{});
-        } catch(e) {}
-        return false;
+    // ── ERROR CAPTURE ──
+    (function(){
+      let _q=[], _saving=false;
+      async function _flush(){
+        if(_saving||_q.length===0||!window._db||!window._user) return;
+        _saving=true; const batch=_q.splice(0,5);
+        for(const e of batch) {
+          try {
+            const id=`${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
+            await setDoc(doc(db,'artifacts','level-ia-premium','public','data','error_logs',id),e);
+          } catch(_){}
+        }
+        _saving=false; if(_q.length>0) _flush();
+      }
+      function _cap(type,msg,stack){
+        _q.push({type,message:String(msg||'').substring(0,400),stack:String(stack||'').substring(0,1500),url:location.href,uid:window._user?.uid||'anon',ts:Date.now()});
+        _flush();
+      }
+      window.onerror=(msg,src,line,col,err)=>{ _cap('js_error',msg,err?.stack); return false; };
+      window.addEventListener('unhandledrejection',e=>{ _cap('promise_rejection',e.reason?.message||String(e.reason),e.reason?.stack||''); });
+      document.addEventListener('lvl_auth_ready',()=>setTimeout(_flush,2000));
+    })();
+
+  </script>
+
+  <!-- ═══ UI LOGIC ═══ -->
+  <script>
+    // ── TABS ──
+    let _activeTab = 'accueil';
+    window.switchTab = function(tab) {
+      document.querySelectorAll('.app-section').forEach(s=>{
+        if(s.id==='tab-'+tab) { s.classList.remove('hidden'); s.classList.add('flex'); }
+        else { s.classList.add('hidden'); s.classList.remove('flex'); }
+      });
+      document.querySelectorAll('.nav-btn').forEach(b=>{
+        const isActive=b.id==='nav-btn-'+tab;
+        b.classList.toggle('text-white',isActive);
+        b.classList.toggle('scale-110',isActive);
+        b.classList.toggle('text-slate-500',!isActive);
+      });
+      _activeTab=tab;
     };
 
-    // --- MODALES UI MOBILES ---
+    // ── LOGIN SHEET ──
     window.openLoginSheet = function() {
-        if(window._turnstileWidgetId === undefined && window._renderTurnstile) window._renderTurnstile();
-        const modal = document.getElementById('loginSheetModal');
-        const backdrop = document.getElementById('loginSheetBackdrop');
-        const content = document.getElementById('loginSheetContent');
-        modal.classList.remove('hidden'); void modal.offsetWidth; 
-        backdrop.classList.remove('opacity-0');
-        content.classList.remove('translate-y-full');
-        document.getElementById('authLoginStep').classList.remove('hidden');
-        document.getElementById('authRegisterStep').classList.add('hidden');
-        document.getElementById('authRegisterStep').classList.remove('flex');
+      const modal=document.getElementById('loginSheetModal');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(()=>{
+        document.getElementById('loginSheetBackdrop').style.opacity='1';
+        document.getElementById('loginSheetContent').style.transform='translateY(0)';
+      });
+      setTimeout(window._renderTurnstile, 200);
     };
     window.closeLoginSheet = function() {
-        document.getElementById('loginSheetBackdrop').classList.add('opacity-0');
-        document.getElementById('loginSheetContent').classList.add('translate-y-full');
-        setTimeout(() => document.getElementById('loginSheetModal').classList.add('hidden'), 300);
+      document.getElementById('loginSheetBackdrop').style.opacity='0';
+      document.getElementById('loginSheetContent').style.transform='translateY(100%)';
+      setTimeout(()=>{
+        document.getElementById('loginSheetModal').classList.add('hidden');
+        document.getElementById('authLoginStep')?.classList.remove('hidden');
+        const reg=document.getElementById('authRegisterStep');
+        if(reg){reg.classList.add('hidden');reg.classList.remove('flex');}
+        const btn=document.getElementById('gSignInBtn'); if(btn) btn.disabled=false;
+        const gTxt=document.getElementById('gBtnTxt'); if(gTxt) gTxt.textContent='Continuer avec Google';
+        window._turnstileToken=null;
+        window._turnstileWidgetId=undefined;
+        if(window.turnstile) try{window.turnstile.reset();}catch(_){}
+      },320);
     };
+
+    // ── SEARCH MODAL (placeholder) ──
     window.openModal = function(id) {
-        const el = document.getElementById(id);
-        el.classList.remove('hidden', 'translate-y-full'); el.classList.add('modal-enter');
+      const m=document.getElementById(id); if(!m) return;
+      m.classList.remove('hidden','translate-y-full');
     };
     window.closeModal = function(id) {
-        const el = document.getElementById(id);
-        el.classList.remove('modal-enter'); el.classList.add('modal-exit');
-        setTimeout(() => el.classList.add('hidden', 'translate-y-full'), 300);
-    };
-    window.openNotifSidebar = function() {
-        const modal = document.getElementById('notifModal');
-        const backdrop = document.getElementById('notifBackdrop');
-        const sidebar = document.getElementById('notifSidebar');
-        modal.classList.remove('hidden'); void modal.offsetWidth; 
-        backdrop.classList.remove('opacity-0'); sidebar.classList.remove('translate-x-full');
-    };
-    window.closeNotifSidebar = function() {
-        document.getElementById('notifBackdrop').classList.add('opacity-0');
-        document.getElementById('notifSidebar').classList.add('translate-x-full');
-        setTimeout(() => document.getElementById('notifModal').classList.add('hidden'), 300); 
+      const m=document.getElementById(id); if(!m) return;
+      m.classList.add('hidden');
     };
 
-    window.switchTab = function(tabId) {
-        if (tabId === 'compte' && document.getElementById('nav-text-compte').textContent === 'Connexion') {
-            window.openLoginSheet(); return;
-        }
-        document.querySelectorAll('.app-section').forEach(sec => sec.classList.add('hidden'));
-        const target = document.getElementById(`tab-${tabId}`);
-        if(target) target.classList.remove('hidden');
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.remove('text-white', 'scale-110'); btn.classList.add('text-slate-500');
-            const icon = btn.querySelector('i');
-            if(!btn.id.includes('dona')) icon.classList.remove('drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]');
-        });
-        const activeBtn = document.getElementById(`nav-btn-${tabId}`);
-        if (activeBtn) {
-            if (tabId === 'dona') activeBtn.classList.add('scale-110');
-            else {
-                activeBtn.classList.remove('text-slate-500'); activeBtn.classList.add('text-white', 'scale-110');
-                activeBtn.querySelector('i').classList.add('drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]');
-            }
-        }
-        document.getElementById('mainContent').scrollTop = 0;
+    // ── NOTIF PANEL ──
+    window.openNotifPanel = function() {
+      document.getElementById('notifPanel')?.classList.add('open');
+      document.getElementById('notifBackdrop')?.classList.add('open');
+      document.body.style.overflow='hidden';
+    };
+    window.closeNotifPanel = function() {
+      document.getElementById('notifPanel')?.classList.remove('open');
+      document.getElementById('notifBackdrop')?.classList.remove('open');
+      document.body.style.overflow='';
+      setTimeout(()=>{
+        localStorage.setItem('lvl_notif_last_seen', Date.now().toString());
+        const mob=document.getElementById('notifMobBadge'); if(mob) mob.classList.add('hidden');
+        document.querySelectorAll('.notif-item.unread').forEach(el=>el.classList.remove('unread'));
+      },1500);
     };
 
-    // --- GÉNÉRATION CARTES ACCUEIL ---
-    const renderMobileCards = () => {
-        const container = document.getElementById('tab-accueil');
-        container.innerHTML = `
-          <div onclick="window.openAppWithSSO('movie', '#')" class="w-full h-[180px] rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
-            <img src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
-            <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent z-0"></div>
-            <div class="relative z-10 p-4 flex justify-between items-start w-full">
-              <div class="glass-effect px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md"><span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span><span class="text-white text-[9px] font-bold uppercase">En ligne</span></div>
-            </div>
-            <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
-              <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelMovie</h2><p class="text-xs text-slate-300/90">Vos films et séries préférés.</p></div>
-              <div class="w-10 h-10 shrink-0 rounded-full glass-effect flex items-center justify-center text-white"><i class="fa-solid fa-play"></i></div>
-            </div>
-          </div>
-          <div onclick="window.openAppWithSSO('music', '#')" class="w-full h-[180px] rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
-            <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
-            <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent z-0"></div>
-            <div class="relative z-10 p-4 flex justify-between items-start w-full">
-              <div class="glass-effect px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md"><span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span><span class="text-white text-[9px] font-bold uppercase">En ligne</span></div>
-            </div>
-            <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
-              <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelMusic</h2><p class="text-xs text-slate-300/90">Écoutez vos morceaux favoris.</p></div>
-              <div class="w-10 h-10 shrink-0 rounded-full glass-effect flex items-center justify-center text-white"><i class="fa-solid fa-music"></i></div>
-            </div>
-          </div>`;
-    };
+    // Alias legacy
+    window.openNotifSidebar = window.openNotifPanel;
+    window.closeNotifSidebar = window.closeNotifPanel;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        renderMobileCards();
-    });
+    // Initial render
+    window.refreshProfileUI && window.refreshProfileUI();
   </script>
 </body>
 </html>
