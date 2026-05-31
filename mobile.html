@@ -112,8 +112,6 @@
     .btn-google:hover:not(:disabled) { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.25); }
     .btn-x { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); color: #f4f4f5; }
     .btn-x:hover:not(:disabled) { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); }
-    .btn-anon { background: rgba(168,85,247,.1); border-color: rgba(168,85,247,.3); color: #e9d5ff; }
-    .btn-anon:hover:not(:disabled) { background: rgba(168,85,247,.2); border-color: rgba(168,85,247,.5); }
 
     .btn-spinner {
       width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.2);
@@ -205,51 +203,16 @@
           <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
           <p class="text-[10px] text-slate-500 mt-4 font-bold uppercase tracking-widest">Connexion à Dona...</p>
         </div>
-        <iframe id="donaIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent"></iframe>
+        <iframe id="donaIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent" onload="document.getElementById('donaLoader').classList.add('hidden')"></iframe>
       </section>
 
-      <!-- ONGLET INFOS -->
-      <section id="tab-infos" class="app-section hidden flex-col gap-4 px-4 py-6 pb-8 tab-enter">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
-            <i class="fa-solid fa-compass text-lg"></i>
-          </div>
-          <div>
-            <h2 class="text-xl font-display font-bold text-white">L'Univers LevelUp</h2>
-            <p class="text-xs text-slate-400">Infrastructure Cloud.</p>
-          </div>
+      <!-- ONGLET INFOS (IFRAME) -->
+      <section id="tab-infos" class="app-section hidden absolute inset-0 w-full h-full bg-[#050505] z-10">
+        <div id="infosLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
+          <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
+          <p class="text-[10px] text-slate-500 mt-4 font-bold uppercase tracking-widest">Connexion aux Infos...</p>
         </div>
-
-        <!-- AJOUT DES INFOS VERSION SYSTEME ICI -->
-        <div class="w-full rounded-[20px] p-5 glass-effect border border-white/10 mt-2">
-            <h3 class="text-[11px] uppercase tracking-wider font-bold text-slate-500 mb-4 px-1">Informations Système</h3>
-            
-            <div class="space-y-3">
-                <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                    <span class="text-xs text-slate-400">Version Application</span>
-                    <span class="text-xs font-mono font-bold text-brand bg-brand/10 px-2 py-0.5 rounded">Mobile v2.3.00</span>
-                </div>
-                <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                    <span class="text-xs text-slate-400">Environnement</span>
-                    <span class="text-xs font-mono font-bold text-green-400 flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 bg-green-400 rounded-full shadow-[0_0_5px_rgba(74,222,128,0.8)]"></span> Production
-                    </span>
-                </div>
-                <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                    <span class="text-xs text-slate-400">Build</span>
-                    <span class="text-xs font-mono text-slate-300">#8472-STABLE</span>
-                </div>
-                <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                    <span class="text-xs text-slate-400">Moteur</span>
-                    <span class="text-xs font-mono text-slate-300">LevelCore 1.2</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-xs text-slate-400">Dernière mise à jour</span>
-                    <span class="text-xs font-mono text-slate-300">Aujourd'hui</span>
-                </div>
-            </div>
-        </div>
-
+        <iframe id="infosIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent" onload="document.getElementById('infosLoader').classList.add('hidden')"></iframe>
       </section>
 
       <!-- ONGLET COMPTE (PARAMÈTRES) -->
@@ -432,7 +395,7 @@
       <i class="fa-solid fa-star text-xl text-brand drop-shadow-[0_0_10px_rgba(168,85,247,0.7)] transition-all"></i>
       <span class="text-[9px] font-bold text-brand tracking-wide">Dona</span>
     </button>
-    <button onclick="switchTab('infos')" id="nav-btn-infos" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
+    <button onclick="openAppWithSSO('infos', 'info.html')" id="nav-btn-infos" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
       <i class="fa-solid fa-compass text-lg"></i>
       <span class="text-[9px] font-semibold tracking-wide">Infos</span>
     </button>
@@ -441,6 +404,9 @@
       <span id="nav-text-compte" class="text-[9px] font-semibold tracking-wide">Réglages</span>
     </button>
   </nav>
+
+  <!-- LECTEUR AUDIO CACHÉ POUR LES STORIES (APPLE MUSIC API) -->
+  <audio id="storyAudioPlayer" loop preload="auto" class="hidden"></audio>
 
   <!-- MODAL LOGIN / INSCRIPTION -->
   <div id="loginSheetModal" class="fixed inset-0 z-[110] hidden">
@@ -469,17 +435,6 @@
           <button id="xSignInBtn" onclick="window.xSignInSimul()" class="login-btn btn-x">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-[18px] h-[18px]"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             <span id="xBtnTxt">Continuer avec X</span>
-          </button>
-
-          <div class="w-full flex items-center gap-3 my-5">
-            <div class="flex-1 h-px bg-white/10"></div>
-            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">OU</span>
-            <div class="flex-1 h-px bg-white/10"></div>
-          </div>
-
-          <button id="anonSignInBtn" onclick="window.anonymousSignIn()" class="login-btn btn-anon shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-            <i class="fa-solid fa-mask text-brand mr-1 text-lg"></i>
-            <span id="anonBtnTxt">Continuer en Anonyme</span>
           </button>
 
           <div class="mt-4 w-full" id="turnstileWrap"><div id="cfTurnstile"></div></div>
@@ -573,6 +528,34 @@
     <p class="text-sm font-bold tracking-widest text-slate-300 uppercase">Déconnexion...</p>
   </div>
 
+  <!-- REPORT MODAL (SIGNALEMENT) -->
+  <div id="reportModal" class="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4">
+    <div class="w-full max-w-[320px] bg-[#121214] border border-white/10 rounded-[24px] p-6 text-left shadow-2xl relative animate-slide-up">
+      <button onclick="window.closeReportModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-flag text-red-500 mr-2"></i> Signaler</h3>
+      <p class="text-xs text-slate-400 mb-4">Pourquoi souhaitez-vous signaler ce contenu ?</p>
+      
+      <div class="flex flex-col gap-2 mb-4">
+        <label class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+          <input type="radio" name="reportReason" value="spam" class="accent-brand" checked onchange="window.toggleReportOther()">
+          <span class="text-sm text-slate-300">Spam ou trompeur</span>
+        </label>
+        <label class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+          <input type="radio" name="reportReason" value="inappropriate" class="accent-brand" onchange="window.toggleReportOther()">
+          <span class="text-sm text-slate-300">Contenu inapproprié</span>
+        </label>
+        <label class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+          <input type="radio" name="reportReason" value="other" class="accent-brand" onchange="window.toggleReportOther()">
+          <span class="text-sm text-slate-300">Autre raison...</span>
+        </label>
+      </div>
+      
+      <textarea id="reportOtherText" class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand hidden transition-colors mb-4 resize-none" rows="3" placeholder="Précisez la raison (obligatoire, min. 5 caractères)..." oninput="window.checkReportSubmit()"></textarea>
+      
+      <button id="submitReportBtn" onclick="window.submitReport()" class="w-full py-3 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(239,68,68,0.3)]">Signaler et masquer</button>
+    </div>
+  </div>
+
   <!-- STORY MODAL (FULLSCREEN) -->
   <div id="storyModal" class="fixed inset-0 z-[200] bg-black hidden flex-col transition-opacity duration-300 opacity-0">
     <div class="absolute top-safe left-0 w-full px-2 pt-3 flex gap-1 z-50" id="storyProgressContainer"></div>
@@ -609,9 +592,18 @@
             <span class="text-white font-bold text-sm leading-tight">LevelUp Ecosystem</span>
             <i class="fa-solid fa-circle-check text-brand text-[12px] drop-shadow-[0_0_5px_rgba(168,85,247,0.6)]"></i>
           </div>
-          <span id="storyTime" class="text-white/70 text-[10px] font-semibold">2h</span>
+          <div class="flex flex-col">
+            <span id="storyTime" class="text-white/70 text-[10px] font-semibold">2h</span>
+            
+            <!-- Affichage Pro de la Musique en ligne (discret) -->
+            <div id="storyMusicInline" class="hidden items-center gap-1.5 mt-0.5 cursor-pointer pointer-events-auto w-max" onclick="window.toggleStoryMute()">
+              <i id="musicStatusIcon" class="fa-solid fa-music text-brand text-[9px] animate-pulse drop-shadow-[0_0_4px_rgba(168,85,247,0.6)]"></i>
+              <span id="storyMusicTitle" class="text-[10px] text-white/90 font-medium truncate max-w-[150px] drop-shadow-md">Recherche...</span>
+            </div>
+          </div>
         </div>
       </div>
+
       <button onclick="window.closeStory()" class="text-white drop-shadow-md w-10 h-10 flex items-center justify-end pointer-events-auto active:scale-90 transition-transform"><i class="fa-solid fa-xmark text-2xl"></i></button>
     </div>
     
@@ -626,6 +618,19 @@
     
     <!-- Conteneur pour le texte et les boutons (Au-dessus des clics de navigation) -->
     <div class="w-full h-full absolute inset-0 z-50 pointer-events-none" id="storyContentArea"></div>
+  </div>
+
+  <!-- TRAILER MODAL (IN-APP) Z-INDEX AU DESSUS DES STORIES -->
+  <div id="trailerModal" class="fixed inset-0 z-[300] bg-black/95 flex flex-col hidden transition-opacity duration-300 opacity-0 backdrop-blur-md">
+    <div class="w-full px-4 safe-top py-4 flex justify-end shrink-0">
+      <button onclick="window.closeTrailer()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors shadow-lg active:scale-90"><i class="fa-solid fa-xmark text-xl"></i></button>
+    </div>
+    <div class="flex-1 w-full flex items-center justify-center p-4">
+      <div class="w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-[0_0_40px_rgba(220,38,38,0.3)] border border-white/10 relative">
+        <div class="absolute inset-0 flex items-center justify-center z-0"><div class="w-8 h-8 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div></div>
+        <iframe id="trailerIframe" class="w-full h-full relative z-10" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+      </div>
+    </div>
   </div>
 
   <div id="searchModal" class="fixed inset-0 bg-[#050505] z-[100] flex flex-col hidden translate-y-full">
@@ -650,8 +655,8 @@
   <!-- JAVASCRIPT LOGIC (FIREBASE & SSO & UI) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Variables globales
     window._auth = null;
@@ -797,8 +802,7 @@
                             regStep.classList.remove('hidden');
                             regStep.classList.add('flex');
                             
-                            // Pre-fill
-                            const defaultName = u.isAnonymous ? ('Visiteur-' + Math.floor(Math.random()*1000)) : (u.displayName || 'Utilisateur LevelUp');
+                            const defaultName = u.displayName || 'Utilisateur LevelUp';
                             document.getElementById('regNameInput').value = defaultName;
                             window.checkRegForm();
                         }
@@ -860,20 +864,6 @@
             document.getElementById('gBtnTxt').textContent = 'Continuer avec Google';
             if(window.turnstile && window._turnstileWidgetId) window.turnstile.reset(window._turnstileWidgetId);
             if(e.code !== 'auth/popup-closed-by-user') window.toast_('Erreur de connexion', 'err');
-        }
-    };
-
-    window.anonymousSignIn = async function() {
-        if (!window._auth) return;
-        const btn = document.getElementById('anonSignInBtn');
-        btn.disabled = true;
-        document.getElementById('anonBtnTxt').textContent = 'Création session...';
-        try {
-            await signInAnonymously(window._auth);
-        } catch(e) {
-            btn.disabled = false;
-            document.getElementById('anonBtnTxt').textContent = 'Continuer en Anonyme';
-            window.toast_("Erreur de connexion anonyme.", 'err');
         }
     };
 
@@ -996,7 +986,7 @@
                 
                 // Populate Settings Values
                 if(document.getElementById('setNameDisplay')) document.getElementById('setNameDisplay').textContent = window._ud.displayName || '—';
-                if(document.getElementById('setEmailDisplay')) document.getElementById('setEmailDisplay').textContent = window._ud.email || (window._user.isAnonymous ? 'Compte Anonyme' : '—');
+                if(document.getElementById('setEmailDisplay')) document.getElementById('setEmailDisplay').textContent = window._ud.email || '—';
                 if(document.getElementById('setJoinedDisplay')) {
                     const dStr = window._ud.createdAt ? new Date(window._ud.createdAt).toLocaleDateString('fr-FR', {year:'numeric', month:'long', day:'numeric'}) : '—';
                     document.getElementById('setJoinedDisplay').textContent = dStr;
@@ -1217,28 +1207,47 @@
 
     // --- SSO & APP VIEWER ---
     window.openAppWithSSO = function(appId, urlFallback) {
-        if(!window._user || !window._ud?.apiKey) {
-            window.toast_('Veuillez générer une clé avant.', 'warn');
+        // L'onglet 'infos' est public, le reste nécessite une connexion
+        const isAuthRequired = (appId !== 'infos');
+
+        if(isAuthRequired && (!window._user || !window._ud?.apiKey)) {
+            window.toast_('Veuillez vous connecter et générer une clé avant.', 'warn');
             window.switchTab('compte');
             return;
         }
 
-        const payload = new URLSearchParams({
-            lvl_key: window._ud.apiKey,
-            lvl_uid: window._user.uid,
-            lvl_name: window._ud.displayName,
-            lvl_photo: window._ud.photoURL
-        }).toString();
+        let ssoUrl = urlFallback;
 
-        // Plus d'overrides pour movie ou music, on garde ton fallback (le fichier local) !
-        let finalUrl = urlFallback;
+        // Si l'utilisateur est connecté, on attache toujours ses informations sécurisées (SSO)
+        if (window._user && window._ud?.apiKey) {
+            const payload = new URLSearchParams({
+                lvl_key: window._ud.apiKey,
+                lvl_uid: window._user.uid,
+                lvl_name: window._ud.displayName,
+                lvl_photo: window._ud.photoURL
+            }).toString();
 
-        const sep = finalUrl.includes('?') ? '&' : '?';
-        const ssoUrl = finalUrl + sep + payload;
+            const sep = urlFallback.includes('?') ? '&' : '?';
+            ssoUrl = urlFallback + sep + payload;
+        }
 
+        // Routage vers le bon Iframe ou la modale plein écran
         if(appId === 'ia' || appId === 'dona') {
-            document.getElementById('donaIframe').src = ssoUrl;
+            const iframe = document.getElementById('donaIframe');
+            if (!iframe.src.includes(urlFallback)) {
+                const loader = document.getElementById('donaLoader');
+                if(loader) loader.classList.remove('hidden');
+                iframe.src = ssoUrl;
+            }
             window.switchTab('dona');
+        } else if (appId === 'infos') {
+            const iframe = document.getElementById('infosIframe');
+            if (!iframe.src.includes(urlFallback)) {
+                const loader = document.getElementById('infosLoader');
+                if(loader) loader.classList.remove('hidden');
+                iframe.src = ssoUrl;
+            }
+            window.switchTab('infos');
         } else {
             window.openAppInViewer(ssoUrl, appId.toUpperCase());
         }
@@ -1260,7 +1269,6 @@
     };
 
     window.closeAppViewer = function() {
-        // Remettre en mode normal avant de fermer si on était en plein écran
         if (window._isAppFs) {
             window.toggleAppFullscreen();
         }
@@ -1286,40 +1294,22 @@
         const fsBtn = document.getElementById('fsToggleBtn');
         
         if(window._isAppFs) {
-            // 1. Cacher la nav du bas complètement sans casser son style
             nav.classList.add('hidden');
-            
-            // 2. Rendre le header flottant et transparent (pointer-events-none laisse passer les clics vers l'iframe)
             header.classList.remove('bg-[#050505]', 'border-b', 'border-white/5');
             header.classList.add('absolute', 'top-0', 'left-0', 'bg-transparent', 'border-transparent', 'pointer-events-none');
-            
-            // 3. Masquer le titre et le bouton refresh
             titleBox.classList.add('opacity-0');
             refreshBtn.classList.add('hidden');
-            
-            // 4. Styliser les boutons restants (fermer et réduire) en mode pastille de verre
             closeBtn.classList.add('pointer-events-auto', 'bg-black/50', 'backdrop-blur-md');
             fsBtn.classList.add('pointer-events-auto', 'bg-black/50', 'backdrop-blur-md');
-            
-            // 5. Mettre l'icône de réduction
             fsIcon.classList.replace('fa-expand', 'fa-compress');
         } else {
-            // 1. Remettre la nav du bas
             nav.classList.remove('hidden');
-            
-            // 2. Remettre le header classique
             header.classList.remove('absolute', 'top-0', 'left-0', 'bg-transparent', 'border-transparent', 'pointer-events-none');
             header.classList.add('bg-[#050505]', 'border-b', 'border-white/5');
-            
-            // 3. Remettre le titre et le refresh
             titleBox.classList.remove('opacity-0');
             refreshBtn.classList.remove('hidden');
-            
-            // 4. Retirer le style pastille
             closeBtn.classList.remove('pointer-events-auto', 'bg-black/50', 'backdrop-blur-md');
             fsBtn.classList.remove('pointer-events-auto', 'bg-black/50', 'backdrop-blur-md');
-            
-            // 5. Mettre l'icône d'agrandissement
             fsIcon.classList.replace('fa-compress', 'fa-expand');
         }
     };
@@ -1352,15 +1342,193 @@
     // 🌟 MOTEUR DYNAMIQUE DES ACTUS ET STORIES (API + FIRESTORE) 🌟
     // =========================================================================
     
+    window._audioCache = {}; 
+    window._isStoryMuted = false;
+
+    window.fetchAppleMusicSong = async function(query) {
+        if(window._audioCache[query]) return window._audioCache[query];
+        try {
+            const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`);
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                const songInfo = {
+                    url: data.results[0].previewUrl,
+                    title: data.results[0].trackName,
+                    artist: data.results[0].artistName
+                };
+                window._audioCache[query] = songInfo; 
+                return songInfo;
+            }
+        } catch (e) {
+            console.warn("Algorithme Audio iTunes Error:", e);
+        }
+        return null;
+    };
+
+    window.toggleStoryMute = function() {
+        const audio = document.getElementById('storyAudioPlayer');
+        const icon = document.getElementById('musicStatusIcon');
+        window._isStoryMuted = !window._isStoryMuted;
+        audio.muted = window._isStoryMuted;
+
+        if (window._isStoryMuted) {
+            icon.classList.replace('fa-music', 'fa-volume-xmark');
+            icon.classList.replace('text-brand', 'text-slate-400');
+            icon.classList.remove('animate-pulse');
+            window.toast_('Musique coupée', 'info');
+        } else {
+            icon.classList.replace('fa-volume-xmark', 'fa-music');
+            icon.classList.replace('text-slate-400', 'text-brand');
+            icon.classList.add('animate-pulse');
+            audio.play().catch(e => console.log('Autoplay block:', e));
+        }
+    };
+
+    window.processStoryMusic = async function(story) {
+        const player = document.getElementById('storyAudioPlayer');
+        const inlineUI = document.getElementById('storyMusicInline');
+        const titleEl = document.getElementById('storyMusicTitle');
+
+        player.pause();
+        player.src = "";
+        inlineUI.classList.add('hidden'); inlineUI.classList.remove('flex');
+        
+        if(!story.musicQuery) return;
+
+        inlineUI.classList.remove('hidden'); inlineUI.classList.add('flex');
+        titleEl.textContent = "Recherche musicale...";
+
+        const musicInfo = await window.fetchAppleMusicSong(story.musicQuery);
+        
+        const activeStory = window._storySequences[window._currentSeqType][window._currentStoryIndex];
+        if (activeStory !== story) return;
+
+        if (musicInfo) {
+            titleEl.textContent = musicInfo.title;
+            player.src = musicInfo.url;
+            player.muted = window._isStoryMuted;
+            
+            player.play().catch(err => {
+                titleEl.textContent = "Toucher pour écouter";
+            });
+        } else {
+            inlineUI.classList.add('hidden'); inlineUI.classList.remove('flex');
+        }
+    };
+
+    window.toggleStoryLike = function(event) {
+        if(event) event.stopPropagation(); 
+        
+        if(!window._user) { 
+            window.toast_('Vous devez être connecté pour liker !', 'warn'); 
+            return; 
+        }
+
+        const story = window._storySequences[window._currentSeqType][window._currentStoryIndex];
+        const icon = document.getElementById('storyLikeIcon');
+
+        if(story.userLiked) {
+            story.userLiked = false;
+            icon.classList.replace('fa-solid', 'fa-regular');
+            icon.classList.remove('text-red-500');
+        } else {
+            story.userLiked = true;
+            icon.classList.replace('fa-regular', 'fa-solid');
+            icon.classList.add('text-red-500');
+            icon.parentElement.style.transform = 'scale(1.2)';
+            setTimeout(() => icon.parentElement.style.transform = 'scale(1)', 150);
+        }
+    };
+
+    // --- LECTEUR DE TRAILER MODAL ---
+    window._wasPlayingBeforeTrailer = false;
+
+    window.playTrailer = function(embedUrl) {
+        if(!embedUrl) return;
+        
+        // Si l'URL de base contient "autoplay=0", on l'active (sinon on l'ajoute)
+        let finalUrl = embedUrl;
+        if(finalUrl.includes('autoplay=0')) finalUrl = finalUrl.replace('autoplay=0', 'autoplay=1');
+        else if(!finalUrl.includes('autoplay=1')) finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+
+        const modal = document.getElementById('trailerModal');
+        const iframe = document.getElementById('trailerIframe');
+        iframe.src = finalUrl;
+        
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        
+        // Pause intelligente de la musique de la story
+        const player = document.getElementById('storyAudioPlayer');
+        if(player && !player.muted && !player.paused) { 
+            player.pause(); 
+            window._wasPlayingBeforeTrailer = true; 
+        }
+        
+        // Mise en pause de la progression de la story
+        clearTimeout(storyTimeout);
+        clearInterval(storyProgressInterval);
+    };
+
+    window.closeTrailer = function() {
+        const modal = document.getElementById('trailerModal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            document.getElementById('trailerIframe').src = '';
+        }, 300);
+        
+        // Reprendre la musique de fond
+        if(window._wasPlayingBeforeTrailer) {
+            const player = document.getElementById('storyAudioPlayer');
+            player.play().catch(e=>console.log(e));
+            window._wasPlayingBeforeTrailer = false;
+        }
+        
+        // Redémarrer le temps pour que l'utilisateur ait le temps de finir de lire sa story
+        window.renderCurrentStory();
+    };
+
+    // Recherche Dynamique de Trailer (Pour l'API TMDB)
+    window.fetchAndPlayTrailer = async function(type, id) {
+        const btnIcon = document.getElementById('trailerBtnIcon');
+        if(btnIcon) btnIcon.className = "fa-solid fa-circle-notch fa-spin text-lg";
+
+        const tmdbKey = '027cc951d888c64e5f15dcb853c7347a';
+        try {
+            // Cherche le trailer en VF
+            const res = await fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${tmdbKey}&language=fr-FR`);
+            const data = await res.json();
+            let video = data.results.find(v => v.site === 'YouTube' && v.type === 'Trailer') || data.results.find(v => v.site === 'YouTube');
+            
+            // Si introuvable en français, cherche en Anglais
+            if(!video) {
+                const resEn = await fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${tmdbKey}`);
+                const dataEn = await resEn.json();
+                video = dataEn.results.find(v => v.site === 'YouTube' && v.type === 'Trailer') || dataEn.results.find(v => v.site === 'YouTube');
+            }
+
+            if(btnIcon) btnIcon.className = "fa-brands fa-youtube text-lg";
+
+            if(video) {
+                window.playTrailer(`https://www.youtube.com/embed/${video.key}?autoplay=1&rel=0`);
+            } else {
+                window.toast_('Aucun trailer YouTube disponible', 'warn');
+            }
+        } catch(e) {
+            if(btnIcon) btnIcon.className = "fa-brands fa-youtube text-lg";
+            window.toast_('Erreur réseau', 'err');
+        }
+    };
+
     // Variables globales pour le lecteur de Stories
     window._storySequences = { main: [], movies: [], anime: [] };
     window._currentSeqType = 'main';
     window._currentStoryIndex = 0;
-    window._seenStories = new Set(); // Pour mémoriser les stories déjà vues
+    window._seenStories = new Set();
     let storyTimeout = null;
     let storyProgressInterval = null;
 
-    // Fonction pour mettre à jour l'état visuel "Vu" des bulles
     window.updateBubbleVisuals = function() {
         if (window._storySequences.main) {
             window._storySequences.main.forEach((s, index) => {
@@ -1399,31 +1567,52 @@
         const feedContainer = document.getElementById('actusFeed');
         if(!storyContainer || !feedContainer) return;
 
-        // 1. CHARGEMENT DES STORIES PRINCIPALES
-        const mainStories = [
-            { 
-                id: 1, title: 'Flash Info', icon: 'fa-bolt', color: 'from-brand to-orange-500', time: 'Il y a 1h',
-                bubbleImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop',
-                contentImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop',
-                contentText: 'Nouvelle architecture Firebase déployée avec succès. Les temps de chargement sont réduits de 40% ! 🚀'
-            },
-            { 
-                id: 2, title: 'Dev Log', icon: 'fa-code', color: 'from-blue-500 to-indigo-500', bg: 'bg-blue-900', time: 'Il y a 3h',
-                bubbleImg: null,
-                contentImg: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
-                contentText: 'On travaille dur sur la nouvelle API LevelTools. Plus d\'outils, plus vite. Restez connectés. 💻'
-            },
-            { 
-                id: 3, title: 'Sondage', icon: 'fa-square-poll-vertical', color: 'from-green-500 to-emerald-500', bg: 'bg-green-900', time: 'Il y a 6h',
-                bubbleImg: null,
-                contentImg: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop',
-                contentText: 'Quel est votre anime préféré de cette saison ? Dites-le nous en cliquant sur le cœur ! 🎌'
+        // 1. CHARGEMENT DES STORIES PRINCIPALES (DEPUIS FIRESTORE)
+        let mainStories = [];
+        try {
+            if (window._db) {
+                // Requête sécurisée vers ta base de données
+                const storiesRef = collection(window._db, 'artifacts', appId, 'public', 'data', 'main_stories');
+                const snap = await getDocs(storiesRef);
+                if (!snap.empty) {
+                    snap.forEach(doc => {
+                        mainStories.push({ id: doc.id, ...doc.data(), userLiked: false });
+                    });
+                }
             }
-        ];
+        } catch (e) {
+            console.warn("Erreur chargement stories depuis DB:", e);
+        }
+
+        // Fallback (sécurité) si ta base de données est vide pour le moment
+        if (mainStories.length === 0) {
+            mainStories = [
+                { 
+                    id: 1, title: 'Flash Info', icon: 'fa-bolt', color: 'from-brand to-orange-500', time: 'Il y a 1h',
+                    bubbleImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop',
+                    contentImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop',
+                    contentText: 'Nouvelle architecture Firebase déployée avec succès. Les temps de chargement sont réduits de 40% ! 🚀',
+                    musicQuery: 'epic intense news theme', likes: 120, userLiked: false
+                },
+                { 
+                    id: 2, title: 'Dev Log', icon: 'fa-code', color: 'from-blue-500 to-indigo-500', bg: 'bg-blue-900', time: 'Il y a 3h',
+                    bubbleImg: null,
+                    contentImg: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
+                    contentText: 'On travaille dur sur la nouvelle API LevelTools. Plus d\'outils, plus vite. Restez connectés. 💻',
+                    musicQuery: 'chill lofi coding beats', likes: 45, userLiked: false
+                },
+                { 
+                    id: 3, title: 'Sondage', icon: 'fa-square-poll-vertical', color: 'from-green-500 to-emerald-500', bg: 'bg-green-900', time: 'Il y a 6h',
+                    bubbleImg: null,
+                    contentImg: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop',
+                    contentText: 'Quel est votre anime préféré de cette saison ? Dites-le nous en cliquant sur le cœur ! 🎌',
+                    musicQuery: 'anime opening theme', likes: 312, userLiked: false
+                }
+            ];
+        }
         
         window._storySequences.main = mainStories;
 
-        // Rendu HTML des bulles de Stories (avec les nouveaux IDs pour les anneaux)
         let storyHtml = mainStories.map((s, index) => `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('main', ${index})">
             <div id="ring-main-${index}" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${s.color} shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300">
@@ -1437,7 +1626,6 @@
           </div>
         `).join('');
 
-        // Bulle: Recommandations Films (TMDB)
         storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('movies', 0)">
             <div id="ring-movies" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300">
@@ -1448,7 +1636,6 @@
             <span class="text-[10px] font-bold text-slate-300">Top Films</span>
           </div>`;
 
-        // Bulle: Recommandations Anime (Jikan)
         storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('anime', 0)">
             <div id="ring-anime" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
@@ -1462,11 +1649,8 @@
         storyContainer.innerHTML = storyHtml;
         window.updateBubbleVisuals();
 
-        // 1.5 CHARGEMENT ASYNCHRONE DES RECOMMANDATIONS (Algo intelligent)
-        // Le seed permet de changer la page des tendances en fonction du jour de la semaine
         const daySeed = new Date().getDay() + 1; 
         
-        // Récupération TMDB (Top Tendances Films du jour)
         const tmdbKey = '027cc951d888c64e5f15dcb853c7347a';
         fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${tmdbKey}&language=fr-FR&page=${daySeed}`)
             .then(res => res.json())
@@ -1478,13 +1662,16 @@
                         time: `Note: ${(m.vote_average || 0).toFixed(1)}/10`,
                         contentImg: `https://image.tmdb.org/t/p/w780${m.poster_path}`,
                         contentText: m.overview,
-                        trailerUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(m.title + ' bande annonce vf')}`,
-                        color: 'from-red-500 to-rose-700'
+                        type: 'movie',
+                        trailerId: m.id, // On conserve l'ID pour lancer la recherche YouTube ciblée in-app
+                        color: 'from-red-500 to-rose-700',
+                        musicQuery: `${m.title} soundtrack epic`,
+                        likes: Math.floor(Math.random() * 1000) + 100,
+                        userLiked: false
                     }));
                 }
             }).catch(e => console.warn('TMDB Error', e));
 
-        // Récupération Jikan (Top Anime de tous les temps par pagination)
         fetch(`https://api.jikan.moe/v4/top/anime?page=${daySeed}&limit=20`)
             .then(res => res.json())
             .then(data => {
@@ -1495,119 +1682,167 @@
                         time: `Score: ${a.score} ⭐`,
                         contentImg: a.images.webp.large_image_url,
                         contentText: a.synopsis,
-                        color: 'from-blue-400 to-indigo-600'
+                        type: 'anime',
+                        embedUrl: a.trailer?.embed_url || null, // Jikan renvoie souvent l'URL embed YouTube directement
+                        color: 'from-blue-400 to-indigo-600',
+                        musicQuery: `${a.title} anime opening`,
+                        likes: Math.floor(Math.random() * 2000) + 500,
+                        userLiked: false
                     }));
                 }
             }).catch(e => console.warn('Jikan Error', e));
 
-        // 2. CHARGEMENT DU FEED BENTO GRID
         feedContainer.innerHTML = `<div class="col-span-2 py-10 flex justify-center"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div></div>`;
         
-        let allNews = [];
-
-        // A. Ajout d'une News Système/Annonce "en dur"
-        allNews.push({
-            type: 'announce', category: 'tools',
-            title: "LevelTools v2.0 : L'IA s'intègre partout",
-            desc: "Découvrez comment la nouvelle mise à jour transforme votre façon d'utiliser les utilitaires au quotidien.",
-            img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop",
-            time: "Il y a 2h", likes: 124, comments: 18
-        });
-
-        // B. APPEL À UNE VRAIE API : JIKAN (MyAnimeList)
+        // --- NOUVEAU FLUX D'ACTUALITÉS EN TEMPS RÉEL (SANS LIKE, AVEC PARTAGE/SAUVEGARDE/SIGNALEMENT) ---
         try {
-            const res = await fetch('https://api.jikan.moe/v4/top/anime?limit=2');
-            const animeData = await res.json();
+            // Utilisation d'un flux d'actualités technologiques et geeks réel (converti en JSON)
+            const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.journaldugeek.com/feed/');
+            const feedData = await res.json();
             
-            if(animeData && animeData.data) {
-                animeData.data.forEach(anime => {
-                    allNews.push({
-                        type: 'small', category: 'otaku',
-                        title: anime.title,
-                        time: `Score: ${anime.score} ⭐`,
-                        img: anime.images.webp.large_image_url
-                    });
+            if(feedData && feedData.items) {
+                let htmlFeed = '';
+                feedData.items.slice(0, 10).forEach((item, index) => {
+                    // Création d'un ID unique sécurisé pour l'article
+                    const articleId = 'news_' + window.sHash(item.link || index.toString());
+                    
+                    // Si l'utilisateur a signalé cet article, on le saute (masquage effectif)
+                    if(window._hiddenArticles.has(articleId)) return;
+
+                    // Nettoyage intelligent du contenu
+                    let imgSrc = item.thumbnail || item.enclosure?.link || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop';
+                    let cleanDesc = item.description.replace(/<[^>]*>?/gm, '').substring(0, 110) + '...'; // Retire le HTML
+                    
+                    let dateObj = new Date(item.pubDate);
+                    let dateStr = dateObj.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}) + ' à ' + dateObj.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+
+                    htmlFeed += `
+                    <div class="actu-card col-span-2 glass-effect rounded-[24px] overflow-hidden border border-white/5 relative bg-[#0a0a0c] transition-opacity duration-300" id="article-${articleId}" data-category="tout">
+                        <a href="${item.link}" target="_blank" class="block h-44 w-full relative overflow-hidden group">
+                             <img src="${imgSrc}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                             <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent opacity-90"></div>
+                             <div class="absolute bottom-3 left-4 px-2 py-1 bg-black/60 backdrop-blur border border-white/10 text-white text-[9px] font-bold uppercase rounded-md shadow-lg flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-brand"></span> Temps réel</div>
+                        </a>
+                        <div class="p-4 pt-3">
+                            <h3 class="text-[15px] font-display font-bold text-white mb-2 leading-tight line-clamp-2"><a href="${item.link}" target="_blank">${item.title}</a></h3>
+                            <p class="text-[11px] text-slate-400 line-clamp-2 mb-4 leading-relaxed">${cleanDesc}</p>
+                            
+                            <div class="flex items-center justify-between border-t border-white/10 pt-3">
+                                <span class="text-[10px] text-slate-500 font-medium"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</span>
+                                <div class="flex items-center gap-4">
+                                    <button onclick="window.saveArticle('${articleId}')" class="text-slate-400 hover:text-brand transition-colors active:scale-90" title="Enregistrer"><i class="${window._savedArticles.has(articleId) ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark text-sm" id="bookmark-${articleId}"></i></button>
+                                    <button onclick="window.shareArticle(decodeURIComponent('${encodeURIComponent(item.title)}'), '${item.link}')" class="text-slate-400 hover:text-blue-400 transition-colors active:scale-90" title="Partager"><i class="fa-solid fa-share-nodes text-sm"></i></button>
+                                    <button onclick="window.openReportModal('${articleId}')" class="text-slate-400 hover:text-red-400 transition-colors active:scale-90" title="Signaler"><i class="fa-solid fa-flag text-sm"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
                 });
+                feedContainer.innerHTML = htmlFeed;
             }
-        } catch(err) {
-            console.warn("Erreur API Anime:", err);
-            allNews.push({ type: 'small', category: 'otaku', title: "Les sorties Anime de la semaine", time: "Hier", img: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=400&auto=format&fit=crop" });
+        } catch (err) {
+            console.warn("Erreur chargement news RSS en temps réel:", err);
+            feedContainer.innerHTML = `<div class="col-span-2 text-center text-slate-500 text-sm py-10">Impossible de charger les actualités mondiales.</div>`;
         }
-
-        // C. Ajout d'une News Gaming
-        allNews.push({
-            type: 'small', category: 'gaming',
-            title: "Nouveau patch compétitif déployé sur les serveurs",
-            time: "Aujourd'hui",
-            img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=400&auto=format&fit=crop"
-        });
-
-        // D. Ajout de la carte Récompense
-        allNews.push({ type: 'reward', category: 'tout' });
-
-        // 3. RENDU HTML DES CARTES
-        let htmlFeed = '';
-        allNews.forEach(news => {
-            if (news.type === 'announce') {
-                htmlFeed += `
-                <div class="actu-card col-span-2 glass-effect rounded-[24px] overflow-hidden border border-white/5 relative group cursor-pointer" data-category="${news.category}">
-                    <img src="${news.img}" class="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent"></div>
-                    <div class="relative z-10 p-5 h-full flex flex-col justify-end min-h-[220px]">
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="px-2 py-0.5 bg-brand/20 text-brand border border-brand/30 text-[9px] font-bold uppercase rounded-md backdrop-blur-md">Annonce</span>
-                            <span class="text-[10px] text-slate-300">${news.time}</span>
-                        </div>
-                        <h3 class="text-xl font-display font-bold text-white mb-2 leading-tight">${news.title}</h3>
-                        <p class="text-xs text-slate-300 line-clamp-2">${news.desc}</p>
-                        <div class="flex items-center justify-between mt-4">
-                          <div class="flex items-center gap-4">
-                              <button class="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-brand transition-colors" onclick="event.stopPropagation(); this.style.color='#a855f7'; this.querySelector('i').classList.replace('fa-regular', 'fa-solid');"><i class="fa-regular fa-heart"></i> ${news.likes}</button>
-                              <button class="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-blue-400 transition-colors"><i class="fa-regular fa-comment"></i> ${news.comments}</button>
-                          </div>
-                        </div>
-                    </div>
-                </div>`;
-            } 
-            else if (news.type === 'small') {
-                htmlFeed += `
-                <div class="actu-card col-span-1 glass-effect rounded-[20px] overflow-hidden border border-white/5 flex flex-col cursor-pointer hover:border-white/10 transition-colors" data-category="${news.category}">
-                    <div class="h-28 w-full relative">
-                         <img src="${news.img}" class="w-full h-full object-cover">
-                         <div class="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent opacity-80"></div>
-                         <div class="absolute top-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur border border-white/10 text-white text-[9px] font-bold uppercase rounded-md">${news.category}</div>
-                    </div>
-                    <div class="p-3 flex-1 flex flex-col bg-[#0a0a0c]">
-                        <h3 class="text-sm font-bold text-white mb-1 line-clamp-2">${news.title}</h3>
-                        <div class="flex items-center justify-between mt-auto pt-2">
-                          <p class="text-[10px] font-semibold text-brand">${news.time}</p>
-                          <i class="fa-solid fa-arrow-right text-[10px] text-slate-500"></i>
-                        </div>
-                    </div>
-                </div>`;
-            }
-            else if (news.type === 'reward') {
-                htmlFeed += `
-                <div class="actu-card col-span-2 rounded-[20px] overflow-hidden border border-orange-500/30 relative group cursor-pointer bg-orange-500/5 p-4 flex items-center justify-between" data-category="tout">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-2xl rounded-full pointer-events-none"></div>
-                    <div class="relative z-10 flex flex-col gap-1">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-gift text-orange-400"></i>
-                            <span class="text-[10px] font-bold text-orange-400 uppercase tracking-widest">Récompense Dispo</span>
-                        </div>
-                        <h3 class="text-sm font-bold text-white">Réclamez votre badge "Fondateur"</h3>
-                    </div>
-                    <button class="relative z-10 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:scale-105 active:scale-95 text-white text-xs font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(249,115,22,0.4)] shrink-0" onclick="event.stopPropagation(); window.toast_('🎁 Badge Fondateur réclamé avec succès !', 'ok'); this.textContent='Réclamé ✓'; this.disabled=true; this.classList.add('opacity-50')">Claim</button>
-                </div>`;
-            }
-        });
-
-        feedContainer.innerHTML = htmlFeed;
     };
 
-    // =========================================================================
-    // 📱 LECTEUR DE STORIES (LOGIQUE FULLSCREEN MODIFIÉE)
-    // =========================================================================
+    // --- FONCTIONNALITÉS SOCIALES DES ACTUALITÉS (SAUVEGARDE, PARTAGE, SIGNALEMENT) ---
+    window._hiddenArticles = new Set();
+    window._savedArticles = new Set();
+    window._currentReportId = null;
+
+    window.saveArticle = function(id) {
+        if(!window._user) { window.toast_('Connectez-vous pour enregistrer cet article.', 'warn'); return; }
+        const icon = document.getElementById('bookmark-'+id);
+        if(window._savedArticles.has(id)) {
+            window._savedArticles.delete(id);
+            icon.classList.replace('fa-solid', 'fa-regular');
+            icon.classList.remove('text-brand');
+            window.toast_('Retiré de vos favoris', 'info');
+        } else {
+            window._savedArticles.add(id);
+            icon.classList.replace('fa-regular', 'fa-solid');
+            icon.classList.add('text-brand');
+            window.toast_('Article sauvegardé !', 'ok');
+        }
+    };
+
+    window.shareArticle = function(title, url) {
+        // Détecte si le téléphone possède la fenêtre de partage native (WhatsApp, Messages, etc.)
+        if (navigator.share) {
+            navigator.share({
+                title: title,
+                text: 'Regarde cette actualité sur LevelUp !',
+                url: url // Le vrai lien de l'article est partagé
+            }).catch(e => {
+                // Ignore l'erreur si l'utilisateur annule le partage lui-même
+                if(e.name !== 'AbortError') window.toast_('Erreur lors du partage', 'err');
+            });
+        } else {
+            // Système de secours pour les appareils qui ne supportent pas le partage natif
+            navigator.clipboard.writeText(url);
+            window.toast_('Lien copié dans le presse-papier !', 'ok');
+        }
+    };
+
+    window.openReportModal = function(id) {
+        window._currentReportId = id;
+        document.getElementById('reportOtherText').value = '';
+        document.querySelector('input[name="reportReason"][value="spam"]').checked = true;
+        window.toggleReportOther();
+        
+        const modal = document.getElementById('reportModal');
+        modal.classList.remove('hidden'); modal.classList.add('flex');
+    };
+
+    window.closeReportModal = function() {
+        const modal = document.getElementById('reportModal');
+        modal.classList.add('hidden'); modal.classList.remove('flex');
+        window._currentReportId = null;
+    };
+
+    window.toggleReportOther = function() {
+        const isOther = document.querySelector('input[name="reportReason"]:checked').value === 'other';
+        const textarea = document.getElementById('reportOtherText');
+        if(isOther) {
+            textarea.classList.remove('hidden');
+            textarea.focus();
+        } else {
+            textarea.classList.add('hidden');
+        }
+        window.checkReportSubmit();
+    };
+
+    window.checkReportSubmit = function() {
+        const isOther = document.querySelector('input[name="reportReason"]:checked').value === 'other';
+        const textarea = document.getElementById('reportOtherText');
+        const btn = document.getElementById('submitReportBtn');
+        
+        // Bloque le bouton si "Autre" est coché mais que le texte fait moins de 5 caractères
+        if(isOther && textarea.value.trim().length < 5) {
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    };
+
+    window.submitReport = function() {
+        if(window._currentReportId) {
+            // Ajoute l'article à la liste des articles bloqués
+            window._hiddenArticles.add(window._currentReportId);
+            
+            // Masque l'article de l'interface avec une petite animation
+            const card = document.getElementById('article-' + window._currentReportId);
+            if(card) {
+                card.style.opacity = '0';
+                setTimeout(() => card.style.display = 'none', 300);
+            }
+            window.toast_('Contenu signalé et masqué', 'info');
+        }
+        window.closeReportModal();
+    };
 
     window.openStory = function(type, index) {
         if(!window._storySequences[type] || window._storySequences[type].length === 0) {
@@ -1618,7 +1853,7 @@
         window._currentStoryIndex = index;
         const modal = document.getElementById('storyModal');
         modal.classList.remove('hidden');
-        void modal.offsetWidth; // Forcer le reflow pour l'animation
+        void modal.offsetWidth; 
         modal.classList.remove('opacity-0');
         window.renderCurrentStory();
     };
@@ -1626,15 +1861,12 @@
     window.renderCurrentStory = function() {
         const stories = window._storySequences[window._currentSeqType];
         
-        // Sécurité : Fermer ou passer automatiquement à la séquence suivante !
         if(window._currentStoryIndex >= stories.length) {
             const seqOrder = ['main', 'movies', 'anime'];
             const currentIndex = seqOrder.indexOf(window._currentSeqType);
             
-            // Si on n'est pas à la dernière catégorie, on passe à la suivante
             if (currentIndex >= 0 && currentIndex < seqOrder.length - 1) {
                 const nextSeq = seqOrder[currentIndex + 1];
-                // On vérifie que la prochaine séquence a bien des éléments
                 if (window._storySequences[nextSeq] && window._storySequences[nextSeq].length > 0) {
                     window._currentSeqType = nextSeq;
                     window._currentStoryIndex = 0;
@@ -1642,25 +1874,20 @@
                     return;
                 }
             }
-            
-            // Si on a tout fini, on ferme
             window.closeStory();
             return;
         }
         
-        // Bloquer sous 0
         if(window._currentStoryIndex < 0) {
             window._currentStoryIndex = 0;
         }
 
-        // Marquer la story courante comme "VUE" et actualiser le menu
         const seenKey = window._currentSeqType === 'main' ? `main_${window._currentStoryIndex}` : window._currentSeqType;
         window._seenStories.add(seenKey);
         window.updateBubbleVisuals();
 
         const story = stories[window._currentStoryIndex];
         
-        // Mise à jour de l'UI
         document.getElementById('storyTime').textContent = story.time;
         
         const bgArea = document.getElementById('storyBgArea');
@@ -1674,23 +1901,45 @@
         `;
 
         const contentArea = document.getElementById('storyContentArea');
+        
+        // Logique Bouton Trailer In-App (Modal)
+        let trailerBtnHtml = '';
+        if(story.embedUrl) {
+            trailerBtnHtml = `
+            <button onclick="event.stopPropagation(); window.playTrailer('${story.embedUrl}')" class="mt-4 flex items-center justify-center gap-2 w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(220,38,38,0.4)] relative active:scale-95 pointer-events-auto">
+               <i id="trailerBtnIcon" class="fa-brands fa-youtube text-lg"></i> Voir le trailer
+            </button>`;
+        } else if(story.trailerId) {
+            trailerBtnHtml = `
+            <button onclick="event.stopPropagation(); window.fetchAndPlayTrailer('${story.type}', ${story.trailerId})" class="mt-4 flex items-center justify-center gap-2 w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(220,38,38,0.4)] relative active:scale-95 pointer-events-auto">
+               <i id="trailerBtnIcon" class="fa-brands fa-youtube text-lg"></i> Voir le trailer
+            </button>`;
+        }
+
         contentArea.innerHTML = `
-            <!-- Boîte de texte en bas (avec événements pointeur activés) -->
+            <!-- Bouton LIKE sur le côté droit -->
+            <div class="absolute right-4 bottom-48 flex flex-col items-center gap-2 z-[60] pointer-events-auto">
+                <button onclick="window.toggleStoryLike(event)" class="group flex flex-col items-center">
+                    <div class="w-[45px] h-[45px] rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-90">
+                        <i id="storyLikeIcon" class="${story.userLiked ? 'fa-solid text-red-500' : 'fa-regular text-white'} fa-heart text-xl transition-colors"></i>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Boîte de texte en bas -->
             <div class="absolute bottom-12 left-0 w-full px-6">
                 <div class="bg-[#050505]/80 backdrop-blur-xl border border-white/10 p-5 rounded-[24px] shadow-2xl animate-slide-up pointer-events-auto">
                     <h4 class="text-white font-display font-bold text-lg mb-2 flex items-center gap-2">
                         <i class="fa-solid ${story.icon} text-brand"></i> <span class="line-clamp-1">${story.title}</span>
                     </h4>
                     <p class="text-slate-300 text-[13px] leading-relaxed line-clamp-[6]">${story.contentText}</p>
-                    ${story.trailerUrl ? `
-                    <a href="${story.trailerUrl}" target="_blank" onclick="event.stopPropagation()" class="mt-4 flex items-center justify-center gap-2 w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(220,38,38,0.4)] relative active:scale-95">
-                       <i class="fa-brands fa-youtube text-lg"></i> Voir le trailer
-                    </a>` : ''}
+                    ${trailerBtnHtml}
                 </div>
             </div>
         `;
 
-        // Mise à jour des barres de progression
+        window.processStoryMusic(story);
+
         const progContainer = document.getElementById('storyProgressContainer');
         progContainer.innerHTML = '';
         stories.forEach((s, i) => {
@@ -1703,23 +1952,20 @@
             progContainer.appendChild(bar);
         });
 
-        // Reset des timers
         clearTimeout(storyTimeout);
         clearInterval(storyProgressInterval);
 
         let progress = 0;
-        const duration = 6500; // 6.5 secondes pour avoir le temps de lire la recommandation
+        const duration = 6500; 
         const step = 50;
         const currentBar = document.getElementById(`storyBar-${window._currentStoryIndex}`);
 
-        // Animation fluide de la barre de la story en cours
         storyProgressInterval = setInterval(() => {
             progress += step;
             const pct = (progress / duration) * 100;
             if(currentBar) currentBar.style.width = `${pct}%`;
         }, step);
 
-        // Passage auto à la story suivante
         storyTimeout = setTimeout(() => {
             window.nextStory();
         }, duration);
@@ -1738,15 +1984,59 @@
     window.closeStory = function() {
         clearTimeout(storyTimeout);
         clearInterval(storyProgressInterval);
+
+        const player = document.getElementById('storyAudioPlayer');
+        if (player) {
+            player.pause();
+            player.src = "";
+        }
+
         const modal = document.getElementById('storyModal');
+        modal.style.transform = ''; // Réinitialisation de la position en cas de swipe
         modal.classList.add('opacity-0');
         setTimeout(() => {
             modal.classList.add('hidden');
             document.getElementById('storyContentArea').innerHTML = '';
+            
+            const inlineUI = document.getElementById('storyMusicInline');
+            if(inlineUI) { inlineUI.classList.add('hidden'); inlineUI.classList.remove('flex'); }
         }, 300);
     };
 
-    // --- ERROR CAPTURE ---
+    // --- GESTION DU SWIPE VERS LE BAS POUR FERMER LES STORIES (STYLE IPHONE) ---
+    let storyTouchStartY = 0;
+    let storyTouchCurrentY = 0;
+    const storyModalEl = document.getElementById('storyModal');
+
+    storyModalEl.addEventListener('touchstart', (e) => {
+        storyTouchStartY = e.touches[0].clientY;
+        storyTouchCurrentY = storyTouchStartY;
+        storyModalEl.style.transition = 'none'; // Désactiver l'animation pendant le glissement pour que ça suive le doigt
+    }, {passive: true});
+
+    storyModalEl.addEventListener('touchmove', (e) => {
+        storyTouchCurrentY = e.touches[0].clientY;
+        const deltaY = storyTouchCurrentY - storyTouchStartY;
+        
+        // On ne déplace la modale que si on glisse vers le bas
+        if (deltaY > 0) {
+            storyModalEl.style.transform = 'translateY(' + deltaY + 'px)';
+        }
+    }, {passive: true});
+
+    storyModalEl.addEventListener('touchend', (e) => {
+        const deltaY = storyTouchCurrentY - storyTouchStartY;
+        storyModalEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease'; // Réactiver l'animation fluide
+        
+        if (deltaY > 120) {
+            // Si on a glissé de plus de 120px vers le bas, on ferme la story
+            window.closeStory();
+        } else {
+            // Sinon on annule et on remet la story en plein écran
+            storyModalEl.style.transform = '';
+        }
+    });
+
     window.onerror = function(msg, src, line, col, err) {
         if(!window._db) return false;
         try {
@@ -1761,7 +2051,6 @@
         return false;
     };
 
-    // --- MODALES UI MOBILES ---
     window.openLoginSheet = function() {
         if(window._turnstileWidgetId === undefined && window._renderTurnstile) window._renderTurnstile();
         const modal = document.getElementById('loginSheetModal');
@@ -1825,13 +2114,11 @@
         }
         document.getElementById('mainContent').scrollTop = 0;
 
-        // Charger les actus dynamiques si on ouvre l'onglet Actus
         if(tabId === 'actus') {
             window.loadDynamicActus();
         }
     };
 
-    // --- GÉNÉRATION CARTES ACCUEIL ---
     const renderMobileCards = () => {
         const container = document.getElementById('tab-accueil');
         container.innerHTML = `
