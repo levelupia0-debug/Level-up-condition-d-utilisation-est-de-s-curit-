@@ -392,17 +392,22 @@
 
   <!-- ZONE 2 : MODALE POUR IFRAMES SSO -->
   <div id="appViewerModal" class="hidden flex-1 flex-col w-full bg-[#050505] relative z-20 animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
-    <div class="w-full bg-[#050505] border-b border-white/5 py-3 px-4 safe-top flex justify-between items-center shrink-0">
-      <button onclick="closeAppViewer()" class="text-slate-300 hover:text-brand flex items-center justify-center w-8 h-8 bg-white/5 rounded-full transition-all">
+    <div id="appViewerHeader" class="w-full bg-[#050505] border-b border-white/5 py-3 px-4 safe-top flex justify-between items-center shrink-0 transition-all duration-300 z-50">
+      <button onclick="closeAppViewer()" id="appCloseBtn" class="text-slate-300 hover:text-brand flex items-center justify-center w-8 h-8 bg-white/5 rounded-full transition-all">
         <i class="fa-solid fa-chevron-down text-[14px]"></i>
       </button>
-      <div class="flex flex-col items-center flex-1 px-4">
+      <div id="appViewerTitleBox" class="flex flex-col items-center flex-1 px-4 transition-opacity duration-300">
         <span id="appViewerTitle" class="text-sm font-display font-bold text-white truncate w-full text-center">App</span>
         <span class="text-[8px] text-green-400 font-bold uppercase tracking-widest mt-0.5">Connecté & Sécurisé</span>
       </div>
-      <button onclick="document.getElementById('appIframe').src = document.getElementById('appIframe').src" class="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white bg-white/5 rounded-full transition-all">
-        <i class="fa-solid fa-rotate-right text-[12px]"></i>
-      </button>
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="fsToggleBtn" onclick="window.toggleAppFullscreen()" class="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white bg-white/5 rounded-full transition-all">
+          <i class="fa-solid fa-expand text-[12px]"></i>
+        </button>
+        <button id="appRefreshBtn" onclick="document.getElementById('appIframe').src = document.getElementById('appIframe').src" class="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white bg-white/5 rounded-full transition-all">
+          <i class="fa-solid fa-rotate-right text-[12px]"></i>
+        </button>
+      </div>
     </div>
     <div class="flex-1 relative w-full bg-black">
       <div id="iframeLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-10">
@@ -414,7 +419,7 @@
   </div>
 
   <!-- BARRE DE NAVIGATION EN BAS -->
-  <nav class="shrink-0 w-full glass-effect rounded-t-[2rem] rounded-b-none !border-x-0 !border-b-0 border-t border-white/10 flex justify-between items-center px-6 pt-5 safe-bottom z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.7)] relative bg-[#050505]/80">
+  <nav id="mainBottomNav" class="shrink-0 w-full glass-effect rounded-t-[2rem] rounded-b-none !border-x-0 !border-b-0 border-t border-white/10 flex justify-between items-center px-6 pt-5 safe-bottom z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.7)] relative bg-[#050505]/80 transition-transform duration-300">
     <button onclick="switchTab('accueil')" id="nav-btn-accueil" class="nav-btn flex flex-col items-center gap-1.5 text-white scale-110 transition-all">
       <i class="fa-solid fa-house text-lg drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"></i>
       <span class="text-[9px] font-bold tracking-wide">Accueil</span>
@@ -573,9 +578,37 @@
     <div class="absolute top-safe left-0 w-full px-2 pt-3 flex gap-1 z-50" id="storyProgressContainer"></div>
     <div class="absolute top-safe left-0 w-full px-4 pt-8 flex items-center justify-between z-50 pointer-events-none">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-full border border-white/20 bg-brand text-white flex items-center justify-center font-bold shadow-lg">L</div>
+        
+        <!-- NOUVEAU LOGO CUSTOM SVG ICI -->
+        <div class="w-9 h-9 rounded-full border border-white/20 overflow-hidden flex items-center justify-center shadow-lg shrink-0 bg-[#020202]">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full object-cover">
+            <defs>
+              <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="#1a0b2e" />
+                <stop offset="100%" stop-color="#020202" />
+              </radialGradient>
+              <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#d8b4fe" />
+                <stop offset="50%" stop-color="#a855f7" />
+                <stop offset="100%" stop-color="#6b21a8" />
+              </linearGradient>
+              <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="15" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+            <rect width="512" height="512" fill="url(#bgGrad)" />
+            <g transform="translate(256, 265) scale(1.4)" filter="url(#glow)">
+              <path d="M 0 -110 L 31 -35 L 105 -35 L 45 12 L 68 85 L 0 40 L -68 85 L -45 12 L -105 -35 L -31 -35 Z" fill="url(#starGrad)" />
+            </g>
+          </svg>
+        </div>
+
         <div class="flex flex-col drop-shadow-md">
-          <span class="text-white font-bold text-sm leading-tight">LevelUp</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-white font-bold text-sm leading-tight">LevelUp Ecosystem</span>
+            <i class="fa-solid fa-circle-check text-brand text-[12px] drop-shadow-[0_0_5px_rgba(168,85,247,0.6)]"></i>
+          </div>
           <span id="storyTime" class="text-white/70 text-[10px] font-semibold">2h</span>
         </div>
       </div>
@@ -1228,12 +1261,68 @@
     };
 
     window.closeAppViewer = function() {
+        // Remettre en mode normal avant de fermer si on était en plein écran
+        if (window._isAppFs) {
+            window.toggleAppFullscreen();
+        }
+
         const appModal = document.getElementById('appViewerModal');
         appModal.classList.add('hidden'); appModal.classList.remove('flex');
         document.getElementById('appIframe').src = ''; 
 
         const mainUI = document.getElementById('mainInterface');
         mainUI.classList.remove('hidden'); mainUI.classList.add('flex');
+    };
+
+    // --- GESTION DU MODE PLEIN ÉCRAN POUR L'IFRAME ---
+    window._isAppFs = false;
+    window.toggleAppFullscreen = function() {
+        window._isAppFs = !window._isAppFs;
+        const nav = document.getElementById('mainBottomNav');
+        const header = document.getElementById('appViewerHeader');
+        const titleBox = document.getElementById('appViewerTitleBox');
+        const fsIcon = document.querySelector('#fsToggleBtn i');
+        const refreshBtn = document.getElementById('appRefreshBtn');
+        const closeBtn = document.getElementById('appCloseBtn');
+        const fsBtn = document.getElementById('fsToggleBtn');
+        
+        if(window._isAppFs) {
+            // 1. Cacher la nav du bas complètement sans casser son style
+            nav.classList.add('hidden');
+            
+            // 2. Rendre le header flottant et transparent (pointer-events-none laisse passer les clics vers l'iframe)
+            header.classList.remove('bg-[#050505]', 'border-b', 'border-white/5');
+            header.classList.add('absolute', 'top-0', 'left-0', 'bg-transparent', 'border-transparent', 'pointer-events-none');
+            
+            // 3. Masquer le titre et le bouton refresh
+            titleBox.classList.add('opacity-0');
+            refreshBtn.classList.add('hidden');
+            
+            // 4. Styliser les boutons restants (fermer et réduire) en mode pastille de verre
+            closeBtn.classList.add('pointer-events-auto', 'bg-black/50', 'backdrop-blur-md');
+            fsBtn.classList.add('pointer-events-auto', 'bg-black/50', 'backdrop-blur-md');
+            
+            // 5. Mettre l'icône de réduction
+            fsIcon.classList.replace('fa-expand', 'fa-compress');
+        } else {
+            // 1. Remettre la nav du bas
+            nav.classList.remove('hidden');
+            
+            // 2. Remettre le header classique
+            header.classList.remove('absolute', 'top-0', 'left-0', 'bg-transparent', 'border-transparent', 'pointer-events-none');
+            header.classList.add('bg-[#050505]', 'border-b', 'border-white/5');
+            
+            // 3. Remettre le titre et le refresh
+            titleBox.classList.remove('opacity-0');
+            refreshBtn.classList.remove('hidden');
+            
+            // 4. Retirer le style pastille
+            closeBtn.classList.remove('pointer-events-auto', 'bg-black/50', 'backdrop-blur-md');
+            fsBtn.classList.remove('pointer-events-auto', 'bg-black/50', 'backdrop-blur-md');
+            
+            // 5. Mettre l'icône d'agrandissement
+            fsIcon.classList.replace('fa-compress', 'fa-expand');
+        }
     };
 
     // --- LOGIQUE DE FILTRE POUR L'ONGLET ACTUS ---
@@ -1268,8 +1357,43 @@
     window._storySequences = { main: [], movies: [], anime: [] };
     window._currentSeqType = 'main';
     window._currentStoryIndex = 0;
+    window._seenStories = new Set(); // Pour mémoriser les stories déjà vues
     let storyTimeout = null;
     let storyProgressInterval = null;
+
+    // Fonction pour mettre à jour l'état visuel "Vu" des bulles
+    window.updateBubbleVisuals = function() {
+        if (window._storySequences.main) {
+            window._storySequences.main.forEach((s, index) => {
+                const ring = document.getElementById(`ring-main-${index}`);
+                if(ring) {
+                    if(window._seenStories.has(`main_${index}`)) {
+                        ring.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
+                    } else {
+                        ring.className = `w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${s.color} shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300`;
+                    }
+                }
+            });
+        }
+        
+        const ringMovies = document.getElementById('ring-movies');
+        if(ringMovies) {
+            if(window._seenStories.has('movies')) {
+                ringMovies.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
+            } else {
+                ringMovies.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300';
+            }
+        }
+        
+        const ringAnime = document.getElementById('ring-anime');
+        if(ringAnime) {
+            if(window._seenStories.has('anime')) {
+                ringAnime.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
+            } else {
+                ringAnime.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300';
+            }
+        }
+    };
 
     window.loadDynamicActus = async function() {
         const storyContainer = document.getElementById('storyBarContainer');
@@ -1300,10 +1424,10 @@
         
         window._storySequences.main = mainStories;
 
-        // Rendu HTML des bulles de Stories
+        // Rendu HTML des bulles de Stories (avec les nouveaux IDs pour les anneaux)
         let storyHtml = mainStories.map((s, index) => `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('main', ${index})">
-            <div class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${s.color} shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+            <div id="ring-main-${index}" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${s.color} shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300">
               <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative ${s.bg || ''} flex items-center justify-center">
                  ${s.bubbleImg 
                     ? `<img src="${s.bubbleImg}" class="w-full h-full object-cover group-hover:scale-110 transition-transform"><div class="absolute inset-0 bg-black/30 flex items-center justify-center"><i class="fa-solid ${s.icon} text-white text-sm drop-shadow-md"></i></div>` 
@@ -1317,7 +1441,7 @@
         // Bulle: Recommandations Films (TMDB)
         storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('movies', 0)">
-            <div class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)]">
+            <div id="ring-movies" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300">
               <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
                  <i class="fa-solid fa-film text-white text-xl group-hover:scale-110 transition-transform"></i>
               </div>
@@ -1328,7 +1452,7 @@
         // Bulle: Recommandations Anime (Jikan)
         storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('anime', 0)">
-            <div class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+            <div id="ring-anime" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
               <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
                  <i class="fa-solid fa-dragon text-white text-xl group-hover:scale-110 transition-transform"></i>
               </div>
@@ -1337,6 +1461,7 @@
           </div>`;
 
         storyContainer.innerHTML = storyHtml;
+        window.updateBubbleVisuals();
 
         // 1.5 CHARGEMENT ASYNCHRONE DES RECOMMANDATIONS (Algo intelligent)
         // Le seed permet de changer la page des tendances en fonction du jour de la semaine
@@ -1502,14 +1627,37 @@
     window.renderCurrentStory = function() {
         const stories = window._storySequences[window._currentSeqType];
         
-        // Sécurité : Fermer si on dépasse
+        // Sécurité : Fermer ou passer automatiquement à la séquence suivante !
         if(window._currentStoryIndex >= stories.length) {
+            const seqOrder = ['main', 'movies', 'anime'];
+            const currentIndex = seqOrder.indexOf(window._currentSeqType);
+            
+            // Si on n'est pas à la dernière catégorie, on passe à la suivante
+            if (currentIndex >= 0 && currentIndex < seqOrder.length - 1) {
+                const nextSeq = seqOrder[currentIndex + 1];
+                // On vérifie que la prochaine séquence a bien des éléments
+                if (window._storySequences[nextSeq] && window._storySequences[nextSeq].length > 0) {
+                    window._currentSeqType = nextSeq;
+                    window._currentStoryIndex = 0;
+                    window.renderCurrentStory();
+                    return;
+                }
+            }
+            
+            // Si on a tout fini, on ferme
             window.closeStory();
             return;
         }
+        
+        // Bloquer sous 0
         if(window._currentStoryIndex < 0) {
             window._currentStoryIndex = 0;
         }
+
+        // Marquer la story courante comme "VUE" et actualiser le menu
+        const seenKey = window._currentSeqType === 'main' ? `main_${window._currentStoryIndex}` : window._currentSeqType;
+        window._seenStories.add(seenKey);
+        window.updateBubbleVisuals();
 
         const story = stories[window._currentStoryIndex];
         
