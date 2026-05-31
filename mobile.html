@@ -187,8 +187,9 @@
         <div class="flex gap-2 overflow-x-auto hide-scrollbar px-4 py-3 mb-2 sticky top-0 bg-[#050505]/95 backdrop-blur-md z-30 border-b border-white/5">
           <button onclick="window.filterActus('tout')" class="actu-filter-btn active px-4 py-1.5 bg-brand text-white rounded-full text-xs font-bold transition-colors shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.3)]" data-filter="tout">Tout</button>
           <button onclick="window.filterActus('gaming')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="gaming">Gaming</button>
+          <button onclick="window.filterActus('movies')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="movies">Cinéma</button>
           <button onclick="window.filterActus('otaku')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="otaku">Otaku</button>
-          <button onclick="window.filterActus('tools')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="tools">LevelTools</button>
+          <button onclick="window.filterActus('tools')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="tools">Tech & IA</button>
         </div>
 
         <!-- Feed Bento Grid Dynamique -->
@@ -1694,55 +1695,114 @@
 
         feedContainer.innerHTML = `<div class="col-span-2 py-10 flex justify-center"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div></div>`;
         
-        // --- NOUVEAU FLUX D'ACTUALITÉS EN TEMPS RÉEL (SANS LIKE, AVEC PARTAGE/SAUVEGARDE/SIGNALEMENT) ---
+        // --- NOUVEAU FLUX D'ACTUALITÉS MULTI-SOURCES (MIXÉ, TEMPS RÉEL ET ANCIEN) ---
+        let allNews = [];
+
+        // Base de données "Evergreen" (Contenus intemporels de secours au cas où les API externes bloquent)
+        const evergreenData = [
+            { category: 'gaming', label: 'Gaming', title: "L'évolution des moteurs graphiques : Vers un photoréalisme total ?", desc: "Analyse des dernières technologies de rendu en temps réel qui bouleversent l'industrie du jeu vidéo.", link: "https://www.jeuxvideo.com", img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop", date: new Date(Date.now() - 86400000 * 2).toISOString() },
+            { category: 'tools', label: 'Tech & IA', title: "Les nouvelles intelligences artificielles génératives", desc: "Comment les IA redéfinissent la création de contenu, le code et l'art numérique au quotidien.", link: "https://www.journaldugeek.com", img: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800&auto=format&fit=crop", date: new Date(Date.now() - 86400000 * 5).toISOString() },
+            { category: 'movies', label: 'Cinéma', title: "Les blockbusters les plus attendus de la fin d'année", desc: "Découvrez la liste des films qui vont exploser le box-office mondial dans les prochains mois.", link: "https://www.premiere.fr", img: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=800&auto=format&fit=crop", date: new Date(Date.now() - 86400000 * 12).toISOString() },
+            { category: 'otaku', label: 'Otaku', title: "Pourquoi l'animation japonaise domine le marché mondial", desc: "Retour sur l'expansion fulgurante des animes sur les plateformes de streaming mondiales.", link: "https://adala-news.fr", img: "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800&auto=format&fit=crop", date: new Date(Date.now() - 86400000 * 20).toISOString() }
+        ];
+
         try {
-            // Utilisation d'un flux d'actualités technologiques et geeks réel (converti en JSON)
-            const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.journaldugeek.com/feed/');
-            const feedData = await res.json();
-            
-            if(feedData && feedData.items) {
-                let htmlFeed = '';
-                feedData.items.slice(0, 10).forEach((item, index) => {
-                    // Création d'un ID unique sécurisé pour l'article
-                    const articleId = 'news_' + window.sHash(item.link || index.toString());
-                    
-                    // Si l'utilisateur a signalé cet article, on le saute (masquage effectif)
-                    if(window._hiddenArticles.has(articleId)) return;
+            // Liste des flux RSS ciblés pour chaque catégorie
+            const feedsToFetch = [
+                { url: 'https://www.journaldugeek.com/feed/', cat: 'tools', label: 'Tech & IA' },
+                { url: 'https://www.jeuxvideo.com/rss/rss.xml', cat: 'gaming', label: 'Gaming' },
+                { url: 'https://www.premiere.fr/rss/cinema', cat: 'movies', label: 'Cinéma' },
+                { url: 'https://www.manga-news.com/index.php/rss', cat: 'otaku', label: 'Otaku' }
+            ];
 
-                    // Nettoyage intelligent du contenu
-                    let imgSrc = item.thumbnail || item.enclosure?.link || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop';
-                    let cleanDesc = item.description.replace(/<[^>]*>?/gm, '').substring(0, 110) + '...'; // Retire le HTML
-                    
-                    let dateObj = new Date(item.pubDate);
-                    let dateStr = dateObj.toLocaleDateString('fr-FR', {day:'numeric', month:'short'}) + ' à ' + dateObj.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+            // Récupération simultanée de tous les flux
+            const fetchPromises = feedsToFetch.map(feed => 
+                fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.items) {
+                        data.items.forEach(item => {
+                            allNews.push({
+                                title: item.title,
+                                desc: item.description,
+                                link: item.link,
+                                img: item.thumbnail || item.enclosure?.link || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop',
+                                date: item.pubDate,
+                                category: feed.cat,
+                                label: feed.label
+                            });
+                        });
+                    }
+                }).catch(e => console.warn("Impossible de charger le flux:", feed.cat))
+            );
 
-                    htmlFeed += `
-                    <div class="actu-card col-span-2 glass-effect rounded-[24px] overflow-hidden border border-white/5 relative bg-[#0a0a0c] transition-opacity duration-300" id="article-${articleId}" data-category="tout">
-                        <a href="${item.link}" target="_blank" class="block h-44 w-full relative overflow-hidden group">
-                             <img src="${imgSrc}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                             <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent opacity-90"></div>
-                             <div class="absolute bottom-3 left-4 px-2 py-1 bg-black/60 backdrop-blur border border-white/10 text-white text-[9px] font-bold uppercase rounded-md shadow-lg flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-brand"></span> Temps réel</div>
-                        </a>
-                        <div class="p-4 pt-3">
-                            <h3 class="text-[15px] font-display font-bold text-white mb-2 leading-tight line-clamp-2"><a href="${item.link}" target="_blank">${item.title}</a></h3>
-                            <p class="text-[11px] text-slate-400 line-clamp-2 mb-4 leading-relaxed">${cleanDesc}</p>
-                            
-                            <div class="flex items-center justify-between border-t border-white/10 pt-3">
-                                <span class="text-[10px] text-slate-500 font-medium"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</span>
-                                <div class="flex items-center gap-4">
-                                    <button onclick="window.saveArticle('${articleId}')" class="text-slate-400 hover:text-brand transition-colors active:scale-90" title="Enregistrer"><i class="${window._savedArticles.has(articleId) ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark text-sm" id="bookmark-${articleId}"></i></button>
-                                    <button onclick="window.shareArticle(decodeURIComponent('${encodeURIComponent(item.title)}'), '${item.link}')" class="text-slate-400 hover:text-blue-400 transition-colors active:scale-90" title="Partager"><i class="fa-solid fa-share-nodes text-sm"></i></button>
-                                    <button onclick="window.openReportModal('${articleId}')" class="text-slate-400 hover:text-red-400 transition-colors active:scale-90" title="Signaler"><i class="fa-solid fa-flag text-sm"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                });
-                feedContainer.innerHTML = htmlFeed;
-            }
+            await Promise.allSettled(fetchPromises);
+
         } catch (err) {
-            console.warn("Erreur chargement news RSS en temps réel:", err);
-            feedContainer.innerHTML = `<div class="col-span-2 text-center text-slate-500 text-sm py-10">Impossible de charger les actualités mondiales.</div>`;
+            console.warn("Erreur réseau globale RSS");
+        }
+
+        // Si on a moins de 15 articles (problème réseau), on injecte notre base intemporelle
+        if (allNews.length < 15) {
+            allNews = [...allNews, ...evergreenData];
+        }
+
+        // L'algorithme de mélange : On "bourre" d'infos en mixant le récent et l'ancien aléatoirement
+        allNews = allNews.sort(() => Math.random() - 0.5);
+
+        // Génération de l'affichage
+        let htmlFeed = '';
+        allNews.forEach((item, index) => {
+            const articleId = 'news_' + window.sHash(item.link || index.toString());
+            
+            // Masquage si signalé
+            if(window._hiddenArticles.has(articleId)) return;
+
+            // Nettoyage du texte (retire les balises HTML indésirables du RSS)
+            let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim().substring(0, 110) + '...';
+            
+            let dateObj = new Date(item.date);
+            let diffDays = Math.floor((new Date() - dateObj) / (1000 * 60 * 60 * 24));
+            let dateStr = diffDays === 0 ? "Aujourd'hui" : (diffDays === 1 ? "Hier" : `Il y a ${diffDays} j`);
+            if (isNaN(diffDays)) dateStr = "Récemment";
+
+            // Définition de la couleur de la catégorie
+            let catColor = "bg-brand";
+            if (item.category === 'gaming') catColor = "bg-green-500";
+            if (item.category === 'movies') catColor = "bg-red-500";
+            if (item.category === 'otaku') catColor = "bg-blue-500";
+
+            htmlFeed += `
+            <div class="actu-card col-span-2 glass-effect rounded-[24px] overflow-hidden border border-white/5 relative bg-[#0a0a0c] transition-all duration-300 shadow-lg" id="article-${articleId}" data-category="${item.category}">
+                <a href="${item.link}" target="_blank" class="block h-48 w-full relative overflow-hidden group">
+                     <img src="${item.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop'">
+                     <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent opacity-90"></div>
+                     <div class="absolute bottom-3 left-4 px-2 py-1 bg-black/70 backdrop-blur border border-white/10 text-white text-[9px] font-bold uppercase rounded-md shadow-lg flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full ${catColor}"></span> ${item.label}
+                     </div>
+                </a>
+                <div class="p-5 pt-4">
+                    <h3 class="text-[16px] font-display font-bold text-white mb-2 leading-tight line-clamp-2"><a href="${item.link}" target="_blank">${item.title}</a></h3>
+                    <p class="text-[12px] text-slate-400 line-clamp-2 mb-4 leading-relaxed">${cleanDesc}</p>
+                    
+                    <div class="flex items-center justify-between border-t border-white/10 pt-4">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</span>
+                        <div class="flex items-center gap-5">
+                            <button onclick="window.saveArticle('${articleId}')" class="text-slate-400 hover:text-brand transition-colors active:scale-90" title="Enregistrer"><i class="${window._savedArticles.has(articleId) ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark text-[15px]" id="bookmark-${articleId}"></i></button>
+                            <button onclick="window.shareArticle(decodeURIComponent('${encodeURIComponent(item.title)}'), '${item.link}')" class="text-slate-400 hover:text-blue-400 transition-colors active:scale-90" title="Partager"><i class="fa-solid fa-share-nodes text-[15px]"></i></button>
+                            <button onclick="window.openReportModal('${articleId}')" class="text-slate-400 hover:text-red-400 transition-colors active:scale-90" title="Signaler"><i class="fa-solid fa-flag text-[15px]"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        
+        feedContainer.innerHTML = htmlFeed;
+
+        // Réappliquer le filtre actuellement sélectionné (important lors d'un rafraîchissement)
+        const activeFilterBtn = document.querySelector('.actu-filter-btn.active');
+        if (activeFilterBtn) {
+            window.filterActus(activeFilterBtn.dataset.filter);
         }
     };
 
