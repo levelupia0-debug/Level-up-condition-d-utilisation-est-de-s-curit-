@@ -1,6 +1,6 @@
 const Parser = require('rss-parser');
 
-//const parser = new Parser({
+const parser = new Parser({
     customFields: {
         item: [
             ['media:content', 'media'],
@@ -10,7 +10,7 @@ const Parser = require('rss-parser');
     }
 });
 
-//const SOURCES = {
+const SOURCES = {
     gaming: [
         { name: 'JeuxVideo.com', url: 'https://www.jeuxvideo.com/rss/rss.xml' },
         { name: 'IGN France', url: 'https://fr.ign.com/feed.xml' },
@@ -51,7 +51,7 @@ const Parser = require('rss-parser');
     ]
 };
 
-//async function fetchCategoryNews(categoryKey) {
+async function fetchCategoryNews(categoryKey) {
     const sources = SOURCES[categoryKey];
     if (!sources) return [];
 
@@ -95,13 +95,22 @@ const Parser = require('rss-parser');
     return allArticles.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 300);
 }
 
-//module.exports = async (req, res) => {
-    // IMPORTANT : Active le cache Vercel pendant 15 minutes (900 secondes) !
-    // Cela protège tes sources RSS et rend ton app ultra rapide.
-    res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate');
+// Nouvel export standard Vercel avec gestion propre du CORS
+export default async function handler(req, res) {
+    // Configuration des headers CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Intercepter la requête de pré-vérification (Preflight)
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
 
-    // On récupère la catégorie demandée via /api/news?category=gaming (ou 'all' par défaut)
+    // Cache Vercel pendant 15 minutes (900 secondes) pour soulager les flux RSS et accélérer l'app
+    res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate');
+
+    // Récupération de la catégorie (ou 'all' par défaut)
     const category = req.query.category || 'all';
 
     try {
@@ -126,4 +135,4 @@ const Parser = require('rss-parser');
         console.error("Erreur API News:", error);
         return res.status(500).json({ error: "Erreur serveur lors de la génération des actualités." });
     }
-};
+}
