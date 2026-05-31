@@ -189,11 +189,12 @@
           <button onclick="window.filterActus('gaming')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="gaming">Gaming</button>
           <button onclick="window.filterActus('movies')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="movies">Cinéma</button>
           <button onclick="window.filterActus('otaku')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="otaku">Otaku</button>
-          <button onclick="window.filterActus('tools')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="tools">Tech & IA</button>
+          <!-- Bouton renommé Tool -->
+          <button onclick="window.filterActus('tool')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="tool">Tool</button>
         </div>
 
-        <!-- Feed Bento Grid Dynamique -->
-        <div class="grid grid-cols-2 gap-3 px-4" id="actusFeed">
+        <!-- Feed Style Instagram / Facebook (flex-col sans px-4 pour que l'image prenne toute la largeur) -->
+        <div class="flex flex-col w-full" id="actusFeed">
             <!-- Les actus seront générées ici par JS -->
         </div>
       </section>
@@ -1693,13 +1694,15 @@
                 }
             }).catch(e => console.warn('Jikan Error', e));
 
-        feedContainer.innerHTML = `<div class="col-span-2 py-10 flex justify-center"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div></div>`;
+        feedContainer.innerHTML = `<div class="py-10 flex justify-center w-full"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div></div>`;
         
         // --- NOUVEAU FLUX D'ACTUALITÉS DEPUIS LE SERVEUR VERCEL ---
         let allNews = [];
 
         try {
+            // URL directe vers ton serveur Vercel
             const API_URL = 'https://levelup-ecosystem.com/api/news?category=all';
+            
             console.log("📡 [Actus] Tentative de récupération depuis le serveur : " + API_URL);
             
             const res = await fetch(API_URL);
@@ -1712,15 +1715,39 @@
             
             if (data && Array.isArray(data)) {
                 console.log(`✅ [Actus] Succès ! ${data.length} articles récupérés.`);
-                allNews = data.map(item => ({
-                    title: item.title,
-                    desc: item.desc || item.description || '',
-                    link: item.link,
-                    img: item.img || item.thumbnail || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop',
-                    date: item.date || item.pubDate || new Date().toISOString(),
-                    category: item.category || 'tout',
-                    label: item.label || 'Info'
-                }));
+                allNews = data.map(item => {
+                    let rawImg = item.img || item.thumbnail || '';
+                    
+                    // CORRECTION MIXED CONTENT : Forcer le passage de HTTP à HTTPS
+                    if (rawImg && rawImg.startsWith('http://')) {
+                        rawImg = rawImg.replace('http://', 'https://');
+                    }
+
+                    const categoryLower = (item.category || '').toLowerCase();
+                    
+                    // CORRECTION IMAGES MANQUANTES : Images de secours adaptées à la catégorie
+                    if (!rawImg || rawImg.trim() === '') {
+                        if (categoryLower.includes('otaku') || categoryLower.includes('anime')) {
+                            rawImg = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800&auto=format&fit=crop';
+                        } else if (categoryLower.includes('gaming') || categoryLower.includes('jeu')) {
+                            rawImg = 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=800&auto=format&fit=crop';
+                        } else if (categoryLower.includes('movie') || categoryLower.includes('film')) {
+                            rawImg = 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=800&auto=format&fit=crop';
+                        } else {
+                            rawImg = 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop'; // Defaut tech/info
+                        }
+                    }
+
+                    return {
+                        title: item.title,
+                        desc: item.desc || item.description || '',
+                        link: item.link,
+                        img: rawImg,
+                        date: item.date || item.pubDate || new Date().toISOString(),
+                        category: item.category || 'tout',
+                        label: item.label || item.category || 'Info'
+                    };
+                });
             } else {
                 console.warn("⚠️ [Actus] Le serveur a répondu mais le format n'est pas un tableau :", data);
                 window.toast_("Format des actualités non reconnu.", "warn");
@@ -1731,15 +1758,15 @@
             window.toast_("Impossible de charger les actus du serveur.", "err");
         }
 
-        // L'algorithme de mélange : On "bourre" d'infos en mixant aléatoirement (optionnel, tu peux le retirer si ton API trie déjà)
+        // L'algorithme de mélange : On "bourre" d'infos en mixant aléatoirement
         if (allNews.length > 0) {
             allNews = allNews.sort(() => Math.random() - 0.5);
         } else {
-            feedContainer.innerHTML = `<div class="col-span-2 py-10 text-center text-slate-500 text-sm">Aucune actualité disponible pour le moment.</div>`;
+            feedContainer.innerHTML = `<div class="py-10 text-center text-slate-500 text-sm w-full">Aucune actualité disponible pour le moment.</div>`;
             return;
         }
 
-        // Génération de l'affichage
+        // Génération de l'affichage (Nouveau design Instagram / Facebook)
         let htmlFeed = '';
         allNews.forEach((item, index) => {
             const articleId = 'news_' + window.sHash(item.link || index.toString());
@@ -1748,40 +1775,59 @@
             if(window._hiddenArticles.has(articleId)) return;
 
             // Nettoyage du texte (retire les balises HTML indésirables du RSS)
-            let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim().substring(0, 110) + '...';
+            let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim().substring(0, 150) + '...';
             
             let dateObj = new Date(item.date);
             let diffDays = Math.floor((new Date() - dateObj) / (1000 * 60 * 60 * 24));
             let dateStr = diffDays === 0 ? "Aujourd'hui" : (diffDays === 1 ? "Hier" : `Il y a ${diffDays} j`);
             if (isNaN(diffDays)) dateStr = "Récemment";
 
-            // Définition de la couleur de la catégorie
+            // Définition du style du header du post (Avatar + Icone)
             let catColor = "bg-brand";
-            if (item.category === 'gaming') catColor = "bg-green-500";
-            if (item.category === 'movies') catColor = "bg-red-500";
-            if (item.category === 'otaku') catColor = "bg-blue-500";
+            let catIcon = '<i class="fa-solid fa-newspaper text-xs"></i>';
+            let catDisplay = "tool"; // par defaut
+            
+            if (item.category === 'gaming') { catColor = "bg-green-500"; catIcon = '<i class="fa-solid fa-gamepad text-xs"></i>'; catDisplay = 'gaming'; }
+            if (item.category === 'movies') { catColor = "bg-red-500"; catIcon = '<i class="fa-solid fa-film text-xs"></i>'; catDisplay = 'movies'; }
+            if (item.category === 'otaku') { catColor = "bg-blue-500"; catIcon = '<i class="fa-solid fa-dragon text-xs"></i>'; catDisplay = 'otaku'; }
+            if (item.category === 'tool' || item.category === 'tools') { catColor = "bg-yellow-500"; catIcon = '<i class="fa-solid fa-wrench text-xs"></i>'; catDisplay = 'tool'; }
 
+            // LE NOUVEAU DESIGN : Pleine largeur, style post social media
             htmlFeed += `
-            <div class="actu-card col-span-2 glass-effect rounded-[24px] overflow-hidden border border-white/5 relative bg-[#0a0a0c] transition-all duration-300 shadow-lg" id="article-${articleId}" data-category="${item.category}">
-                <a href="${item.link}" target="_blank" class="block h-48 w-full relative overflow-hidden group">
-                     <img src="${item.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop'">
-                     <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent opacity-90"></div>
-                     <div class="absolute bottom-3 left-4 px-2 py-1 bg-black/70 backdrop-blur border border-white/10 text-white text-[9px] font-bold uppercase rounded-md shadow-lg flex items-center gap-1">
-                        <span class="w-2 h-2 rounded-full ${catColor}"></span> ${item.label}
-                     </div>
-                </a>
-                <div class="p-5 pt-4">
-                    <h3 class="text-[16px] font-display font-bold text-white mb-2 leading-tight line-clamp-2"><a href="${item.link}" target="_blank">${item.title}</a></h3>
-                    <p class="text-[12px] text-slate-400 line-clamp-2 mb-4 leading-relaxed">${cleanDesc}</p>
-                    
-                    <div class="flex items-center justify-between border-t border-white/10 pt-4">
-                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</span>
-                        <div class="flex items-center gap-5">
-                            <button onclick="window.saveArticle('${articleId}')" class="text-slate-400 hover:text-brand transition-colors active:scale-90" title="Enregistrer"><i class="${window._savedArticles.has(articleId) ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark text-[15px]" id="bookmark-${articleId}"></i></button>
-                            <button onclick="window.shareArticle(decodeURIComponent('${encodeURIComponent(item.title)}'), '${item.link}')" class="text-slate-400 hover:text-blue-400 transition-colors active:scale-90" title="Partager"><i class="fa-solid fa-share-nodes text-[15px]"></i></button>
-                            <button onclick="window.openReportModal('${articleId}')" class="text-slate-400 hover:text-red-400 transition-colors active:scale-90" title="Signaler"><i class="fa-solid fa-flag text-[15px]"></i></button>
+            <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-5 mb-2 transition-all duration-300 w-full" id="article-${articleId}" data-category="${catDisplay}">
+                
+                <!-- HEADER DU POST -->
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full ${catColor} flex items-center justify-center text-white shadow-lg">
+                            ${catIcon}
+                        </div>
+                        <div>
+                            <p class="text-[13px] font-bold text-white leading-none uppercase tracking-wide">${item.label}</p>
+                            <p class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</p>
                         </div>
                     </div>
+                    <button onclick="window.openReportModal('${articleId}')" class="text-slate-500 hover:text-white transition-colors"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
+
+                <!-- IMAGE CENTRALE (Format large) -->
+                <a href="${item.link}" target="_blank" class="block w-full bg-[#121214] relative">
+                     <img src="${item.img}" class="w-full max-h-[450px] object-cover" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop'">
+                </a>
+
+                <!-- BARRE D'ACTIONS -->
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center gap-5">
+                        <button onclick="window.toggleLikeActu('${articleId}')" class="text-white hover:text-red-500 transition-colors text-2xl active:scale-90 transform"><i class="fa-regular fa-heart" id="like-${articleId}"></i></button>
+                        <button onclick="window.shareArticle(decodeURIComponent('${encodeURIComponent(item.title)}'), '${item.link}')" class="text-white hover:text-blue-400 transition-colors text-[22px] active:scale-90 transform"><i class="fa-regular fa-paper-plane"></i></button>
+                    </div>
+                    <button onclick="window.saveArticle('${articleId}')" class="text-white hover:text-brand transition-colors text-2xl active:scale-90 transform"><i class="${window._savedArticles.has(articleId) ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark" id="bookmark-${articleId}"></i></button>
+                </div>
+
+                <!-- TEXTE ET TITRE -->
+                <div class="px-4">
+                    <h3 class="text-[15px] font-bold text-white mb-1 leading-tight"><a href="${item.link}" target="_blank">${item.title}</a></h3>
+                    <p class="text-[12px] text-slate-300 line-clamp-3 leading-relaxed">${cleanDesc}</p>
                 </div>
             </div>`;
         });
@@ -1795,10 +1841,24 @@
         }
     };
 
-    // --- FONCTIONNALITÉS SOCIALES DES ACTUALITÉS (SAUVEGARDE, PARTAGE, SIGNALEMENT) ---
+    // --- FONCTIONNALITÉS SOCIALES DES ACTUALITÉS (LIKE, SAUVEGARDE, PARTAGE, SIGNALEMENT) ---
     window._hiddenArticles = new Set();
     window._savedArticles = new Set();
     window._currentReportId = null;
+
+    window.toggleLikeActu = function(id) {
+        const icon = document.getElementById('like-'+id);
+        if(icon.classList.contains('fa-solid')) {
+            icon.classList.replace('fa-solid', 'fa-regular');
+            icon.classList.remove('text-red-500');
+        } else {
+            icon.classList.replace('fa-regular', 'fa-solid');
+            icon.classList.add('text-red-500');
+            // Petite animation de pop
+            icon.parentElement.style.transform = 'scale(1.3)';
+            setTimeout(() => icon.parentElement.style.transform = 'scale(1)', 150);
+        }
+    };
 
     window.saveArticle = function(id) {
         if(!window._user) { window.toast_('Connectez-vous pour enregistrer cet article.', 'warn'); return; }
@@ -1812,6 +1872,9 @@
             window._savedArticles.add(id);
             icon.classList.replace('fa-regular', 'fa-solid');
             icon.classList.add('text-brand');
+            // Petite animation
+            icon.parentElement.style.transform = 'scale(1.2)';
+            setTimeout(() => icon.parentElement.style.transform = 'scale(1)', 150);
             window.toast_('Article sauvegardé !', 'ok');
         }
     };
@@ -2179,7 +2242,21 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelMovie</h2><p class="text-xs text-slate-300/90">Vos films et séries préférés.</p></div>
-              <div class="w-10 h-10 shrink-0 rounded-full glass-effect flex items-center justify-center text-white"><i class="fa-solid fa-play"></i></div>
+              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
+                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="512" height="512" rx="100" fill="#030303"/>
+                  <defs>
+                    <filter id="blueGlow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="18" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+                  <g filter="url(#blueGlow)">
+                    <path d="M185 170V315C185 328.807 196.193 340 210 340H355" stroke="#3b82f6" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M235 210L325 255L235 300V210Z" fill="#3b82f6" stroke="#3b82f6" stroke-width="8" stroke-linejoin="round"/>
+                  </g>
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -2191,7 +2268,22 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelMusic</h2><p class="text-xs text-slate-300/90">Écoutez vos morceaux favoris.</p></div>
-              <div class="w-10 h-10 shrink-0 rounded-full glass-effect flex items-center justify-center text-white"><i class="fa-solid fa-music"></i></div>
+              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
+                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="512" height="512" rx="100" fill="#030303"/>
+                  <defs>
+                    <filter id="glowMusic" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="20" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+                  <g filter="url(#glowMusic)">
+                    <path d="M180 320V120L380 80V280" stroke="#3b82f6" stroke-width="35" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="140" cy="340" r="40" fill="#3b82f6" />
+                    <circle cx="340" cy="300" r="40" fill="#3b82f6" />
+                  </g>
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -2203,7 +2295,21 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelTool</h2><p class="text-xs text-slate-300/90">Utilitaires et outils pratiques.</p></div>
-              <div class="w-10 h-10 shrink-0 rounded-full glass-effect flex items-center justify-center text-white"><i class="fa-solid fa-wrench"></i></div>
+              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
+                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="512" height="512" rx="100" fill="#030303"/>
+                  <defs>
+                    <filter id="greenGlowTool" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="18" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+                  <g filter="url(#greenGlowTool)">
+                    <path d="M346 138c-28-28-70-32-102-12l-114 114c-12 3-26 0-36 10-16 16-16 42 0 58s42 16 58 0c10-10 13-24 10-36l114-114c20 32 16 74-12 102" stroke="#22c55e" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="370" cy="140" r="24" fill="#22c55e"/>
+                  </g>
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -2215,7 +2321,23 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelGame</h2><p class="text-xs text-slate-300/90">Jouez à des jeux exclusifs.</p></div>
-              <div class="w-10 h-10 shrink-0 rounded-full glass-effect flex items-center justify-center text-white"><i class="fa-solid fa-gamepad"></i></div>
+              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
+                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="512" height="512" rx="100" fill="#030303"/>
+                  <defs>
+                    <filter id="greenGlowGame" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="18" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+                  <g filter="url(#greenGlowGame)">
+                    <path d="M100 330C50 330 40 180 160 180H352C472 180 462 330 412 330C370 330 360 260 340 260H172C152 260 142 330 100 330Z" stroke="#22c55e" stroke-width="32" stroke-linejoin="round"/>
+                    <path d="M130 225V275M105 250H155" stroke="#22c55e" stroke-width="20" stroke-linecap="round"/>
+                    <circle cx="360" cy="260" r="16" fill="#22c55e"/>
+                    <circle cx="400" cy="220" r="16" fill="#22c55e"/>
+                  </g>
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -2227,7 +2349,25 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelOtaku</h2><p class="text-xs text-slate-300/90">L'univers anime et manga.</p></div>
-              <div class="w-10 h-10 shrink-0 rounded-full glass-effect flex items-center justify-center text-white"><i class="fa-solid fa-dragon"></i></div>
+              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
+                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="512" height="512" rx="100" fill="#030303"/>
+                  <defs>
+                    <filter id="pinkGlowOtaku" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="18" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+                  <g filter="url(#pinkGlowOtaku)">
+                    <path d="M90 200C160 170 352 170 422 200" stroke="#ec4899" stroke-width="32" stroke-linecap="round"/>
+                    <path d="M120 130C180 110 332 110 392 130" stroke="#ec4899" stroke-width="24" stroke-linecap="round"/>
+                    <path d="M160 120V380" stroke="#ec4899" stroke-width="32" stroke-linecap="round"/>
+                    <path d="M352 120V380" stroke="#ec4899" stroke-width="32" stroke-linecap="round"/>
+                    <path d="M256 180V300" stroke="#ec4899" stroke-width="24" stroke-linecap="round"/>
+                    <path d="M210 300H302V380H210Z" fill="#ec4899"/>
+                  </g>
+                </svg>
+              </div>
             </div>
           </div>`;
     };
