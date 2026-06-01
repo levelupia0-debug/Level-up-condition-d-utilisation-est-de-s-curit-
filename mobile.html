@@ -284,7 +284,7 @@
       </section>
 
       <!-- ONGLET DONA -->
-      <section id="tab-dona" class="app-section hidden absolute inset-0 w-full h-full bg-[#050505] z-10">
+      <section id="tab-dona" class="app-section hidden absolute inset-0 w-full h-full bg-[#050505] z-10 flex flex-col transition-all duration-300">
         <!-- Bouton Agrandir Dona -->
         <div class="absolute top-safe right-4 z-30 pointer-events-auto transition-opacity" id="donaTopControls">
           <button onclick="window.enterFullscreen('dona')" class="w-10 h-10 rounded-full bg-[#050505]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-colors mt-2">
@@ -292,18 +292,22 @@
           </button>
         </div>
 
-        <div id="donaLoader" class="absolute inset-0 flex items-center justify-center bg-transparent z-20 pointer-events-none">
-          <div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="flex-1 relative w-full h-full">
+          <div id="donaLoader" class="absolute inset-0 flex items-center justify-center bg-transparent z-20 pointer-events-none">
+            <div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          </div>
+          <iframe id="donaIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent opacity-0 transition-opacity duration-500" onload="this.classList.remove('opacity-0'); document.getElementById('donaLoader').classList.add('hidden')"></iframe>
         </div>
-        <iframe id="donaIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent opacity-0 transition-opacity duration-500" onload="this.classList.remove('opacity-0'); document.getElementById('donaLoader').classList.add('hidden')"></iframe>
       </section>
 
       <!-- ONGLET INFOS (IFRAME) -->
-      <section id="tab-infos" class="app-section hidden absolute inset-0 w-full h-full bg-[#050505] z-10">
-        <div id="infosLoader" class="absolute inset-0 flex items-center justify-center bg-transparent z-20 pointer-events-none">
-          <div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <section id="tab-infos" class="app-section hidden absolute inset-0 w-full h-full bg-[#050505] z-10 flex flex-col transition-all duration-300">
+        <div class="flex-1 relative w-full h-full">
+          <div id="infosLoader" class="absolute inset-0 flex items-center justify-center bg-transparent z-20 pointer-events-none">
+            <div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          </div>
+          <iframe id="infosIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent opacity-0 transition-opacity duration-500" onload="this.classList.remove('opacity-0'); document.getElementById('infosLoader').classList.add('hidden')"></iframe>
         </div>
-        <iframe id="infosIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent opacity-0 transition-opacity duration-500" onload="this.classList.remove('opacity-0'); document.getElementById('infosLoader').classList.add('hidden')"></iframe>
       </section>
 
       <!-- ONGLET COMPTE (PARAMÈTRES) -->
@@ -461,11 +465,11 @@
         </button>
       </div>
     </div>
-    <div class="flex-1 relative w-full bg-black">
+    <div id="appIframeWrap" class="flex-1 relative w-full bg-black transition-all duration-300">
       <div id="iframeLoader" class="absolute inset-0 flex items-center justify-center bg-transparent z-10 pointer-events-none">
         <div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
       </div>
-      <iframe id="appIframe" class="w-full h-full border-0 bg-transparent opacity-0 transition-opacity duration-500" allow="autoplay; fullscreen"></iframe>
+      <iframe id="appIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent opacity-0 transition-opacity duration-500" allow="autoplay; fullscreen"></iframe>
     </div>
   </div>
 
@@ -495,7 +499,7 @@
       <i class="fa-solid fa-fire text-lg"></i>
       <span class="text-[9px] font-semibold tracking-wide">Actus</span>
     </button>
-    <button onclick="window.openAppWithSSO('ia', 'dona.html')" id="nav-btn-dona" class="nav-btn flex flex-col items-center gap-1.5 transition-all">
+    <button onclick="window.openAppWithSSO('ia', 'https://vonemerci-hub.github.io/dona/')" id="nav-btn-dona" class="nav-btn flex flex-col items-center gap-1.5 transition-all">
       <i class="fa-solid fa-star text-xl text-brand drop-shadow-[0_0_10px_rgba(168,85,247,0.7)] transition-all"></i>
       <span class="text-[9px] font-bold text-brand tracking-wide">Dona</span>
     </button>
@@ -1457,19 +1461,26 @@
         hook.classList.remove('hidden');
         hook.classList.add('flex');
 
-        // On cache la barre du bas pour tous les pleins écrans
         const bottomNav = document.getElementById('mainBottomNav');
         bottomNav.classList.add('hidden');
         bottomNav.classList.remove('flex');
 
         if(target === 'viewer') {
-            // On cache totalement la barre du haut de l'iframe
             const header = document.getElementById('appViewerHeader');
             header.classList.add('hidden');
             header.classList.remove('flex');
+            
+            // Applique la sécurité (encoche + barre du bas)
+            const wrap = document.getElementById('appIframeWrap');
+            if(wrap) wrap.classList.add('safe-top', 'safe-bottom');
+
         } else if(target === 'dona') {
             const donaControls = document.getElementById('donaTopControls');
             if(donaControls) donaControls.classList.add('hidden');
+            
+            // Applique la sécurité (encoche + barre du bas)
+            const wrap = document.getElementById('tab-dona');
+            if(wrap) wrap.classList.add('safe-top', 'safe-bottom');
         }
     };
 
@@ -1480,22 +1491,30 @@
         hook.classList.remove('flex');
         
         // Cache le menu du Hook
-        document.getElementById('fsHookMenu').classList.add('hidden');
-        document.getElementById('fsHookMenu').classList.remove('flex');
+        const menu = document.getElementById('fsHookMenu');
+        menu.classList.add('hidden');
+        menu.classList.remove('flex');
 
-        // On réaffiche la barre du bas
         const bottomNav = document.getElementById('mainBottomNav');
         bottomNav.classList.remove('hidden');
         bottomNav.classList.add('flex');
 
         if(target === 'viewer') {
-            // On réaffiche la barre du haut de l'iframe
             const header = document.getElementById('appViewerHeader');
             header.classList.remove('hidden');
             header.classList.add('flex');
+            
+            // Retire la sécurité (La barre de nav et le header reprennent le relais)
+            const wrap = document.getElementById('appIframeWrap');
+            if(wrap) wrap.classList.remove('safe-top', 'safe-bottom');
+
         } else if(target === 'dona') {
             const donaControls = document.getElementById('donaTopControls');
             if(donaControls) donaControls.classList.remove('hidden');
+            
+            // Retire la sécurité
+            const wrap = document.getElementById('tab-dona');
+            if(wrap) wrap.classList.remove('safe-top', 'safe-bottom');
         }
         window._currentFsTarget = null;
     };
@@ -2572,7 +2591,7 @@
     const renderMobileCards = () => {
         const container = document.getElementById('tab-accueil');
         container.innerHTML = `
-          <div onclick="window.openAppWithSSO('movie', 'movie.html')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
+          <div onclick="window.openAppWithSSO('movie', 'https://vonemerci-hub.github.io/levelup-service-1/')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
             <img src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
             <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent z-0"></div>
             <div class="relative z-10 p-4 flex justify-between items-start w-full">
@@ -2586,7 +2605,7 @@
             </div>
           </div>
 
-          <div onclick="window.openAppWithSSO('music', 'music.html')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
+          <div onclick="window.openAppWithSSO('music', 'https://vonemerci-hub.github.io/levelmusicw/')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
             <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
             <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent z-0"></div>
             <div class="relative z-10 p-4 flex justify-between items-start w-full">
@@ -2600,7 +2619,7 @@
             </div>
           </div>
 
-          <div onclick="window.openAppWithSSO('tool', 'tool.html')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
+          <div onclick="window.openAppWithSSO('tool', 'https://vonemerci-hub.github.io/levmarco/')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
             <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
             <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent z-0"></div>
             <div class="relative z-10 p-4 flex justify-between items-start w-full">
@@ -2628,7 +2647,7 @@
             </div>
           </div>
 
-          <div onclick="window.openAppWithSSO('otaku', 'anime.html')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
+          <div onclick="window.openAppWithSSO('otaku', 'https://vonemerci-hub.github.io/levelanime/')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
             <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
             <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent z-0"></div>
             <div class="relative z-10 p-4 flex justify-between items-start w-full">
