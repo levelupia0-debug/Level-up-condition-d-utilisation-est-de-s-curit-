@@ -1,13 +1,13 @@
-const CACHE_NAME = 'levelup-cache-v1';
+const CACHE_NAME = 'levelup-cache-v2'; // On passe en V2 pour forcer la maj
 
-// Fichiers à mettre en cache pour un lancement ultra-rapide
+// Fichiers à mettre en cache
 const ASSETS_TO_CACHE = [
+  '/mobile',
   '/mobile.html',
   '/manifest-mobile.json',
   '/icon.svg'
 ];
 
-// 1. Installation : On met en cache les fichiers de base
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -18,7 +18,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 2. Activation : On nettoie les vieux caches s'il y a eu une mise à jour
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -35,13 +34,11 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. Interception (Fetch) : Stratégie "Network First"
-// On essaie de récupérer la donnée sur internet pour avoir les actus fraîches,
-// et si pas de réseau (mode hors-ligne), on renvoie ce qu'il y a dans le cache.
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request).catch(() => {
-      return caches.match(event.request);
+      // L'option ignoreSearch est vitale pour matcher "/mobile?pwa=1" avec le "/mobile" en cache
+      return caches.match(event.request, { ignoreSearch: true });
     })
   );
 });
