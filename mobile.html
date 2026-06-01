@@ -132,6 +132,13 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+
+    /* Custom Loader (3 boules) */
+    .level-loader { display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .level-loader .dot { width: 10px; height: 10px; background-color: theme('colors.brand'); border-radius: 50%; box-shadow: 0 0 10px rgba(168,85,247,0.6); animation: bounceDot 0.6s infinite alternate; }
+    .level-loader .dot:nth-child(2) { animation-delay: 0.2s; }
+    .level-loader .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounceDot { 0% { transform: translateY(0) scale(1); opacity: 0.5; } 100% { transform: translateY(-8px) scale(1.2); opacity: 1; } }
   </style>
 
   <!-- SCRIPT DE RESTRICTION PWA & MOBILE -->
@@ -242,7 +249,7 @@
         <div id="storyBarContainer" class="flex gap-4 overflow-x-auto hide-scrollbar px-4 py-3 mb-2">
           <!-- Les stories seront générées ici par JS -->
           <div class="flex items-center justify-center w-full py-2">
-             <div class="w-5 h-5 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
+             <div class="level-loader scale-75"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
           </div>
         </div>
 
@@ -263,19 +270,19 @@
       <!-- ONGLET DONA -->
       <section id="tab-dona" class="app-section hidden absolute inset-0 w-full h-full bg-[#050505] z-10">
         <div id="donaLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
-          <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
-          <p class="text-[10px] text-slate-500 mt-4 font-bold uppercase tracking-widest">Connexion à Dona...</p>
+          <div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <p class="text-[10px] text-slate-500 mt-6 font-bold uppercase tracking-widest">Connexion à Dona...</p>
         </div>
-        <iframe id="donaIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent" onload="document.getElementById('donaLoader').classList.add('hidden')"></iframe>
+        <iframe id="donaIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent opacity-0 transition-opacity duration-500" onload="this.classList.remove('opacity-0'); document.getElementById('donaLoader').classList.add('hidden')"></iframe>
       </section>
 
       <!-- ONGLET INFOS (IFRAME) -->
       <section id="tab-infos" class="app-section hidden absolute inset-0 w-full h-full bg-[#050505] z-10">
         <div id="infosLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-20">
-          <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
-          <p class="text-[10px] text-slate-500 mt-4 font-bold uppercase tracking-widest">Connexion aux Infos...</p>
+          <div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <p class="text-[10px] text-slate-500 mt-6 font-bold uppercase tracking-widest">Connexion aux Infos...</p>
         </div>
-        <iframe id="infosIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent" onload="document.getElementById('infosLoader').classList.add('hidden')"></iframe>
+        <iframe id="infosIframe" class="absolute inset-0 w-full h-full border-0 bg-transparent opacity-0 transition-opacity duration-500" onload="this.classList.remove('opacity-0'); document.getElementById('infosLoader').classList.add('hidden')"></iframe>
       </section>
 
       <!-- ONGLET COMPTE (PARAMÈTRES) -->
@@ -435,10 +442,10 @@
     </div>
     <div class="flex-1 relative w-full bg-black">
       <div id="iframeLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-10">
-        <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
-        <p class="text-[10px] text-slate-500 mt-4 font-bold uppercase tracking-widest">Génération SSO...</p>
+        <div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <p class="text-[10px] text-slate-500 mt-6 font-bold uppercase tracking-widest">Génération SSO...</p>
       </div>
-      <iframe id="appIframe" class="w-full h-full border-0 bg-transparent" allow="autoplay; fullscreen"></iframe>
+      <iframe id="appIframe" class="w-full h-full border-0 bg-transparent opacity-0 transition-opacity duration-500" allow="autoplay; fullscreen"></iframe>
     </div>
   </div>
 
@@ -671,8 +678,8 @@
     </div>
     <div class="flex-1 w-full flex items-center justify-center p-4">
       <div class="w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-[0_0_40px_rgba(220,38,38,0.3)] border border-white/10 relative">
-        <div class="absolute inset-0 flex items-center justify-center z-0"><div class="w-8 h-8 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div></div>
-        <iframe id="trailerIframe" class="w-full h-full relative z-10" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        <div class="absolute inset-0 flex items-center justify-center z-0"><div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+        <iframe id="trailerIframe" class="w-full h-full relative z-10 opacity-0 transition-opacity duration-500" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen onload="this.classList.remove('opacity-0')"></iframe>
       </div>
     </div>
   </div>
@@ -1358,8 +1365,12 @@
         const iframe = document.getElementById('appIframe');
         const loader = document.getElementById('iframeLoader');
         loader.classList.remove('hidden');
+        iframe.classList.add('opacity-0');
         iframe.src = url;
-        iframe.onload = () => loader.classList.add('hidden');
+        iframe.onload = () => {
+            loader.classList.add('hidden');
+            iframe.classList.remove('opacity-0');
+        };
     };
 
     window.closeAppViewer = function() {
@@ -1764,7 +1775,7 @@
                 }
             }).catch(e => console.warn('Jikan Error', e));
 
-        feedContainer.innerHTML = `<div class="py-10 flex justify-center w-full"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div></div>`;
+        feedContainer.innerHTML = `<div class="py-10 flex justify-center w-full"><div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
         
         // --- NOUVEAU FLUX D'ACTUALITÉS DEPUIS LE SERVEUR VERCEL ---
         let allNews = [];
@@ -1950,7 +1961,7 @@
     };
 
     window.toggleLikeActu = function(id) {
-        if(!window._user) { window.toast_('Connectez-vous pour liker.', 'warn'); return; }
+        if(!window._user) { window.openLoginSheet(); return; }
         const icon = document.getElementById('like-'+id);
         if(window._likedArticles.has(id)) {
             window._likedArticles.delete(id);
@@ -1968,7 +1979,7 @@
     };
 
     window.saveArticle = function(id) {
-        if(!window._user) { window.toast_('Connectez-vous pour enregistrer cet article.', 'warn'); return; }
+        if(!window._user) { window.openLoginSheet(); return; }
         const icon = document.getElementById('bookmark-'+id);
         if(window._savedArticles.has(id)) {
             window._savedArticles.delete(id);
@@ -2174,7 +2185,7 @@
         if(!story) return;
 
         if(!window._user) { 
-            window.toast_('Vous devez être connecté pour liker !', 'warn'); 
+            window.openLoginSheet(); 
             return; 
         }
 
