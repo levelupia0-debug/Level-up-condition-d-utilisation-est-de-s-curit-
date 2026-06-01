@@ -89,9 +89,9 @@
     }
 
     /* Ajustement précis de la zone de sécurité (Notch & Home Indicator iOS) */
-    .safe-top { padding-top: max(1rem, env(safe-area-inset-top)) !important; }
-    .safe-bottom { padding-bottom: max(1.2rem, calc(env(safe-area-inset-bottom) + 0.4rem)) !important; }
-    .top-safe { top: max(0.5rem, env(safe-area-inset-top)) !important; }
+    .safe-top { padding-top: max(1.5rem, env(safe-area-inset-top)) !important; }
+    .safe-bottom { padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 0.5rem)) !important; }
+    .top-safe { top: max(1.5rem, env(safe-area-inset-top)) !important; }
 
     .tab-enter { animation: tabFadeIn 0.3s ease-out forwards; }
     @keyframes tabFadeIn {
@@ -139,6 +139,9 @@
     .level-loader .dot:nth-child(2) { animation-delay: 0.2s; }
     .level-loader .dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes bounceDot { 0% { transform: translateY(0) scale(1); opacity: 0.5; } 100% { transform: translateY(-8px) scale(1.2); opacity: 1; } }
+
+    /* Animation fluide style iOS pour le bouton PiP */
+    .ios-spring { transition-timing-function: cubic-bezier(0.3, 0.8, 0.2, 1.2); }
   </style>
 
   <!-- SCRIPT DE RESTRICTION PWA & MOBILE -->
@@ -292,7 +295,7 @@
           </button>
         </div>
 
-        <div class="flex-1 relative w-full h-full">
+        <div class="flex-1 relative w-full">
           <div id="donaLoader" class="absolute inset-0 flex items-center justify-center bg-transparent z-20 pointer-events-none">
             <div class="level-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
           </div>
@@ -484,8 +487,12 @@
             <i class="fa-solid fa-rotate-right text-blue-400 w-4"></i> Rafraîchir
         </button>
     </div>
-    <button onclick="window.toggleFsMenu()" class="w-10 h-14 bg-[#121214]/90 backdrop-blur-xl border border-white/20 border-r-0 rounded-l-2xl flex flex-col items-center justify-center text-white shadow-[-5px_0_20px_rgba(0,0,0,0.7)] pointer-events-auto active:scale-95 transition-transform">
-        <i class="fa-solid fa-bars text-sm opacity-80"></i>
+    
+    <!-- BOUTON PiP iOS ISOLÉ (Design personnalisé) -->
+    <button onclick="window.toggleFsMenu()" class="w-8 h-20 bg-black/60 backdrop-blur-xl border border-r-0 border-white/20 rounded-l-xl flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(0,0,0,0.2)] pointer-events-auto hover:bg-black/80 group cursor-pointer active:scale-95 ios-spring">
+        <svg class="w-5 h-5 text-white pr-0.5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path>
+        </svg>
     </button>
   </div>
 
@@ -499,7 +506,7 @@
       <i class="fa-solid fa-fire text-lg"></i>
       <span class="text-[9px] font-semibold tracking-wide">Actus</span>
     </button>
-    <button onclick="window.openAppWithSSO('ia', 'https://vonemerci-hub.github.io/dona/')" id="nav-btn-dona" class="nav-btn flex flex-col items-center gap-1.5 transition-all">
+    <button onclick="window.openAppWithSSO('ia', 'dona.html')" id="nav-btn-dona" class="nav-btn flex flex-col items-center gap-1.5 transition-all">
       <i class="fa-solid fa-star text-xl text-brand drop-shadow-[0_0_10px_rgba(168,85,247,0.7)] transition-all"></i>
       <span class="text-[9px] font-bold text-brand tracking-wide">Dona</span>
     </button>
@@ -1470,15 +1477,15 @@
             header.classList.add('hidden');
             header.classList.remove('flex');
             
-            // Applique la sécurité (encoche + barre du bas)
-            const wrap = document.getElementById('appIframeWrap');
+            // On applique la marge de sécurité sur la modale entière
+            const wrap = document.getElementById('appViewerModal');
             if(wrap) wrap.classList.add('safe-top', 'safe-bottom');
 
         } else if(target === 'dona') {
             const donaControls = document.getElementById('donaTopControls');
             if(donaControls) donaControls.classList.add('hidden');
             
-            // Applique la sécurité (encoche + barre du bas)
+            // On applique la marge de sécurité sur l'onglet
             const wrap = document.getElementById('tab-dona');
             if(wrap) wrap.classList.add('safe-top', 'safe-bottom');
         }
@@ -1504,15 +1511,15 @@
             header.classList.remove('hidden');
             header.classList.add('flex');
             
-            // Retire la sécurité (La barre de nav et le header reprennent le relais)
-            const wrap = document.getElementById('appIframeWrap');
+            // On retire la marge de sécurité
+            const wrap = document.getElementById('appViewerModal');
             if(wrap) wrap.classList.remove('safe-top', 'safe-bottom');
 
         } else if(target === 'dona') {
             const donaControls = document.getElementById('donaTopControls');
             if(donaControls) donaControls.classList.remove('hidden');
             
-            // Retire la sécurité
+            // On retire la marge de sécurité
             const wrap = document.getElementById('tab-dona');
             if(wrap) wrap.classList.remove('safe-top', 'safe-bottom');
         }
@@ -2568,6 +2575,18 @@
         if (tabId === 'compte' && document.getElementById('nav-text-compte').textContent === 'Connexion') {
             window.openLoginSheet(); return;
         }
+
+        // CORRECTION : Fermer le Viewer d'Application s'il est ouvert au-dessus
+        const appModal = document.getElementById('appViewerModal');
+        if (appModal && !appModal.classList.contains('hidden')) {
+            window.closeAppViewer();
+        }
+
+        // CORRECTION : Quitter le mode Plein Écran si on navigue ailleurs
+        if (window._currentFsTarget) {
+            window.exitFullscreen();
+        }
+
         document.querySelectorAll('.app-section').forEach(sec => sec.classList.add('hidden'));
         const target = document.getElementById(`tab-${tabId}`);
         if(target) target.classList.remove('hidden');
@@ -2591,7 +2610,7 @@
     const renderMobileCards = () => {
         const container = document.getElementById('tab-accueil');
         container.innerHTML = `
-          <div onclick="window.openAppWithSSO('movie', 'https://vonemerci-hub.github.io/levelup-service-1/')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
+          <div onclick="window.openAppWithSSO('movie', 'movie.html')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
             <img src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
             <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent z-0"></div>
             <div class="relative z-10 p-4 flex justify-between items-start w-full">
@@ -2605,7 +2624,7 @@
             </div>
           </div>
 
-          <div onclick="window.openAppWithSSO('music', 'https://vonemerci-hub.github.io/levelmusicw/')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
+          <div onclick="window.openAppWithSSO('music', 'music.html')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
             <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
             <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent z-0"></div>
             <div class="relative z-10 p-4 flex justify-between items-start w-full">
@@ -2647,7 +2666,7 @@
             </div>
           </div>
 
-          <div onclick="window.openAppWithSSO('otaku', 'https://vonemerci-hub.github.io/levelanime/')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
+          <div onclick="window.openAppWithSSO('otaku', 'anime.html')" class="w-full h-[180px] shrink-0 rounded-[24px] relative overflow-hidden flex flex-col justify-between group shadow-xl border border-white/5 bg-[#111] cursor-pointer active:scale-[0.98]">
             <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
             <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent z-0"></div>
             <div class="relative z-10 p-4 flex justify-between items-start w-full">
