@@ -74,6 +74,8 @@
       color: white;
       -webkit-font-smoothing: antialiased;
       overflow: hidden; 
+      overscroll-behavior: none; /* Bloque l'effet "rebond" élastique sur mobile */
+      -webkit-tap-highlight-color: transparent; /* Désactive le surlignement bleu au tap */
     }
 
     .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -86,8 +88,9 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .safe-top { padding-top: max(0.8rem, env(safe-area-inset-top)); }
-    .safe-bottom { padding-bottom: max(1.2rem, env(safe-area-inset-bottom)); }
+    /* Ajustement de la zone de sécurité (Éloigne de la barre Home Indicator iOS) */
+    .safe-top { padding-top: max(1rem, env(safe-area-inset-top)); }
+    .safe-bottom { padding-bottom: max(1.8rem, calc(env(safe-area-inset-bottom) + 0.8rem)) !important; }
 
     .tab-enter { animation: tabFadeIn 0.3s ease-out forwards; }
     @keyframes tabFadeIn {
@@ -129,6 +132,71 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
   </style>
+
+  <!-- SCRIPT DE RESTRICTION PWA & MOBILE -->
+  <script>
+    (function() {
+      // 1. EXCEPTION DEV : Détecte si on est dans l'éditeur (iFrame) ou en local
+      const isDevEnvironment = window.self !== window.top || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'; 
+      
+      if (isDevEnvironment) {
+          console.log("🛠️ Mode développeur détecté : L'écran de restriction PWA est désactivé pour le travail.");
+          return; // On annule le blocage pour pouvoir travailler
+      }
+
+      // 2. VÉRIFICATIONS APPAREIL ET INSTALLATION
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      // 'standalone' est vrai uniquement si lancé depuis l'écran d'accueil
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+      // 3. BLOCAGE SI NON CONFORME
+      if (!isMobile || !isStandalone) {
+        document.addEventListener("DOMContentLoaded", () => {
+          // On vide complètement le contenu de l'application pour des raisons de sécurité
+          document.body.innerHTML = '';
+          // On force le style du body pour l'écran de blocage
+          document.body.className = 'bg-[#050505] text-white flex flex-col items-center justify-center h-screen w-screen p-6 overflow-hidden';
+          
+          // On injecte notre belle interface d'installation
+          document.body.innerHTML = `
+            <div style="animation: tabFadeIn 0.4s ease-out forwards;" class="flex flex-col items-center justify-center text-center w-full max-w-md">
+              
+              <div class="mb-8 flex gap-8 text-7xl text-white/20">
+                <i class="fa-brands fa-apple drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"></i>
+                <i class="fa-brands fa-android drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"></i>
+              </div>
+              
+              <h1 class="text-3xl font-display font-bold text-white mb-4 leading-tight">Application<br>Mobile Exclusive</h1>
+              
+              <p class="text-slate-400 mb-10 text-sm leading-relaxed px-2">
+                <strong>LevelUp</strong> est conçu exclusivement pour offrir une expérience mobile native. Veuillez l'installer sur votre téléphone pour y accéder.
+              </p>
+              
+              <div class="bg-[#121214] rounded-3xl p-6 border border-white/5 w-full text-left shadow-2xl">
+                
+                <h3 class="font-bold text-white mb-3 flex items-center text-lg">
+                  <i class="fa-brands fa-apple mr-3 text-2xl text-slate-300"></i>iOS / iPadOS
+                </h3>
+                <p class="text-sm text-slate-400 mb-6 leading-relaxed">
+                  Appuyez sur l'icône <i class="fa-solid fa-arrow-up-from-bracket mx-1 text-white bg-white/10 p-1 rounded"></i> (Partager) dans Safari, puis choisissez <strong>"Sur l'écran d'accueil"</strong>.
+                </p>
+                
+                <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-6"></div>
+
+                <h3 class="font-bold text-white mb-3 flex items-center text-lg">
+                  <i class="fa-brands fa-android mr-3 text-2xl text-slate-300"></i>Android
+                </h3>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                  Appuyez sur le menu <i class="fa-solid fa-ellipsis-vertical mx-1 text-white bg-white/10 px-2 py-1 rounded"></i> (Options) de Chrome, puis sur <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong>.
+                </p>
+                
+              </div>
+            </div>
+          `;
+        });
+      }
+    })();
+  </script>
 </head>
 
 <body class="h-[100dvh] w-screen flex flex-col relative bg-[#050505]">
@@ -186,6 +254,7 @@
 
         <!-- Story Bar Dynamique (Scroll Horizontal) -->
         <div id="storyBarContainer" class="flex gap-4 overflow-x-auto hide-scrollbar px-4 py-3 mb-2">
+          <!-- Les stories seront générées ici par JS -->
           <div class="flex items-center justify-center w-full py-2">
              <div class="w-5 h-5 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
           </div>
@@ -325,7 +394,7 @@
             <!-- Provider -->
             <div class="flex items-center justify-between p-3.5 bg-white/5 border border-white/10 rounded-xl mb-2 hover:border-white/20 transition-colors">
               <div><h5 class="text-xs font-bold text-white mb-0.5">Fournisseur d'identité</h5><p class="text-[11px] text-slate-400">LevelUp Auth</p></div>
-              <div class="text-[10px] text-green-400 font-bold flex items-center gap-1"><i class="fa-solid fa-check-circle"></i> Vérifié</div>
+              <div class="text-[10px] text-green-400 font-bold flex items-center gap-1"><i class="fa-solid fa-check-circle"></i> Verified</div>
             </div>
 
             <!-- Date -->
@@ -389,23 +458,23 @@
 
   <!-- BARRE DE NAVIGATION EN BAS -->
   <nav id="mainBottomNav" class="shrink-0 w-full glass-effect rounded-t-[2rem] rounded-b-none !border-x-0 !border-b-0 border-t border-white/10 flex justify-between items-center px-6 pt-5 safe-bottom z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.7)] relative bg-[#050505]/80 transition-transform duration-300">
-    <button onclick="switchTab('accueil')" id="nav-btn-accueil" class="nav-btn flex flex-col items-center gap-1.5 text-white scale-110 transition-all">
+    <button onclick="window.switchTab('accueil')" id="nav-btn-accueil" class="nav-btn flex flex-col items-center gap-1.5 text-white scale-110 transition-all">
       <i class="fa-solid fa-house text-lg drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"></i>
       <span class="text-[9px] font-bold tracking-wide">Accueil</span>
     </button>
-    <button onclick="switchTab('actus')" id="nav-btn-actus" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
+    <button onclick="window.switchTab('actus')" id="nav-btn-actus" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
       <i class="fa-solid fa-fire text-lg"></i>
       <span class="text-[9px] font-semibold tracking-wide">Actus</span>
     </button>
-    <button onclick="openAppWithSSO('ia', 'dona.html')" id="nav-btn-dona" class="nav-btn flex flex-col items-center gap-1.5 transition-all">
+    <button onclick="window.openAppWithSSO('ia', 'dona.html')" id="nav-btn-dona" class="nav-btn flex flex-col items-center gap-1.5 transition-all">
       <i class="fa-solid fa-star text-xl text-brand drop-shadow-[0_0_10px_rgba(168,85,247,0.7)] transition-all"></i>
       <span class="text-[9px] font-bold text-brand tracking-wide">Dona</span>
     </button>
-    <button onclick="openAppWithSSO('infos', 'info.html')" id="nav-btn-infos" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
+    <button onclick="window.openAppWithSSO('infos', 'info.html')" id="nav-btn-infos" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
       <i class="fa-solid fa-compass text-lg"></i>
       <span class="text-[9px] font-semibold tracking-wide">Infos</span>
     </button>
-    <button onclick="switchTab('compte')" id="nav-btn-compte" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
+    <button onclick="window.switchTab('compte')" id="nav-btn-compte" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
       <i id="nav-icon-compte" class="fa-solid fa-gear text-lg"></i>
       <span id="nav-text-compte" class="text-[9px] font-semibold tracking-wide">Réglages</span>
     </button>
@@ -594,7 +663,7 @@
     <!-- Image/Vidéo de fond -->
     <div class="w-full h-full absolute inset-0 bg-[#050505] z-30" id="storyBgArea"></div>
 
-    <!-- NOUVEAU: Overlay Coeur Géant pour le Double-Tap -->
+    <!-- Overlay Coeur Géant pour le Double-Tap -->
     <div id="giantHeartOverlay" class="absolute inset-0 z-[70] flex items-center justify-center pointer-events-none hidden transition-all duration-300 transform scale-50 opacity-0">
         <i class="fa-solid fa-heart text-red-500 drop-shadow-[0_0_40px_rgba(239,68,68,0.8)]" style="font-size: 120px;"></i>
     </div>
@@ -675,14 +744,28 @@
     window._currentReportId = null;
     window._currentPostLink = null;
 
+    // Gestion propre des erreurs de chargement d'image pour éviter les conflits de guillemets
+    window.handleImageError = function(imgEl, link) {
+        const parent = imgEl.parentElement;
+        if (parent) {
+            parent.innerHTML = `
+                <div class="block w-full bg-[#121214] border-y border-white/5 relative p-6 flex flex-col items-center justify-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4"><i class="fa-regular fa-image text-2xl text-slate-500"></i></div>
+                    <p class="text-sm text-slate-400 mb-4 max-w-xs leading-relaxed">Le site source empêche l'affichage direct de cette image (protection active).</p>
+                    <button onclick="window.confirmExternalLink('${link}')" class="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors"><i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i> Ouvrir l'article original</button>
+                </div>
+            `;
+        }
+    };
+
     // Générateur d'Avatars SVG Personnalisés (incluant ton logo musique)
     window.getCategoryAvatar = function(category) {
-        if(category === 'movies') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-film text-xl"></i></div>`;
-        if(category === 'music' || category === 'audio') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-music text-xl"></i></div>`;
+        if(category === 'movies') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-blue-500"><i class="fa-solid fa-film text-xl drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"></i></div>`;
+        if(category === 'music' || category === 'audio') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-blue-500"><i class="fa-solid fa-music text-xl drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"></i></div>`;
         if(category === 'tool') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-screwdriver-wrench text-xl"></i></div>`;
         if(category === 'gaming') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-gamepad text-xl"></i></div>`;
-        if(category === 'otaku') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-dragon text-xl"></i></div>`;
-        return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white text-xl"><i class="fa-solid fa-newspaper"></i></div>`;
+        if(category === 'otaku') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-pink-500"><i class="fa-solid fa-dragon text-xl drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]"></i></div>`;
+        return `<div class="w-full h-full bg-brand flex items-center justify-center text-white text-lg"><i class="fa-solid fa-newspaper"></i></div>`;
     };
 
     // Définir l'ID de l'application
@@ -766,7 +849,7 @@
                             window.refreshProfileUI();
                             window.closeLoginSheet();
 
-                            // ── SURVEILLANCE COMPTE EN TEMPS RÉEL ──
+                            // ── SURVEILLANCE COMPTE EN TEMPS RÉEL (suspension / suppression) ──
                             window._accountUnsubscribe && window._accountUnsubscribe();
                             window._accountUnsubscribe = onSnapshot(ref, async (realtimeSnap) => {
                                 const data = realtimeSnap.exists() ? realtimeSnap.data() : null;
@@ -775,6 +858,7 @@
                                     const already = document.getElementById('accountBlockedOverlay');
                                     if (already) return;
                                     
+                                    // Notification Email
                                     try {
                                         fetch('/api/send', {
                                             method: 'POST',
@@ -787,6 +871,7 @@
                                         }).catch(() => {});
                                     } catch(_) {}
 
+                                    // Affichage Overlay de Blocage (Design Tailwind refondu)
                                     const ov = document.createElement('div');
                                     ov.id = 'accountBlockedOverlay';
                                     const isSuspended = status === 'suspended';
@@ -801,9 +886,9 @@
                                             ${isSuspended ? 'Ton compte a été suspendu' : 'Ton compte a été supprimé'}
                                         </h2>
                                         <p class="text-slate-400 text-sm leading-relaxed max-w-sm mb-8">
-                                            ${isSuspended ? 'Ton accès a été temporairement suspendu. Contacte le support.' : 'Ton compte a été définitivement supprimé.'}
+                                            ${isSuspended ? 'Ton accès à LevelUp Ecosystem a été temporairement suspendu. Un email t\'a été envoyé. Contacte le support pour plus d\'informations.' : 'Ton compte LevelUp a été définitivement supprimé. Un email de confirmation t\'a été envoyé.'}
                                         </p>
-                                        <a href="mailto:support@levelup-ecosystem.com" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border text-sm font-bold text-decoration-none mb-4 bg-brand/10 border-brand/30 text-brand">
+                                        <a href="mailto:support@levelup-ecosystem.com?subject=${isSuspended ? 'Suspension' : 'Suppression'} compte LevelUp" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border text-sm font-bold text-decoration-none mb-4 ${isSuspended ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500' : 'bg-brand/10 border-brand/30 text-brand'}">
                                             <i class="fa-solid fa-envelope"></i> Contacter le support
                                         </a>
                                         <button onclick="window._accountUnsubscribe&&window._accountUnsubscribe();window.execLogout()" class="text-slate-500 text-xs font-bold hover:text-white transition-colors p-2">Se déconnecter</button>
@@ -866,7 +951,7 @@
         for(let i=0;i<5;i++) k+=c.charAt(Math.floor(Math.random()*c.length)); return k;
     };
 
-    // --- STREAMING_CHUNK:Méthodes d'Authentification et Profile... ---
+    // --- AUTHENTIFICATION ---
     window.googleSignIn = async function() {
         if (!window._auth) return;
         const btn = document.getElementById('gSignInBtn');
@@ -922,6 +1007,7 @@
                 likedArticles: []
             };
             
+            // Geoloc on creation
             let locData = await fetchUserLocation();
             if(locData) {
                 window._ud.country = locData.country;
@@ -931,6 +1017,7 @@
 
             await setDoc(ref, window._ud);
 
+            // API Email
             try {
                 fetch('/api/send', {
                     method: 'POST',
@@ -953,6 +1040,7 @@
         }
     };
 
+    // LOGOUT LOGIC WITH ANIMATION
     window.confirmLogout = function() {
         document.getElementById('logoutOv').classList.remove('hidden');
         document.getElementById('logoutOv').classList.add('flex');
@@ -1004,6 +1092,7 @@
                 document.getElementById('pinBtnTxt').textContent = window._ud.pinHash ? 'Modifier PIN' : 'Ajouter PIN';
                 window._kVis = false;
                 
+                // Populate Settings Values
                 if(document.getElementById('setNameDisplay')) document.getElementById('setNameDisplay').textContent = window._ud.displayName || '—';
                 if(document.getElementById('setEmailDisplay')) document.getElementById('setEmailDisplay').textContent = window._ud.email || '—';
                 if(document.getElementById('setJoinedDisplay')) {
@@ -1034,6 +1123,7 @@
         }
     };
 
+    // --- NAME CHANGE LOGIC ---
     window.openNameChange = function() {
         const box = document.getElementById('nameChangeBox');
         const inp = document.getElementById('nameChangeInput');
@@ -1083,6 +1173,7 @@
         } catch(e) { window.toast_('Erreur : ' + e.message, 'err'); }
     };
 
+    // --- GESTION DES CLÉS & PIN ---
     window.genKey = async function() {
         if(!window._user) return;
         const key = window.mkKey();
@@ -1222,8 +1313,9 @@
         }
     };
 
-    // --- STREAMING_CHUNK:Méthodes d'Affichage SSO, Actus et Filtres... ---
+    // --- SSO & APP VIEWER ---
     window.openAppWithSSO = function(appId, urlFallback) {
+        // L'onglet 'infos' est public, le reste nécessite une connexion
         const isAuthRequired = (appId !== 'infos');
 
         if(isAuthRequired && (!window._user || !window._ud?.apiKey)) {
@@ -1234,6 +1326,7 @@
 
         let ssoUrl = urlFallback;
 
+        // Si l'utilisateur est connecté, on attache toujours ses informations sécurisées (SSO)
         if (window._user && window._ud?.apiKey) {
             const payload = new URLSearchParams({
                 lvl_key: window._ud.apiKey,
@@ -1246,6 +1339,7 @@
             ssoUrl = urlFallback + sep + payload;
         }
 
+        // Routage vers le bon Iframe ou la modale plein écran
         if(appId === 'ia' || appId === 'dona') {
             const iframe = document.getElementById('donaIframe');
             if (!iframe.src.includes(urlFallback)) {
@@ -1295,6 +1389,7 @@
         mainUI.classList.remove('hidden'); mainUI.classList.add('flex');
     };
 
+    // --- GESTION DU MODE PLEIN ÉCRAN POUR L'IFRAME ---
     window._isAppFs = false;
     window.toggleAppFullscreen = function() {
         window._isAppFs = !window._isAppFs;
@@ -1327,6 +1422,7 @@
         }
     };
 
+    // --- LOGIQUE DE FILTRE POUR L'ONGLET ACTUS ---
     window.filterActus = function(category) {
         document.querySelectorAll('.actu-filter-btn').forEach(btn => {
             if(btn.dataset.filter === category) {
@@ -1428,37 +1524,13 @@
         }
     };
 
-    // Sauvegarde en DB pour Likes / Favoris
-    window.syncUserData = async function() {
-        if(!window._user || !window._db) return;
-        try {
-            const ref = doc(window._db, 'artifacts', appId, 'users', window._user.uid, 'profile', 'data');
-            await setDoc(ref, {
-                savedArticles: Array.from(window._savedArticles),
-                likedArticles: Array.from(window._likedArticles)
-            }, { merge: true });
-        } catch(e) { console.warn('Erreur synchro data user', e); }
-    };
-
-    window.toggleStoryLike = function(event, forceLike = false) {
-        if(event) event.stopPropagation(); 
-        
-        if(!window._user) { 
-            window.toast_('Vous devez être connecté pour liker !', 'warn'); 
-            return; 
-        }
-
-        const story = window._storySequences[window._currentSeqType][window._currentStoryIndex];
-        if(!story) return;
-
-        story.userLiked = true; // On force le like pour la story (le bouton coeur UI a été retiré, c'est que via double tap)
-    };
-
+    // --- LECTEUR DE TRAILER MODAL ---
     window._wasPlayingBeforeTrailer = false;
 
     window.playTrailer = function(embedUrl) {
         if(!embedUrl) return;
         
+        // Si l'URL de base contient "autoplay=0", on l'active (sinon on l'ajoute)
         let finalUrl = embedUrl;
         if(finalUrl.includes('autoplay=0')) finalUrl = finalUrl.replace('autoplay=0', 'autoplay=1');
         else if(!finalUrl.includes('autoplay=1')) finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=1';
@@ -1470,12 +1542,14 @@
         modal.classList.remove('hidden');
         setTimeout(() => modal.classList.remove('opacity-0'), 10);
         
+        // Pause intelligente de la musique de la story
         const player = document.getElementById('storyAudioPlayer');
         if(player && !player.muted && !player.paused) { 
             player.pause(); 
             window._wasPlayingBeforeTrailer = true; 
         }
         
+        // Mise en pause de la progression de la story
         clearTimeout(storyTimeout);
         clearInterval(storyProgressInterval);
     };
@@ -1488,25 +1562,30 @@
             document.getElementById('trailerIframe').src = '';
         }, 300);
         
+        // Reprendre la musique de fond
         if(window._wasPlayingBeforeTrailer) {
             const player = document.getElementById('storyAudioPlayer');
             player.play().catch(e=>console.log(e));
             window._wasPlayingBeforeTrailer = false;
         }
         
+        // Redémarrer le temps pour que l'utilisateur ait le temps de finir de lire sa story
         window.renderCurrentStory();
     };
 
+    // Recherche Dynamique de Trailer (Pour l'API TMDB)
     window.fetchAndPlayTrailer = async function(type, id) {
         const btnIcon = document.getElementById('trailerBtnIcon');
         if(btnIcon) btnIcon.className = "fa-solid fa-circle-notch fa-spin text-lg";
 
         const tmdbKey = '027cc951d888c64e5f15dcb853c7347a';
         try {
+            // Cherche le trailer en VF
             const res = await fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${tmdbKey}&language=fr-FR`);
             const data = await res.json();
             let video = data.results.find(v => v.site === 'YouTube' && v.type === 'Trailer') || data.results.find(v => v.site === 'YouTube');
             
+            // Si introuvable en français, cherche en Anglais
             if(!video) {
                 const resEn = await fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${tmdbKey}`);
                 const dataEn = await resEn.json();
@@ -1526,6 +1605,7 @@
         }
     };
 
+    // Variables globales pour le lecteur de Stories
     window._storySequences = { main: [], movies: [], anime: [] };
     window._currentSeqType = 'main';
     window._currentStoryIndex = 0;
@@ -1571,9 +1651,11 @@
         const feedContainer = document.getElementById('actusFeed');
         if(!storyContainer || !feedContainer) return;
 
+        // 1. CHARGEMENT DES STORIES PRINCIPALES (DEPUIS FIRESTORE)
         let mainStories = [];
         try {
             if (window._db) {
+                // Requête sécurisée vers ta base de données
                 const storiesRef = collection(window._db, 'artifacts', appId, 'public', 'data', 'main_stories');
                 const snap = await getDocs(storiesRef);
                 if (!snap.empty) {
@@ -1582,8 +1664,11 @@
                     });
                 }
             }
-        } catch (e) { console.warn("Erreur chargement stories depuis DB:", e); }
+        } catch (e) {
+            console.warn("Erreur chargement stories depuis DB:", e);
+        }
 
+        // Fallback (sécurité) si ta base de données est vide pour le moment
         if (mainStories.length === 0) {
             mainStories = [
                 { 
@@ -1591,21 +1676,21 @@
                     bubbleImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop',
                     contentImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop',
                     contentText: 'Nouvelle architecture Firebase déployée avec succès. Les temps de chargement sont réduits de 40% ! 🚀',
-                    musicQuery: 'epic intense news theme', likes: 120, userLiked: false, categoryBadge: 'tool'
+                    musicQuery: 'epic intense news theme', likes: 120, userLiked: false
                 },
                 { 
-                    id: 2, title: 'Tool', icon: 'fa-screwdriver-wrench', color: 'from-blue-500 to-indigo-500', bg: 'bg-blue-900', time: 'Il y a 3h',
+                    id: 2, title: 'Tool', icon: 'fa-screwdriver-wrench', color: 'from-blue-500 to-indigo-500', bg: 'bg-black', time: 'Il y a 3h',
                     bubbleImg: null,
                     contentImg: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
                     contentText: 'On travaille dur sur la nouvelle API LevelTools. Plus d\'outils, plus vite. Restez connectés. 💻',
-                    musicQuery: 'chill lofi coding beats', likes: 45, userLiked: false, categoryBadge: 'tool'
+                    musicQuery: 'chill lofi coding beats', likes: 45, userLiked: false
                 },
                 { 
-                    id: 3, title: 'Monde', icon: 'fa-earth-americas', color: 'from-green-500 to-emerald-500', bg: 'bg-green-900', time: 'Il y a 6h',
+                    id: 3, title: 'Monde', icon: 'fa-earth-americas', color: 'from-green-500 to-emerald-500', bg: 'bg-black', time: 'Il y a 6h',
                     bubbleImg: null,
                     contentImg: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop',
                     contentText: 'Notre écosystème s\'étend à de nouveaux pays. Merci à notre communauté internationale pour son soutien ! 🌍',
-                    musicQuery: 'epic world music', likes: 312, userLiked: false, categoryBadge: 'tool'
+                    musicQuery: 'epic world music', likes: 312, userLiked: false
                 }
             ];
         }
@@ -1615,7 +1700,7 @@
         let storyHtml = mainStories.map((s, index) => `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('main', ${index})">
             <div id="ring-main-${index}" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${s.color} shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300">
-              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative ${s.bg || 'bg-black'} flex items-center justify-center">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative ${s.bg || ''} flex items-center justify-center bg-black">
                  ${s.bubbleImg 
                     ? `<img src="${s.bubbleImg}" class="w-full h-full object-cover group-hover:scale-110 transition-transform"><div class="absolute inset-0 bg-black/30 flex items-center justify-center"><i class="fa-solid ${s.icon} text-white text-sm drop-shadow-md"></i></div>` 
                     : `<i class="fa-solid ${s.icon} text-white text-xl group-hover:scale-110 transition-transform"></i>`}
@@ -1628,7 +1713,7 @@
         storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('movies', 0)">
             <div id="ring-movies" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300">
-              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-[#050505] flex items-center justify-center">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
                  ${window.getCategoryAvatar('movies')}
               </div>
             </div>
@@ -1638,7 +1723,7 @@
         storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('anime', 0)">
             <div id="ring-anime" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
-              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-[#050505] flex items-center justify-center">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
                  ${window.getCategoryAvatar('otaku')}
               </div>
             </div>
@@ -1662,7 +1747,7 @@
                         contentImg: `https://image.tmdb.org/t/p/w780${m.poster_path}`,
                         contentText: m.overview,
                         type: 'movie',
-                        trailerId: m.id, 
+                        trailerId: m.id, // On conserve l'ID pour lancer la recherche YouTube ciblée in-app
                         color: 'from-red-500 to-rose-700',
                         musicQuery: `${m.title} soundtrack epic`,
                         likes: Math.floor(Math.random() * 1000) + 100,
@@ -1683,7 +1768,7 @@
                         contentImg: a.images.webp.large_image_url,
                         contentText: a.synopsis,
                         type: 'anime',
-                        embedUrl: a.trailer?.embed_url || null, 
+                        embedUrl: a.trailer?.embed_url || null, // Jikan renvoie souvent l'URL embed YouTube directement
                         color: 'from-blue-400 to-indigo-600',
                         musicQuery: `${a.title} anime opening`,
                         likes: Math.floor(Math.random() * 2000) + 500,
@@ -1695,28 +1780,40 @@
 
         feedContainer.innerHTML = `<div class="py-10 flex justify-center w-full"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div></div>`;
         
+        // --- NOUVEAU FLUX D'ACTUALITÉS DEPUIS LE SERVEUR VERCEL ---
         let allNews = [];
 
         try {
+            // URL directe vers ton serveur Vercel
             const API_URL = 'https://levelup-ecosystem.com/api/news?category=all';
+            
+            console.log("📡 [Actus] Tentative de récupération depuis le serveur : " + API_URL);
+            
             const res = await fetch(API_URL);
             
-            if (!res.ok) throw new Error(`Erreur HTTP serveur: ${res.status}`);
+            if (!res.ok) {
+                throw new Error(`Erreur HTTP serveur: ${res.status}`);
+            }
 
             const data = await res.json();
             
             if (data && Array.isArray(data)) {
+                console.log(`✅ [Actus] Succès ! ${data.length} articles récupérés.`);
                 allNews = data.map(item => {
                     let rawImg = item.img || item.thumbnail || '';
-                    if (rawImg && rawImg.startsWith('http://')) rawImg = rawImg.replace('http://', 'https://');
+                    
+                    // CORRECTION MIXED CONTENT : Forcer le passage de HTTP à HTTPS
+                    if (rawImg && rawImg.startsWith('http://')) {
+                        rawImg = rawImg.replace('http://', 'https://');
+                    }
 
                     const categoryLower = (item.category || '').toLowerCase();
                     
+                    // CORRECTION IMAGES MANQUANTES : Images de secours adaptées à la catégorie
                     if (!rawImg || rawImg.trim() === '') {
-                        rawImg = null; // Nous allons gérer l'absence d'image avec une interface propre
+                        rawImg = null; // Mettre à null pour déclencher la div "Manquante"
                     }
 
-                    // Détermination du badge "LevelX"
                     let badgeLabel = 'LevelInfo';
                     if (categoryLower.includes('otaku') || categoryLower.includes('anime')) badgeLabel = 'LevelOtaku';
                     else if (categoryLower.includes('gaming') || categoryLower.includes('jeu')) badgeLabel = 'LevelGame';
@@ -1734,14 +1831,17 @@
                         label: badgeLabel
                     };
                 });
+            } else {
+                console.warn("⚠️ [Actus] Le serveur a répondu mais le format n'est pas un tableau :", data);
+                window.toast_("Format des actualités non reconnu.", "warn");
             }
 
         } catch (err) {
-            console.error("❌ [Actus] Erreur de récupération :", err);
-            window.toast_("Impossible de charger les actus.", "err");
+            console.error("❌ [Actus] Erreur de récupération serveur :", err);
+            window.toast_("Impossible de charger les actus du serveur.", "err");
         }
 
-        // Tri chronologique : Plus récents d'abord
+        // L'algorithme de tri : Les plus récents en premier !
         if (allNews.length > 0) {
             allNews = allNews.sort((a, b) => new Date(b.date) - new Date(a.date));
         } else { 
@@ -1755,7 +1855,8 @@
             if(window._hiddenArticles.has(articleId)) return;
 
             let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim();
-            const isLongDesc = cleanDesc.length > 120;
+            // On vérifie si la description est vraiment longue (plus de 120 caractères par exemple)
+            const isLongDesc = cleanDesc.length > 150;
             
             let dateObj = new Date(item.date);
             let diffDays = Math.floor((new Date() - dateObj) / (1000 * 60 * 60 * 24));
@@ -1771,7 +1872,7 @@
 
             // HTML pour Image Manquante Propre
             const missingImageHtml = `
-                <div class="block w-full bg-[#121214] border-y border-white/5 relative group p-6 flex flex-col items-center justify-center text-center">
+                <div class="block w-full bg-[#121214] border-y border-white/5 relative p-6 flex flex-col items-center justify-center text-center">
                     <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4"><i class="fa-regular fa-image text-2xl text-slate-500"></i></div>
                     <p class="text-sm text-slate-400 mb-4 max-w-xs leading-relaxed">Le site source empêche l'affichage direct de cette image (protection active).</p>
                     <button onclick="window.confirmExternalLink('${item.link}')" class="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors"><i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i> Ouvrir l'article original</button>
@@ -1781,7 +1882,7 @@
             // HTML pour Image Présente
             const validImageHtml = `
                 <div class="block w-full bg-[#121214] relative cursor-pointer group" onclick="window.openImageZoom('${item.img}')">
-                     <img src="${item.img}" class="w-full max-h-[450px] object-cover" onerror="this.parentElement.innerHTML=\`${missingImageHtml.replace(/`/g, '\\`')}\`">
+                     <img src="${item.img}" class="w-full max-h-[450px] object-cover" onerror="window.handleImageError(this, '${item.link}')">
                      <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1.5 rounded-lg text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-expand text-xs"></i></div>
                 </div>
             `;
@@ -1789,9 +1890,11 @@
             const isLiked = window._likedArticles.has(articleId);
             const isSaved = window._savedArticles.has(articleId);
 
+            // STRUCTURE DU POST
             htmlFeed += `
             <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-4 mb-3 transition-all duration-300 w-full" id="article-${articleId}" data-category="${catDisplay}">
                 
+                <!-- HEADER (Avatar SVG + Titre + Badge + ...) -->
                 <div class="flex items-center justify-between px-4 py-3">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center bg-black border border-white/10 overflow-hidden shadow-lg shrink-0">
@@ -1808,16 +1911,20 @@
                     <button onclick="window.openPostOptions('${articleId}', '${item.link}')" class="text-slate-500 hover:text-white transition-colors p-2 active:scale-90"><i class="fa-solid fa-ellipsis text-lg"></i></button>
                 </div>
 
+                <!-- TEXTE ET TITRE (EN HAUT DE L'IMAGE) -->
                 <div class="px-4 pb-3">
                     <h3 class="text-[15px] font-bold text-white mb-1.5 leading-tight">${item.title}</h3>
                     <div class="relative">
+                        <!-- class line-clamp-2 uniquement si la description est très longue -->
                         <p id="desc-${articleId}" class="text-[13px] text-slate-300 leading-relaxed transition-all duration-300 ${isLongDesc ? 'line-clamp-2' : ''}">${cleanDesc}</p>
                         ${isLongDesc ? `<button onclick="window.toggleDesc('${articleId}', event)" id="btn-desc-${articleId}" class="text-brand text-[11px] font-bold mt-1.5 hover:text-white transition-colors relative z-10 cursor-pointer">Voir plus</button>` : ''}
                     </div>
                 </div>
 
+                <!-- IMAGE AVEC FALLBACK -->
                 ${item.img ? validImageHtml : missingImageHtml}
 
+                <!-- ACTIONS -->
                 <div class="flex items-center justify-between px-4 pt-4 pb-2">
                     <div class="flex items-center gap-6">
                         <button onclick="window.toggleLikeActu('${articleId}')" class="text-white hover:text-red-500 transition-colors text-2xl active:scale-90 transform"><i class="${isLiked ? 'fa-solid text-red-500' : 'fa-regular'} fa-heart" id="like-${articleId}"></i></button>
@@ -1826,6 +1933,7 @@
                     <button onclick="window.saveArticle('${articleId}')" class="text-white hover:text-brand transition-colors text-2xl active:scale-90 transform"><i class="${isSaved ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark" id="bookmark-${articleId}"></i></button>
                 </div>
 
+                <!-- NOTICE LÉGALE PRO -->
                 <div class="px-4 pb-1">
                     <div class="w-full border-t border-white/5 pt-2 flex items-start gap-2">
                         <i class="fa-solid fa-circle-info text-slate-500 text-[9px] mt-0.5"></i>
@@ -1842,6 +1950,19 @@
         }
     };
 
+    // --- FONCTIONNALITÉS SOCIALES DES ACTUALITÉS (LIKE, SAUVEGARDE, PARTAGE, SIGNALEMENT) ---
+    // Sauvegarde en DB pour Likes / Favoris
+    window.syncUserData = async function() {
+        if(!window._user || !window._db) return;
+        try {
+            const ref = doc(window._db, 'artifacts', appId, 'users', window._user.uid, 'profile', 'data');
+            await setDoc(ref, {
+                savedArticles: Array.from(window._savedArticles),
+                likedArticles: Array.from(window._likedArticles)
+            }, { merge: true });
+        } catch(e) { console.warn('Erreur synchro data user', e); }
+    };
+
     window.toggleLikeActu = function(id) {
         if(!window._user) { window.toast_('Connectez-vous pour liker.', 'warn'); return; }
         const icon = document.getElementById('like-'+id);
@@ -1853,6 +1974,7 @@
             window._likedArticles.add(id);
             icon.classList.replace('fa-regular', 'fa-solid');
             icon.classList.add('text-red-500');
+            // Petite animation de pop
             icon.parentElement.style.transform = 'scale(1.3)';
             setTimeout(() => icon.parentElement.style.transform = 'scale(1)', 150);
         }
@@ -1871,6 +1993,7 @@
             window._savedArticles.add(id);
             icon.classList.replace('fa-regular', 'fa-solid');
             icon.classList.add('text-brand');
+            // Petite animation
             icon.parentElement.style.transform = 'scale(1.2)';
             setTimeout(() => icon.parentElement.style.transform = 'scale(1)', 150);
             window.toast_('Article sauvegardé !', 'ok');
@@ -1880,7 +2003,11 @@
 
     window.shareArticle = function(title, url) {
         if (navigator.share) {
-            navigator.share({ title: title, text: 'Regarde cette actualité sur LevelUp !', url: url }).catch(e => {
+            navigator.share({
+                title: title,
+                text: 'Regarde cette actualité sur LevelUp !',
+                url: url
+            }).catch(e => {
                 if(e.name !== 'AbortError') window.toast_('Erreur lors du partage', 'err');
             });
         } else {
@@ -2021,12 +2148,10 @@
             zoom = document.createElement('div');
             zoom.id = 'imageZoomModal';
             zoom.className = 'fixed inset-0 z-[300] bg-black/95 hidden flex-col items-center justify-center p-2 backdrop-blur-md transition-opacity duration-300 opacity-0 cursor-zoom-out';
-            
             zoom.onclick = function() {
                 this.classList.add('opacity-0');
                 setTimeout(() => this.classList.add('hidden'), 300);
             };
-
             zoom.innerHTML = `
                 <img id="zoomImgEl" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl cursor-default" onclick="event.stopPropagation()">
             `;
@@ -2046,12 +2171,10 @@
         event.stopPropagation();
         const now = Date.now();
         if (now - lastTapTime < 300) {
-            // Double tap detecté
             clearTimeout(window._tapTimeout);
             window.handleStoryDoubleTap();
             lastTapTime = 0;
         } else {
-            // Single tap detecté, on attend 300ms au cas où un 2eme tap arrive
             lastTapTime = now;
             window._tapTimeout = setTimeout(() => {
                 if(direction === 'prev') window.prevStory();
@@ -2070,13 +2193,9 @@
         }
 
         story.userLiked = true;
-        
-        // Animation du gros coeur central
         const bigHeart = document.getElementById('giantHeartOverlay');
         bigHeart.classList.remove('hidden');
-        
-        void bigHeart.offsetWidth; // Force reflow
-
+        void bigHeart.offsetWidth;
         bigHeart.classList.remove('scale-50', 'opacity-0');
         bigHeart.classList.add('scale-100', 'opacity-100');
         
@@ -2086,19 +2205,21 @@
             setTimeout(() => {
                 bigHeart.classList.add('hidden', 'scale-50');
                 bigHeart.classList.remove('scale-150');
+                // Apparition d'un petit coeur pour confirmer le like visuellement
+                const titleArea = document.querySelector('#storyContentArea h4');
+                if (titleArea && !titleArea.querySelector('.fa-heart')) {
+                    titleArea.insertAdjacentHTML('beforeend', '<i class="fa-solid fa-heart text-red-500 text-sm ml-auto drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse"></i>');
+                }
             }, 300);
         }, 600);
     };
 
     window.openStory = function(type, index) {
-        if(!window._storySequences[type] || window._storySequences[type].length === 0) {
-            window.toast_('Recommandations en cours de chargement... Patiente une seconde.', 'warn');
-            return;
-        }
         window._currentSeqType = type;
         window._currentStoryIndex = index;
         const modal = document.getElementById('storyModal');
-        modal.classList.remove('hidden');
+        modal.classList.remove('hidden'); 
+        modal.classList.add('flex');
         void modal.offsetWidth; 
         modal.classList.remove('opacity-0');
         window.renderCurrentStory();
@@ -2108,6 +2229,15 @@
         const stories = window._storySequences[window._currentSeqType];
         
         if(window._currentStoryIndex >= stories.length) {
+            // Marquer comme vu UNIQUEMENT si la séquence entière est terminée
+            if (window._currentSeqType === 'movies') window._seenStories.add('movies');
+            if (window._currentSeqType === 'anime') window._seenStories.add('anime');
+            if (window._currentSeqType === 'main' && window._currentStoryIndex > 0) {
+                window._seenStories.add(`main_${window._currentStoryIndex - 1}`);
+            }
+            
+            window.updateBubbleVisuals();
+
             const seqOrder = ['main', 'movies', 'anime'];
             const currentIndex = seqOrder.indexOf(window._currentSeqType);
             
@@ -2129,7 +2259,6 @@
         }
 
         const story = stories[window._currentStoryIndex];
-        
         document.getElementById('storyTime').textContent = story.time;
         
         const avatarContainer = document.getElementById('storyCategoryAvatar');
@@ -2161,12 +2290,12 @@
             </button>`;
         }
 
-        // Le bouton Like latéral a été retiré de contentArea au profit du Double Tap global
         contentArea.innerHTML = `
             <div class="absolute bottom-12 left-0 w-full px-6">
                 <div class="bg-[#050505]/80 backdrop-blur-xl border border-white/10 p-5 rounded-[24px] shadow-2xl animate-slide-up pointer-events-auto">
                     <h4 class="text-white font-display font-bold text-lg mb-2 flex items-center gap-2">
                         <i class="fa-solid ${story.icon} text-brand"></i> <span class="line-clamp-1">${story.title}</span>
+                        ${story.userLiked ? '<i class="fa-solid fa-heart text-red-500 text-sm ml-auto drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]"></i>' : ''}
                     </h4>
                     <p class="text-slate-300 text-[13px] leading-relaxed line-clamp-[6]">${story.contentText}</p>
                     ${trailerBtnHtml}
@@ -2183,7 +2312,6 @@
             bar.className = 'flex-1 h-1 bg-white/20 rounded-full overflow-hidden relative backdrop-blur-md';
             let innerW = '0%';
             if(i < window._currentStoryIndex) innerW = '100%';
-            
             bar.innerHTML = `<div class="absolute top-0 left-0 h-full bg-white rounded-full transition-all ease-linear" style="width: ${innerW}" id="storyBar-${i}"></div>`;
             progContainer.appendChild(bar);
         });
@@ -2208,12 +2336,11 @@
     };
 
     window.nextStory = function() {
-        // La story actuelle n'est marquée comme vue que lorsque l'on passe au suivant
-        // Cela garantit qu'il faut "finir" la story pour que le cercle coloré disparaisse
-        const seenKey = window._currentSeqType === 'main' ? `main_${window._currentStoryIndex}` : window._currentSeqType;
-        window._seenStories.add(seenKey);
-        window.updateBubbleVisuals();
-
+        // Valide l'image d'une story unique (main) comme "vue" au moment où on passe à la suivante
+        if (window._currentSeqType === 'main') {
+            window._seenStories.add(`main_${window._currentStoryIndex}`);
+            window.updateBubbleVisuals();
+        }
         window._currentStoryIndex++;
         window.renderCurrentStory();
     };
@@ -2226,25 +2353,23 @@
     window.closeStory = function() {
         clearTimeout(storyTimeout);
         clearInterval(storyProgressInterval);
-
         const player = document.getElementById('storyAudioPlayer');
         if (player) {
             player.pause();
             player.src = "";
         }
-
         const modal = document.getElementById('storyModal');
         modal.style.transform = ''; 
         modal.classList.add('opacity-0');
         setTimeout(() => {
             modal.classList.add('hidden');
             document.getElementById('storyContentArea').innerHTML = '';
-            
             const inlineUI = document.getElementById('storyMusicInline');
             if(inlineUI) { inlineUI.classList.add('hidden'); inlineUI.classList.remove('flex'); }
         }, 300);
     };
 
+    // --- GESTION DU SWIPE VERS LE BAS POUR FERMER LES STORIES (STYLE IPHONE) ---
     let storyTouchStartY = 0;
     let storyTouchCurrentY = 0;
     const storyModalEl = document.getElementById('storyModal');
@@ -2258,7 +2383,6 @@
     storyModalEl.addEventListener('touchmove', (e) => {
         storyTouchCurrentY = e.touches[0].clientY;
         const deltaY = storyTouchCurrentY - storyTouchStartY;
-        
         if (deltaY > 0) {
             storyModalEl.style.transform = 'translateY(' + deltaY + 'px)';
         }
@@ -2267,7 +2391,6 @@
     storyModalEl.addEventListener('touchend', (e) => {
         const deltaY = storyTouchCurrentY - storyTouchStartY;
         storyModalEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease'; 
-        
         if (deltaY > 120) {
             window.closeStory();
         } else {
@@ -2304,18 +2427,15 @@
     window.closeLoginSheet = function() {
         document.getElementById('loginSheetBackdrop').classList.add('opacity-0');
         document.getElementById('loginSheetContent').classList.add('translate-y-full');
-        setTimeout(() => {
-            document.getElementById('loginSheetModal').classList.add('hidden');
-        }, 300);
+        setTimeout(() => { document.getElementById('loginSheetModal').classList.add('hidden'); }, 300);
     };
     window.openModal = function(id) {
         const el = document.getElementById(id);
-        el.classList.remove('hidden', 'translate-y-full'); el.classList.add('modal-enter');
+        if(el) { el.classList.remove('hidden', 'translate-y-full'); el.classList.add('modal-enter'); }
     };
     window.closeModal = function(id) {
         const el = document.getElementById(id);
-        el.classList.remove('modal-enter'); el.classList.add('modal-exit');
-        setTimeout(() => el.classList.add('hidden', 'translate-y-full'), 300);
+        if(el) { el.classList.remove('modal-enter'); el.classList.add('modal-exit'); setTimeout(() => el.classList.add('hidden', 'translate-y-full'), 300); }
     };
     window.openNotifSidebar = function() {
         const modal = document.getElementById('notifModal');
@@ -2351,10 +2471,7 @@
             }
         }
         document.getElementById('mainContent').scrollTop = 0;
-
-        if(tabId === 'actus') {
-            window.loadDynamicActus();
-        }
+        if(tabId === 'actus') { window.loadDynamicActus(); }
     };
 
     const renderMobileCards = () => {
