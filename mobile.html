@@ -146,8 +146,14 @@
 
       // 2. VÉRIFICATIONS APPAREIL ET INSTALLATION
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      // 'standalone' est vrai uniquement si lancé depuis l'écran d'accueil
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      
+      // 'standalone' est vrai si lancé depuis l'écran d'accueil (Amélioré pour détecter tous les modes PWA)
+      const isStandalone = 
+        window.matchMedia('(display-mode: standalone)').matches || 
+        window.matchMedia('(display-mode: fullscreen)').matches || 
+        window.matchMedia('(display-mode: minimal-ui)').matches || 
+        window.navigator.standalone === true ||
+        window.location.search.includes('pwa=1'); // Sécurité absolue via l'URL
 
       // 3. BLOCAGE SI NON CONFORME
       if (!isMobile || !isStandalone) {
