@@ -1,6 +1,5 @@
-const CACHE_NAME = 'levelup-cache-v2'; // On passe en V2 pour forcer la maj
+const CACHE_NAME = 'levelup-mobile-v3'; // Nom de cache spécifique à l'app mobile
 
-// Fichiers à mettre en cache
 const ASSETS_TO_CACHE = [
   '/mobile',
   '/mobile.html',
@@ -9,35 +8,35 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Mise en cache des assets');
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+  );
 });
 
 self.addEventListener('activate', (event) => {
+  self.clients.claim();
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Suppression de l\'ancien cache', cacheName);
+          // 🚨 CORRECTION CRUCIALE : On supprime UNIQUEMENT les anciens caches de "mobile".
+          // On ne touche PLUS aux caches des autres apps (LevelMovie, LevelMusic, etc.)
+          if (cacheName.startsWith('levelup-mobile-') && cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
+  // Sécurité : On ignore les requêtes externes (API, TMDB, Firebase) pour ne rien casser
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
   event.respondWith(
     fetch(event.request).catch(() => {
-      // L'option ignoreSearch est vitale pour matcher "/mobile?pwa=1" avec le "/mobile" en cache
       return caches.match(event.request, { ignoreSearch: true });
     })
   );
