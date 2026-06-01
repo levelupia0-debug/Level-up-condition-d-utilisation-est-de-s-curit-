@@ -191,6 +191,7 @@
           <button onclick="window.filterActus('otaku')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="otaku">Otaku</button>
           <!-- Bouton renommé Tool -->
           <button onclick="window.filterActus('tool')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="tool">Tool</button>
+          <button onclick="window.filterActus('music')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="music">Musique</button>
         </div>
 
         <!-- Feed Style Instagram / Facebook (flex-col sans px-4 pour que l'image prenne toute la largeur) -->
@@ -226,6 +227,9 @@
           <h2 id="profileName" class="text-2xl font-display font-bold text-white tracking-tight">Mode Invité</h2>
           <p id="profileStatus" class="text-sm text-slate-400 mt-1">Vous n'êtes pas connecté.</p>
         </div>
+
+        <!-- CONTENEUR DES ARTICLES SAUVEGARDÉS -->
+        <div id="savedArticlesContainer" class="w-full text-left mb-2 hidden"></div>
 
         <div id="profileActionContainer" class="w-full">
           <div class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
@@ -564,34 +568,14 @@
     <div class="absolute top-safe left-0 w-full px-4 pt-8 flex items-center justify-between z-50 pointer-events-none">
       <div class="flex items-center gap-3">
         
-        <!-- NOUVEAU LOGO CUSTOM SVG ICI -->
-        <div class="w-9 h-9 rounded-full border border-white/20 overflow-hidden flex items-center justify-center shadow-lg shrink-0 bg-[#020202]">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full object-cover">
-            <defs>
-              <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                <stop offset="0%" stop-color="#1a0b2e" />
-                <stop offset="100%" stop-color="#020202" />
-              </radialGradient>
-              <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#d8b4fe" />
-                <stop offset="50%" stop-color="#a855f7" />
-                <stop offset="100%" stop-color="#6b21a8" />
-              </linearGradient>
-              <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="15" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
-            </defs>
-            <rect width="512" height="512" fill="url(#bgGrad)" />
-            <g transform="translate(256, 265) scale(1.4)" filter="url(#glow)">
-              <path d="M 0 -110 L 31 -35 L 105 -35 L 45 12 L 68 85 L 0 40 L -68 85 L -45 12 L -105 -35 L -31 -35 Z" fill="url(#starGrad)" />
-            </g>
-          </svg>
+        <!-- NOUVEAU LOGO CUSTOM ALLÉGÉ ICI POUR ÉVITER LE LAG -->
+        <div id="storyCurrentAvatar" class="w-9 h-9 rounded-full border border-white/20 overflow-hidden flex items-center justify-center shadow-lg shrink-0 bg-[#050505]">
+          <i class="fa-solid fa-newspaper text-white"></i>
         </div>
 
         <div class="flex flex-col drop-shadow-md">
           <div class="flex items-center gap-1.5">
-            <span class="text-white font-bold text-sm leading-tight">LevelUp Ecosystem</span>
+            <span id="storyCurrentName" class="text-white font-bold text-sm leading-tight">LevelUp Ecosystem</span>
             <i class="fa-solid fa-circle-check text-brand text-[12px] drop-shadow-[0_0_5px_rgba(168,85,247,0.6)]"></i>
           </div>
           <div class="flex flex-col">
@@ -654,11 +638,24 @@
     </div>
   </div>
 
+  <!-- EXTERNAL LINK MODAL -->
+  <div id="externalLinkModal" class="fixed inset-0 z-[500] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4">
+    <div class="w-full max-w-[320px] bg-[#121214] border border-white/10 rounded-[24px] p-6 text-center shadow-2xl relative animate-slide-up">
+      <div class="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center mx-auto mb-4 text-orange-500 text-xl"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+      <h3 class="text-lg font-bold text-white mb-2">Tu quittes LevelUp</h3>
+      <p class="text-xs text-slate-400 mb-6 leading-relaxed">Tu vas être redirigé vers un site externe qui n'appartient pas à l'écosystème. Veux-tu continuer ?</p>
+      <div class="flex gap-3">
+        <button onclick="window.closeExternalLinkModal()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-bold rounded-xl transition-colors">Annuler</button>
+        <button onclick="window.proceedExternalLink()" class="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(249,115,22,0.3)]">Continuer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- JAVASCRIPT LOGIC (FIREBASE & SSO & UI) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Variables globales
     window._auth = null;
@@ -667,6 +664,23 @@
     window._ud = null;
     window._pendingCreds = null;
     window._accountUnsubscribe = null;
+
+    window._hiddenArticles = new Set();
+    window._savedArticles = new Set();
+    window._likedArticles = new Set();
+    window._savedArticlesData = {};
+    window._currentReportId = null;
+    window._currentPostLink = null;
+
+    // Générateur d'Avatars SVG Personnalisés (incluant ton logo musique)
+    window.getCategoryAvatar = function(category) {
+        if(category === 'movies') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-blue-500"><i class="fa-solid fa-film text-xl drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"></i></div>`;
+        if(category === 'music' || category === 'audio') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-blue-500"><i class="fa-solid fa-music text-xl drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"></i></div>`;
+        if(category === 'tool') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-screwdriver-wrench text-xl"></i></div>`;
+        if(category === 'gaming') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-gamepad text-xl"></i></div>`;
+        if(category === 'otaku') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-pink-500"><i class="fa-solid fa-dragon text-xl drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]"></i></div>`;
+        return `<div class="w-full h-full bg-brand flex items-center justify-center text-white text-lg"><i class="fa-solid fa-newspaper"></i></div>`;
+    };
 
     // Définir l'ID de l'application
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'level-ia-premium';
@@ -742,6 +756,27 @@
                                 window._ud.pinHash = secSnap.data().pinHash;
                             }
 
+                            // --- FETCH FAVORIS & LIKES DEPUIS FIRESTORE ---
+                            window._likedArticles = new Set();
+                            window._savedArticles = new Set();
+                            window._savedArticlesData = {};
+                            
+                            try {
+                                const savedRef = collection(window._db, 'artifacts', appId, 'users', u.uid, 'saved_articles');
+                                const savedSnap = await getDocs(savedRef);
+                                savedSnap.forEach(docSnap => {
+                                    window._savedArticles.add(docSnap.id);
+                                    window._savedArticlesData[docSnap.id] = docSnap.data();
+                                });
+                                
+                                const likedRef = collection(window._db, 'artifacts', appId, 'users', u.uid, 'liked_articles');
+                                const likedSnap = await getDocs(likedRef);
+                                likedSnap.forEach(docSnap => {
+                                    window._likedArticles.add(docSnap.id);
+                                });
+                            } catch(e) { console.log('Erreur fetch favoris/likes', e); }
+                            
+                            window.renderSavedArticlesUI();
                             window.refreshProfileUI();
                             window.closeLoginSheet();
 
@@ -815,6 +850,10 @@
                 } else if (!window._pendingCreds) {
                     window._user = null;
                     window._ud = null;
+                    window._likedArticles = new Set();
+                    window._savedArticles = new Set();
+                    window._savedArticlesData = {};
+                    window.renderSavedArticlesUI();
                     window._accountUnsubscribe && window._accountUnsubscribe();
                     window.refreshProfileUI();
                 }
@@ -1597,18 +1636,18 @@
                     musicQuery: 'epic intense news theme', likes: 120, userLiked: false
                 },
                 { 
-                    id: 2, title: 'Dev Log', icon: 'fa-code', color: 'from-blue-500 to-indigo-500', bg: 'bg-blue-900', time: 'Il y a 3h',
+                    id: 2, title: 'Tool', icon: 'fa-screwdriver-wrench', color: 'from-blue-500 to-indigo-500', bg: 'bg-[#111]', time: 'Il y a 3h',
                     bubbleImg: null,
-                    contentImg: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
-                    contentText: 'On travaille dur sur la nouvelle API LevelTools. Plus d\'outils, plus vite. Restez connectés. 💻',
+                    contentImg: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800&auto=format&fit=crop',
+                    contentText: 'Découvrez les nouveaux outils de l\'écosystème pour booster votre productivité au quotidien. 🛠️',
                     musicQuery: 'chill lofi coding beats', likes: 45, userLiked: false
                 },
                 { 
-                    id: 3, title: 'Sondage', icon: 'fa-square-poll-vertical', color: 'from-green-500 to-emerald-500', bg: 'bg-green-900', time: 'Il y a 6h',
+                    id: 3, title: 'Monde', icon: 'fa-globe', color: 'from-green-500 to-emerald-500', bg: 'bg-green-900', time: 'Il y a 6h',
                     bubbleImg: null,
-                    contentImg: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop',
-                    contentText: 'Quel est votre anime préféré de cette saison ? Dites-le nous en cliquant sur le cœur ! 🎌',
-                    musicQuery: 'anime opening theme', likes: 312, userLiked: false
+                    contentImg: 'https://images.unsplash.com/photo-1521295121783-8a321d551ad2?q=80&w=800&auto=format&fit=crop',
+                    contentText: 'Explorez les dernières actualités mondiales et restez connecté avec l\'univers qui vous entoure. 🌍',
+                    musicQuery: 'world news theme', likes: 312, userLiked: false
                 }
             ];
         }
@@ -1630,9 +1669,9 @@
 
         storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('movies', 0)">
-            <div id="ring-movies" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300">
-              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
-                 <i class="fa-solid fa-film text-white text-xl group-hover:scale-110 transition-transform"></i>
+            <div id="ring-movies" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-[#050505] flex items-center justify-center">
+                 <i class="fa-solid fa-film text-blue-500 text-xl drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"></i>
               </div>
             </div>
             <span class="text-[10px] font-bold text-slate-300">Top Films</span>
@@ -1640,9 +1679,9 @@
 
         storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('anime', 0)">
-            <div id="ring-anime" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
-              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
-                 <i class="fa-solid fa-dragon text-white text-xl group-hover:scale-110 transition-transform"></i>
+            <div id="ring-anime" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-pink-400 to-pink-600 shadow-[0_0_15px_rgba(236,72,153,0.3)] transition-all duration-300">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-[#050505] flex items-center justify-center">
+                 <i class="fa-solid fa-dragon text-pink-500 text-xl drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]"></i>
               </div>
             </div>
             <span class="text-[10px] font-bold text-slate-300">Top Anime</span>
@@ -1725,17 +1764,9 @@
 
                     const categoryLower = (item.category || '').toLowerCase();
                     
-                    // CORRECTION IMAGES MANQUANTES : Images de secours adaptées à la catégorie
+                    // CORRECTION IMAGES MANQUANTES : Au lieu d'une image générique, on laisse vide pour afficher le message pro
                     if (!rawImg || rawImg.trim() === '') {
-                        if (categoryLower.includes('otaku') || categoryLower.includes('anime')) {
-                            rawImg = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800&auto=format&fit=crop';
-                        } else if (categoryLower.includes('gaming') || categoryLower.includes('jeu')) {
-                            rawImg = 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=800&auto=format&fit=crop';
-                        } else if (categoryLower.includes('movie') || categoryLower.includes('film')) {
-                            rawImg = 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=800&auto=format&fit=crop';
-                        } else {
-                            rawImg = 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop'; // Defaut tech/info
-                        }
+                        rawImg = null;
                     }
 
                     return {
@@ -1758,83 +1789,104 @@
             window.toast_("Impossible de charger les actus du serveur.", "err");
         }
 
-        // L'algorithme de mélange : On "bourre" d'infos en mixant aléatoirement
+        // L'algorithme de tri : Les plus récents en premier !
         if (allNews.length > 0) {
-            allNews = allNews.sort(() => Math.random() - 0.5);
-        } else {
-            feedContainer.innerHTML = `<div class="py-10 text-center text-slate-500 text-sm w-full">Aucune actualité disponible pour le moment.</div>`;
-            return;
+            allNews = allNews.sort((a, b) => new Date(b.date) - new Date(a.date));
+        } else { 
+            feedContainer.innerHTML = `<div class="py-10 text-center text-slate-500 text-sm w-full">Aucune actualité disponible.</div>`; 
+            return; 
         }
 
-        // Génération de l'affichage (Nouveau design Instagram / Facebook)
         let htmlFeed = '';
         allNews.forEach((item, index) => {
             const articleId = 'news_' + window.sHash(item.link || index.toString());
-            
-            // Masquage si signalé
             if(window._hiddenArticles.has(articleId)) return;
 
-            // Nettoyage du texte (retire les balises HTML indésirables du RSS)
-            let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim().substring(0, 150) + '...';
+            let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim();
+            const isLongDesc = cleanDesc.length > 150;
             
             let dateObj = new Date(item.date);
             let diffDays = Math.floor((new Date() - dateObj) / (1000 * 60 * 60 * 24));
             let dateStr = diffDays === 0 ? "Aujourd'hui" : (diffDays === 1 ? "Hier" : `Il y a ${diffDays} j`);
             if (isNaN(diffDays)) dateStr = "Récemment";
 
-            // Définition du style du header du post (Avatar + Icone)
-            let catColor = "bg-brand";
-            let catIcon = '<i class="fa-solid fa-newspaper text-xs"></i>';
-            let catDisplay = "tool"; // par defaut
-            
-            if (item.category === 'gaming') { catColor = "bg-green-500"; catIcon = '<i class="fa-solid fa-gamepad text-xs"></i>'; catDisplay = 'gaming'; }
-            if (item.category === 'movies') { catColor = "bg-red-500"; catIcon = '<i class="fa-solid fa-film text-xs"></i>'; catDisplay = 'movies'; }
-            if (item.category === 'otaku') { catColor = "bg-blue-500"; catIcon = '<i class="fa-solid fa-dragon text-xs"></i>'; catDisplay = 'otaku'; }
-            if (item.category === 'tool' || item.category === 'tools') { catColor = "bg-yellow-500"; catIcon = '<i class="fa-solid fa-wrench text-xs"></i>'; catDisplay = 'tool'; }
+            let catDisplay = "tool";
+            if (item.category === 'gaming') catDisplay = 'gaming';
+            if (item.category === 'movies') catDisplay = 'movies';
+            if (item.category === 'otaku') catDisplay = 'otaku';
+            if (item.category === 'tool' || item.category === 'tools') catDisplay = 'tool';
+            if (item.category === 'music' || item.category === 'audio') catDisplay = 'music';
 
-            // LE NOUVEAU DESIGN : Pleine largeur, style post social media
+            const isLiked = window._likedArticles && window._likedArticles.has(articleId);
+            const isSaved = window._savedArticles && window._savedArticles.has(articleId);
+
+            // STRUCTURE DU POST
             htmlFeed += `
-            <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-5 mb-2 transition-all duration-300 w-full" id="article-${articleId}" data-category="${catDisplay}">
+            <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-4 mb-3 transition-all duration-300 w-full" id="article-${articleId}" data-category="${catDisplay}">
                 
-                <!-- HEADER DU POST -->
+                <!-- HEADER -->
                 <div class="flex items-center justify-between px-4 py-3">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full ${catColor} flex items-center justify-center text-white shadow-lg">
-                            ${catIcon}
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-black border border-white/10 overflow-hidden shadow-lg shrink-0">
+                            ${window.getCategoryAvatar(catDisplay)}
                         </div>
                         <div>
-                            <p class="text-[13px] font-bold text-white leading-none uppercase tracking-wide">${item.label}</p>
+                            <p class="text-[13px] font-bold text-white leading-none uppercase tracking-wide flex items-center gap-1.5">
+                                ${item.label}
+                                <i class="fa-solid fa-circle-check text-brand text-[12px] drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]" title="Vérifié"></i>
+                            </p>
                             <p class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</p>
                         </div>
                     </div>
-                    <button onclick="window.openReportModal('${articleId}')" class="text-slate-500 hover:text-white transition-colors"><i class="fa-solid fa-ellipsis"></i></button>
-                </div>
-
-                <!-- IMAGE CENTRALE (Format large) -->
-                <a href="${item.link}" target="_blank" class="block w-full bg-[#121214] relative">
-                     <img src="${item.img}" class="w-full max-h-[450px] object-cover" onerror="this.src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop'">
-                </a>
-
-                <!-- BARRE D'ACTIONS -->
-                <div class="flex items-center justify-between px-4 py-3">
-                    <div class="flex items-center gap-5">
-                        <button onclick="window.toggleLikeActu('${articleId}')" class="text-white hover:text-red-500 transition-colors text-2xl active:scale-90 transform"><i class="fa-regular fa-heart" id="like-${articleId}"></i></button>
-                        <button onclick="window.shareArticle(decodeURIComponent('${encodeURIComponent(item.title)}'), '${item.link}')" class="text-white hover:text-blue-400 transition-colors text-[22px] active:scale-90 transform"><i class="fa-regular fa-paper-plane"></i></button>
-                    </div>
-                    <button onclick="window.saveArticle('${articleId}')" class="text-white hover:text-brand transition-colors text-2xl active:scale-90 transform"><i class="${window._savedArticles.has(articleId) ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark" id="bookmark-${articleId}"></i></button>
+                    <button onclick="window.openPostOptions('${articleId}', '${item.link}')" class="text-slate-500 hover:text-white transition-colors p-2 active:scale-90"><i class="fa-solid fa-ellipsis text-lg"></i></button>
                 </div>
 
                 <!-- TEXTE ET TITRE -->
-                <div class="px-4">
-                    <h3 class="text-[15px] font-bold text-white mb-1 leading-tight"><a href="${item.link}" target="_blank">${item.title}</a></h3>
-                    <p class="text-[12px] text-slate-300 line-clamp-3 leading-relaxed">${cleanDesc}</p>
+                <div class="px-4 pb-3">
+                    <h3 class="text-[15px] font-bold text-white mb-1.5 leading-tight">${item.title}</h3>
+                    <div class="relative">
+                        <p id="desc-${articleId}" class="text-[13px] text-slate-300 leading-relaxed transition-all duration-300 ${isLongDesc ? 'line-clamp-2' : ''}">${cleanDesc}</p>
+                        ${isLongDesc ? `<button onclick="window.toggleDesc('${articleId}', event)" id="btn-desc-${articleId}" class="text-brand text-[11px] font-bold mt-1.5 hover:text-white transition-colors relative z-10 cursor-pointer">Voir plus</button>` : ''}
+                    </div>
+                </div>
+
+                <!-- IMAGE (Ouvre le Zoom plein écran) -->
+                ${item.img ? `
+                <div class="block w-full bg-[#121214] relative cursor-pointer group" onclick="window.openImageZoom('${item.img}')">
+                     <img src="${item.img}" class="w-full max-h-[450px] object-cover" onerror="window.handleBrokenImage(this, '${item.link}')">
+                     <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1.5 rounded-lg text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"><i class="fa-solid fa-expand text-xs"></i></div>
+                </div>` : `
+                <div class="w-full bg-white/5 border-y border-white/5 py-8 px-6 flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 border border-white/10 shadow-inner">
+                        <i class="fa-regular fa-image text-slate-500 text-xl"></i>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-relaxed mb-4 max-w-[280px]">L'aperçu n'est pas disponible pour cet article.</p>
+                    <button onclick="event.stopPropagation(); window.confirmExternalLink('${item.link}')" class="px-5 py-2.5 bg-brand/10 text-brand text-[11px] font-bold rounded-xl hover:bg-brand/20 transition-colors border border-brand/20 shadow-[0_0_10px_rgba(168,85,247,0.15)] relative z-10 cursor-pointer">
+                        Ouvrir l'article original
+                    </button>
+                </div>
+                `}
+
+                <!-- ACTIONS -->
+                <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                    <div class="flex items-center gap-6">
+                        <button onclick="window.toggleLikeActu('${articleId}')" class="text-white hover:text-red-500 transition-colors text-2xl active:scale-90 transform"><i class="${isLiked ? 'fa-solid text-red-500' : 'fa-regular'} fa-heart" id="like-${articleId}"></i></button>
+                        <button onclick="window.shareArticle(decodeURIComponent('${encodeURIComponent(item.title)}'), '${item.link}')" class="text-white hover:text-blue-400 transition-colors text-[22px] active:scale-90 transform"><i class="fa-regular fa-paper-plane"></i></button>
+                    </div>
+                    <button onclick="window.saveArticle('${articleId}', \`${encodeURIComponent(item.title)}\`, '${item.link}', '${item.img || ''}')" class="text-white hover:text-brand transition-colors text-2xl active:scale-90 transform"><i class="${isSaved ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark" id="bookmark-${articleId}"></i></button>
+                </div>
+
+                <!-- NOTICE LÉGALE PRO -->
+                <div class="px-4 pb-1">
+                    <div class="w-full border-t border-white/5 pt-2 flex items-start gap-2">
+                        <i class="fa-solid fa-circle-info text-slate-500 text-[9px] mt-0.5"></i>
+                        <p class="text-[9px] text-slate-500 leading-tight">Contenu externe agrégé automatiquement. LevelUp n'est pas l'auteur de cette publication.</p>
+                    </div>
                 </div>
             </div>`;
         });
         
         feedContainer.innerHTML = htmlFeed;
-
-        // Réappliquer le filtre actuellement sélectionné (important lors d'un rafraîchissement)
         const activeFilterBtn = document.querySelector('.actu-filter-btn.active');
         if (activeFilterBtn) {
             window.filterActus(activeFilterBtn.dataset.filter);
@@ -1842,41 +1894,124 @@
     };
 
     // --- FONCTIONNALITÉS SOCIALES DES ACTUALITÉS (LIKE, SAUVEGARDE, PARTAGE, SIGNALEMENT) ---
-    window._hiddenArticles = new Set();
-    window._savedArticles = new Set();
-    window._currentReportId = null;
-
-    window.toggleLikeActu = function(id) {
-        const icon = document.getElementById('like-'+id);
-        if(icon.classList.contains('fa-solid')) {
-            icon.classList.replace('fa-solid', 'fa-regular');
-            icon.classList.remove('text-red-500');
-        } else {
-            icon.classList.replace('fa-regular', 'fa-solid');
-            icon.classList.add('text-red-500');
-            // Petite animation de pop
-            icon.parentElement.style.transform = 'scale(1.3)';
-            setTimeout(() => icon.parentElement.style.transform = 'scale(1)', 150);
-        }
+    window.handleBrokenImage = function(imgEl, link) {
+        const container = imgEl.parentElement;
+        container.onclick = null; // Retire le zoom sur une image cassée
+        container.classList.remove('cursor-pointer');
+        container.innerHTML = `
+            <div class="w-full bg-white/5 border-y border-white/5 py-8 px-6 flex flex-col items-center justify-center text-center">
+                <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 border border-white/10 shadow-inner">
+                    <i class="fa-regular fa-image text-slate-500 text-xl"></i>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed mb-4 max-w-[280px]">L'image originale n'est plus accessible sur le site source.</p>
+                <button onclick="event.stopPropagation(); window.confirmExternalLink('${link}')" class="px-5 py-2.5 bg-brand/10 text-brand text-[11px] font-bold rounded-xl hover:bg-brand/20 transition-colors border border-brand/20 shadow-[0_0_10px_rgba(168,85,247,0.15)] relative z-10 cursor-pointer">
+                    Ouvrir l'article original
+                </button>
+            </div>
+        `;
     };
 
-    window.saveArticle = function(id) {
+    window.toggleLikeActu = async function(id) {
+        if(!window._user) { window.toast_('Connectez-vous pour liker !', 'warn'); return; }
+        const icon = document.getElementById('like-'+id);
+        const isLiked = window._likedArticles.has(id);
+        
+        if(isLiked) {
+            window._likedArticles.delete(id);
+            if(icon) {
+                icon.classList.replace('fa-solid', 'fa-regular');
+                icon.classList.remove('text-red-500');
+            }
+        } else {
+            window._likedArticles.add(id);
+            if(icon) {
+                icon.classList.replace('fa-regular', 'fa-solid');
+                icon.classList.add('text-red-500');
+                icon.parentElement.style.transform = 'scale(1.3)';
+                setTimeout(() => icon.parentElement.style.transform = 'scale(1)', 150);
+            }
+        }
+
+        try {
+            const ref = doc(window._db, 'artifacts', appId, 'users', window._user.uid, 'liked_articles', id);
+            if (isLiked) {
+                await deleteDoc(ref);
+            } else {
+                await setDoc(ref, { timestamp: new Date().toISOString() });
+            }
+        } catch(e) { console.error('Erreur Firebase Like', e); }
+    };
+
+    window.saveArticle = async function(id, titleEnc, link, img) {
         if(!window._user) { window.toast_('Connectez-vous pour enregistrer cet article.', 'warn'); return; }
+        
+        const title = titleEnc ? decodeURIComponent(titleEnc) : 'Article sauvegardé';
         const icon = document.getElementById('bookmark-'+id);
-        if(window._savedArticles.has(id)) {
+        const isSaved = window._savedArticles.has(id);
+        
+        if(isSaved) {
             window._savedArticles.delete(id);
-            icon.classList.replace('fa-solid', 'fa-regular');
-            icon.classList.remove('text-brand');
+            delete window._savedArticlesData[id];
+            if(icon) {
+                icon.classList.replace('fa-solid', 'fa-regular');
+                icon.classList.remove('text-brand');
+            }
             window.toast_('Retiré de vos favoris', 'info');
         } else {
             window._savedArticles.add(id);
-            icon.classList.replace('fa-regular', 'fa-solid');
-            icon.classList.add('text-brand');
-            // Petite animation
-            icon.parentElement.style.transform = 'scale(1.2)';
-            setTimeout(() => icon.parentElement.style.transform = 'scale(1)', 150);
+            window._savedArticlesData[id] = { title, link, img, timestamp: new Date().toISOString() };
+            if(icon) {
+                icon.classList.replace('fa-regular', 'fa-solid');
+                icon.classList.add('text-brand');
+                icon.parentElement.style.transform = 'scale(1.2)';
+                setTimeout(() => icon.parentElement.style.transform = 'scale(1)', 150);
+            }
             window.toast_('Article sauvegardé !', 'ok');
         }
+
+        window.renderSavedArticlesUI();
+
+        try {
+            const ref = doc(window._db, 'artifacts', appId, 'users', window._user.uid, 'saved_articles', id);
+            if (isSaved) {
+                await deleteDoc(ref);
+            } else {
+                await setDoc(ref, window._savedArticlesData[id]);
+            }
+        } catch(e) { console.error('Erreur Firebase Save', e); }
+    };
+
+    window.renderSavedArticlesUI = function() {
+        const cont = document.getElementById('savedArticlesContainer');
+        if(!cont) return;
+        
+        if(!window._user || Object.keys(window._savedArticlesData || {}).length === 0) {
+            cont.classList.add('hidden');
+            return;
+        }
+        
+        cont.classList.remove('hidden');
+        let html = `<h3 class="text-[11px] uppercase tracking-wider font-bold text-slate-500 mb-3 px-1"><i class="fa-solid fa-bookmark mr-1"></i> Vos Favoris sauvegardés</h3>`;
+        html += `<div class="flex gap-3 overflow-x-auto hide-scrollbar pb-4 px-1">`;
+        
+        const items = Object.entries(window._savedArticlesData).sort((a,b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
+        
+        items.forEach(([id, data]) => {
+            const imgSrc = data.img && data.img !== 'null' ? data.img : 'https://placehold.co/400x300/121214/a855f7?text=LevelUp';
+            html += `
+            <div class="w-[200px] shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col relative group cursor-pointer hover:bg-white/10 transition-colors" onclick="window.confirmExternalLink('${data.link}')">
+                <div class="h-[110px] w-full overflow-hidden relative border-b border-white/10 bg-[#050505] flex items-center justify-center">
+                    ${data.img && data.img !== 'null' ? `<img src="${data.img}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-newspaper text-slate-600 text-3xl"></i>`}
+                    <button onclick="event.stopPropagation(); window.saveArticle('${id}', '${encodeURIComponent(data.title)}', '${data.link}', '${data.img}')" class="absolute top-2 right-2 w-7 h-7 bg-black/60 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center text-brand active:scale-90"><i class="fa-solid fa-bookmark text-xs"></i></button>
+                </div>
+                <div class="p-3 flex-1 flex flex-col justify-between">
+                    <h4 class="text-xs font-bold text-white leading-snug line-clamp-2">${data.title}</h4>
+                    <p class="text-[9px] text-brand mt-2 font-bold uppercase tracking-wider">Lire l'article</p>
+                </div>
+            </div>`;
+        });
+        html += `</div>`;
+        cont.innerHTML = html;
     };
 
     window.shareArticle = function(title, url) {
@@ -1956,6 +2091,104 @@
         window.closeReportModal();
     };
 
+    window.openPostOptions = function(articleId, link) {
+        let sheet = document.getElementById('postOptionsSheet');
+        if (!sheet) {
+            sheet = document.createElement('div');
+            sheet.id = 'postOptionsSheet';
+            sheet.className = 'fixed inset-0 z-[200] hidden flex-col justify-end';
+            sheet.innerHTML = `
+                <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
+                <div class="bg-[#121214] rounded-t-[24px] p-6 relative z-10 flex flex-col gap-3 animate-slide-up border-t border-white/10 safe-bottom">
+                    <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4"></div>
+                    <button id="po-open" class="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-3 shadow-[0_0_10px_rgba(255,255,255,0.05)]"><i class="fa-solid fa-arrow-up-right-from-square"></i> Lire l'article original</button>
+                    <button id="po-report" class="w-full py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold rounded-xl transition-colors flex items-center justify-center gap-3"><i class="fa-solid fa-flag"></i> Signaler le contenu</button>
+                    <button onclick="document.getElementById('postOptionsSheet').classList.add('hidden')" class="w-full py-3.5 bg-transparent text-slate-400 hover:text-white font-bold rounded-xl transition-colors mt-2">Annuler</button>
+                </div>
+            `;
+            document.body.appendChild(sheet);
+        }
+        
+        document.getElementById('po-open').onclick = function() {
+            sheet.classList.add('hidden');
+            window.confirmExternalLink(link);
+        };
+        document.getElementById('po-report').onclick = function() {
+            sheet.classList.add('hidden');
+            window.openReportModal(articleId);
+        };
+        
+        sheet.classList.remove('hidden');
+        sheet.classList.add('flex');
+    };
+
+    window._pendingExternalLink = null;
+    window.confirmExternalLink = function(url) {
+        window._pendingExternalLink = url;
+        const modal = document.getElementById('externalLinkModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    };
+    
+    window.closeExternalLinkModal = function() {
+        window._pendingExternalLink = null;
+        const modal = document.getElementById('externalLinkModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    };
+    
+    window.proceedExternalLink = function() {
+        if (window._pendingExternalLink) {
+            window.open(window._pendingExternalLink, '_blank');
+        }
+        window.closeExternalLinkModal();
+    };
+
+    window.toggleDesc = function(articleId, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const descEl = document.getElementById('desc-' + articleId);
+        const btnEl = document.getElementById('btn-desc-' + articleId);
+        if (descEl && btnEl) {
+            // Le retrait du line-clamp-2 affiche TOUT le texte
+            if (descEl.classList.contains('line-clamp-2')) {
+                descEl.classList.remove('line-clamp-2');
+                btnEl.textContent = 'Voir moins';
+            } else {
+                descEl.classList.add('line-clamp-2');
+                btnEl.textContent = 'Voir plus';
+            }
+        }
+    };
+
+    window.openImageZoom = function(imgUrl) {
+        let zoom = document.getElementById('imageZoomModal');
+        if (!zoom) {
+            zoom = document.createElement('div');
+            zoom.id = 'imageZoomModal';
+            // Le curseur est un "zoom-out" pour indiquer qu'on peut cliquer n'importe où pour fermer
+            zoom.className = 'fixed inset-0 z-[300] bg-black/95 hidden flex-col items-center justify-center p-2 backdrop-blur-md transition-opacity duration-300 opacity-0 cursor-zoom-out';
+            
+            // Le clic sur l'arrière-plan ferme la modale
+            zoom.onclick = function() {
+                this.classList.add('opacity-0');
+                setTimeout(() => this.classList.add('hidden'), 300);
+            };
+
+            zoom.innerHTML = `
+                <!-- event.stopPropagation() empêche la modale de se fermer si on clique exactement sur l'image elle-même, on doit donc bien cliquer à côté pour fermer -->
+                <img id="zoomImgEl" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl cursor-default" onclick="event.stopPropagation()">
+            `;
+            document.body.appendChild(zoom);
+        }
+        document.getElementById('zoomImgEl').src = imgUrl;
+        zoom.classList.remove('hidden');
+        zoom.classList.add('flex');
+        setTimeout(() => zoom.classList.remove('opacity-0'), 10);
+    };
+
     window.openStory = function(type, index) {
         if(!window._storySequences[type] || window._storySequences[type].length === 0) {
             window.toast_('Recommandations en cours de chargement... Patiente une seconde.', 'warn');
@@ -1999,6 +2232,28 @@
         window.updateBubbleVisuals();
 
         const story = stories[window._currentStoryIndex];
+
+        // Modification dynamique de l'avatar et du nom dans l'en-tête (Optimisé)
+        const avEl = document.getElementById('storyCurrentAvatar');
+        const nameEl = document.getElementById('storyCurrentName');
+        if (avEl && nameEl) {
+            if (window._currentSeqType === 'movies') {
+                avEl.innerHTML = window.getCategoryAvatar('movies');
+                nameEl.textContent = 'Top Films';
+            } else if (window._currentSeqType === 'anime') {
+                avEl.innerHTML = window.getCategoryAvatar('otaku');
+                nameEl.textContent = 'Top Anime';
+            } else {
+                if (story.title === 'Tool') {
+                    avEl.innerHTML = window.getCategoryAvatar('tool');
+                } else if (story.title === 'Monde') {
+                    avEl.innerHTML = '<div class="w-full h-full bg-green-900 flex items-center justify-center"><i class="fa-solid fa-globe text-white text-lg"></i></div>';
+                } else {
+                    avEl.innerHTML = '<div class="w-full h-full bg-brand flex items-center justify-center"><i class="fa-solid fa-bolt text-white text-lg"></i></div>';
+                }
+                nameEl.textContent = story.title || 'LevelUp Ecosystem';
+            }
+        }
         
         document.getElementById('storyTime').textContent = story.time;
         
@@ -2242,20 +2497,8 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelMovie</h2><p class="text-xs text-slate-300/90">Vos films et séries préférés.</p></div>
-              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
-                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="512" height="512" rx="100" fill="#030303"/>
-                  <defs>
-                    <filter id="blueGlow" x="-30%" y="-30%" width="160%" height="160%">
-                      <feGaussianBlur stdDeviation="18" result="blur" />
-                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                    </filter>
-                  </defs>
-                  <g filter="url(#blueGlow)">
-                    <path d="M185 170V315C185 328.807 196.193 340 210 340H355" stroke="#3b82f6" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M235 210L325 255L235 300V210Z" fill="#3b82f6" stroke="#3b82f6" stroke-width="8" stroke-linejoin="round"/>
-                  </g>
-                </svg>
+              <div class="shrink-0 transition-transform group-active:scale-95">
+                <i class="fa-solid fa-play text-2xl text-white"></i>
               </div>
             </div>
           </div>
@@ -2268,21 +2511,8 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelMusic</h2><p class="text-xs text-slate-300/90">Écoutez vos morceaux favoris.</p></div>
-              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
-                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="512" height="512" rx="100" fill="#030303"/>
-                  <defs>
-                    <filter id="glowMusic" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="20" result="blur" />
-                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                    </filter>
-                  </defs>
-                  <g filter="url(#glowMusic)">
-                    <path d="M180 320V120L380 80V280" stroke="#3b82f6" stroke-width="35" stroke-linecap="round" stroke-linejoin="round"/>
-                    <circle cx="140" cy="340" r="40" fill="#3b82f6" />
-                    <circle cx="340" cy="300" r="40" fill="#3b82f6" />
-                  </g>
-                </svg>
+              <div class="shrink-0 transition-transform group-active:scale-95">
+                <i class="fa-solid fa-music text-2xl text-white"></i>
               </div>
             </div>
           </div>
@@ -2295,20 +2525,8 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelTool</h2><p class="text-xs text-slate-300/90">Utilitaires et outils pratiques.</p></div>
-              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
-                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="512" height="512" rx="100" fill="#030303"/>
-                  <defs>
-                    <filter id="greenGlowTool" x="-30%" y="-30%" width="160%" height="160%">
-                      <feGaussianBlur stdDeviation="18" result="blur" />
-                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                    </filter>
-                  </defs>
-                  <g filter="url(#greenGlowTool)">
-                    <path d="M346 138c-28-28-70-32-102-12l-114 114c-12 3-26 0-36 10-16 16-16 42 0 58s42 16 58 0c10-10 13-24 10-36l114-114c20 32 16 74-12 102" stroke="#22c55e" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-                    <circle cx="370" cy="140" r="24" fill="#22c55e"/>
-                  </g>
-                </svg>
+              <div class="shrink-0 transition-transform group-active:scale-95">
+                <i class="fa-solid fa-screwdriver-wrench text-2xl text-white"></i>
               </div>
             </div>
           </div>
@@ -2321,22 +2539,8 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelGame</h2><p class="text-xs text-slate-300/90">Jouez à des jeux exclusifs.</p></div>
-              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
-                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="512" height="512" rx="100" fill="#030303"/>
-                  <defs>
-                    <filter id="greenGlowGame" x="-30%" y="-30%" width="160%" height="160%">
-                      <feGaussianBlur stdDeviation="18" result="blur" />
-                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                    </filter>
-                  </defs>
-                  <g filter="url(#greenGlowGame)">
-                    <path d="M100 330C50 330 40 180 160 180H352C472 180 462 330 412 330C370 330 360 260 340 260H172C152 260 142 330 100 330Z" stroke="#22c55e" stroke-width="32" stroke-linejoin="round"/>
-                    <path d="M130 225V275M105 250H155" stroke="#22c55e" stroke-width="20" stroke-linecap="round"/>
-                    <circle cx="360" cy="260" r="16" fill="#22c55e"/>
-                    <circle cx="400" cy="220" r="16" fill="#22c55e"/>
-                  </g>
-                </svg>
+              <div class="shrink-0 transition-transform group-active:scale-95">
+                <i class="fa-solid fa-gamepad text-2xl text-white"></i>
               </div>
             </div>
           </div>
@@ -2349,24 +2553,8 @@
             </div>
             <div class="relative z-10 p-4 pb-5 flex justify-between items-end w-full mt-auto gap-2">
               <div class="flex-1"><h2 class="text-2xl font-display font-bold text-white mb-1">LevelOtaku</h2><p class="text-xs text-slate-300/90">L'univers anime et manga.</p></div>
-              <div class="w-12 h-12 shrink-0 flex items-center justify-center drop-shadow-xl transition-transform group-active:scale-95">
-                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="512" height="512" rx="100" fill="#030303"/>
-                  <defs>
-                    <filter id="pinkGlowOtaku" x="-30%" y="-30%" width="160%" height="160%">
-                      <feGaussianBlur stdDeviation="18" result="blur" />
-                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                    </filter>
-                  </defs>
-                  <g filter="url(#pinkGlowOtaku)">
-                    <path d="M90 200C160 170 352 170 422 200" stroke="#ec4899" stroke-width="32" stroke-linecap="round"/>
-                    <path d="M120 130C180 110 332 110 392 130" stroke="#ec4899" stroke-width="24" stroke-linecap="round"/>
-                    <path d="M160 120V380" stroke="#ec4899" stroke-width="32" stroke-linecap="round"/>
-                    <path d="M352 120V380" stroke="#ec4899" stroke-width="32" stroke-linecap="round"/>
-                    <path d="M256 180V300" stroke="#ec4899" stroke-width="24" stroke-linecap="round"/>
-                    <path d="M210 300H302V380H210Z" fill="#ec4899"/>
-                  </g>
-                </svg>
+              <div class="shrink-0 transition-transform group-active:scale-95">
+                <i class="fa-solid fa-dragon text-2xl text-white"></i>
               </div>
             </div>
           </div>`;
