@@ -269,7 +269,6 @@
         <div class="flex gap-2 overflow-x-auto hide-scrollbar px-4 py-3 mb-2 sticky top-0 bg-[#050505]/95 backdrop-blur-md z-30 border-b border-white/5">
           <button onclick="window.filterActus('tout')" class="actu-filter-btn active px-4 py-1.5 bg-brand text-white rounded-full text-xs font-bold transition-colors shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.3)]" data-filter="tout">Tout</button>
           <button onclick="window.filterActus('gaming')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="gaming">Gaming</button>
-          <button onclick="window.filterActus('sport')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="sport"><i class="fa-solid fa-futbol mr-1.5"></i>Sport</button>
           <button onclick="window.filterActus('movies')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="movies">Cinéma</button>
           <button onclick="window.filterActus('otaku')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="otaku">Otaku</button>
           <button onclick="window.filterActus('tool')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="tool">Tool</button>
@@ -820,9 +819,6 @@
         if(category === 'tool') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-screwdriver-wrench text-xl"></i></div>`;
         if(category === 'gaming') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-gamepad text-xl"></i></div>`;
         if(category === 'otaku') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-pink-500"><i class="fa-solid fa-dragon text-xl drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]"></i></div>`;
-        if(category === 'sport') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-green-500"><i class="fa-solid fa-futbol text-xl drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]"></i></div>`;
-        if(category === 'monde') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-emerald-500"><i class="fa-solid fa-earth-americas text-xl drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]"></i></div>`;
-        if(category === 'flash') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-orange-500"><i class="fa-solid fa-bolt text-xl drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]"></i></div>`;
         return `<div class="w-full h-full bg-brand flex items-center justify-center text-white text-lg"><i class="fa-solid fa-newspaper"></i></div>`;
     };
 
@@ -872,28 +868,16 @@
 
         if (window._auth) {
             onAuthStateChanged(window._auth, async (u) => {
-                console.log("🛡️ [AUTH] Changement d'état Firebase. UID :", u ? u.uid : "Déconnecté");
-                
-                // 🚫 SÉCURITÉ : Bloquer formellement les comptes anonymes (Les fameux utilisateurs fantômes)
-                if (u && u.isAnonymous) {
-                    console.warn("🚫 [AUTH] Rejet d'un compte anonyme. Déconnexion forcée.");
-                    try { await signOut(window._auth); } catch(e) {}
-                    return; // Stoppe toute l'exécution ici
-                }
-
                 if (u) {
                     try {
                         window._user = u;
                         const ref = doc(window._db, 'artifacts', appId, 'users', u.uid, 'profile', 'data');
-                        
-                        console.log("📡 [FIRESTORE] Tentative de lecture du profil existant...");
                         const snap = await getDoc(ref);
 
                         // Récupération localisation
                         let locData = await fetchUserLocation();
 
                         if (snap.exists()) {
-                            console.log("✅ [FIRESTORE] Profil trouvé. Connexion normale.");
                             window._ud = snap.data();
                             
                             // Récupération des articles sauvegardés et likés depuis Firestore
@@ -974,12 +958,7 @@
                             });
 
                         } else {
-                            console.log("⚠️ [FIRESTORE] Aucun profil trouvé dans la base. Passage en mode INSCRIPTION.");
                             window._pendingCreds = u;
-                            
-                            // 1. Ouvrir la modale (au cas où la page a rechargé ou a été fermée)
-                            window.openLoginSheet();
-                            
                             document.getElementById('authLoginStep').classList.add('hidden');
                             const regStep = document.getElementById('authRegisterStep');
                             regStep.classList.remove('hidden');
@@ -988,14 +967,10 @@
                             const defaultName = u.displayName || 'Utilisateur LevelUp';
                             document.getElementById('regNameInput').value = defaultName;
                             window.checkRegForm();
-                            
-                            // 2. Mettre à jour l'UI du profil pour refléter l'état "en attente"
-                            window.refreshProfileUI();
                         }
                     } catch(e) {
-                        console.error("❌ [FIRESTORE ERREUR CRITIQUE] Impossible de lire le profil de l'utilisateur !", e);
-                        console.error("👉 EXPLICATION : C'est ce qui vous bloque en Mode Invité ! Votre base Firestore refuse la lecture (PERMISSION_DENIED). Regardez les règles recommandées plus bas.");
-                        window.toast_("Erreur de permission de la base de données. Regardez la console.", 'err');
+                        console.error("Auth DB Erreur", e);
+                        window.toast_("Erreur système.", 'err');
                     }
                 } else if (!window._pendingCreds) {
                     window._user = null;
@@ -1071,14 +1046,7 @@
         btn.disabled = true;
 
         const u = window._pendingCreds;
-        
-        // 🚫 SÉCURITÉ : Vérifier que l'utilisateur est bien là et NON anonyme avant d'écrire
-        if(!u || u.isAnonymous) {
-            window.toast_("Session invalide. Veuillez vous reconnecter avec Google.", "err");
-            btn.textContent = "Terminer l'inscription";
-            btn.disabled = false;
-            return;
-        }
+        if(!u) return;
 
         const finalName = document.getElementById('regNameInput').value.trim();
 
@@ -1191,46 +1159,21 @@
                 const tmpl = document.getElementById('tmpl-connected-nokey');
                 cont.innerHTML = tmpl.innerHTML;
             }
-        } else if (window._pendingCreds) {
-            navCompte.className = 'fa-solid fa-user-pen text-lg text-brand drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]';
-            navTxt.textContent = 'Inscription';
-            nameEl.textContent = window._pendingCreds.displayName || 'Finalisation...';
-            statEl.textContent = "Veuillez terminer votre inscription.";
-            statEl.className = 'text-sm text-brand mt-1 font-bold';
-
-            if(window._pendingCreds.photoURL) {
-                avaCont.innerHTML = `<img src="${window._pendingCreds.photoURL}" class="w-full h-full object-cover">`;
-            } else {
-                avaCont.innerHTML = `<i class="fa-solid fa-hourglass-half text-3xl text-brand"></i>`;
-            }
-
-            cont.innerHTML = `
-              <div class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
-                <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-user-pen"></i></div>
-                <h3 class="text-base font-bold text-white mb-2">Inscription incomplète</h3>
-                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Vous êtes connecté avec Google, mais votre profil n'est pas encore finalisé.</p>
-                <button onclick="window.openLoginSheet()" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm shadow-[0_0_15px_rgba(168,85,247,0.3)] mb-3">
-                  Terminer mon inscription
-                </button>
-                <button onclick="window.execLogout()" class="block w-full py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold rounded-[14px] transition-all text-sm">
-                  Annuler et se déconnecter
-                </button>
-              </div>`;
         } else if (!window._pendingCreds) {
             navCompte.className = 'fa-solid fa-right-to-bracket text-lg';
             navTxt.textContent = 'Connexion';
-            nameEl.textContent = 'Non connecté';
-            statEl.textContent = "Authentification requise.";
+            nameEl.textContent = 'Mode Invité';
+            statEl.textContent = "Vous n'êtes pas connecté.";
             statEl.className = 'text-sm text-slate-400 mt-1';
-            avaCont.innerHTML = `<i class="fa-solid fa-user-lock text-3xl text-slate-500"></i>`;
+            avaCont.innerHTML = `<i class="fa-solid fa-user text-3xl text-slate-500"></i>`;
 
             cont.innerHTML = `
               <div class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
                 <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-lock"></i></div>
-                <h3 class="text-base font-bold text-white mb-2">Accès restreint</h3>
-                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Vous devez vous connecter avec un compte valide pour générer une clé et utiliser l'écosystème.</p>
+                <h3 class="text-base font-bold text-white mb-2">Déverrouillez l'écosystème</h3>
+                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Connectez-vous pour synchroniser vos données sur tous les outils.</p>
                 <button onclick="openLoginSheet()" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm shadow-[0_0_15px_rgba(168,85,247,0.3)]">
-                  Se connecter
+                  Accéder à la connexion
                 </button>
               </div>`;
         }
@@ -1288,17 +1231,12 @@
 
     // --- GESTION DES CLÉS & PIN ---
     window.genKey = async function() {
-        // 🚫 SÉCURITÉ : Bloquer complètement si pas connecté ou si le compte est anonyme
-        if(!window._user || window._user.isAnonymous) {
-            window.toast_("Action interdite : Connectez-vous avec Google d'abord.", "err");
-            return;
-        }
-        
+        if(!window._user) return;
         const key = window.mkKey();
         
         const realUid = window._auth.currentUser ? window._auth.currentUser.uid : window._user.uid;
         const secRef = doc(window._db, 'artifacts', appId, 'users', realUid, 'security', 'key');
-        const pubRef = doc(window._db, 'artifacts', appId, 'public', 'data', 'keys', realUid);
+        const pubRef = doc(window._db, 'artifacts', appId, 'public', 'data', 'keys', key);
 
         const payload = {
             apiKey: key, key: key,
@@ -1309,35 +1247,15 @@
         };
 
         try {
-            console.log("🔑 [GEN-KEY] Tentative d'écriture de la clé publique et privée...");
             await setDoc(pubRef, payload, {merge: true});
             await setDoc(secRef, payload, {merge: true});
-            console.log("✅ [GEN-KEY] Clés écrites avec succès !");
 
             window._ud.apiKey = key;
             window.refreshProfileUI();
             window.toast_("Clé générée avec succès !", "ok");
         } catch (err) {
-            console.error("❌ [GEN-KEY] ERREUR DE PERMISSION FIRESTORE AU SERVEUR !", err);
-            console.error("👉 EXPLICATION : Votre compte est bien créé (d'où l'email reçu), mais votre Firebase refuse qu'on écrive dans le dossier 'public'.");
-            console.error("👇 SOLUTION : Copiez-collez exactement ces règles dans votre console Firebase (Onglet Firestore Database -> Règles) puis Publiez :");
-            console.error(`
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Autorise la lecture/écriture publique pour les clés et actus
-    match /artifacts/{appId}/public/data/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    // Sécurise les données privées des utilisateurs
-    match /artifacts/{appId}/users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-            `);
-            window.toast_("Erreur de permission Firestore. Consultez la console (F12).", "err");
+            console.error("Firebase Rules Error:", err);
+            window.toast_("Erreur de permission serveur.", "err");
         }
     };
 
@@ -1825,33 +1743,44 @@ service cloud.firestore {
     };
 
     // Variables globales pour le lecteur de Stories
-    window._storySequences = { flash: [], monde: [], tool: [], movies: [], anime: [] };
-    window._currentSeqType = 'flash';
+    window._storySequences = { main: [], movies: [], anime: [] };
+    window._currentSeqType = 'main';
     window._currentStoryIndex = 0;
     window._seenStories = new Set();
     let storyTimeout = null;
     let storyProgressInterval = null;
 
     window.updateBubbleVisuals = function() {
-        const rings = ['flash', 'monde', 'tool', 'movies', 'anime'];
-        const colors = {
-            flash: 'from-brand to-orange-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]',
-            monde: 'from-green-500 to-emerald-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]',
-            tool: 'from-blue-500 to-indigo-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]',
-            movies: 'from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)]',
-            anime: 'from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-        };
-
-        rings.forEach(cat => {
-            const el = document.getElementById('ring-' + cat);
-            if(el) {
-                if(window._seenStories.has(cat)) {
-                    el.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
-                } else {
-                    el.className = `w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${colors[cat]} transition-all duration-300`;
+        if (window._storySequences.main) {
+            window._storySequences.main.forEach((s, index) => {
+                const ring = document.getElementById(`ring-main-${index}`);
+                if(ring) {
+                    if(window._seenStories.has(`main_${index}`)) {
+                        ring.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
+                    } else {
+                        ring.className = `w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${s.color} shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300`;
+                    }
                 }
+            });
+        }
+        
+        const ringMovies = document.getElementById('ring-movies');
+        if(ringMovies) {
+            if(window._seenStories.has('movies')) {
+                ringMovies.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
+            } else {
+                ringMovies.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300';
             }
-        });
+        }
+        
+        const ringAnime = document.getElementById('ring-anime');
+        if(ringAnime) {
+            if(window._seenStories.has('anime')) {
+                ringAnime.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
+            } else {
+                ringAnime.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300';
+            }
+        }
     };
 
     window.loadDynamicActus = async function() {
@@ -1859,78 +1788,66 @@ service cloud.firestore {
         const feedContainer = document.getElementById('actusFeed');
         if(!storyContainer || !feedContainer) return;
 
-        // --- GÉNÉRATEUR DE STORIES DYNAMIQUES (Rafraîchissement simulé toutes les 15 minutes) ---
-        const timeSeed15 = Math.floor(Date.now() / (15 * 60 * 1000)); // Change toutes les 15 min
-
-        const generateStories = (count, category, titles, texts, imgs, icon, color, bg) => {
-            let stories = [];
-            for(let i=0; i<count; i++) {
-                let idx = (i + timeSeed15) % titles.length;
-                let imgIdx = (i + timeSeed15) % imgs.length;
-                stories.push({
-                    title: titles[idx],
-                    icon: icon,
-                    color: color,
-                    bg: bg,
-                    time: `À l'instant (${(i*2 + (timeSeed15%10))} min)`,
-                    contentImg: imgs[imgIdx],
-                    contentText: texts[idx],
-                    likes: 100 + (Math.abs(timeSeed15 + i) % 2000),
-                    userLiked: false,
-                    categoryBadge: category
-                });
+        // 1. CHARGEMENT DES STORIES PRINCIPALES (DEPUIS FIRESTORE)
+        let mainStories = [];
+        try {
+            if (window._db) {
+                // Requête sécurisée vers ta base de données
+                const storiesRef = collection(window._db, 'artifacts', appId, 'public', 'data', 'main_stories');
+                const snap = await getDocs(storiesRef);
+                if (!snap.empty) {
+                    snap.forEach(doc => {
+                        mainStories.push({ id: doc.id, ...doc.data(), userLiked: false });
+                    });
+                }
             }
-            return stories;
-        };
+        } catch (e) {
+            console.warn("Erreur chargement stories depuis DB:", e);
+        }
 
-        // 1. URGENT / FLASH INFO (FOOTBALL & DERNIÈRE MINUTE) - >10 stories
-        const flashTitles = ["Alerte Mercato", "Ligue des Champions", "Flash Actu Sport", "Coup de tonnerre", "Dernière minute", "Transfert Officiel", "Choc en vue", "Résultat Historique"];
-        const flashTexts = ["Un transfert historique vient d'être officialisé à l'instant. Le monde du football est sous le choc.", "Des rebondissements incroyables lors du match de ce soir. Personne ne s'attendait à ce scénario.", "Une annonce de dernière minute concernant l'avenir du célèbre joueur. La conférence de presse est imminente.", "Les autorités sportives dévoilent les nouvelles règles pour la saison prochaine. Ça va changer la donne.", "Record absolu battu ! La prestation de ce soir restera dans les annales du sport international."];
-        const flashImgs = ["https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=800", "https://images.unsplash.com/photo-1518605368461-1ee7c5320d91?q=80&w=800", "https://images.unsplash.com/photo-1486286701208-1d58e8338ce0?q=80&w=800", "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=800"];
-        window._storySequences.flash = generateStories(12, 'sport', flashTitles, flashTexts, flashImgs, 'fa-bolt', 'from-brand to-orange-500', 'bg-black');
+        // Fallback (sécurité) si ta base de données est vide pour le moment
+        if (mainStories.length === 0) {
+            mainStories = [
+                { 
+                    id: 1, title: 'Flash Info', icon: 'fa-bolt', color: 'from-brand to-orange-500', time: 'Il y a 1h',
+                    bubbleImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop',
+                    contentImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop',
+                    contentText: 'Nouvelle architecture Firebase déployée avec succès. Les temps de chargement sont réduits de 40% ! 🚀',
+                    musicQuery: 'epic intense news theme', likes: 120, userLiked: false
+                },
+                { 
+                    id: 2, title: 'Tool', icon: 'fa-screwdriver-wrench', color: 'from-blue-500 to-indigo-500', bg: 'bg-black', time: 'Il y a 3h',
+                    bubbleImg: null,
+                    contentImg: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
+                    contentText: 'On travaille dur sur la nouvelle API LevelTools. Plus d\'outils, plus vite. Restez connectés. 💻',
+                    musicQuery: 'chill lofi coding beats', likes: 45, userLiked: false
+                },
+                { 
+                    id: 3, title: 'Monde', icon: 'fa-earth-americas', color: 'from-green-500 to-emerald-500', bg: 'bg-black', time: 'Il y a 6h',
+                    bubbleImg: null,
+                    contentImg: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop',
+                    contentText: 'Notre écosystème s\'étend à de nouveaux pays. Merci à notre communauté internationale pour son soutien ! 🌍',
+                    musicQuery: 'epic world music', likes: 312, userLiked: false
+                }
+            ];
+        }
+        
+        window._storySequences.main = mainStories;
 
-        // 2. MONDE (ACTUALITÉ PLANÉTAIRE) - >10 stories
-        const mondeTitles = ["Sommet International", "Économie Mondiale", "Crise & Résolutions", "Nouveau Traité", "Actualité Planétaire", "Climat & Urgence", "Géopolitique"];
-        const mondeTexts = ["Les leaders mondiaux se réunissent d'urgence pour discuter des enjeux climatiques majeurs de cette décennie.", "Les marchés financiers réagissent fortement aux dernières annonces économiques des grandes puissances.", "Un accord historique a été signé aujourd'hui pour favoriser le commerce et la paix mondiale.", "Les conséquences de cette nouvelle politique internationale se font déjà ressentir sur l'ensemble des continents.", "Un regard approfondi sur la situation géopolitique actuelle qui bouleverse l'ordre mondial établi depuis des années."];
-        const mondeImgs = ["https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800", "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?q=80&w=800", "https://images.unsplash.com/photo-1494185728463-86366f396213?q=80&w=800", "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800"];
-        window._storySequences.monde = generateStories(15, 'monde', mondeTitles, mondeTexts, mondeImgs, 'fa-earth-americas', 'from-green-500 to-emerald-500', 'bg-black');
-
-        // 3. TECH / TOOL (DÉVELOPPEMENT & IA) - >10 stories
-        const toolTitles = ["IA & Innovation", "Nouvelle API dispo", "Cyber Sécurité", "Le Futur du Code", "Mise à jour Majeure", "Révolution Tech", "Web3 & Cloud"];
-        const toolTexts = ["Un nouveau modèle d'Intelligence Artificielle vient de dépasser largement les attentes des chercheurs mondiaux.", "Les développeurs s'arrachent cette nouvelle technologie API qui permet de coder 2 fois plus vite et sans erreurs.", "Une faille mondiale majeure vient d'être patchée par les équipes de sécurité. Mettez vos systèmes à jour.", "L'informatique quantique franchit un nouveau cap décisif pour l'avenir de la tech et du développement.", "Une startup révolutionne notre façon d'interagir avec les bases de données Cloud en temps réel."];
-        const toolImgs = ["https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800", "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800", "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800", "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=800"];
-        window._storySequences.tool = generateStories(11, 'tool', toolTitles, toolTexts, toolImgs, 'fa-screwdriver-wrench', 'from-blue-500 to-indigo-500', 'bg-black');
-
-
-        let storyHtml = `
-          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('flash', 0)">
-            <div id="ring-flash" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-brand to-orange-500 shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300">
-              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative flex items-center justify-center bg-black">
-                 <img src="${flashImgs[0]}" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
-                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i class="fa-solid fa-bolt text-white text-sm drop-shadow-md"></i></div>
+        let storyHtml = mainStories.map((s, index) => `
+          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('main', ${index})">
+            <div id="ring-main-${index}" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${s.color} shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative ${s.bg || ''} flex items-center justify-center bg-black">
+                 ${s.bubbleImg 
+                    ? `<img src="${s.bubbleImg}" class="w-full h-full object-cover group-hover:scale-110 transition-transform"><div class="absolute inset-0 bg-black/30 flex items-center justify-center"><i class="fa-solid ${s.icon} text-white text-sm drop-shadow-md"></i></div>` 
+                    : `<i class="fa-solid ${s.icon} text-white text-xl group-hover:scale-110 transition-transform"></i>`}
               </div>
             </div>
-            <span class="text-[10px] font-bold text-slate-300">Urgent</span>
+            <span class="text-[10px] font-bold text-slate-300">${s.title}</span>
           </div>
+        `).join('');
 
-          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('monde', 0)">
-            <div id="ring-monde" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-green-500 to-emerald-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] transition-all duration-300">
-              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
-                 ${window.getCategoryAvatar('monde')}
-              </div>
-            </div>
-            <span class="text-[10px] font-bold text-slate-300">Monde</span>
-          </div>
-
-          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('tool', 0)">
-            <div id="ring-tool" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
-              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
-                 ${window.getCategoryAvatar('tool')}
-              </div>
-            </div>
-            <span class="text-[10px] font-bold text-slate-300">Tech/Tool</span>
-          </div>
-
+        storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('movies', 0)">
             <div id="ring-movies" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300">
               <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
@@ -1938,8 +1855,9 @@ service cloud.firestore {
               </div>
             </div>
             <span class="text-[10px] font-bold text-slate-300">Top Films</span>
-          </div>
-          
+          </div>`;
+
+        storyHtml += `
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('anime', 0)">
             <div id="ring-anime" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
               <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
@@ -1947,8 +1865,7 @@ service cloud.firestore {
               </div>
             </div>
             <span class="text-[10px] font-bold text-slate-300">Top Anime</span>
-          </div>
-        `;
+          </div>`;
 
         storyContainer.innerHTML = storyHtml;
         window.updateBubbleVisuals();
@@ -2040,7 +1957,6 @@ service cloud.firestore {
                     else if (categoryLower.includes('movie') || categoryLower.includes('film')) badgeLabel = 'LevelMovie';
                     else if (categoryLower.includes('music') || categoryLower.includes('audio')) badgeLabel = 'LevelMusic';
                     else if (categoryLower.includes('tool') || categoryLower.includes('tech')) badgeLabel = 'LevelTool';
-                    else if (categoryLower.includes('sport') || categoryLower.includes('foot')) badgeLabel = 'LevelFoot';
 
                     return {
                         title: item.title,
@@ -2091,7 +2007,6 @@ service cloud.firestore {
             if (item.label === 'LevelOtaku') catDisplay = 'otaku';
             if (item.label === 'LevelTool') catDisplay = 'tool';
             if (item.label === 'LevelMusic') catDisplay = 'music';
-            if (item.label === 'LevelFoot') catDisplay = 'sport';
 
             // HTML pour Image Manquante Propre
             const missingImageHtml = `
@@ -2507,12 +2422,16 @@ service cloud.firestore {
         const stories = window._storySequences[window._currentSeqType];
         
         if(window._currentStoryIndex >= stories.length) {
-            // Marquer la séquence entière comme vue
-            window._seenStories.add(window._currentSeqType);
+            // Marquer comme vu UNIQUEMENT si la séquence entière est terminée
+            if (window._currentSeqType === 'movies') window._seenStories.add('movies');
+            if (window._currentSeqType === 'anime') window._seenStories.add('anime');
+            if (window._currentSeqType === 'main' && window._currentStoryIndex > 0) {
+                window._seenStories.add(`main_${window._currentStoryIndex - 1}`);
+            }
+            
             window.updateBubbleVisuals();
 
-            // Ordre de lecture continu des stories
-            const seqOrder = ['flash', 'monde', 'tool', 'movies', 'anime'];
+            const seqOrder = ['main', 'movies', 'anime'];
             const currentIndex = seqOrder.indexOf(window._currentSeqType);
             
             if (currentIndex >= 0 && currentIndex < seqOrder.length - 1) {
@@ -2694,18 +2613,9 @@ service cloud.firestore {
         modal.classList.remove('hidden'); void modal.offsetWidth; 
         backdrop.classList.remove('opacity-0');
         content.classList.remove('translate-y-full');
-        
-        if (window._pendingCreds) {
-            document.getElementById('authLoginStep').classList.add('hidden');
-            const regStep = document.getElementById('authRegisterStep');
-            regStep.classList.remove('hidden');
-            regStep.classList.add('flex');
-        } else {
-            document.getElementById('authLoginStep').classList.remove('hidden');
-            const regStep = document.getElementById('authRegisterStep');
-            regStep.classList.add('hidden');
-            regStep.classList.remove('flex');
-        }
+        document.getElementById('authLoginStep').classList.remove('hidden');
+        document.getElementById('authRegisterStep').classList.add('hidden');
+        document.getElementById('authRegisterStep').classList.remove('flex');
     };
     window.closeLoginSheet = function() {
         document.getElementById('loginSheetBackdrop').classList.add('opacity-0');
