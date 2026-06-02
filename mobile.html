@@ -269,6 +269,7 @@
         <div class="flex gap-2 overflow-x-auto hide-scrollbar px-4 py-3 mb-2 sticky top-0 bg-[#050505]/95 backdrop-blur-md z-30 border-b border-white/5">
           <button onclick="window.filterActus('tout')" class="actu-filter-btn active px-4 py-1.5 bg-brand text-white rounded-full text-xs font-bold transition-colors shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.3)]" data-filter="tout">Tout</button>
           <button onclick="window.filterActus('gaming')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="gaming">Gaming</button>
+          <button onclick="window.filterActus('sport')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="sport"><i class="fa-solid fa-futbol mr-1.5"></i>Sport</button>
           <button onclick="window.filterActus('movies')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="movies">Cinéma</button>
           <button onclick="window.filterActus('otaku')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="otaku">Otaku</button>
           <button onclick="window.filterActus('tool')" class="actu-filter-btn px-4 py-1.5 bg-white/5 text-slate-400 rounded-full text-xs font-bold hover:bg-white/10 transition-colors shrink-0 border border-white/5" data-filter="tool">Tool</button>
@@ -548,7 +549,7 @@
             <span id="gBtnTxt">Continuer avec Google</span>
           </button>
 
-          <button id="xSignInBtn" onclick="window.xSignInSimul()" class="login-btn btn-x">
+          <button id="xSignInBtn" onclick="window.xSignIn()" class="login-btn btn-x">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-[18px] h-[18px]"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             <span id="xBtnTxt">Continuer avec X</span>
           </button>
@@ -719,17 +720,36 @@
     <div class="w-full h-full absolute inset-0 z-50 pointer-events-none" id="storyContentArea"></div>
   </div>
 
-  <!-- TRAILER MODAL (IN-APP) Z-INDEX AU DESSUS DES STORIES -->
-  <div id="trailerModal" class="fixed inset-0 z-[300] bg-black/95 flex flex-col hidden transition-opacity duration-300 opacity-0 backdrop-blur-md">
-    <div class="w-full px-4 safe-top py-4 flex justify-end shrink-0">
-      <button onclick="window.closeTrailer()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors shadow-lg active:scale-90"><i class="fa-solid fa-xmark text-xl"></i></button>
+  <!-- MODAL: YOUTUBE TRAILER -->
+  <div id="trailerModal" class="fixed inset-0 z-[300] hidden flex-col justify-center items-center px-4" onclick="window.closeTrailer()">
+    <div id="trailerBackdrop" class="absolute inset-0 bg-black/90 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
+    <div id="trailerContainer" class="relative w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden scale-95 opacity-0 transition-all duration-300 shadow-[0_0_50px_rgba(225,29,72,0.3)]">
+       <iframe id="trailerIframe" class="w-full h-full relative z-10" src="" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+       <button onclick="window.closeTrailer()" class="absolute top-4 right-4 w-10 h-10 bg-black/50 text-white rounded-full backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-red-600 transition-colors z-20"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="flex-1 w-full flex items-center justify-center p-4">
-      <div class="w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-[0_0_40px_rgba(220,38,38,0.3)] border border-white/10 relative">
-        <div class="absolute inset-0 flex items-center justify-center z-0"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div></div>
-        <iframe id="trailerIframe" class="w-full h-full relative z-10 opacity-0 transition-opacity duration-500" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen onload="this.classList.remove('opacity-0')"></iframe>
+  </div>
+
+  <!-- MODAL: LECTEUR D'ARTICLE INTERNE -->
+  <div id="articleReaderModal" class="fixed inset-0 z-[300] hidden flex-col justify-end">
+      <div id="articleReaderBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="window.closeArticleModal()"></div>
+      <div id="articleReaderContent" class="relative w-full h-[85vh] bg-[#0a0a0c] rounded-t-3xl border-t border-white/10 flex flex-col translate-y-full transition-transform duration-300 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+          <div class="w-full flex justify-center py-3 shrink-0 cursor-pointer" onclick="window.closeArticleModal()"><div class="w-12 h-1.5 bg-white/20 rounded-full"></div></div>
+          <div class="flex-1 overflow-y-auto hide-scrollbar pb-10">
+              <div class="relative w-full h-56 bg-black">
+                  <img id="articleReaderImg" src="" class="w-full h-full object-cover opacity-70">
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] to-transparent"></div>
+              </div>
+              <div class="px-5 -mt-10 relative z-10">
+                  <span id="articleReaderBadge" class="px-3 py-1 bg-brand text-white text-[10px] font-bold rounded-md uppercase tracking-wider mb-3 inline-block shadow-[0_0_10px_rgba(168,85,247,0.4)]">Info</span>
+                  <h2 id="articleReaderTitle" class="text-xl font-display font-bold text-white mb-4 leading-tight"></h2>
+                  <div id="articleReaderText" class="text-slate-300 text-sm leading-relaxed mb-6 space-y-3"></div>
+                  <button id="articleReaderLinkBtn" class="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-[14px] transition-colors flex items-center justify-center gap-2 border border-white/10">
+                      <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> Lire la source originale sur le web
+                  </button>
+              </div>
+          </div>
+          <button onclick="window.closeArticleModal()" class="absolute top-4 right-4 w-9 h-9 bg-black/50 text-white rounded-full backdrop-blur-md flex items-center justify-center border border-white/10 z-20"><i class="fa-solid fa-xmark"></i></button>
       </div>
-    </div>
   </div>
 
   <!-- LIBRARY MODAL (LIKES & SAVES) -->
@@ -778,7 +798,7 @@
   <!-- JAVASCRIPT LOGIC (FIREBASE & SSO & UI) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Variables globales
@@ -819,6 +839,9 @@
         if(category === 'tool') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-screwdriver-wrench text-xl"></i></div>`;
         if(category === 'gaming') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-gamepad text-xl"></i></div>`;
         if(category === 'otaku') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-pink-500"><i class="fa-solid fa-dragon text-xl drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]"></i></div>`;
+        if(category === 'sport') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-green-500"><i class="fa-solid fa-futbol text-xl drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]"></i></div>`;
+        if(category === 'monde') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-emerald-500"><i class="fa-solid fa-earth-americas text-xl drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]"></i></div>`;
+        if(category === 'flash') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-orange-500"><i class="fa-solid fa-bolt text-xl drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]"></i></div>`;
         return `<div class="w-full h-full bg-brand flex items-center justify-center text-white text-lg"><i class="fa-solid fa-newspaper"></i></div>`;
     };
 
@@ -868,16 +891,28 @@
 
         if (window._auth) {
             onAuthStateChanged(window._auth, async (u) => {
+                console.log("🛡️ [AUTH] Changement d'état Firebase. UID :", u ? u.uid : "Déconnecté");
+                
+                // 🚫 SÉCURITÉ : Bloquer formellement les comptes anonymes (Les fameux utilisateurs fantômes)
+                if (u && u.isAnonymous) {
+                    console.warn("🚫 [AUTH] Rejet d'un compte anonyme. Déconnexion forcée.");
+                    try { await signOut(window._auth); } catch(e) {}
+                    return; // Stoppe toute l'exécution ici
+                }
+
                 if (u) {
                     try {
                         window._user = u;
                         const ref = doc(window._db, 'artifacts', appId, 'users', u.uid, 'profile', 'data');
+                        
+                        console.log("📡 [FIRESTORE] Tentative de lecture du profil existant...");
                         const snap = await getDoc(ref);
 
                         // Récupération localisation
                         let locData = await fetchUserLocation();
 
                         if (snap.exists()) {
+                            console.log("✅ [FIRESTORE] Profil trouvé. Connexion normale.");
                             window._ud = snap.data();
                             
                             // Récupération des articles sauvegardés et likés depuis Firestore
@@ -958,7 +993,12 @@
                             });
 
                         } else {
+                            console.log("⚠️ [FIRESTORE] Aucun profil trouvé dans la base. Passage en mode INSCRIPTION.");
                             window._pendingCreds = u;
+                            
+                            // 1. Ouvrir la modale (au cas où la page a rechargé ou a été fermée)
+                            window.openLoginSheet();
+                            
                             document.getElementById('authLoginStep').classList.add('hidden');
                             const regStep = document.getElementById('authRegisterStep');
                             regStep.classList.remove('hidden');
@@ -967,10 +1007,14 @@
                             const defaultName = u.displayName || 'Utilisateur LevelUp';
                             document.getElementById('regNameInput').value = defaultName;
                             window.checkRegForm();
+                            
+                            // 2. Mettre à jour l'UI du profil pour refléter l'état "en attente"
+                            window.refreshProfileUI();
                         }
                     } catch(e) {
-                        console.error("Auth DB Erreur", e);
-                        window.toast_("Erreur système.", 'err');
+                        console.error("❌ [FIRESTORE ERREUR CRITIQUE] Impossible de lire le profil de l'utilisateur !", e);
+                        console.error("👉 EXPLICATION : C'est ce qui vous bloque en Mode Invité ! Votre base Firestore refuse la lecture (PERMISSION_DENIED). Regardez les règles recommandées plus bas.");
+                        window.toast_("Erreur de permission de la base de données. Regardez la console.", 'err');
                     }
                 } else if (!window._pendingCreds) {
                     window._user = null;
@@ -1029,8 +1073,24 @@
         }
     };
 
-    window.xSignInSimul = function() {
-        window.toast_("L'API X (Twitter) n'est pas encore configurée.", 'warn');
+    window.xSignIn = async function() {
+        if (!window._auth) return;
+        const btn = document.getElementById('xSignInBtn');
+        const token = window._turnstileToken;
+        if (!token) { window.toast_('Veuillez compléter le captcha.', 'warn'); return; }
+
+        btn.disabled = true;
+        document.getElementById('xBtnTxt').textContent = 'Connexion...';
+
+        try {
+            const xProv = new TwitterAuthProvider();
+            await signInWithPopup(window._auth, xProv);
+        } catch(e) {
+            btn.disabled = false;
+            document.getElementById('xBtnTxt').textContent = 'Continuer avec X';
+            if(window.turnstile && window._turnstileWidgetId) window.turnstile.reset(window._turnstileWidgetId);
+            if(e.code !== 'auth/popup-closed-by-user') window.toast_('Erreur de connexion X : ' + e.message, 'err');
+        }
     };
 
     window.checkRegForm = function() {
@@ -1046,7 +1106,14 @@
         btn.disabled = true;
 
         const u = window._pendingCreds;
-        if(!u) return;
+        
+        // 🚫 SÉCURITÉ : Vérifier que l'utilisateur est bien là et NON anonyme avant d'écrire
+        if(!u || u.isAnonymous) {
+            window.toast_("Session invalide. Veuillez vous reconnecter avec Google.", "err");
+            btn.textContent = "Terminer l'inscription";
+            btn.disabled = false;
+            return;
+        }
 
         const finalName = document.getElementById('regNameInput').value.trim();
 
@@ -1159,21 +1226,46 @@
                 const tmpl = document.getElementById('tmpl-connected-nokey');
                 cont.innerHTML = tmpl.innerHTML;
             }
+        } else if (window._pendingCreds) {
+            navCompte.className = 'fa-solid fa-user-pen text-lg text-brand drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]';
+            navTxt.textContent = 'Inscription';
+            nameEl.textContent = window._pendingCreds.displayName || 'Finalisation...';
+            statEl.textContent = "Veuillez terminer votre inscription.";
+            statEl.className = 'text-sm text-brand mt-1 font-bold';
+
+            if(window._pendingCreds.photoURL) {
+                avaCont.innerHTML = `<img src="${window._pendingCreds.photoURL}" class="w-full h-full object-cover">`;
+            } else {
+                avaCont.innerHTML = `<i class="fa-solid fa-hourglass-half text-3xl text-brand"></i>`;
+            }
+
+            cont.innerHTML = `
+              <div class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
+                <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-user-pen"></i></div>
+                <h3 class="text-base font-bold text-white mb-2">Inscription incomplète</h3>
+                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Vous êtes connecté avec Google, mais votre profil n'est pas encore finalisé.</p>
+                <button onclick="window.openLoginSheet()" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm shadow-[0_0_15px_rgba(168,85,247,0.3)] mb-3">
+                  Terminer mon inscription
+                </button>
+                <button onclick="window.execLogout()" class="block w-full py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold rounded-[14px] transition-all text-sm">
+                  Annuler et se déconnecter
+                </button>
+              </div>`;
         } else if (!window._pendingCreds) {
             navCompte.className = 'fa-solid fa-right-to-bracket text-lg';
             navTxt.textContent = 'Connexion';
-            nameEl.textContent = 'Mode Invité';
-            statEl.textContent = "Vous n'êtes pas connecté.";
+            nameEl.textContent = 'Non connecté';
+            statEl.textContent = "Authentification requise.";
             statEl.className = 'text-sm text-slate-400 mt-1';
-            avaCont.innerHTML = `<i class="fa-solid fa-user text-3xl text-slate-500"></i>`;
+            avaCont.innerHTML = `<i class="fa-solid fa-user-lock text-3xl text-slate-500"></i>`;
 
             cont.innerHTML = `
               <div class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
                 <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-lock"></i></div>
-                <h3 class="text-base font-bold text-white mb-2">Déverrouillez l'écosystème</h3>
-                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Connectez-vous pour synchroniser vos données sur tous les outils.</p>
+                <h3 class="text-base font-bold text-white mb-2">Accès restreint</h3>
+                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Vous devez vous connecter avec un compte valide pour générer une clé et utiliser l'écosystème.</p>
                 <button onclick="openLoginSheet()" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm shadow-[0_0_15px_rgba(168,85,247,0.3)]">
-                  Accéder à la connexion
+                  Se connecter
                 </button>
               </div>`;
         }
@@ -1231,12 +1323,17 @@
 
     // --- GESTION DES CLÉS & PIN ---
     window.genKey = async function() {
-        if(!window._user) return;
+        // 🚫 SÉCURITÉ : Bloquer complètement si pas connecté ou si le compte est anonyme
+        if(!window._user || window._user.isAnonymous) {
+            window.toast_("Action interdite : Connectez-vous avec Google d'abord.", "err");
+            return;
+        }
+        
         const key = window.mkKey();
         
         const realUid = window._auth.currentUser ? window._auth.currentUser.uid : window._user.uid;
         const secRef = doc(window._db, 'artifacts', appId, 'users', realUid, 'security', 'key');
-        const pubRef = doc(window._db, 'artifacts', appId, 'public', 'data', 'keys', key);
+        const pubRef = doc(window._db, 'artifacts', appId, 'public', 'data', 'keys', realUid);
 
         const payload = {
             apiKey: key, key: key,
@@ -1247,15 +1344,35 @@
         };
 
         try {
+            console.log("🔑 [GEN-KEY] Tentative d'écriture de la clé publique et privée...");
             await setDoc(pubRef, payload, {merge: true});
             await setDoc(secRef, payload, {merge: true});
+            console.log("✅ [GEN-KEY] Clés écrites avec succès !");
 
             window._ud.apiKey = key;
             window.refreshProfileUI();
             window.toast_("Clé générée avec succès !", "ok");
         } catch (err) {
-            console.error("Firebase Rules Error:", err);
-            window.toast_("Erreur de permission serveur.", "err");
+            console.error("❌ [GEN-KEY] ERREUR DE PERMISSION FIRESTORE AU SERVEUR !", err);
+            console.error("👉 EXPLICATION : Votre compte est bien créé (d'où l'email reçu), mais votre Firebase refuse qu'on écrive dans le dossier 'public'.");
+            console.error("👇 SOLUTION : Copiez-collez exactement ces règles dans votre console Firebase (Onglet Firestore Database -> Règles) puis Publiez :");
+            console.error(`
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Autorise la lecture/écriture publique pour les clés et actus
+    match /artifacts/{appId}/public/data/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    // Sécurise les données privées des utilisateurs
+    match /artifacts/{appId}/users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+            `);
+            window.toast_("Erreur de permission Firestore. Consultez la console (F12).", "err");
         }
     };
 
@@ -1396,20 +1513,25 @@
         }
 
         // Routage vers le bon Iframe ou la modale plein écran
+        // FIX : Utilisation de dataset.loadedUrl pour éviter que le navigateur recharge l'iframe
         if(appId === 'ia' || appId === 'dona') {
             const iframe = document.getElementById('donaIframe');
-            if (!iframe.src.includes(urlFallback)) {
+            if (iframe.dataset.loadedUrl !== ssoUrl) {
                 const loader = document.getElementById('donaLoader');
                 if(loader) loader.classList.remove('hidden');
-                iframe.src = ssoUrl;
+                iframe.dataset.loadedUrl = ssoUrl;
+                // ANTI-LAG : On laisse l'UI changer d'onglet avant de lancer le lourd chargement
+                setTimeout(() => { iframe.src = ssoUrl; }, 50);
             }
             window.switchTab('dona');
         } else if (appId === 'infos') {
             const iframe = document.getElementById('infosIframe');
-            if (!iframe.src.includes(urlFallback)) {
+            if (iframe.dataset.loadedUrl !== ssoUrl) {
                 const loader = document.getElementById('infosLoader');
                 if(loader) loader.classList.remove('hidden');
-                iframe.src = ssoUrl;
+                iframe.dataset.loadedUrl = ssoUrl;
+                // ANTI-LAG
+                setTimeout(() => { iframe.src = ssoUrl; }, 50);
             }
             window.switchTab('infos');
         } else {
@@ -1428,14 +1550,19 @@
         const iframe = document.getElementById('appIframe');
         const loader = document.getElementById('iframeLoader');
         
-        // Optimisation : On ne recharge pas si l'URL est identique (garde la session active !)
-        if (iframe.src === url || iframe.src === url + '/') {
+        // Optimisation & FIX Anti-déconnexion : Ne recharge jamais si le lien mémorisé est identique
+        if (iframe.dataset.loadedUrl === url) {
             loader.classList.add('hidden');
             iframe.classList.remove('opacity-0');
         } else {
             loader.classList.remove('hidden');
             iframe.classList.add('opacity-0');
-            iframe.src = url;
+            iframe.dataset.loadedUrl = url;
+            // ANTI-LAG : Laisse la modale s'afficher (flex) de façon fluide avant d'appeler src
+            setTimeout(() => {
+                iframe.src = url;
+            }, 100);
+            
             iframe.onload = () => {
                 loader.classList.add('hidden');
                 iframe.classList.remove('opacity-0');
@@ -1583,6 +1710,118 @@
         });
     };
 
+    // --- RENDU SÉPARÉ DES ACTUALITÉS (Pour le système de Cache) ---
+    window.renderNewsFeed = function(allNews) {
+        const feedContainer = document.getElementById('actusFeed');
+        if(!feedContainer) return;
+
+        if (allNews.length > 0) {
+            allNews = allNews.sort((a, b) => new Date(b.date) - new Date(a.date));
+        } else { 
+            feedContainer.innerHTML = `<div class="py-10 text-center text-slate-500 text-sm w-full">Aucune actualité disponible.</div>`; 
+            return; 
+        }
+
+        let htmlFeed = '';
+        allNews.forEach((item, index) => {
+            const articleId = 'news_' + window.sHash(item.link || index.toString());
+            window._loadedArticles[articleId] = item; // On garde en mémoire pour la bibliothèque
+            if(window._hiddenArticles.has(articleId)) return;
+
+            let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim();
+            // On vérifie si la description est vraiment longue (plus de 120 caractères par exemple)
+            const isLongDesc = cleanDesc.length > 150;
+            
+            let dateObj = new Date(item.date);
+            let diffDays = Math.floor((new Date() - dateObj) / (1000 * 60 * 60 * 24));
+            let dateStr = diffDays === 0 ? "Aujourd'hui" : (diffDays === 1 ? "Hier" : `Il y a ${diffDays} j`);
+            if (isNaN(diffDays)) dateStr = "Récemment";
+
+            let catDisplay = "tool";
+            if (item.label === 'LevelGame') catDisplay = 'gaming';
+            if (item.label === 'LevelMovie') catDisplay = 'movies';
+            if (item.label === 'LevelOtaku') catDisplay = 'otaku';
+            if (item.label === 'LevelTool') catDisplay = 'tool';
+            if (item.label === 'LevelMusic') catDisplay = 'music';
+            if (item.label === 'LevelFoot') catDisplay = 'sport';
+
+            // HTML pour Image Manquante Propre
+            const missingImageHtml = `
+                <div class="block w-full bg-[#121214] border-y border-white/5 relative p-6 flex flex-col items-center justify-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4"><i class="fa-regular fa-image text-2xl text-slate-500"></i></div>
+                    <p class="text-sm text-slate-400 mb-4 max-w-xs leading-relaxed">Le site source empêche l'affichage direct de cette image (protection active).</p>
+                    <button onclick="window.confirmExternalLink('${item.link}')" class="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors"><i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i> Ouvrir l'article original</button>
+                </div>
+            `;
+
+            // HTML pour Image Présente
+            const validImageHtml = `
+                <div class="block w-full bg-[#121214] relative cursor-pointer group" onclick="window.openImageZoom('${item.img}')">
+                     <img src="${item.img}" class="w-full max-h-[450px] object-cover" loading="lazy" decoding="async" onerror="window.handleImageError(this, '${item.link}')">
+                     <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1.5 rounded-lg text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-expand text-xs"></i></div>
+                </div>
+            `;
+
+            const isLiked = window._likedArticles.has(articleId);
+            const isSaved = window._savedArticles.has(articleId);
+
+            htmlFeed += `
+            <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-4 mb-3 transition-all duration-300 w-full" id="article-${articleId}" data-category="${catDisplay}">
+                <!-- HEADER (Avatar SVG + Titre + Badge + ...) -->
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-black border border-white/10 overflow-hidden shadow-lg shrink-0">
+                            ${window.getCategoryAvatar(catDisplay)}
+                        </div>
+                        <div>
+                            <p class="text-[13px] font-bold text-white leading-none uppercase tracking-wide flex items-center gap-1.5">
+                                ${item.label}
+                                <i class="fa-solid fa-circle-check text-brand text-[12px] drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]" title="Vérifié"></i>
+                            </p>
+                            <p class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</p>
+                        </div>
+                    </div>
+                    <button onclick="window.openPostOptions('${articleId}', '${item.link}')" class="text-slate-500 hover:text-white transition-colors p-2 active:scale-90"><i class="fa-solid fa-ellipsis text-lg"></i></button>
+                </div>
+
+                <!-- TEXTE ET TITRE (EN HAUT DE L'IMAGE) -->
+                <div class="px-4 pb-3">
+                    <h3 class="text-[15px] font-bold text-white mb-1.5 leading-tight">${item.title}</h3>
+                    <div class="relative">
+                        <p id="desc-${articleId}" class="text-[13px] text-slate-300 leading-relaxed transition-all duration-300 ${isLongDesc ? 'line-clamp-2' : ''}">${cleanDesc}</p>
+                        ${isLongDesc ? `<button onclick="window.toggleDesc('${articleId}', event)" id="btn-desc-${articleId}" class="text-brand text-[11px] font-bold mt-1.5 hover:text-white transition-colors relative z-10 cursor-pointer">Voir plus</button>` : ''}
+                    </div>
+                </div>
+
+                <!-- IMAGE AVEC FALLBACK -->
+                ${item.img ? validImageHtml : missingImageHtml}
+
+                <!-- ACTIONS -->
+                <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                    <div class="flex items-center gap-6">
+                        <button onclick="window.toggleLikeActu('${articleId}')" class="text-white hover:text-red-500 transition-colors text-2xl active:scale-90 transform"><i class="${isLiked ? 'fa-solid text-red-500' : 'fa-regular'} fa-heart" id="like-${articleId}"></i></button>
+                        <button onclick="window.shareArticle(decodeURIComponent('${encodeURIComponent(item.title)}'), '${item.link}')" class="text-white hover:text-blue-400 transition-colors text-[22px] active:scale-90 transform"><i class="fa-regular fa-paper-plane"></i></button>
+                    </div>
+                    <button onclick="window.saveArticle('${articleId}')" class="text-white hover:text-brand transition-colors text-2xl active:scale-90 transform"><i class="${isSaved ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark" id="bookmark-${articleId}"></i></button>
+                </div>
+
+                <!-- NOTICE LÉGALE PRO -->
+                <div class="px-4 pb-1">
+                    <div class="w-full border-t border-white/5 pt-2 flex items-start gap-2">
+                        <i class="fa-solid fa-circle-info text-slate-500 text-[9px] mt-0.5"></i>
+                        <p class="text-[9px] text-slate-500 leading-tight">Contenu externe agrégé automatiquement. LevelUp n'est pas l'auteur de cette publication et la propose à titre informatif.</p>
+                    </div>
+                </div>
+            </div>`;
+        });
+        
+        feedContainer.innerHTML = htmlFeed;
+        const activeFilterBtn = document.querySelector('.actu-filter-btn.active');
+        if (activeFilterBtn) {
+            window.filterActus(activeFilterBtn.dataset.filter);
+        }
+    };
+
     // =========================================================================
     // 🌟 MOTEUR DYNAMIQUE DES ACTUS ET STORIES (API + FIRESTORE) 🌟
     // =========================================================================
@@ -1677,7 +1916,14 @@
         iframe.src = finalUrl;
         
         modal.classList.remove('hidden');
-        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        modal.classList.add('flex');
+        
+        setTimeout(() => {
+            const backdrop = document.getElementById('trailerBackdrop');
+            const container = document.getElementById('trailerContainer');
+            if (backdrop) backdrop.classList.remove('opacity-0');
+            if (container) container.classList.remove('scale-95', 'opacity-0');
+        }, 10);
         
         // Pause intelligente de la musique de la story
         const player = document.getElementById('storyAudioPlayer');
@@ -1693,10 +1939,17 @@
 
     window.closeTrailer = function() {
         const modal = document.getElementById('trailerModal');
-        modal.classList.add('opacity-0');
+        const backdrop = document.getElementById('trailerBackdrop');
+        const container = document.getElementById('trailerContainer');
+        const iframe = document.getElementById('trailerIframe');
+        
+        if (backdrop) backdrop.classList.add('opacity-0');
+        if (container) container.classList.add('scale-95', 'opacity-0');
+        
         setTimeout(() => {
             modal.classList.add('hidden');
-            document.getElementById('trailerIframe').src = '';
+            modal.classList.remove('flex');
+            iframe.src = "";
         }, 300);
         
         // Reprendre la musique de fond
@@ -1708,6 +1961,70 @@
         
         // Redémarrer le temps pour que l'utilisateur ait le temps de finir de lire sa story
         window.renderCurrentStory();
+    };
+
+    // --- GESTION DU LECTEUR D'ARTICLE INTERNE ---
+    window.openArticleModal = function(title, img, text, link, badge) {
+        // Mettre en pause visuellement la barre de progression de la story
+        const storyProgressElements = document.querySelectorAll('#storyProgressContainer > div > div');
+        storyProgressElements.forEach(el => el.style.animationPlayState = 'paused');
+        
+        document.getElementById('articleReaderTitle').textContent = decodeURIComponent(title);
+        
+        const imgEl = document.getElementById('articleReaderImg');
+        const imgUrl = decodeURIComponent(img);
+        if(imgUrl && imgUrl !== 'null') {
+            imgEl.src = imgUrl;
+            imgEl.parentElement.classList.remove('hidden');
+        } else {
+            imgEl.parentElement.classList.add('hidden');
+        }
+
+        // Mise en forme du texte (paragraphes automatiques)
+        const rawText = decodeURIComponent(text);
+        document.getElementById('articleReaderText').innerHTML = rawText.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+        
+        let catText = decodeURIComponent(badge);
+        if(catText === 'flash' || catText === 'sport') catText = 'Foot';
+        document.getElementById('articleReaderBadge').textContent = catText;
+        
+        const linkBtn = document.getElementById('articleReaderLinkBtn');
+        const realLink = decodeURIComponent(link);
+        if(realLink && realLink !== 'null') {
+            linkBtn.onclick = () => window.confirmExternalLink(realLink);
+            linkBtn.classList.remove('hidden');
+        } else {
+            linkBtn.classList.add('hidden');
+        }
+
+        const modal = document.getElementById('articleReaderModal');
+        const backdrop = document.getElementById('articleReaderBackdrop');
+        const content = document.getElementById('articleReaderContent');
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+        setTimeout(() => {
+            backdrop.classList.remove('opacity-0');
+            content.classList.remove('translate-y-full');
+        }, 10);
+    };
+
+    window.closeArticleModal = function() {
+        const backdrop = document.getElementById('articleReaderBackdrop');
+        const content = document.getElementById('articleReaderContent');
+        
+        backdrop.classList.add('opacity-0');
+        content.classList.add('translate-y-full');
+        
+        // Relancer visuellement la barre de progression
+        const storyProgressElements = document.querySelectorAll('#storyProgressContainer > div > div');
+        storyProgressElements.forEach(el => el.style.animationPlayState = 'running');
+
+        setTimeout(() => {
+            document.getElementById('articleReaderModal').classList.add('hidden');
+            document.getElementById('articleReaderModal').classList.remove('flex');
+        }, 300);
     };
 
     // Recherche Dynamique de Trailer (Pour l'API TMDB)
@@ -1743,111 +2060,106 @@
     };
 
     // Variables globales pour le lecteur de Stories
-    window._storySequences = { main: [], movies: [], anime: [] };
-    window._currentSeqType = 'main';
+    window._storySequences = { flash: [], monde: [], tool: [], movies: [], anime: [] };
+    window._currentSeqType = 'flash';
     window._currentStoryIndex = 0;
     window._seenStories = new Set();
     let storyTimeout = null;
     let storyProgressInterval = null;
 
     window.updateBubbleVisuals = function() {
-        if (window._storySequences.main) {
-            window._storySequences.main.forEach((s, index) => {
-                const ring = document.getElementById(`ring-main-${index}`);
-                if(ring) {
-                    if(window._seenStories.has(`main_${index}`)) {
-                        ring.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
-                    } else {
-                        ring.className = `w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${s.color} shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300`;
-                    }
+        const rings = ['flash', 'monde', 'tool', 'movies', 'anime'];
+        const colors = {
+            flash: 'from-brand to-orange-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]',
+            monde: 'from-green-500 to-emerald-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]',
+            tool: 'from-blue-500 to-indigo-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]',
+            movies: 'from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)]',
+            anime: 'from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+        };
+
+        rings.forEach(cat => {
+            const el = document.getElementById('ring-' + cat);
+            if(el) {
+                if(window._seenStories.has(cat)) {
+                    el.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
+                } else {
+                    el.className = `w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${colors[cat]} transition-all duration-300`;
                 }
-            });
-        }
-        
-        const ringMovies = document.getElementById('ring-movies');
-        if(ringMovies) {
-            if(window._seenStories.has('movies')) {
-                ringMovies.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
-            } else {
-                ringMovies.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300';
             }
-        }
-        
-        const ringAnime = document.getElementById('ring-anime');
-        if(ringAnime) {
-            if(window._seenStories.has('anime')) {
-                ringAnime.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
-            } else {
-                ringAnime.className = 'w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300';
-            }
-        }
+        });
     };
 
     window.loadDynamicActus = async function() {
+        // 🛡️ VERROU ANTI-SPAM : Empêche le plantage si l'utilisateur clique frénétiquement
+        if (window._isFetchingActus) return;
+        window._isFetchingActus = true;
+
         const storyContainer = document.getElementById('storyBarContainer');
         const feedContainer = document.getElementById('actusFeed');
-        if(!storyContainer || !feedContainer) return;
+        if(!storyContainer || !feedContainer) {
+            window._isFetchingActus = false;
+            return;
+        }
 
-        // 1. CHARGEMENT DES STORIES PRINCIPALES (DEPUIS FIRESTORE)
-        let mainStories = [];
-        try {
-            if (window._db) {
-                // Requête sécurisée vers ta base de données
-                const storiesRef = collection(window._db, 'artifacts', appId, 'public', 'data', 'main_stories');
-                const snap = await getDocs(storiesRef);
-                if (!snap.empty) {
-                    snap.forEach(doc => {
-                        mainStories.push({ id: doc.id, ...doc.data(), userLiked: false });
-                    });
-                }
+        // --- GÉNÉRATEUR DE STORIES (Mock instantané en attendant l'API pour éviter l'écran noir) ---
+        const timeSeed15 = Math.floor(Date.now() / (15 * 60 * 1000)); // Change toutes les 15 min
+
+        const generateStories = (count, category, titles, texts, imgs, icon, color, bg) => {
+            let stories = [];
+            for(let i=0; i<count; i++) {
+                let idx = (i + timeSeed15) % titles.length;
+                let imgIdx = (i + timeSeed15) % imgs.length;
+                stories.push({
+                    title: titles[idx],
+                    icon: icon,
+                    color: color,
+                    bg: bg,
+                    time: `À l'instant`,
+                    contentImg: imgs[imgIdx],
+                    contentText: texts[idx],
+                    likes: 100 + (Math.abs(timeSeed15 + i) % 2000),
+                    userLiked: false,
+                    categoryBadge: category
+                });
             }
-        } catch (e) {
-            console.warn("Erreur chargement stories depuis DB:", e);
-        }
+            return stories;
+        };
 
-        // Fallback (sécurité) si ta base de données est vide pour le moment
-        if (mainStories.length === 0) {
-            mainStories = [
-                { 
-                    id: 1, title: 'Flash Info', icon: 'fa-bolt', color: 'from-brand to-orange-500', time: 'Il y a 1h',
-                    bubbleImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop',
-                    contentImg: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop',
-                    contentText: 'Nouvelle architecture Firebase déployée avec succès. Les temps de chargement sont réduits de 40% ! 🚀',
-                    musicQuery: 'epic intense news theme', likes: 120, userLiked: false
-                },
-                { 
-                    id: 2, title: 'Tool', icon: 'fa-screwdriver-wrench', color: 'from-blue-500 to-indigo-500', bg: 'bg-black', time: 'Il y a 3h',
-                    bubbleImg: null,
-                    contentImg: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop',
-                    contentText: 'On travaille dur sur la nouvelle API LevelTools. Plus d\'outils, plus vite. Restez connectés. 💻',
-                    musicQuery: 'chill lofi coding beats', likes: 45, userLiked: false
-                },
-                { 
-                    id: 3, title: 'Monde', icon: 'fa-earth-americas', color: 'from-green-500 to-emerald-500', bg: 'bg-black', time: 'Il y a 6h',
-                    bubbleImg: null,
-                    contentImg: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop',
-                    contentText: 'Notre écosystème s\'étend à de nouveaux pays. Merci à notre communauté internationale pour son soutien ! 🌍',
-                    musicQuery: 'epic world music', likes: 312, userLiked: false
-                }
-            ];
-        }
-        
-        window._storySequences.main = mainStories;
+        // Fallbacks très légers pour l'affichage initial (< 100ms)
+        const flashImgs = ["https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=800"];
+        window._storySequences.flash = generateStories(3, 'sport', ["Recherche des actus..."], ["Mise à jour en cours depuis le serveur..."], flashImgs, 'fa-bolt', 'from-brand to-orange-500', 'bg-black');
+        window._storySequences.monde = generateStories(3, 'monde', ["Recherche des actus..."], ["Mise à jour en cours depuis le serveur..."], flashImgs, 'fa-earth-americas', 'from-green-500 to-emerald-500', 'bg-black');
+        window._storySequences.tool = generateStories(3, 'tool', ["Recherche des actus..."], ["Mise à jour en cours depuis le serveur..."], flashImgs, 'fa-screwdriver-wrench', 'from-blue-500 to-indigo-500', 'bg-black');
 
-        let storyHtml = mainStories.map((s, index) => `
-          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('main', ${index})">
-            <div id="ring-main-${index}" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr ${s.color} shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300">
-              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative ${s.bg || ''} flex items-center justify-center bg-black">
-                 ${s.bubbleImg 
-                    ? `<img src="${s.bubbleImg}" class="w-full h-full object-cover group-hover:scale-110 transition-transform"><div class="absolute inset-0 bg-black/30 flex items-center justify-center"><i class="fa-solid ${s.icon} text-white text-sm drop-shadow-md"></i></div>` 
-                    : `<i class="fa-solid ${s.icon} text-white text-xl group-hover:scale-110 transition-transform"></i>`}
+        let storyHtml = `
+          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('flash', 0)">
+            <div id="ring-flash" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-brand to-orange-500 shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative flex items-center justify-center bg-black">
+                 <img src="${flashImgs[0]}" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
+                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i class="fa-solid fa-bolt text-white text-sm drop-shadow-md"></i></div>
               </div>
             </div>
-            <span class="text-[10px] font-bold text-slate-300">${s.title}</span>
+            <span class="text-[10px] font-bold text-slate-300">Foot</span>
           </div>
-        `).join('');
 
-        storyHtml += `
+          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('monde', 0)">
+            <div id="ring-monde" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-green-500 to-emerald-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] transition-all duration-300">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
+                 ${window.getCategoryAvatar('monde')}
+              </div>
+            </div>
+            <span class="text-[10px] font-bold text-slate-300">Monde</span>
+          </div>
+
+          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('tool', 0)">
+            <div id="ring-tool" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
+                 ${window.getCategoryAvatar('tool')}
+              </div>
+            </div>
+            <span class="text-[10px] font-bold text-slate-300">Tech/Tool</span>
+          </div>
+
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('movies', 0)">
             <div id="ring-movies" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300">
               <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
@@ -1855,9 +2167,8 @@
               </div>
             </div>
             <span class="text-[10px] font-bold text-slate-300">Top Films</span>
-          </div>`;
-
-        storyHtml += `
+          </div>
+          
           <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('anime', 0)">
             <div id="ring-anime" class="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
               <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
@@ -1865,13 +2176,15 @@
               </div>
             </div>
             <span class="text-[10px] font-bold text-slate-300">Top Anime</span>
-          </div>`;
+          </div>
+        `;
 
         storyContainer.innerHTML = storyHtml;
         window.updateBubbleVisuals();
 
         const daySeed = new Date().getDay() + 1; 
         
+        // --- CHARGEMENT ASYNCHRONE DE TMDB/JIKAN (Trés rapide, en arrière plan) ---
         const tmdbKey = '027cc951d888c64e5f15dcb853c7347a';
         fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${tmdbKey}&language=fr-FR&page=${daySeed}`)
             .then(res => res.json())
@@ -1884,7 +2197,7 @@
                         contentImg: `https://image.tmdb.org/t/p/w780${m.poster_path}`,
                         contentText: m.overview,
                         type: 'movie',
-                        trailerId: m.id, // On conserve l'ID pour lancer la recherche YouTube ciblée in-app
+                        trailerId: m.id,
                         color: 'from-red-500 to-rose-700',
                         musicQuery: `${m.title} soundtrack epic`,
                         likes: Math.floor(Math.random() * 1000) + 100,
@@ -1905,7 +2218,7 @@
                         contentImg: a.images.webp.large_image_url,
                         contentText: a.synopsis,
                         type: 'anime',
-                        embedUrl: a.trailer?.embed_url || null, // Jikan renvoie souvent l'URL embed YouTube directement
+                        embedUrl: a.trailer?.embed_url || null,
                         color: 'from-blue-400 to-indigo-600',
                         musicQuery: `${a.title} anime opening`,
                         likes: Math.floor(Math.random() * 2000) + 500,
@@ -1915,176 +2228,105 @@
                 }
             }).catch(e => console.warn('Jikan Error', e));
 
-        feedContainer.innerHTML = `<div class="py-10 flex justify-center w-full"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin shadow-[0_0_10px_rgba(168,85,247,0.3)]"></div></div>`;
+        // --- ⚡ CACHE LOCAL ⚡ ---
+        const cachedNews = localStorage.getItem('levelup_news_cache');
+        if (cachedNews) {
+            try {
+                const parsedData = JSON.parse(cachedNews);
+                if (parsedData && parsedData.length > 0) {
+                    window.renderNewsFeed(parsedData);
+                }
+            } catch(e) { console.warn("Erreur cache", e); }
+        } else {
+            feedContainer.innerHTML = `<div class="py-10 flex justify-center w-full"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin shadow-[0_0_10px_rgba(168,85,247,0.3)]"></div></div>`;
+        }
         
-        // --- NOUVEAU FLUX D'ACTUALITÉS DEPUIS LE SERVEUR VERCEL ---
+        // --- 🚀 ALIMENTATION PAR L'API VERCEL (FEED ET STORIES SIMULTANÉS) 🚀 ---
         let allNews = [];
 
         try {
-            // URL directe vers ton serveur Vercel
             const API_URL = 'https://levelup-ecosystem.com/api/news?category=all';
-            
-            console.log("📡 [Actus] Tentative de récupération depuis le serveur : " + API_URL);
-            
             const res = await fetch(API_URL);
             
-            if (!res.ok) {
+            if (res.ok) {
+                const data = await res.json();
+                if (data && Array.isArray(data)) {
+                    allNews = data.map(item => {
+                        let rawImg = item.img || item.thumbnail || '';
+                        if (rawImg && rawImg.startsWith('http://')) rawImg = rawImg.replace('http://', 'https://');
+                        if (!rawImg || rawImg.trim() === '') rawImg = null;
+
+                        const categoryLower = (item.category || '').toLowerCase();
+                        let badgeLabel = 'LevelInfo';
+                        if (categoryLower.includes('otaku') || categoryLower.includes('anime')) badgeLabel = 'LevelOtaku';
+                        else if (categoryLower.includes('gaming') || categoryLower.includes('jeu')) badgeLabel = 'LevelGame';
+                        else if (categoryLower.includes('movie') || categoryLower.includes('film')) badgeLabel = 'LevelMovie';
+                        else if (categoryLower.includes('music') || categoryLower.includes('audio')) badgeLabel = 'LevelMusic';
+                        else if (categoryLower.includes('tool') || categoryLower.includes('tech')) badgeLabel = 'LevelTool';
+                        else if (categoryLower.includes('sport') || categoryLower.includes('foot')) badgeLabel = 'LevelFoot';
+
+                        return {
+                            title: item.title,
+                            desc: item.desc || item.description || '',
+                            link: item.link,
+                            img: rawImg,
+                            date: item.date || item.pubDate || new Date().toISOString(),
+                            category: item.category || 'tout',
+                            label: badgeLabel,
+                            videoUrl: item.video || item.videoUrl || item.embed || item.trailer || null // Support vidéo de ton API
+                        };
+                    });
+
+                    // 1. Mise à jour instantanée du flux (Feed)
+                    localStorage.setItem('levelup_news_cache', JSON.stringify(allNews));
+                    window.renderNewsFeed(allNews);
+
+                    // 2. ⚡ DISTRIBUTION INTELLIGENTE DANS LES STORIES ⚡
+                    const getStoryTime = (dateStr) => {
+                        const diffMins = Math.floor((new Date() - new Date(dateStr)) / (1000 * 60));
+                        if(isNaN(diffMins) || diffMins < 0) return "À l'instant";
+                        if(diffMins < 60) return `Il y a ${diffMins} min`;
+                        if(diffMins < 1440) return `Il y a ${Math.floor(diffMins/60)}h`;
+                        return `Il y a ${Math.floor(diffMins/1440)}j`;
+                    };
+
+                    const articleToStory = (article, type, icon, color) => ({
+                        title: article.title,
+                        icon: icon,
+                        color: color,
+                        time: getStoryTime(article.date),
+                        contentImg: article.img,
+                        contentText: article.desc ? article.desc.replace(/<[^>]*>?/gm, '').trim() : "Voir plus de détails...",
+                        fullText: article.desc ? article.desc.replace(/<[^>]*>?/gm, '').trim() : "", // Ajout du texte complet pour le Modal
+                        likes: Math.floor(Math.random() * 2000) + 100,
+                        userLiked: false,
+                        categoryBadge: type,
+                        link: article.link,
+                        embedUrl: article.videoUrl, // Transfère la vidéo à la Story !
+                        type: 'api_story'
+                    });
+
+                    // Séparation des catégories depuis ton API
+                    const sports = allNews.filter(a => a.label === 'LevelFoot' || a.category.toLowerCase().includes('sport') || a.category.toLowerCase().includes('foot'));
+                    const tools = allNews.filter(a => a.label === 'LevelTool' || a.category.toLowerCase().includes('tech'));
+                    const mondes = allNews.filter(a => a.label === 'LevelInfo' || a.category.toLowerCase().includes('monde') || a.category === 'tout');
+
+                    // Remplacement des mocks par tes Vraies Données
+                    if (sports.length > 0) window._storySequences.flash = sports.slice(0, 15).map(a => articleToStory(a, 'flash', 'fa-bolt', 'from-brand to-orange-500'));
+                    if (mondes.length > 0) window._storySequences.monde = mondes.slice(0, 15).map(a => articleToStory(a, 'monde', 'fa-earth-americas', 'from-green-500 to-emerald-500'));
+                    if (tools.length > 0) window._storySequences.tool = tools.slice(0, 15).map(a => articleToStory(a, 'tool', 'fa-screwdriver-wrench', 'from-blue-500 to-indigo-500'));
+                }
+            } else {
                 throw new Error(`Erreur HTTP serveur: ${res.status}`);
             }
-
-            const data = await res.json();
-            
-            if (data && Array.isArray(data)) {
-                console.log(`✅ [Actus] Succès ! ${data.length} articles récupérés.`);
-                allNews = data.map(item => {
-                    let rawImg = item.img || item.thumbnail || '';
-                    
-                    // CORRECTION MIXED CONTENT : Forcer le passage de HTTP à HTTPS
-                    if (rawImg && rawImg.startsWith('http://')) {
-                        rawImg = rawImg.replace('http://', 'https://');
-                    }
-
-                    const categoryLower = (item.category || '').toLowerCase();
-                    
-                    // CORRECTION IMAGES MANQUANTES : Images de secours adaptées à la catégorie
-                    if (!rawImg || rawImg.trim() === '') {
-                        rawImg = null; // Mettre à null pour déclencher la div "Manquante"
-                    }
-
-                    let badgeLabel = 'LevelInfo';
-                    if (categoryLower.includes('otaku') || categoryLower.includes('anime')) badgeLabel = 'LevelOtaku';
-                    else if (categoryLower.includes('gaming') || categoryLower.includes('jeu')) badgeLabel = 'LevelGame';
-                    else if (categoryLower.includes('movie') || categoryLower.includes('film')) badgeLabel = 'LevelMovie';
-                    else if (categoryLower.includes('music') || categoryLower.includes('audio')) badgeLabel = 'LevelMusic';
-                    else if (categoryLower.includes('tool') || categoryLower.includes('tech')) badgeLabel = 'LevelTool';
-
-                    return {
-                        title: item.title,
-                        desc: item.desc || item.description || '',
-                        link: item.link,
-                        img: rawImg,
-                        date: item.date || item.pubDate || new Date().toISOString(),
-                        category: item.category || 'tout',
-                        label: badgeLabel
-                    };
-                });
-            } else {
-                console.warn("⚠️ [Actus] Le serveur a répondu mais le format n'est pas un tableau :", data);
-                window.toast_("Format des actualités non reconnu.", "warn");
-            }
-
         } catch (err) {
             console.error("❌ [Actus] Erreur de récupération serveur :", err);
-            window.toast_("Impossible de charger les actus du serveur.", "err");
-        }
-
-        // L'algorithme de tri : Les plus récents en premier !
-        if (allNews.length > 0) {
-            allNews = allNews.sort((a, b) => new Date(b.date) - new Date(a.date));
-        } else { 
-            feedContainer.innerHTML = `<div class="py-10 text-center text-slate-500 text-sm w-full">Aucune actualité disponible.</div>`; 
-            return; 
-        }
-
-        let htmlFeed = '';
-        allNews.forEach((item, index) => {
-            const articleId = 'news_' + window.sHash(item.link || index.toString());
-            window._loadedArticles[articleId] = item; // On garde en mémoire pour la bibliothèque
-            if(window._hiddenArticles.has(articleId)) return;
-
-            let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim();
-            // On vérifie si la description est vraiment longue (plus de 120 caractères par exemple)
-            const isLongDesc = cleanDesc.length > 150;
-            
-            let dateObj = new Date(item.date);
-            let diffDays = Math.floor((new Date() - dateObj) / (1000 * 60 * 60 * 24));
-            let dateStr = diffDays === 0 ? "Aujourd'hui" : (diffDays === 1 ? "Hier" : `Il y a ${diffDays} j`);
-            if (isNaN(diffDays)) dateStr = "Récemment";
-
-            let catDisplay = "tool";
-            if (item.label === 'LevelGame') catDisplay = 'gaming';
-            if (item.label === 'LevelMovie') catDisplay = 'movies';
-            if (item.label === 'LevelOtaku') catDisplay = 'otaku';
-            if (item.label === 'LevelTool') catDisplay = 'tool';
-            if (item.label === 'LevelMusic') catDisplay = 'music';
-
-            // HTML pour Image Manquante Propre
-            const missingImageHtml = `
-                <div class="block w-full bg-[#121214] border-y border-white/5 relative p-6 flex flex-col items-center justify-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4"><i class="fa-regular fa-image text-2xl text-slate-500"></i></div>
-                    <p class="text-sm text-slate-400 mb-4 max-w-xs leading-relaxed">Le site source empêche l'affichage direct de cette image (protection active).</p>
-                    <button onclick="window.confirmExternalLink('${item.link}')" class="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors"><i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i> Ouvrir l'article original</button>
-                </div>
-            `;
-
-            // HTML pour Image Présente
-            const validImageHtml = `
-                <div class="block w-full bg-[#121214] relative cursor-pointer group" onclick="window.openImageZoom('${item.img}')">
-                     <img src="${item.img}" class="w-full max-h-[450px] object-cover" onerror="window.handleImageError(this, '${item.link}')">
-                     <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1.5 rounded-lg text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-expand text-xs"></i></div>
-                </div>
-            `;
-
-            const isLiked = window._likedArticles.has(articleId);
-            const isSaved = window._savedArticles.has(articleId);
-
-            // STRUCTURE DU POST
-            htmlFeed += `
-            <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-4 mb-3 transition-all duration-300 w-full" id="article-${articleId}" data-category="${catDisplay}">
-                
-                <!-- HEADER (Avatar SVG + Titre + Badge + ...) -->
-                <div class="flex items-center justify-between px-4 py-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-black border border-white/10 overflow-hidden shadow-lg shrink-0">
-                            ${window.getCategoryAvatar(catDisplay)}
-                        </div>
-                        <div>
-                            <p class="text-[13px] font-bold text-white leading-none uppercase tracking-wide flex items-center gap-1.5">
-                                ${item.label}
-                                <i class="fa-solid fa-circle-check text-brand text-[12px] drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]" title="Vérifié"></i>
-                            </p>
-                            <p class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</p>
-                        </div>
-                    </div>
-                    <button onclick="window.openPostOptions('${articleId}', '${item.link}')" class="text-slate-500 hover:text-white transition-colors p-2 active:scale-90"><i class="fa-solid fa-ellipsis text-lg"></i></button>
-                </div>
-
-                <!-- TEXTE ET TITRE (EN HAUT DE L'IMAGE) -->
-                <div class="px-4 pb-3">
-                    <h3 class="text-[15px] font-bold text-white mb-1.5 leading-tight">${item.title}</h3>
-                    <div class="relative">
-                        <!-- class line-clamp-2 uniquement si la description est très longue -->
-                        <p id="desc-${articleId}" class="text-[13px] text-slate-300 leading-relaxed transition-all duration-300 ${isLongDesc ? 'line-clamp-2' : ''}">${cleanDesc}</p>
-                        ${isLongDesc ? `<button onclick="window.toggleDesc('${articleId}', event)" id="btn-desc-${articleId}" class="text-brand text-[11px] font-bold mt-1.5 hover:text-white transition-colors relative z-10 cursor-pointer">Voir plus</button>` : ''}
-                    </div>
-                </div>
-
-                <!-- IMAGE AVEC FALLBACK -->
-                ${item.img ? validImageHtml : missingImageHtml}
-
-                <!-- ACTIONS -->
-                <div class="flex items-center justify-between px-4 pt-4 pb-2">
-                    <div class="flex items-center gap-6">
-                        <button onclick="window.toggleLikeActu('${articleId}')" class="text-white hover:text-red-500 transition-colors text-2xl active:scale-90 transform"><i class="${isLiked ? 'fa-solid text-red-500' : 'fa-regular'} fa-heart" id="like-${articleId}"></i></button>
-                        <button onclick="window.shareArticle(decodeURIComponent('${encodeURIComponent(item.title)}'), '${item.link}')" class="text-white hover:text-blue-400 transition-colors text-[22px] active:scale-90 transform"><i class="fa-regular fa-paper-plane"></i></button>
-                    </div>
-                    <button onclick="window.saveArticle('${articleId}')" class="text-white hover:text-brand transition-colors text-2xl active:scale-90 transform"><i class="${isSaved ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark" id="bookmark-${articleId}"></i></button>
-                </div>
-
-                <!-- NOTICE LÉGALE PRO -->
-                <div class="px-4 pb-1">
-                    <div class="w-full border-t border-white/5 pt-2 flex items-start gap-2">
-                        <i class="fa-solid fa-circle-info text-slate-500 text-[9px] mt-0.5"></i>
-                        <p class="text-[9px] text-slate-500 leading-tight">Contenu externe agrégé automatiquement. LevelUp n'est pas l'auteur de cette publication et la propose à titre informatif.</p>
-                    </div>
-                </div>
-            </div>`;
-        });
-        
-        feedContainer.innerHTML = htmlFeed;
-        const activeFilterBtn = document.querySelector('.actu-filter-btn.active');
-        if (activeFilterBtn) {
-            window.filterActus(activeFilterBtn.dataset.filter);
+            if (!cachedNews) {
+                window.toast_("Impossible de charger les actus du serveur.", "err");
+            }
+        } finally {
+            // ✅ On retire le verrou anti-spam après le chargement
+            setTimeout(() => { window._isFetchingActus = false; }, 1000);
         }
     };
 
@@ -2422,16 +2664,10 @@
         const stories = window._storySequences[window._currentSeqType];
         
         if(window._currentStoryIndex >= stories.length) {
-            // Marquer comme vu UNIQUEMENT si la séquence entière est terminée
-            if (window._currentSeqType === 'movies') window._seenStories.add('movies');
-            if (window._currentSeqType === 'anime') window._seenStories.add('anime');
-            if (window._currentSeqType === 'main' && window._currentStoryIndex > 0) {
-                window._seenStories.add(`main_${window._currentStoryIndex - 1}`);
-            }
-            
+            window._seenStories.add(window._currentSeqType);
             window.updateBubbleVisuals();
 
-            const seqOrder = ['main', 'movies', 'anime'];
+            const seqOrder = ['flash', 'monde', 'tool', 'movies', 'anime'];
             const currentIndex = seqOrder.indexOf(window._currentSeqType);
             
             if (currentIndex >= 0 && currentIndex < seqOrder.length - 1) {
@@ -2470,16 +2706,31 @@
 
         const contentArea = document.getElementById('storyContentArea');
         
+        // ⚡ GESTION DYNAMIQUE DES BOUTONS VIDÉO / LIEN (Adapté à ton API Vercel)
         let trailerBtnHtml = '';
         if(story.embedUrl) {
+            // Si c'est un film/anime = "Voir le trailer". Si c'est l'API (Foot/Monde) = "Voir la vidéo"
+            const btnText = (story.type === 'movie' || story.type === 'anime') ? 'Voir le trailer' : 'Voir la vidéo';
             trailerBtnHtml = `
             <button onclick="event.stopPropagation(); window.playTrailer('${story.embedUrl}')" class="mt-4 flex items-center justify-center gap-2 w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(220,38,38,0.4)] relative active:scale-95 pointer-events-auto">
-               <i id="trailerBtnIcon" class="fa-brands fa-youtube text-lg"></i> Voir le trailer
+               <i id="trailerBtnIcon" class="fa-brands fa-youtube text-lg"></i> ${btnText}
             </button>`;
         } else if(story.trailerId) {
             trailerBtnHtml = `
             <button onclick="event.stopPropagation(); window.fetchAndPlayTrailer('${story.type}', ${story.trailerId})" class="mt-4 flex items-center justify-center gap-2 w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(220,38,38,0.4)] relative active:scale-95 pointer-events-auto">
                <i id="trailerBtnIcon" class="fa-brands fa-youtube text-lg"></i> Voir le trailer
+            </button>`;
+        } else if(story.link) {
+            // NOUVEAU BOUTON : Ouvre le lecteur d'article interne
+            const safeTitle = encodeURIComponent(story.title || '');
+            const safeImg = encodeURIComponent(story.contentImg || '');
+            const safeText = encodeURIComponent(story.fullText || story.contentText || '');
+            const safeLink = encodeURIComponent(story.link || '');
+            const safeBadge = encodeURIComponent(story.categoryBadge || 'Info');
+            
+            trailerBtnHtml = `
+            <button onclick="event.stopPropagation(); window.openArticleModal('${safeTitle}', '${safeImg}', '${safeText}', '${safeLink}', '${safeBadge}')" class="mt-4 flex items-center justify-center gap-2 w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-xl transition-colors relative active:scale-95 pointer-events-auto">
+               <i class="fa-solid fa-book-open text-sm"></i> Voir plus
             </button>`;
         }
 
@@ -2613,9 +2864,18 @@
         modal.classList.remove('hidden'); void modal.offsetWidth; 
         backdrop.classList.remove('opacity-0');
         content.classList.remove('translate-y-full');
-        document.getElementById('authLoginStep').classList.remove('hidden');
-        document.getElementById('authRegisterStep').classList.add('hidden');
-        document.getElementById('authRegisterStep').classList.remove('flex');
+        
+        if (window._pendingCreds) {
+            document.getElementById('authLoginStep').classList.add('hidden');
+            const regStep = document.getElementById('authRegisterStep');
+            regStep.classList.remove('hidden');
+            regStep.classList.add('flex');
+        } else {
+            document.getElementById('authLoginStep').classList.remove('hidden');
+            const regStep = document.getElementById('authRegisterStep');
+            regStep.classList.add('hidden');
+            regStep.classList.remove('flex');
+        }
     };
     window.closeLoginSheet = function() {
         document.getElementById('loginSheetBackdrop').classList.add('opacity-0');
