@@ -1,6 +1,6 @@
 const Parser = require('rss-parser');
 
-// Configuration avancée du parser pour capter un maximum d'images
+// Configuration avancée du parser pour capter images ET vidéos de toutes sources
 const parser = new Parser({
     customFields: {
         item: [
@@ -13,7 +13,7 @@ const parser = new Parser({
     }
 });
 
-// Ajout massif de nouvelles sources : Monde, Sports (Foot, etc) et Économie
+// Sources d'actualités
 const SOURCES = {
     gaming: [
         { name: 'JeuxVideo.com', url: 'https://www.jeuxvideo.com/rss/rss.xml' },
@@ -53,7 +53,6 @@ const SOURCES = {
         { name: 'Metalorgie', url: 'https://www.metalorgie.com/feed/news' },
         { name: 'La Grosse Radio', url: 'https://www.lagrosseradio.com/feed/' }
     ],
-    // --- NOUVELLES CATÉGORIES TEMPS RÉEL (FOOT, MONDE, INFO) ---
     sports: [
         { name: "L'Équipe", url: 'https://www.lequipe.fr/rss/actu_rss.xml' },
         { name: 'RMC Sport', url: 'https://rmcsport.bfmtv.com/rss/info/flux.xml' },
@@ -75,43 +74,86 @@ const SOURCES = {
     ]
 };
 
-// Fonction améliorée pour chercher les images cachées
+// Fonction pour chercher les images de façon intelligente
 function extractBestImage(item, sourceName) {
     let img = null;
 
-    // 1. Chercher dans media:content ou media:thumbnail (Standard moderne)
-    if (item.mediaContent && item.mediaContent['$'] && item.mediaContent['$'].url) {
+    if (item.mediaContent && item.mediaContent['$'] && item.mediaContent['$'].url && !item.mediaContent['$'].type?.startsWith('video/')) {
         img = item.mediaContent['$'].url;
     } else if (item.mediaThumbnail && item.mediaThumbnail['$'] && item.mediaThumbnail['$'].url) {
         img = item.mediaThumbnail['$'].url;
-    } 
-    // 2. Chercher dans enclosure (Vieux standard)
-    else if (item.enclosure && item.enclosure.url && item.enclosure.url.match(/\.(jpeg|jpg|gif|png|webp)/i)) {
+    } else if (item.enclosure && item.enclosure.url && item.enclosure.url.match(/\.(jpeg|jpg|gif|png|webp)/i)) {
         img = item.enclosure.url;
-    } 
-    // 3. Scanner le contenu complet avec une Regex puissante (gère les apostrophes et guillemets)
-    else {
+    } else {
         const regex = /<img[^>]+src=["']([^"']+)["']/i;
-        
         if (item.contentEncoded) {
             const match = item.contentEncoded.match(regex);
             if (match) img = match[1];
         }
-        
         if (!img && item.description) {
             const match = item.description.match(regex);
             if (match) img = match[1];
         }
     }
 
-    // 4. FALLBACK INTELLIGENT : Si AUCUNE image n'est trouvée
-    // Au lieu de mettre la même image partout, on génère une image unique basée sur le titre !
     if (!img || img.length < 5) {
         const safeSeed = encodeURIComponent((item.title || sourceName).substring(0, 20).replace(/[^a-zA-Z0-9]/g, ''));
         img = `https://picsum.photos/seed/${safeSeed}/800/450`;
     }
 
     return img;
+}
+
+// ALGORITHME DE DÉTECTION VIDÉO ULTRA-LARGE (MULTI-PLATEFORME & FICHIERS DIRECTS)
+function extractBestVideo(item) {
+    let video = null;
+    const htmlContent = (item.contentEncoded || '') + ' ' + (item.description || '');
+
+    // 1. Détection des lecteurs embarqués et iFrames de tous types (YouTube, Twitch, Vimeo, TikTok, Dailymotion, Streamable)
+    const iframeRegex = /src=["'](https:\/\/(?:www\.)?(?:youtube\.com\/embed|dailymotion\.com\/embed\/video|player\.vimeo\.com\/video|player\.twitch\.tv\/\?channel|tiktok\.com\/embed|streamable\.com\/e)\/[^"']+)["']/i;
+    const matchIframe = htmlContent.match(iframeRegex);
+    
+    if (matchIframe) {
+        video = matchIframe[1];
+    }
+
+    // 2. Détection de liens bruts de partage vidéo dans le texte de l'article (ex: Twitch, Streamable, TikTok)
+    if (!video) {
+        const linkRegex = /(https:\/\/(?:www\.)?(?:twitch\.fr\/videos\/|streamable\.com\/|tiktok\.com\/@[\w.-]+\/video\/|vimeo\.com\/)\w+)/i;
+        const matchLink = htmlContent.match(linkRegex);
+        if (matchLink) {
+            video = matchLink[1];
+        }
+    }
+
+    // 3. Détection d'une balise vidéo HTML5 directe (<video src="..."> ou <source src="...">)
+    if (!video) {
+        const videoTagRegex = /<(?:video|source)[^>]+src=["']([^"']+\.(?:mp4|webm|ogg|m3u8)(?:\?[^"']*)?)["']/i;
+        const matchVideo = htmlContent.match(videoTagRegex);
+        if (matchVideo) {
+            video = matchVideo[1];
+        }
+    }
+
+    // 4. Détection dans les pièces jointes (Enclosure) si le format est de type vidéo
+    if (!video && item.enclosure && item.enclosure.url) {
+        const type = item.enclosure.type || '';
+        const isVideoUrl = item.enclosure.url.match(/\.(mp4|webm|ogg|m3u8|mov|avi)/i);
+        if (type.startsWith('video/') || isVideoUrl) {
+            video = item.enclosure.url;
+        }
+    }
+    
+    // 5. Détection dans les balises de médias modernes (media:content)
+    if (!video && item.mediaContent && item.mediaContent['$']) {
+        const mediaUrl = item.mediaContent['$'].url;
+        const mediaType = item.mediaContent['$'].type || '';
+        if (mediaType.startsWith('video/') || mediaUrl?.match(/\.(mp4|webm|ogg|m3u8|mov|avi)/i)) {
+            video = mediaUrl;
+        }
+    }
+
+    return video; // Renvoie l'URL trouvée (embed ou brute) ou null si aucune vidéo n'est présente
 }
 
 async function fetchCategoryNews(categoryKey) {
@@ -125,8 +167,8 @@ async function fetchCategoryNews(categoryKey) {
             const feed = await parser.parseURL(source.url);
             return feed.items.map(item => {
                 
-                // Utilisation de notre nouvelle fonction d'extraction d'images
                 const finalImage = extractBestImage(item, source.name);
+                const finalVideo = extractBestVideo(item); 
 
                 return {
                     title: item.title,
@@ -134,6 +176,7 @@ async function fetchCategoryNews(categoryKey) {
                     desc: item.contentSnippet || item.content || item.description || '',
                     date: item.pubDate || item.isoDate || new Date().toISOString(),
                     img: finalImage,
+                    video: finalVideo, 
                     source: source.name,
                     category: categoryKey
                 };
@@ -151,23 +194,20 @@ async function fetchCategoryNews(categoryKey) {
         }
     });
 
-    // Tri par date de la plus récente à la plus ancienne
+    // Tri chronologique des actualités
     return allArticles.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 300);
 }
 
-// Export Vercel
+// Export d'API Vercel avec gestion CORS et Cache de 5 minutes
 export default async function handler(req, res) {
-    // Configuration des headers CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
-    // Intercepter la requête de pré-vérification (Preflight)
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
 
-    // MISE À JOUR : Cache réglé sur 300 secondes (5 minutes) pour du VRAI TEMPS RÉEL !
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
 
     const category = req.query.category || 'all';
@@ -175,7 +215,6 @@ export default async function handler(req, res) {
     try {
         if (category === 'all') {
             let mixed = [];
-            // On récupère TOUTES les actus (foot, monde, gaming, etc)
             for (const cat of Object.keys(SOURCES)) {
                 const news = await fetchCategoryNews(cat);
                 mixed = mixed.concat(news);
