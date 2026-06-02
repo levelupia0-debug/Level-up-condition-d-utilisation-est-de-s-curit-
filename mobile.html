@@ -959,6 +959,10 @@
 
                         } else {
                             window._pendingCreds = u;
+                            
+                            // 1. Ouvrir la modale (au cas où la page a rechargé ou a été fermée)
+                            window.openLoginSheet();
+                            
                             document.getElementById('authLoginStep').classList.add('hidden');
                             const regStep = document.getElementById('authRegisterStep');
                             regStep.classList.remove('hidden');
@@ -967,6 +971,9 @@
                             const defaultName = u.displayName || 'Utilisateur LevelUp';
                             document.getElementById('regNameInput').value = defaultName;
                             window.checkRegForm();
+                            
+                            // 2. Mettre à jour l'UI du profil pour refléter l'état "en attente"
+                            window.refreshProfileUI();
                         }
                     } catch(e) {
                         console.error("Auth DB Erreur", e);
@@ -1159,6 +1166,31 @@
                 const tmpl = document.getElementById('tmpl-connected-nokey');
                 cont.innerHTML = tmpl.innerHTML;
             }
+        } else if (window._pendingCreds) {
+            navCompte.className = 'fa-solid fa-user-pen text-lg text-brand drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]';
+            navTxt.textContent = 'Inscription';
+            nameEl.textContent = window._pendingCreds.displayName || 'Finalisation...';
+            statEl.textContent = "Veuillez terminer votre inscription.";
+            statEl.className = 'text-sm text-brand mt-1 font-bold';
+
+            if(window._pendingCreds.photoURL) {
+                avaCont.innerHTML = `<img src="${window._pendingCreds.photoURL}" class="w-full h-full object-cover">`;
+            } else {
+                avaCont.innerHTML = `<i class="fa-solid fa-hourglass-half text-3xl text-brand"></i>`;
+            }
+
+            cont.innerHTML = `
+              <div class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
+                <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-user-pen"></i></div>
+                <h3 class="text-base font-bold text-white mb-2">Inscription incomplète</h3>
+                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Vous êtes connecté avec Google, mais votre profil n'est pas encore finalisé.</p>
+                <button onclick="window.openLoginSheet()" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm shadow-[0_0_15px_rgba(168,85,247,0.3)] mb-3">
+                  Terminer mon inscription
+                </button>
+                <button onclick="window.execLogout()" class="block w-full py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold rounded-[14px] transition-all text-sm">
+                  Annuler et se déconnecter
+                </button>
+              </div>`;
         } else if (!window._pendingCreds) {
             navCompte.className = 'fa-solid fa-right-to-bracket text-lg';
             navTxt.textContent = 'Connexion';
@@ -2613,9 +2645,18 @@
         modal.classList.remove('hidden'); void modal.offsetWidth; 
         backdrop.classList.remove('opacity-0');
         content.classList.remove('translate-y-full');
-        document.getElementById('authLoginStep').classList.remove('hidden');
-        document.getElementById('authRegisterStep').classList.add('hidden');
-        document.getElementById('authRegisterStep').classList.remove('flex');
+        
+        if (window._pendingCreds) {
+            document.getElementById('authLoginStep').classList.add('hidden');
+            const regStep = document.getElementById('authRegisterStep');
+            regStep.classList.remove('hidden');
+            regStep.classList.add('flex');
+        } else {
+            document.getElementById('authLoginStep').classList.remove('hidden');
+            const regStep = document.getElementById('authRegisterStep');
+            regStep.classList.add('hidden');
+            regStep.classList.remove('flex');
+        }
     };
     window.closeLoginSheet = function() {
         document.getElementById('loginSheetBackdrop').classList.add('opacity-0');
