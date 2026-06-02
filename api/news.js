@@ -1,15 +1,19 @@
 const Parser = require('rss-parser');
 
+// Configuration avancée du parser pour capter un maximum d'images
 const parser = new Parser({
     customFields: {
         item: [
-            ['media:content', 'media'],
+            ['media:content', 'mediaContent'],
+            ['media:thumbnail', 'mediaThumbnail'],
             ['enclosure', 'enclosure'],
-            ['content:encoded', 'contentEncoded']
+            ['content:encoded', 'contentEncoded'],
+            ['description', 'description']
         ]
     }
 });
 
+// Ajout massif de nouvelles sources : Monde, Sports (Foot, etc) et Économie
 const SOURCES = {
     gaming: [
         { name: 'JeuxVideo.com', url: 'https://www.jeuxvideo.com/rss/rss.xml' },
@@ -48,8 +52,67 @@ const SOURCES = {
         { name: 'Les Inrocks', url: 'https://www.lesinrocks.com/musique/feed/' },
         { name: 'Metalorgie', url: 'https://www.metalorgie.com/feed/news' },
         { name: 'La Grosse Radio', url: 'https://www.lagrosseradio.com/feed/' }
+    ],
+    // --- NOUVELLES CATÉGORIES TEMPS RÉEL (FOOT, MONDE, INFO) ---
+    sports: [
+        { name: "L'Équipe", url: 'https://www.lequipe.fr/rss/actu_rss.xml' },
+        { name: 'RMC Sport', url: 'https://rmcsport.bfmtv.com/rss/info/flux.xml' },
+        { name: 'Eurosport', url: 'https://www.eurosport.fr/rss.xml' },
+        { name: 'Foot Mercato', url: 'https://www.footmercato.net/rss' },
+        { name: 'So Foot', url: 'https://www.sofoot.com/rss' }
+    ],
+    world: [
+        { name: 'France Info', url: 'https://www.francetvinfo.fr/titres.rss' },
+        { name: 'Le Monde', url: 'https://www.lemonde.fr/rss/une.xml' },
+        { name: 'Le Figaro', url: 'https://www.lefigaro.fr/rss/figaro_actualites.xml' },
+        { name: '20 Minutes', url: 'https://www.20minutes.fr/feeds/rss-actu-france.xml' },
+        { name: 'Le Parisien', url: 'https://www.leparisien.fr/arcio/rss/' }
+    ],
+    economy: [
+        { name: 'Les Echos', url: 'https://services.lesechos.fr/rss/les-echos-accueil.xml' },
+        { name: 'La Tribune', url: 'https://www.latribune.fr/feed.xml' },
+        { name: 'BFM Business', url: 'https://www.bfmtv.com/rss/economie/' }
     ]
 };
+
+// Fonction améliorée pour chercher les images cachées
+function extractBestImage(item, sourceName) {
+    let img = null;
+
+    // 1. Chercher dans media:content ou media:thumbnail (Standard moderne)
+    if (item.mediaContent && item.mediaContent['$'] && item.mediaContent['$'].url) {
+        img = item.mediaContent['$'].url;
+    } else if (item.mediaThumbnail && item.mediaThumbnail['$'] && item.mediaThumbnail['$'].url) {
+        img = item.mediaThumbnail['$'].url;
+    } 
+    // 2. Chercher dans enclosure (Vieux standard)
+    else if (item.enclosure && item.enclosure.url && item.enclosure.url.match(/\.(jpeg|jpg|gif|png|webp)/i)) {
+        img = item.enclosure.url;
+    } 
+    // 3. Scanner le contenu complet avec une Regex puissante (gère les apostrophes et guillemets)
+    else {
+        const regex = /<img[^>]+src=["']([^"']+)["']/i;
+        
+        if (item.contentEncoded) {
+            const match = item.contentEncoded.match(regex);
+            if (match) img = match[1];
+        }
+        
+        if (!img && item.description) {
+            const match = item.description.match(regex);
+            if (match) img = match[1];
+        }
+    }
+
+    // 4. FALLBACK INTELLIGENT : Si AUCUNE image n'est trouvée
+    // Au lieu de mettre la même image partout, on génère une image unique basée sur le titre !
+    if (!img || img.length < 5) {
+        const safeSeed = encodeURIComponent((item.title || sourceName).substring(0, 20).replace(/[^a-zA-Z0-9]/g, ''));
+        img = `https://picsum.photos/seed/${safeSeed}/800/450`;
+    }
+
+    return img;
+}
 
 async function fetchCategoryNews(categoryKey) {
     const sources = SOURCES[categoryKey];
@@ -61,20 +124,16 @@ async function fetchCategoryNews(categoryKey) {
         try {
             const feed = await parser.parseURL(source.url);
             return feed.items.map(item => {
-                let img = 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800'; 
-                if (item.media && item.media['$'] && item.media['$'].url) img = item.media['$'].url;
-                else if (item.enclosure && item.enclosure.url) img = item.enclosure.url;
-                else if (item.contentEncoded) {
-                    const match = item.contentEncoded.match(/<img[^>]+src="([^">]+)"/);
-                    if (match) img = match[1];
-                }
+                
+                // Utilisation de notre nouvelle fonction d'extraction d'images
+                const finalImage = extractBestImage(item, source.name);
 
                 return {
                     title: item.title,
                     link: item.link,
-                    desc: item.contentSnippet || item.content || '',
-                    date: item.pubDate || item.isoDate,
-                    img: img,
+                    desc: item.contentSnippet || item.content || item.description || '',
+                    date: item.pubDate || item.isoDate || new Date().toISOString(),
+                    img: finalImage,
                     source: source.name,
                     category: categoryKey
                 };
@@ -92,10 +151,11 @@ async function fetchCategoryNews(categoryKey) {
         }
     });
 
+    // Tri par date de la plus récente à la plus ancienne
     return allArticles.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 300);
 }
 
-// Nouvel export standard Vercel avec gestion propre du CORS
+// Export Vercel
 export default async function handler(req, res) {
     // Configuration des headers CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -107,15 +167,15 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
-    // Cache Vercel pendant 15 minutes (900 secondes) pour soulager les flux RSS et accélérer l'app
-    res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate');
+    // MISE À JOUR : Cache réglé sur 300 secondes (5 minutes) pour du VRAI TEMPS RÉEL !
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
 
-    // Récupération de la catégorie (ou 'all' par défaut)
     const category = req.query.category || 'all';
 
     try {
         if (category === 'all') {
             let mixed = [];
+            // On récupère TOUTES les actus (foot, monde, gaming, etc)
             for (const cat of Object.keys(SOURCES)) {
                 const news = await fetchCategoryNews(cat);
                 mixed = mixed.concat(news);
