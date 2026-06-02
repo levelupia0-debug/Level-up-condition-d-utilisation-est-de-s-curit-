@@ -868,16 +868,28 @@
 
         if (window._auth) {
             onAuthStateChanged(window._auth, async (u) => {
+                console.log("🛡️ [AUTH] Changement d'état Firebase. UID :", u ? u.uid : "Déconnecté");
+                
+                // 🚫 SÉCURITÉ : Bloquer formellement les comptes anonymes (Les fameux utilisateurs fantômes)
+                if (u && u.isAnonymous) {
+                    console.warn("🚫 [AUTH] Rejet d'un compte anonyme. Déconnexion forcée.");
+                    try { await signOut(window._auth); } catch(e) {}
+                    return; // Stoppe toute l'exécution ici
+                }
+
                 if (u) {
                     try {
                         window._user = u;
                         const ref = doc(window._db, 'artifacts', appId, 'users', u.uid, 'profile', 'data');
+                        
+                        console.log("📡 [FIRESTORE] Tentative de lecture du profil existant...");
                         const snap = await getDoc(ref);
 
                         // Récupération localisation
                         let locData = await fetchUserLocation();
 
                         if (snap.exists()) {
+                            console.log("✅ [FIRESTORE] Profil trouvé. Connexion normale.");
                             window._ud = snap.data();
                             
                             // Récupération des articles sauvegardés et likés depuis Firestore
@@ -958,6 +970,7 @@
                             });
 
                         } else {
+                            console.log("⚠️ [FIRESTORE] Aucun profil trouvé dans la base. Passage en mode INSCRIPTION.");
                             window._pendingCreds = u;
                             
                             // 1. Ouvrir la modale (au cas où la page a rechargé ou a été fermée)
@@ -976,8 +989,9 @@
                             window.refreshProfileUI();
                         }
                     } catch(e) {
-                        console.error("Auth DB Erreur", e);
-                        window.toast_("Erreur système.", 'err');
+                        console.error("❌ [FIRESTORE ERREUR CRITIQUE] Impossible de lire le profil de l'utilisateur !", e);
+                        console.error("👉 EXPLICATION : C'est ce qui vous bloque en Mode Invité ! Votre base Firestore refuse la lecture (PERMISSION_DENIED). Regardez les règles recommandées plus bas.");
+                        window.toast_("Erreur de permission de la base de données. Regardez la console.", 'err');
                     }
                 } else if (!window._pendingCreds) {
                     window._user = null;
@@ -1053,7 +1067,14 @@
         btn.disabled = true;
 
         const u = window._pendingCreds;
-        if(!u) return;
+        
+        // 🚫 SÉCURITÉ : Vérifier que l'utilisateur est bien là et NON anonyme avant d'écrire
+        if(!u || u.isAnonymous) {
+            window.toast_("Session invalide. Veuillez vous reconnecter avec Google.", "err");
+            btn.textContent = "Terminer l'inscription";
+            btn.disabled = false;
+            return;
+        }
 
         const finalName = document.getElementById('regNameInput').value.trim();
 
@@ -1194,18 +1215,18 @@
         } else if (!window._pendingCreds) {
             navCompte.className = 'fa-solid fa-right-to-bracket text-lg';
             navTxt.textContent = 'Connexion';
-            nameEl.textContent = 'Mode Invité';
-            statEl.textContent = "Vous n'êtes pas connecté.";
+            nameEl.textContent = 'Non connecté';
+            statEl.textContent = "Authentification requise.";
             statEl.className = 'text-sm text-slate-400 mt-1';
-            avaCont.innerHTML = `<i class="fa-solid fa-user text-3xl text-slate-500"></i>`;
+            avaCont.innerHTML = `<i class="fa-solid fa-user-lock text-3xl text-slate-500"></i>`;
 
             cont.innerHTML = `
               <div class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
                 <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-lock"></i></div>
-                <h3 class="text-base font-bold text-white mb-2">Déverrouillez l'écosystème</h3>
-                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Connectez-vous pour synchroniser vos données sur tous les outils.</p>
+                <h3 class="text-base font-bold text-white mb-2">Accès restreint</h3>
+                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Vous devez vous connecter avec un compte valide pour générer une clé et utiliser l'écosystème.</p>
                 <button onclick="openLoginSheet()" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm shadow-[0_0_15px_rgba(168,85,247,0.3)]">
-                  Accéder à la connexion
+                  Se connecter
                 </button>
               </div>`;
         }
@@ -1263,13 +1284,16 @@
 
     // --- GESTION DES CLÉS & PIN ---
     window.genKey = async function() {
-        if(!window._user) return;
+        // 🚫 SÉCURITÉ : Bloquer complètement si pas connecté ou si le compte est anonyme
+        if(!window._user || window._user.isAnonymous) {
+            window.toast_("Action interdite : Connectez-vous avec Google d'abord.", "err");
+            return;
+        }
+        
         const key = window.mkKey();
         
         const realUid = window._auth.currentUser ? window._auth.currentUser.uid : window._user.uid;
         const secRef = doc(window._db, 'artifacts', appId, 'users', realUid, 'security', 'key');
-        
-        // CORRECTION ICI : On utilise realUid au lieu de 'key' pour passer la sécurité Firebase
         const pubRef = doc(window._db, 'artifacts', appId, 'public', 'data', 'keys', realUid);
 
         const payload = {
@@ -1281,15 +1305,35 @@
         };
 
         try {
+            console.log("🔑 [GEN-KEY] Tentative d'écriture de la clé publique et privée...");
             await setDoc(pubRef, payload, {merge: true});
             await setDoc(secRef, payload, {merge: true});
+            console.log("✅ [GEN-KEY] Clés écrites avec succès !");
 
             window._ud.apiKey = key;
             window.refreshProfileUI();
             window.toast_("Clé générée avec succès !", "ok");
         } catch (err) {
-            console.error("Firebase Rules Error:", err);
-            window.toast_("Erreur de permission serveur.", "err");
+            console.error("❌ [GEN-KEY] ERREUR DE PERMISSION FIRESTORE AU SERVEUR !", err);
+            console.error("👉 EXPLICATION : Votre compte est bien créé (d'où l'email reçu), mais votre Firebase refuse qu'on écrive dans le dossier 'public'.");
+            console.error("👇 SOLUTION : Copiez-collez exactement ces règles dans votre console Firebase (Onglet Firestore Database -> Règles) puis Publiez :");
+            console.error(`
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Autorise la lecture/écriture publique pour les clés et actus
+    match /artifacts/{appId}/public/data/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    // Sécurise les données privées des utilisateurs
+    match /artifacts/{appId}/users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+            `);
+            window.toast_("Erreur de permission Firestore. Consultez la console (F12).", "err");
         }
     };
 
