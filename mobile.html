@@ -247,7 +247,7 @@
               <i class="fa-solid fa-fire text-lg"></i>
             </div>
             <div>
-              <h2 class="text-xl font-display font-bold text-white">Actus</h2>
+              <h2 class="text-xl font-display font-bold text-white">Oppa</h2>
               <p class="text-[11px] text-slate-400">Le cœur de l'écosystème</p>
             </div>
           </div>
@@ -281,13 +281,6 @@
 
       <!-- ONGLET DONA -->
       <section id="tab-dona" class="app-section hidden absolute inset-0 w-full h-full bg-[#050505] z-10 flex flex-col transition-all duration-300">
-        <!-- Bouton Agrandir Dona -->
-        <div class="absolute top-safe right-4 z-30 pointer-events-auto transition-opacity" id="donaTopControls">
-          <button onclick="window.enterFullscreen('dona')" class="w-10 h-10 rounded-full bg-[#050505]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-colors mt-2">
-            <i class="fa-solid fa-expand text-[13px]"></i>
-          </button>
-        </div>
-
         <div class="flex-1 relative w-full">
           <div id="donaLoader" class="absolute inset-0 flex items-center justify-center bg-transparent z-20 pointer-events-none">
             <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin shadow-[0_0_10px_rgba(168,85,247,0.3)]"></div>
@@ -417,7 +410,22 @@
             </div>
           </div>
 
-          <!-- 3. Légal & Danger -->
+          <!-- 3. Ma Bibliothèque (Photos / Actus) -->
+          <div class="w-full text-left mb-6">
+            <h3 class="text-[11px] uppercase tracking-wider font-bold text-slate-500 mb-3 px-1">Ma Bibliothèque</h3>
+            <div class="flex gap-3">
+              <button onclick="window.openLibrary('likes')" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 text-center transition-colors flex flex-col items-center gap-2 active:scale-95 transition-transform">
+                <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 text-lg"><i class="fa-solid fa-heart"></i></div>
+                <span class="text-xs font-bold text-white">Mentions J'aime</span>
+              </button>
+              <button onclick="window.openLibrary('saves')" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 text-center transition-colors flex flex-col items-center gap-2 active:scale-95 transition-transform">
+                <div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand text-lg"><i class="fa-solid fa-bookmark"></i></div>
+                <span class="text-xs font-bold text-white">Enregistrements</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. Légal & Danger -->
           <div class="w-full text-left mb-6">
             <h3 class="text-[11px] uppercase tracking-wider font-bold text-slate-500 mb-3 px-1">Légal & Zone Danger</h3>
             
@@ -435,7 +443,7 @@
             </div>
           </div>
 
-          <!-- 4. Déconnexion -->
+          <!-- 5. Déconnexion -->
           <button onclick="window.confirmLogout()" class="w-full py-4 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 font-bold tracking-widest text-[11px] uppercase transition-all border border-red-500/20 flex items-center justify-center gap-2 mb-4"><i class="fa-solid fa-sign-out-alt text-sm"></i> Se déconnecter</button>
         </template>
       </section>
@@ -497,7 +505,7 @@
     </button>
     <button onclick="window.switchTab('actus')" id="nav-btn-actus" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
       <i class="fa-solid fa-fire text-lg"></i>
-      <span class="text-[9px] font-semibold tracking-wide">Actus</span>
+      <span class="text-[9px] font-semibold tracking-wide">Oppa</span>
     </button>
     <button onclick="window.openAppWithSSO('ia', 'dona.html')" id="nav-btn-dona" class="nav-btn flex flex-col items-center gap-1.5 transition-all">
       <i class="fa-solid fa-star text-xl text-brand drop-shadow-[0_0_10px_rgba(168,85,247,0.7)] transition-all"></i>
@@ -724,6 +732,17 @@
     </div>
   </div>
 
+  <!-- LIBRARY MODAL (LIKES & SAVES) -->
+  <div id="libraryModal" class="fixed inset-0 bg-[#050505] z-[150] flex flex-col hidden translate-y-full transition-transform duration-300">
+    <div class="shrink-0 px-4 safe-top py-3 flex items-center gap-3 bg-[#050505]/95 backdrop-blur-md border-b border-white/5">
+      <button onclick="window.closeLibrary()" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+      <h2 id="libraryTitle" class="text-lg font-display font-bold text-white">Ma Bibliothèque</h2>
+    </div>
+    <div id="libraryGrid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3 content-start pb-8">
+       <!-- Les articles sauvés/likés vont atterrir ici -->
+    </div>
+  </div>
+
   <div id="searchModal" class="fixed inset-0 bg-[#050505] z-[100] flex flex-col hidden translate-y-full">
     <div class="shrink-0 px-4 safe-top py-3 flex items-center gap-3 bg-[#050505]/95 backdrop-blur-md border-b border-white/5">
       <button onclick="closeModal('searchModal')" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
@@ -774,6 +793,8 @@
     window._savedArticles = new Set();
     window._likedArticles = new Set();
     window._savedArticlesData = {};
+    window._likedArticlesData = {};
+    window._loadedArticles = {}; // Cache temporaire pour stocker les données du feed
     window._currentReportId = null;
     window._currentPostLink = null;
 
@@ -862,6 +883,8 @@
                             // Récupération des articles sauvegardés et likés depuis Firestore
                             if(window._ud.savedArticles) window._savedArticles = new Set(window._ud.savedArticles);
                             if(window._ud.likedArticles) window._likedArticles = new Set(window._ud.likedArticles);
+                            window._savedArticlesData = window._ud.savedData || {};
+                            window._likedArticlesData = window._ud.likedData || {};
 
                             // Maj localisation
                             if(locData) {
@@ -1966,6 +1989,7 @@
         let htmlFeed = '';
         allNews.forEach((item, index) => {
             const articleId = 'news_' + window.sHash(item.link || index.toString());
+            window._loadedArticles[articleId] = item; // On garde en mémoire pour la bibliothèque
             if(window._hiddenArticles.has(articleId)) return;
 
             let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim();
@@ -2072,7 +2096,9 @@
             const ref = doc(window._db, 'artifacts', appId, 'users', window._user.uid, 'profile', 'data');
             await setDoc(ref, {
                 savedArticles: Array.from(window._savedArticles),
-                likedArticles: Array.from(window._likedArticles)
+                likedArticles: Array.from(window._likedArticles),
+                savedData: window._savedArticlesData,
+                likedData: window._likedArticlesData
             }, { merge: true });
         } catch(e) { console.warn('Erreur synchro data user', e); }
     };
@@ -2082,10 +2108,12 @@
         const icon = document.getElementById('like-'+id);
         if(window._likedArticles.has(id)) {
             window._likedArticles.delete(id);
+            delete window._likedArticlesData[id]; // Retire de la biblio
             icon.classList.replace('fa-solid', 'fa-regular');
             icon.classList.remove('text-red-500');
         } else {
             window._likedArticles.add(id);
+            if(window._loadedArticles[id]) window._likedArticlesData[id] = window._loadedArticles[id]; // Ajoute à la biblio
             icon.classList.replace('fa-regular', 'fa-solid');
             icon.classList.add('text-red-500');
             // Petite animation de pop
@@ -2100,11 +2128,13 @@
         const icon = document.getElementById('bookmark-'+id);
         if(window._savedArticles.has(id)) {
             window._savedArticles.delete(id);
+            delete window._savedArticlesData[id]; // Retire de la biblio
             icon.classList.replace('fa-solid', 'fa-regular');
             icon.classList.remove('text-brand');
             window.toast_('Retiré de vos favoris', 'info');
         } else {
             window._savedArticles.add(id);
+            if(window._loadedArticles[id]) window._savedArticlesData[id] = window._loadedArticles[id]; // Ajoute à la biblio
             icon.classList.replace('fa-regular', 'fa-solid');
             icon.classList.add('text-brand');
             // Petite animation
@@ -2275,6 +2305,55 @@
         zoom.classList.remove('hidden');
         zoom.classList.add('flex');
         setTimeout(() => zoom.classList.remove('opacity-0'), 10);
+    };
+
+    // --- SYSTEME DE BIBLIOTHÈQUE (LIKES / SAVES) ---
+    window.openLibrary = function(type) {
+        const modal = document.getElementById('libraryModal');
+        const title = document.getElementById('libraryTitle');
+        
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('translate-y-full'), 10);
+
+        if(type === 'likes') {
+            title.innerHTML = '<i class="fa-solid fa-heart text-red-500 mr-2"></i> Mentions J\'aime';
+            window.renderLibraryGrid(window._likedArticlesData);
+        } else {
+            title.innerHTML = '<i class="fa-solid fa-bookmark text-brand mr-2"></i> Enregistrements';
+            window.renderLibraryGrid(window._savedArticlesData);
+        }
+    };
+
+    window.closeLibrary = function() {
+        const modal = document.getElementById('libraryModal');
+        modal.classList.add('translate-y-full');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    };
+
+    window.renderLibraryGrid = function(dataObj) {
+        const grid = document.getElementById('libraryGrid');
+        grid.innerHTML = '';
+        
+        const items = Object.values(dataObj || {});
+        
+        if(items.length === 0) {
+            grid.innerHTML = '<div class="col-span-2 py-10 text-center text-slate-500 text-sm">Aucun élément dans cette liste.</div>';
+            return;
+        }
+
+        let html = '';
+        items.reverse().forEach(item => {
+            const img = item.img || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=400&auto=format&fit=crop';
+            html += `
+            <div onclick="window.confirmExternalLink('${item.link}')" class="bg-[#121214] border border-white/10 rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform flex flex-col h-44 shadow-lg relative group">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10"></div>
+                <img src="${img}" class="w-full h-full object-cover absolute inset-0 z-0" onerror="this.src='https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=400&auto=format&fit=crop'">
+                <div class="p-3 relative z-20 mt-auto">
+                    <p class="text-[11px] text-white font-bold line-clamp-3 leading-tight drop-shadow-md">${item.title || 'Contenu'}</p>
+                </div>
+            </div>`;
+        });
+        grid.innerHTML = html;
     };
 
     // --- SYSTEME DE LECTURE DES STORIES ET DOUBLE TAP ---
