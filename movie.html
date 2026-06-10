@@ -1230,81 +1230,49 @@ return t.worldAll;
 const formatAccessKey = (val) => {
     setAccessKey(val); 
 };
-
 const handleLogin = async () => {
     const finalKey = accessKey.trim();
     if (!finalKey) return;
     setIsLoadingAuth(true);
     setAuthError('');
+    
     try {
-        if (!auth.currentUser) {
-            await signInAnonymously(auth);
-        }
+        const response = await fetch('https://TON-PROJET.vercel.app/api/validate-key', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: finalKey, appId: APP_ID })
+        });
         
-        let foundUserData = null;
-
-        try {
-            const q = collectionGroup(db, 'security');
-            const querySnapshot = await getDocs(q);
-            querySnapshot.forEach(docSnap => {
-                if (docSnap.data().key === finalKey) foundUserData = docSnap.data();
-            });
-        } catch (err) {}
-
-        if (!foundUserData) {
-            try {
-                const q2 = collection(db, 'artifacts', APP_ID, 'public', 'data', 'security');
-                const snap2 = await getDocs(q2);
-                snap2.forEach(docSnap => {
-                    if (docSnap.data().key === finalKey) foundUserData = docSnap.data();
-                });
-            } catch (err) {}
-        }
-
-        if (!foundUserData) {
-            try {
-                const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'security', finalKey);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    foundUserData = docSnap.data();
-                }
-            } catch(err) {}
-        }
-
-        if (foundUserData) {
-            const email = foundUserData.owner || foundUserData.email || "email@inconnu.com";
-            const name = foundUserData.name || foundUserData.displayName || email.split('@')[0] || t.defaultUser;
-            const uid = foundUserData.uid || finalKey;
-            const photo = localStorage.getItem('lm_photo') || foundUserData.photoUrl || foundUserData.photo || null;
-
+        const result = await response.json();
+        
+        if (!result.valid) {
+            setAuthError(result.error || 'Clé invalide.');
             setIsLoadingAuth(false);
-            setIsLoggingIn(true);
-
-            setTimeout(() => {
-                setUser({ uid });
-                setUserName(name);
-                setUserEmail(email);
-                if (photo) setUserPhoto(photo);
-                
-                localStorage.setItem('levelmovie_saved_key', finalKey);
-                localStorage.setItem('levelmovie_user_name', name);
-                localStorage.setItem('levelmovie_user_email', email);
-                localStorage.setItem('levelmovie_user_uid', uid);
-                if(photo) localStorage.setItem('lm_photo', photo);
-                
-                showToast(t.loginSuccess, 'success');
-                setIsLoggingIn(false);
-
-                const pendingParty = localStorage.getItem('pending_party_join');
-                if (pendingParty) { triggerJoinParty(pendingParty); }
-
-            }, 2000);
-        } else {
-            setAuthError(t.enterKey || "Clé invalide.");
-            setIsLoadingAuth(false);
+            return;
         }
-    } catch (error) {
-        setAuthError(lang === 'fr' ? "Connexion impossible. Vérifiez votre réseau ou votre clé." : "Connection failed. Check your key.");
+
+        // Connexion Firebase anonyme classique
+        if (!auth.currentUser) await signInAnonymously(auth);
+
+        setIsLoadingAuth(false);
+        setIsLoggingIn(true);
+
+        setTimeout(() => {
+            setUser({ uid: result.uid });
+            setUserName(result.name || t.defaultUser);
+            setUserEmail(result.email || '');
+            
+            localStorage.setItem('levelmovie_saved_key', finalKey);
+            localStorage.setItem('levelmovie_user_name', result.name || '');
+            localStorage.setItem('levelmovie_user_email', result.email || '');
+            localStorage.setItem('levelmovie_user_uid', result.uid);
+            
+            showToast(t.loginSuccess, 'success');
+            setIsLoggingIn(false);
+        }, 2000);
+
+    } catch (err) {
+        setAuthError('Connexion impossible. Vérifiez votre réseau.');
         setIsLoadingAuth(false);
     }
 };
