@@ -3203,9 +3203,9 @@ try {
 localStorage.removeItem('lm_name');
 localStorage.removeItem('lm_photo');
 localStorage.removeItem('lm_login_mode');
-// Sur iPhone ET Android en mode PWA, les popups sont bloqués — on utilise le redirect
-const isPWAMode = !!window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-if (isPWAMode) {
+// Sur mobile (iOS + Android), les popups sont bloqués — on utilise le redirect
+const isMobileUA = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone;
+if (isMobileUA) {
   await signInWithRedirect(auth, gProv);
   return;
 }
@@ -3229,8 +3229,8 @@ window.facebookSignIn = async function() {
   if (txt) txt.textContent = 'Connexion en cours...';
   try {
     const fbProv = new FacebookAuthProvider();
-    const isPWAMode = !!window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-    if (isPWAMode) {
+    const isMobileUA = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone;
+    if (isMobileUA) {
       await signInWithRedirect(auth, fbProv);
       return;
     }
@@ -8588,8 +8588,8 @@ window.scrollTo(0, 0);
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.75)" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
     </div>
 
-    <!-- Cloudflare Turnstile -->
-    <div id="cfTurnstile" style="margin-bottom:14px;border-radius:10px;overflow:hidden"></div>
+    <!-- Cloudflare Turnstile — caché, bypass immédiat activé -->
+    <div id="cfTurnstile" style="display:none"></div>
 
     <!-- Conditions d'utilisation -->
     <div style="text-align:center">
@@ -8793,10 +8793,14 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
     var track=document.getElementById('pwaSliderTrack');
     var dots=document.getElementById('pwaSliderDots');
     if(!track||!dots)return;
-    // Normaliser : si l'item est une string (erreur Firestore), le convertir en objet
+    // Normaliser + valider : seules les vraies URLs http sont acceptées
     var normalized=items.map(function(it,i){
-      if(typeof it==='string') return {url:it,caption:''};
-      return it;
+      if(typeof it==='string'){
+        var isUrl=it.indexOf('http')===0;
+        return isUrl?{url:it,caption:''}:{url:'',caption:it,bg:FALLBACKS[i%FALLBACKS.length].bg};
+      }
+      var validUrl=it.url&&it.url.indexOf('http')===0;
+      return {url:validUrl?it.url:'',caption:it.caption||'',bg:it.bg||FALLBACKS[i%FALLBACKS.length].bg};
     });
     _slides=normalized; track.innerHTML=''; dots.innerHTML='';
     normalized.forEach(function(it,i){
@@ -8835,22 +8839,24 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
         var fb=window._fb;
         var _fd=fb.doc, _fg=fb.getDoc;
         _fg(_fd(window._db,'artifacts','level-ia-premium','config','slider')).then(function(snap){
-          var imgs=snap.exists()&&Array.isArray(snap.data().images)&&snap.data().images.length?snap.data().images:FALLBACKS;
-          _build(imgs);
-        }).catch(function(){_build(FALLBACKS);});
-      }catch(e){_build(FALLBACKS);}
+          // N'utiliser les données Firebase que si elles contiennent des vraies URLs http
+          var raw=snap.exists()&&Array.isArray(snap.data().images)?snap.data().images:[];
+          var valid=raw.filter(function(it){ return it&&((typeof it==='string'&&it.indexOf('http')===0)||(it.url&&it.url.indexOf('http')===0)); });
+          _build(valid.length?valid:FALLBACKS);
+        }).catch(function(){/* fallbacks déjà affichés */});
+      }catch(e){/* fallbacks déjà affichés */}
     } else if(attempt<5){
-      // Firebase pas encore prêt — réessayer dans 800ms (max 5 fois = 4s)
       setTimeout(function(){_loadSliderImages(attempt+1);},800);
-    } else {
-      _build(FALLBACKS);
     }
+    // Les fallbacks sont déjà affichés — on ne rappelle pas _build(FALLBACKS) en cas d'échec
   }
   window._pwaSlider={
     show:function(){
       var el=document.getElementById('pwaMobileSlider');
       if(!el)return;
       el.classList.add('active');
+      // Afficher les fallbacks immédiatement, puis mettre à jour avec Firebase si données valides
+      _build(FALLBACKS);
       _loadSliderImages(0);
     },
     hide:function(){
