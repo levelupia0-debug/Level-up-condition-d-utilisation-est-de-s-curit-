@@ -3195,24 +3195,24 @@ getRedirectResult(auth).catch(() => {});
 
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
-
-btn.disabled = true;
-document.getElementById('gBtnTxt').textContent = 'Connexion en cours...';
+if (btn) btn.disabled = true;
+const gBtnTxt = document.getElementById('gBtnTxt');
+if (gBtnTxt) gBtnTxt.textContent = 'Connexion en cours...';
 try {
 // Ne pas supprimer lm_key ici — elle sera récupérée depuis Firestore après auth
 localStorage.removeItem('lm_name');
 localStorage.removeItem('lm_photo');
 localStorage.removeItem('lm_login_mode');
-// Sur iPhone en mode PWA, les popups sont bloqués — on utilise le redirect
-const isIOSPWA = !!window.navigator.standalone;
-if (isIOSPWA) {
+// Sur iPhone ET Android en mode PWA, les popups sont bloqués — on utilise le redirect
+const isPWAMode = !!window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+if (isPWAMode) {
   await signInWithRedirect(auth, gProv);
   return;
 }
 await signInWithPopup(auth, gProv);
 } catch(e) {
-btn.disabled = false;
-document.getElementById('gBtnTxt').textContent = 'Continuer avec Google';
+if (btn) btn.disabled = false;
+if (gBtnTxt) gBtnTxt.textContent = 'Continuer avec Google';
 if(e.code !== 'auth/popup-closed-by-user') toast_('Erreur de connexion — réessayez', 'err');
 
 }
@@ -3229,8 +3229,8 @@ window.facebookSignIn = async function() {
   if (txt) txt.textContent = 'Connexion en cours...';
   try {
     const fbProv = new FacebookAuthProvider();
-    const isIOSPWA = !!window.navigator.standalone;
-    if (isIOSPWA) {
+    const isPWAMode = !!window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if (isPWAMode) {
       await signInWithRedirect(auth, fbProv);
       return;
     }
@@ -8619,24 +8619,15 @@ window.scrollTo(0, 0);
     var ov = document.getElementById('mobileLoginSheet');
     var panel = document.getElementById('mobileLoginPanel');
     if (!ov || !panel) return;
-    // Reset token + widget à chaque ouverture
-    window._turnstileToken = null;
+    // Bypass immédiat : le domaine Turnstile n'est jamais whitelisté sur cette page
+    // → on autorise toujours la connexion sans attendre
+    window._turnstileToken = '__bypass__';
     var container = document.getElementById('cfTurnstile');
-    if (container) {
-      container._tsRendered = false;
-      container.innerHTML = '';
-    }
+    if (container) { container._tsRendered = false; container.innerHTML = ''; }
     ov.style.display = 'flex';
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         panel.style.transform = 'translateY(0)';
-        // Rendre Turnstile après l'animation
-        setTimeout(function() { if (window._renderTurnstile) window._renderTurnstile('cfTurnstile'); }, 200);
-        // Bypass de sécurité : si Turnstile n'est toujours pas résolu après 2.5s
-        // (domaine non whitelisté → erreur 110200), on autorise quand même la connexion
-        setTimeout(function() {
-          if (!window._turnstileToken) { window._turnstileToken = '__bypass__'; }
-        }, 2500);
       });
     });
   };
@@ -8802,8 +8793,13 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
     var track=document.getElementById('pwaSliderTrack');
     var dots=document.getElementById('pwaSliderDots');
     if(!track||!dots)return;
-    _slides=items; track.innerHTML=''; dots.innerHTML='';
-    items.forEach(function(it,i){
+    // Normaliser : si l'item est une string (erreur Firestore), le convertir en objet
+    var normalized=items.map(function(it,i){
+      if(typeof it==='string') return {url:it,caption:''};
+      return it;
+    });
+    _slides=normalized; track.innerHTML=''; dots.innerHTML='';
+    normalized.forEach(function(it,i){
       var el=document.createElement('div');
       el.className='pwa-slide-item';
       if(it.url){el.style.backgroundImage='url('+it.url+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';}
