@@ -5,13 +5,13 @@
 <meta name="google-site-verification" content="YqY4GBEbg3ZlrrmxH8W2U7KYzV1Z05jDGA62Sk10cWw" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="description" content="LevelUp Ecosystem — The central hub for LevelMovie, LevelMusic and Level IA. One Google account, one key, your entire LevelUp universe. Powered by Google Gemini AI & Firebase.">
+<meta name="description" content="L'écosystème numérique complet et unifié conçu par Richelieu Bonte. Accédez à vos applications (Level IA, Movie, Music, Game, Outils) via un compte unique et sécurisé.">
 <meta name="theme-color" content="#a855f7">
 <meta name="msapplication-TileColor" content="#a855f7">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LevelUp">
-<title>LevelUp Ecosystem — One Account, Every App</title>
+<title>LevelUp Ecosystem</title>
 
 <link rel="icon" href="/icon-eco.svg" type="image/svg+xml">
 
@@ -3199,8 +3199,7 @@ const btn = document.getElementById('gSignInBtn');
 btn.disabled = true;
 document.getElementById('gBtnTxt').textContent = 'Connexion en cours...';
 try {
-localStorage.removeItem('lm_key');
-localStorage.removeItem('lm_uid');
+// Ne pas supprimer lm_key ici — elle sera récupérée depuis Firestore après auth
 localStorage.removeItem('lm_name');
 localStorage.removeItem('lm_photo');
 localStorage.removeItem('lm_login_mode');
@@ -4993,15 +4992,18 @@ function _sendWelcomeNotification() {
         if (Notification.permission !== 'granted') return;
         if (localStorage.getItem('lvl_welcome_notif_sent')) return;
         localStorage.setItem('lvl_welcome_notif_sent', '1');
-        navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification('Bienvenue sur LevelUp Ecosystem 🌟', {
-                body: 'Grâce à ce système de notifications, vous serez informé de chaque changement, nouvelle sortie et mise à jour exclusive sur notre plateforme.',
-                icon: '/icon.svg',
-                badge: '/icon.svg',
-                vibrate: [200, 80, 200],
-                data: { url: '/' }
+        // Delay 60 seconds before showing the welcome notification
+        setTimeout(function() {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification('Welcome to LevelUp Ecosystem 🌟', {
+                    body: 'Thanks for enabling notifications! You will be the first to know about every new release, exclusive update, and platform change.',
+                    icon: '/icon.svg',
+                    badge: '/icon.svg',
+                    vibrate: [200, 80, 200],
+                    data: { url: 'https://levelup-ecosystem.com/' }
+                });
             });
-        });
+        }, 60000);
     } catch(_) {}
 }
 window._sendWelcomeNotification = _sendWelcomeNotification;
@@ -5638,17 +5640,19 @@ window.refreshUI();
 // ── TOAST BIENVENUE ENRICHI ──
 const firstName = (d.displayName || u.displayName || 'Utilisateur').split(' ')[0];
 toast_(`🎉 Félicitations ${firstName} ! Ta clé LevelUp est prête.`, 'ok');
-// Notification push sécurité — génération de clé
+// Notification push sécurité — génération de clé (délai 60s, en anglais, avec lien)
 try {
-    if(navigator.serviceWorker?.controller) {
-        navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification('🔑 Clé LevelUp générée', {
-                body: 'Votre clé d\'accès vient d\'être créée. Gardez-la précieusement et ne la partagez jamais.',
-                icon: '/icon.svg', badge: '/icon.svg',
-                vibrate: [100,50,100],
-                data: { url: '/' }
+    if(Notification.permission === 'granted') {
+        setTimeout(function() {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification('🔑 Your LevelUp key is ready!', {
+                    body: 'Your free access key has just been created. Go to the Keys section to copy it and unlock LevelMovie, LevelMusic or Level IA.',
+                    icon: '/icon.svg', badge: '/icon.svg',
+                    vibrate: [100,50,100],
+                    data: { url: 'https://levelup-ecosystem.com/#dashboard' }
+                });
             });
-        });
+        }, 60000);
     }
 } catch(_) {}
 
@@ -5658,8 +5662,8 @@ try {
     const userNotifRef = col3(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'notifications');
     await add3(userNotifRef, {
         type: 'key_created',
-        title: '🔑 Ta clé LevelUp est prête !',
-        body: `Bienvenue ${firstName} ! Ta clé d'accès a été générée. Copie-la depuis Clés d'accès, puis colle-la dans LevelMovie, LevelMusic ou Level IA pour débloquer toutes les fonctionnalités. Ton accès est gratuit et illimité.`,
+        title: '🔑 Your LevelUp key is ready!',
+        body: `Welcome ${firstName}! Your access key has been generated. Copy it from the Keys section, then paste it into LevelMovie, LevelMusic or Level IA to unlock all features. Your access is free and unlimited.`,
         url: 'https://levelup-ecosystem.com/#dashboard',
         createdAt: sts3()
     });
@@ -5717,15 +5721,17 @@ window._ud.apiKey = key; window._ud.keyCreatedAt = now;
 localStorage.setItem('lm_key', key); localStorage.setItem('lm_uid', u.uid);
 window._kVis = false; window.refreshUI(); toast_('Clé régénérée — ancienne clé invalidée','info');
 try {
-    if(navigator.serviceWorker?.controller) {
-        navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification('🔑 Clé LevelUp régénérée', {
-                body: 'Votre ancienne clé a été invalidée. Une nouvelle clé vient d\'être générée. Si vous n\'êtes pas à l\'origine de cette action, sécurisez votre compte.',
-                icon: '/icon.svg', badge: '/icon.svg',
-                vibrate: [200,100,200],
-                data: { url: '/' }
+    if(Notification.permission === 'granted') {
+        setTimeout(function() {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification('🔑 LevelUp key regenerated', {
+                    body: 'Your old key has been invalidated. A new key has been generated. If you did not initiate this action, please secure your account immediately.',
+                    icon: '/icon.svg', badge: '/icon.svg',
+                    vibrate: [200,100,200],
+                    data: { url: 'https://levelup-ecosystem.com/#dashboard' }
+                });
             });
-        });
+        }, 60000);
     }
 } catch(_) {}
 }
@@ -8643,6 +8649,43 @@ window.scrollTo(0, 0);
     setTimeout(function() { ov.style.display = 'none'; }, 380);
   };
 
+  // ── Clic sur le backdrop (zone vide) ferme le sheet ──
+  var _loginOv = document.getElementById('mobileLoginSheet');
+  var _loginPanel = document.getElementById('mobileLoginPanel');
+  if (_loginOv) {
+    _loginOv.addEventListener('click', function(e) {
+      if (e.target === _loginOv) window.closeMobileLoginSheet();
+    });
+  }
+
+  // ── Swipe vers le bas pour fermer ──
+  if (_loginPanel) {
+    var _swipeStartY = 0, _swipeStarted = false, _swipeDelta = 0;
+    _loginPanel.addEventListener('touchstart', function(e) {
+      _swipeStartY = e.touches[0].clientY;
+      _swipeStarted = true;
+      _swipeDelta = 0;
+      _loginPanel.style.transition = 'none';
+    }, { passive: true });
+    _loginPanel.addEventListener('touchmove', function(e) {
+      if (!_swipeStarted) return;
+      _swipeDelta = e.touches[0].clientY - _swipeStartY;
+      if (_swipeDelta > 0) {
+        _loginPanel.style.transform = 'translateY(' + _swipeDelta + 'px)';
+      }
+    }, { passive: true });
+    _loginPanel.addEventListener('touchend', function() {
+      _swipeStarted = false;
+      _loginPanel.style.transition = 'transform .35s cubic-bezier(0.32,0.72,0,1)';
+      if (_swipeDelta > 80) {
+        window.closeMobileLoginSheet();
+      } else {
+        _loginPanel.style.transform = 'translateY(0)';
+      }
+      _swipeDelta = 0;
+    });
+  }
+
   // Vérification Turnstile avant sign-in
   function _checkTurnstile() {
     var token = window._turnstileToken;
@@ -8704,24 +8747,9 @@ window.scrollTo(0, 0);
     }, 600);
   }
 
-  // ── PWA installé : login sheet UNIQUEMENT après réponse au popup de notifications ──
+  // ── PWA installé : classe pwa-mobile uniquement, pas d'auto-show du login sheet ──
   if (isPWA) {
     if (isMobile) document.body.classList.add('pwa-mobile');
-    setTimeout(function() {
-      if (window._user) return;
-      var pushed = localStorage.getItem('lvl_push_pref');
-      if (isMobile) {
-        // Si déjà répondu aux notifs → login direct
-        // Sinon → acceptPushPerm/declinePushPerm géreront le login sheet
-        if (pushed === 'granted' || pushed === 'denied' || pushed === 'later') {
-          if (window.openMobileLoginSheet) window.openMobileLoginSheet();
-        }
-        return;
-      }
-      if (pushed === 'granted' || pushed === 'denied' || pushed === 'later') {
-        if (window.openMobileLoginSheet) window.openMobileLoginSheet();
-      }
-    }, 2500);
   }
 })();
 </script>
@@ -8754,8 +8782,9 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
   <div id="pwaSliderCaption"></div>
   <div id="pwaSliderDots"></div>
   <div id="pwaSliderLoginBtn">
-    <button onclick="if(window.openMobileLoginSheet)window.openMobileLoginSheet()" style="width:100%;max-width:320px;padding:15px 28px;border-radius:16px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:white;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-.01em;box-shadow:0 4px 20px rgba(168,85,247,.5);transition:opacity .2s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-      <svg style="width:16px;height:16px;vertical-align:middle;margin-right:8px;fill:none;stroke:white;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Se connecter
+    <button onclick="if(window.openMobileLoginSheet)window.openMobileLoginSheet()" style="width:100%;max-width:320px;padding:16px 28px;border-radius:16px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:white;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:-.01em;box-shadow:0 4px 28px rgba(168,85,247,.6);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+      <svg style="width:20px;height:20px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Sign In
     </button>
   </div>
 </div>
