@@ -838,7 +838,7 @@ body.pwa-mobile .fab-wrap.ctx-dashboard #fabNavBtn { display: none !important; }
 }
 
 /* ── STREAMING PROVIDERS POPUP ── */
-#streamPopup{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+#streamPopup{position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
 #streamPopup.open{opacity:1;pointer-events:all}
 .stream-popup-card{background:#0f0f1a;border:1px solid rgba(255,255,255,.09);border-radius:20px;width:100%;max-width:440px;max-height:82dvh;display:flex;flex-direction:column;overflow:hidden;animation:cIn .28s cubic-bezier(.34,1.46,.64,1)}
 .stream-popup-head{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;flex-shrink:0}
@@ -3426,8 +3426,13 @@ targetUrl = 'https://levelup-ecosystem.com/ia';
 if (targetUrl) {
 // Ajout des données à l'URL de l'application
 const finalUrl = targetUrl.includes('?') ? `${targetUrl}&${payload}` : `${targetUrl}?${payload}`;
-// Toujours ouvrir dans le vrai navigateur (pas d'iframe interne pour ces apps)
-window.open(finalUrl, '_blank');
+// Ouvrir dans le vrai navigateur via <a> (évite les blocages PWA et l'ouverture en iframe)
+(function(url){
+  var a=document.createElement('a');
+  a.href=url; a.target='_blank'; a.rel='noopener noreferrer';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); },100);
+})(finalUrl);
 }
 };
 
@@ -4273,6 +4278,25 @@ localStorage.setItem('lm_name', window._ud.displayName);
 if (window._ud.photoURL) localStorage.setItem('lm_photo', window._ud.photoURL);
 localStorage.setItem('lm_login_mode', 'google');
 
+// CORRECTIF 2 — double-vérification clé avant loadAppStatus
+if (!window._ud.apiKey) {
+    try {
+        const _secRef2 = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
+        const _secSnap2 = await getDoc(_secRef2);
+        if (_secSnap2.exists()) {
+            const _sd = _secSnap2.data();
+            window._ud.apiKey = _sd.apiKey || _sd.key;
+            window._ud.pinHash = _sd.pinHash;
+            window._ud.keyCreatedAt = _sd.keyCreatedAt;
+            localStorage.setItem('lm_key', window._ud.apiKey);
+            localStorage.setItem('lm_uid', u.uid);
+        }
+    } catch(_) {}
+}
+if (!window._ud.apiKey) {
+    const _fk = localStorage.getItem('lm_key');
+    if (_fk && localStorage.getItem('lm_uid') === u.uid) { window._ud.apiKey = _fk; }
+}
 await window.loadAppStatus();
 closeAuth();
 showDash(u);
@@ -4341,6 +4365,25 @@ window._accountUnsubscribe = onSnapshot(ref, async (snap) => {
 } catch(e) {
 window._ud = window._ud || { displayName: u.displayName || 'Utilisateur' };
 localStorage.setItem('lm_login_mode', 'google');
+// CORRECTIF 2 — double-vérification clé avant loadAppStatus
+if (!window._ud.apiKey) {
+    try {
+        const _secRef2 = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'security', 'key');
+        const _secSnap2 = await getDoc(_secRef2);
+        if (_secSnap2.exists()) {
+            const _sd = _secSnap2.data();
+            window._ud.apiKey = _sd.apiKey || _sd.key;
+            window._ud.pinHash = _sd.pinHash;
+            window._ud.keyCreatedAt = _sd.keyCreatedAt;
+            localStorage.setItem('lm_key', window._ud.apiKey);
+            localStorage.setItem('lm_uid', u.uid);
+        }
+    } catch(_) {}
+}
+if (!window._ud.apiKey) {
+    const _fk = localStorage.getItem('lm_key');
+    if (_fk && localStorage.getItem('lm_uid') === u.uid) { window._ud.apiKey = _fk; }
+}
 await window.loadAppStatus();
 closeAuth();
 showDash(u);
@@ -7040,15 +7083,21 @@ let _srTimer = null;
 window.openSearch = function() {
     const ov = document.getElementById('searchOverlay');
     if (!ov) return;
+    // Déplacer en dernier enfant de body pour garantir l'affichage au-dessus de tout
+    document.body.appendChild(ov);
     ov.classList.remove('hidden');
-    ov.style.zIndex = '999990'; // au-dessus du slider PWA mobile
+    ov.style.zIndex = '999990';
+    ov.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    // S'assurer que le streamPopup (sources) est aussi remonté
+    const sp = document.getElementById('streamPopup');
+    if (sp) document.body.appendChild(sp);
     setTimeout(() => { const inp = document.getElementById('searchInput'); if (inp) inp.focus(); }, 120);
 };
 window.closeSearch = function() {
     const ov = document.getElementById('searchOverlay');
-    if (ov) { ov.classList.add('hidden'); ov.style.zIndex = ''; }
+    if (ov) { ov.classList.add('hidden'); ov.style.zIndex = ''; ov.style.display = ''; }
     document.body.style.overflow = '';
     document.documentElement.style.overflow = '';
 };
@@ -8582,7 +8631,7 @@ window.scrollTo(0, 0);
 
 <!-- Bottom-sheet login (mobile — glisse du bas) -->
 <div id="mobileLoginSheet" style="display:none;position:fixed;inset:0;z-index:99999;background:linear-gradient(to bottom,transparent 0%,transparent 35%,rgba(0,0,0,.72) 65%,rgba(0,0,0,.96) 100%);align-items:flex-end;justify-content:center">
-  <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px 52px;box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto">
+  <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px calc(52px + env(safe-area-inset-bottom, 20px));box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto">
     <div style="width:40px;height:4px;background:rgba(255,255,255,.2);border-radius:4px;margin:0 auto 24px"></div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
       <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp" style="width:48px;height:48px;object-fit:contain;flex-shrink:0;border-radius:10px;filter:drop-shadow(0 0 12px rgba(168,85,247,.55))">
@@ -8647,8 +8696,19 @@ window.scrollTo(0, 0);
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         panel.style.transform = 'translateY(0)';
+        // Rendre Turnstile visuellement (bypass déjà actif → boutons cliquables immédiatement)
+        setTimeout(function(){ if(window._renderTurnstile) window._renderTurnstile('cfTurnstile'); }, 300);
       });
     });
+    // Bloquer le swipe-down pour empêcher la fermeture du sheet
+    if (!panel._swipeLocked) {
+      panel._swipeLocked = true;
+      var _tsY = 0;
+      panel.addEventListener('touchstart', function(e){ _tsY = e.touches[0].clientY; }, {passive:true});
+      panel.addEventListener('touchmove', function(e){
+        if (e.touches[0].clientY - _tsY > 10) { e.preventDefault(); e.stopPropagation(); }
+      }, {passive:false});
+    }
   };
   window.closeMobileLoginSheet = function() {
     var panel = document.getElementById('mobileLoginPanel');
@@ -8869,11 +8929,17 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
       var el=document.getElementById('pwaMobileSlider');
       if(!el)return;
       el.classList.add('active');
-      _build(FALLBACKS);
-      // Ouvrir le sheet auth automatiquement après l'animation d'entrée
-      setTimeout(function(){
-        if(!window._user && window.openMobileLoginSheet) window.openMobileLoginSheet();
-      },1200);
+      // Mêmes images que le panneau héro web (image_ou_video_fond de Firebase)
+      var appImgs=[];
+      try {
+        var raw=window._appsStatus&&window._appsStatus.image_ou_video_fond;
+        if(raw){ var arr=Array.isArray(raw)?raw:[raw];
+          appImgs=arr.filter(function(u){return u&&typeof u==='string'&&u.indexOf('http')===0;})
+                     .map(function(u){return {url:u,caption:''};}); }
+      }catch(_){}
+      _build(appImgs.length?appImgs:FALLBACKS);
+      // Login sheet immédiat — toujours visible dès le départ
+      if(!window._user && window.openMobileLoginSheet) window.openMobileLoginSheet();
     },
     hide:function(){
       clearInterval(_timer); clearTimeout(_capTimer);
