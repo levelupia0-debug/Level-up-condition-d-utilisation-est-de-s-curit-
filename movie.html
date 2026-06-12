@@ -47,7 +47,7 @@ if (ssoKey) {
     if (ssoEmail) localStorage.setItem('levelmovie_user_email', ssoEmail);
     const ssoPhoto = urlParams.get('lvl_photo');
     if (ssoPhoto) localStorage.setItem('lm_photo', ssoPhoto);
-    
+
     // Nettoyage des paramètres d'URL pour sécuriser la clé
     urlParams.delete('lvl_key');
     urlParams.delete('lvl_uid');
@@ -760,7 +760,7 @@ useEffect(() => {
         } catch(e) { console.error("Erreur Auth:", e); }
     };
     initAuth();
-    
+
     const unsubscribe = onAuthStateChanged(auth, setFbUser);
     return () => unsubscribe();
 }, []);
@@ -804,7 +804,7 @@ useEffect(() => {
         if (savedName) setUserName(savedName);
         if (savedEmail) setUserEmail(savedEmail);
         if (savedPhoto) setUserPhoto(savedPhoto);
-        
+
         const handleScroll = () => setIsScrolled(window.scrollY > 30);
         window.addEventListener('scroll', handleScroll);
 
@@ -862,7 +862,7 @@ const joinPartyByCode = async (codeStr, currentUser, currentName, currentPhoto) 
             setPartyId(cleanCode);
             localStorage.setItem('active_party_id', cleanCode);
             openModal(movieData, 'play');
-            
+
             if (!d.members.some(m => m.uid === uid)) {
                 await updateDoc(pRef, { 
                     members: arrayUnion({ uid: uid, name: name, photo: photo }),
@@ -990,10 +990,10 @@ React.useEffect(() => {
 partyStateRef.current = { partyId, partyData, user, fbUser };
 }, [partyId, partyData, user, fbUser]);
 
-// AUTO-QUIT PARTY : quand l'utilisateur ferme / switche hors de l'app
+// AUTO-QUIT PARTY : uniquement si la page est RÉELLEMENT fermée (onglet/app forcée)
+// Le simple switch d'app (visibilitychange) NE quitte plus le salon
 React.useEffect(() => {
-const handleVisibility = async () => {
-    if (!document.hidden) return;
+const _doPartyQuit = async () => {
     const s = partyStateRef.current;
     if (!s.partyId || !s.user || !s.fbUser || !s.partyData) return;
     try {
@@ -1020,8 +1020,12 @@ const handleVisibility = async () => {
         }
     } catch(e) {}
 };
-document.addEventListener('visibilitychange', handleVisibility);
-return () => document.removeEventListener('visibilitychange', handleVisibility);
+// pagehide → onglet fermé ou app tuée en arrière-plan (iOS/Android)
+const handlePageHide = (e) => {
+    if (!e.persisted) _doPartyQuit(); // persisted=true = bfcache (juste navigation back)
+};
+window.addEventListener('pagehide', handlePageHide);
+return () => window.removeEventListener('pagehide', handlePageHide);
 }, []);
 
 // WATCH PARTY SYNC LISTENER
@@ -1064,7 +1068,7 @@ if (docSnap.exists() && docSnap.data().status !== 'ended') {
     } else if (partyData) {
         setRoomEndedInfo({ roomName: partyData.roomName || partyData.title, title: partyData.title });
     }
-    
+
     setPartyId(null);
     setPartyData(null);
     setSelectedMovie(null);
@@ -1195,7 +1199,7 @@ const handleClearCache = async () => {
     setRecentSearches([]);
     localStorage.removeItem('lm_recent_searches');
     localStorage.removeItem('levelmovie_watchlist_' + user?.uid);
-    
+
     if (user && fbUser) {
         try {
             await setDoc(doc(db, "artifacts", APP_ID, "users", user.uid, "history", "recent"), { items: [] });
@@ -1240,7 +1244,7 @@ const handleLogin = async () => {
         if (!auth.currentUser) {
             await signInAnonymously(auth);
         }
-        
+
         let foundUserData = null;
 
         try {
@@ -1285,13 +1289,13 @@ const handleLogin = async () => {
                 setUserName(name);
                 setUserEmail(email);
                 if (photo) setUserPhoto(photo);
-                
+
                 localStorage.setItem('levelmovie_saved_key', finalKey);
                 localStorage.setItem('levelmovie_user_name', name);
                 localStorage.setItem('levelmovie_user_email', email);
                 localStorage.setItem('levelmovie_user_uid', uid);
                 if(photo) localStorage.setItem('lm_photo', photo);
-                
+
                 showToast(t.loginSuccess, 'success');
                 setIsLoggingIn(false);
 
@@ -1533,7 +1537,7 @@ try {
             await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), updates);
         }
     }
-    
+
     setPartyId(null);
     setPartyData(null);
     setSelectedMovie(null);
@@ -1899,7 +1903,7 @@ return (
                 <Info className="w-6 h-6 md:w-8 md:h-8 text-[#a855f7]" />
             </div>
             <h3 className="text-lg md:text-2xl shrink-0 font-black text-white mb-4 md:mb-6 uppercase tracking-widest text-center">{t.tutorialTitle}</h3>
-            
+
             <div className="space-y-3 md:space-y-4 mb-6 md:mb-8 shrink-0">
                 <div className="flex items-start gap-2 sm:gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
                     <span className="text-lg sm:text-xl shrink-0">🎟️</span>
@@ -1918,7 +1922,7 @@ return (
                     <p className="text-white/80 text-[11px] sm:text-xs md:text-sm leading-relaxed">{t.tutorialRule4}</p>
                 </div>
             </div>
-            
+
             <button onClick={acceptPartyTutorial} className="w-full shrink-0 mt-auto py-3.5 md:py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white rounded-xl text-[11px] md:text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all active:scale-95 outline-none">
                 {pendingPartyAction?.type === 'create' ? t.tutorialCreateBtn : t.tutorialJoinBtn}
             </button>
@@ -1966,7 +1970,7 @@ return (
             </div>
             <h3 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-widest">{t.createPartyRoomName}</h3>
             <p className="text-white/60 text-xs mb-8">{t.createPartyRoomDesc}</p>
-            
+
             <div className="mb-8">
                 <input
                     type="text"
@@ -1979,7 +1983,7 @@ return (
                 />
                 <p className="text-right text-[10px] text-white/40 mt-1">{customRoomName.length}/25 caractères</p>
             </div>
-            
+
             <div className="flex gap-3">
                 <button onClick={() => { setShowCreatePartyPrompt(false); setCreatePartyMovie(null); }} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl text-[10px] font-bold uppercase transition-colors outline-none">{t.createPartyCancel}</button>
                 <button onClick={() => handleCreateParty(createPartyMovie, customRoomName)} disabled={!customRoomName.trim()} className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 disabled:opacity-50 text-white rounded-xl text-[10px] font-bold uppercase shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-all outline-none">{t.createPartySubmit}</button>
@@ -2001,7 +2005,7 @@ return (
             <p className="text-white/60 text-[11px] md:text-xs mb-8 px-2 leading-relaxed">
                 {pinModal.mode === 'create' ? t.createPinDesc : t.enterPinDesc}
             </p>
-            
+
             <div className="relative flex justify-center gap-3 md:gap-4 mb-8">
                 {[0, 1, 2, 3].map(i => (
                     <div key={i} className={`w-14 h-16 md:w-16 md:h-20 rounded-2xl flex items-center justify-center text-2xl md:text-4xl font-black transition-all duration-300 ${pinModal.tempPin.length === i ? 'border-2 border-[#a855f7] shadow-[0_0_20px_rgba(168,85,247,0.5)] bg-[#a855f7]/10 text-white' : pinModal.tempPin.length > i ? 'border border-[#a855f7]/50 bg-[#a855f7]/20 text-[#a855f7]' : 'border border-white/10 bg-black/50 text-white/30'}`}>
@@ -2019,9 +2023,9 @@ return (
                     autoFocus
                 />
             </div>
-            
+
             {pinModal.error && <p className="text-red-400 text-xs font-bold bg-red-500/10 py-3 rounded-xl border border-red-500/20 mb-6">{pinModal.error}</p>}
-            
+
             <button onClick={() => setPinModal({ ...pinModal, show: false, tempPin: '', error: '' })} className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-colors w-full border border-white/5 outline-none shadow-sm active:scale-95">
                 {t.cancel}
             </button>
@@ -2169,7 +2173,7 @@ return (
             </button>
         </div>
     )}
-    
+
     {/* Interface intégrée pour rejoindre/créer */}
     <div className="w-full bg-gradient-to-r from-[#a855f7]/10 to-transparent border border-white/10 rounded-[2rem] p-6 md:p-12 backdrop-blur-md shadow-2xl mb-12 animate-in fade-in zoom-in duration-500 flex flex-col md:flex-row gap-10 items-center">
         <div className="flex-1 text-center md:text-left w-full">
@@ -2178,7 +2182,7 @@ return (
             </div>
             <h2 className="text-2xl md:text-4xl font-black uppercase tracking-widest mb-2">{t.joinPartyTitle}</h2>
             <p className="text-white/60 text-xs md:text-sm">{t.joinPartyDesc}</p>
-            
+
             <div className="flex mt-6 bg-black/50 border border-white/10 rounded-full p-1 shadow-inner focus-within:border-[#a855f7] transition-colors w-full max-w-sm mx-auto md:mx-0">
                 <input 
                     type="text" 
@@ -2204,9 +2208,9 @@ return (
                 </button>
             </div>
         </div>
-        
+
         <div className="hidden md:block w-px h-40 bg-white/10"></div>
-        
+
         <div className="flex-1 w-full mt-6 md:mt-0">
             <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest mb-2 border-l-4 border-[#a855f7] pl-3">{t.createPartyTitle}</h2>
             <p className="text-white/60 text-xs md:text-sm mb-4">{t.createPartyDesc}</p>
@@ -2826,17 +2830,17 @@ const searchUsers = async () => {
         const snaps = await getDocs(q);
         const results = [];
         const queryLower = friendSearchQuery.trim().toLowerCase();
-        
+
         snaps.forEach(doc => {
             const data = doc.data();
             const userNameStr = data.name || data.displayName || (data.email ? data.email.split('@')[0] : 'Inconnu');
             const userUid = data.uid || data.key;
-            
+
             if (userUid && userNameStr.toLowerCase().includes(queryLower)) {
                 results.push({ uid: userUid, name: userNameStr, email: data.owner || data.email, photo: null });
             }
         });
-        
+
         const uniqueResults = Array.from(new Map(results.map(item => [item.uid, item])).values());
         setFriendResults(uniqueResults);
     } catch(e) {}
@@ -2848,43 +2852,45 @@ return () => clearTimeout(delay);
 const handleInviteUser = async (friend) => {
     const inviteDataStr = localStorage.getItem(`lm_invites_${user.uid}`);
     let inviteData = inviteDataStr ? JSON.parse(inviteDataStr) : { count: 0, emails: [], weekStart: Date.now() };
-    
+
     if (Date.now() - inviteData.weekStart > 7 * 24 * 60 * 60 * 1000) {
         inviteData = { count: 0, emails: [], weekStart: Date.now() };
     }
-    
+
     if (inviteData.count >= 5) {
         showToast(t.inviteLimitReached, "error");
         return;
     }
-    
+
     if (inviteData.emails.includes(friend.email)) {
         showToast(t.inviteAlreadySent, "error");
         return;
     }
 
     try {
-        const keyDoc = await getDoc(doc(db, "artifacts", APP_ID, "system", "keys"));
-        let emailjs_service = "service_yzyqexy";
-        let emailjs_template = "template_c0eotmg";
-        let emailjs_public = "7UQM4yu7KUSpooMy9";
+        // Récupérer l'endpoint Resend depuis Firebase (avec fallback)
+        let emailEndpoint = 'https://levelup-ecosystem.com/api/send';
+        try {
+            const keyDoc = await getDoc(doc(db, "artifacts", APP_ID, "system", "keys"));
+            if (keyDoc.exists() && keyDoc.data().email_endpoint) {
+                emailEndpoint = keyDoc.data().email_endpoint;
+            }
+        } catch(_) {}
 
-        if (keyDoc.exists() && keyDoc.data().emailjs_public) {
-            emailjs_service = keyDoc.data().emailjs_service;
-            emailjs_template = keyDoc.data().emailjs_template;
-            emailjs_public = keyDoc.data().emailjs_public;
-        }
-
-        emailjs.init(emailjs_public);
-        await emailjs.send(emailjs_service, emailjs_template, {
-            email: friend.email,
-            to_email: friend.email,
-            to_name: friend.name,
-            from_name: defaultUserName,
-            message: `Rejoins ma Watch Party sur LevelMovie ! Le code d'accès de la room est : ${partyId}`,
-            code: partyId
+        // Envoi via Resend — type WATCH_PARTY
+        await fetch(emailEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: friend.email,
+                type: 'WATCH_PARTY',
+                name: friend.name,
+                inviterName: defaultUserName,
+                partyCode: partyId,
+                movieTitle: partyData?.title || partyData?.roomName || 'Watch Party'
+            })
         });
-        
+
         inviteData.count += 1;
         inviteData.emails.push(friend.email);
         localStorage.setItem(`lm_invites_${user.uid}`, JSON.stringify(inviteData));
@@ -2893,7 +2899,8 @@ const handleInviteUser = async (friend) => {
         setShowUserSearch(false);
         setFriendSearchQuery('');
     } catch (error) {
-        console.error("Erreur EmailJS", error);
+        console.error("Erreur invitation Resend", error);
+        showToast("Erreur lors de l'envoi de l'invitation.", "error");
     }
 };
 
@@ -2936,7 +2943,7 @@ const handleBanUser = async (member) => {
     const isMod = partyData.mods?.includes(user?.uid);
     const targetIsHost = member.uid === partyData.hostUid;
     const targetIsMod = partyData.mods?.includes(member.uid);
-    
+
     // Vérification des permissions
     if ((isHost && !targetIsHost) || (isMod && !targetIsHost && !targetIsMod)) {
         try {
@@ -2959,7 +2966,7 @@ const handleMuteUser = async (memberUid) => {
     const isMod = partyData.mods?.includes(user?.uid);
     const targetIsHost = memberUid === partyData.hostUid;
     const targetIsMod = partyData.mods?.includes(memberUid);
-    
+
     // Un modérateur ne peut pas muter l'hôte ou un autre modérateur
     if ((isHost && !targetIsHost) || (isMod && !targetIsHost && !targetIsMod)) {
         try {
@@ -2976,7 +2983,7 @@ const handleUnmuteUser = async (member) => {
     if (!partyData) return;
     const isHost = user?.uid === partyData.hostUid;
     const isMod = partyData.mods?.includes(user?.uid);
-    
+
     if (isHost || isMod) {
         try {
             const muteObj = partyData.muted?.find(m => m.uid === member.uid);
@@ -3171,8 +3178,8 @@ if (partyId && partyData) {
     const iAmMod = partyData.mods?.includes(user?.uid);
 
     return (
-        <div className="fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden">
-            
+        <div className="fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden" style={{paddingTop: 'env(safe-area-inset-top, 0px)'}}>
+
             {/* Modal de Modération */}
             {memberMenu && (
                 <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setMemberMenu(null)}>
@@ -3201,7 +3208,7 @@ if (partyId && partyData) {
                                     </>
                                 );
                             })()}
-                            
+
                             <button onClick={() => setMemberMenu(null)} className="w-full py-3 mt-2 text-white/50 hover:text-white text-[10px] font-bold uppercase transition-colors outline-none">{t.menuCancel}</button>
                         </div>
                     </div>
@@ -3271,7 +3278,7 @@ if (partyId && partyData) {
                             </h3>
                             <button onClick={() => setShowUserSearch(false)} className="text-white/40 hover:text-white outline-none bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors shadow-sm active:scale-95"><X className="w-4 h-4" /></button>
                         </div>
-                        
+
                         <div className="relative mb-5 shrink-0">
                             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                             <input 
@@ -3295,7 +3302,6 @@ if (partyId && partyData) {
                                             <span className="text-sm font-bold text-white truncate">
                                                 {friend.name} {friend.uid === user?.uid && <span className="text-[#a855f7] text-[10px] ml-1 uppercase tracking-widest">(Vous)</span>}
                                             </span>
-                                            <span className="text-[10px] text-white/40 truncate">{friend.email}</span>
                                         </div>
                                     </div>
                                     {friend.uid !== user?.uid && (
@@ -3324,11 +3330,11 @@ if (partyId && partyData) {
 
             {/* Colonne Gauche: Vidéo + Contrôles (Épinglée en haut sur mobile grâce à shrink-0) */}
             <div className="w-full lg:flex-1 flex flex-col shrink-0 lg:shrink relative z-[60] bg-black shadow-2xl h-auto max-h-[60vh] lg:max-h-full">
-                
+
                 {/* Lecteur Vidéo Exclusif (Format 16:9 parfait sur mobile, prend tout l'espace restant sur PC) */}
                 <div className="w-full aspect-video lg:aspect-auto lg:flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center">
                     <iframe key={iframeSrc} className={`absolute inset-0 w-full h-full bg-transparent z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={iframeSrc} onLoad={() => setIframeLoading(false)} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
-                    
+
                     {iframeLoading && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-0">
                             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#a855f7]"></div>
@@ -3371,7 +3377,7 @@ if (partyId && partyData) {
                         </div>
                     )}
                 </div>
-                
+
                 {/* Barre d'informations Hôte & Changement de Serveur (Hauteur Fixe) */}
                 <div className="w-full bg-[#0a0a0f] p-3 md:p-4 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-30 flex flex-col md:flex-row items-center justify-between gap-3 relative border-t border-white/10">
                     <div className="flex items-center justify-between w-full md:w-auto gap-3 shrink-0 min-w-0">
@@ -3390,7 +3396,7 @@ if (partyId && partyData) {
                     </div>
 
                     <div className="flex flex-row flex-wrap gap-2 md:gap-3 w-full md:w-auto shrink-0 justify-between md:justify-end items-center min-w-0">
-                        
+
                         {/* Contrôles d'Action (Envoi Msg Système & Sync Serveur) */}
                         <div className="flex gap-1.5 shrink-0 items-center">
                             {(iAmHost || iAmMod) && (
@@ -3414,11 +3420,11 @@ if (partyId && partyData) {
                             </select>
                             <ChevronDown className="w-3 h-3 text-white/40 absolute right-2 pointer-events-none" />
                         </div>
-                        
+
                         <button onClick={() => { document.body.classList.remove('party-mode'); onClose(); }} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap">
                             <Minimize2 className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.minimizeRoom}</span>
                         </button>
-                        
+
                         {/* Bouton Quitter (Power Rouge Pro) en bas */}
                         <button onClick={() => setShowLeavePartyConfirm(true)} className="bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 text-red-400 hover:text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors outline-none shadow-sm shrink-0 whitespace-nowrap">
                             <Power className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.closeLive}</span>
@@ -3429,7 +3435,7 @@ if (partyId && partyData) {
 
             {/* Colonne Droite: Chat (Défile à l'intérieur de lui-même) */}
             <div className="flex-1 lg:w-[350px] xl:w-[400px] flex flex-col bg-[#0c0c10] border-t lg:border-t-0 lg:border-l border-white/5 relative z-40 min-h-0 shadow-[-20px_0_40px_rgba(0,0,0,0.8)]">
-                
+
                 {/* Header Chat / Code Caché Pro */}
                 <div className="p-3 bg-black/60 border-b border-white/5 backdrop-blur-md relative z-20 shrink-0">
                     <div className="flex items-center gap-2 w-full bg-white/5 p-1.5 rounded-2xl border border-white/10">
@@ -3463,7 +3469,7 @@ if (partyId && partyData) {
 
                 {/* Messages du Chat (Style TikTok / Instagram Live sans bulles, propre) */}
                 <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1 no-scrollbar bg-gradient-to-t from-black/80 via-black/40 to-transparent min-h-0">
-                    
+
                     {/* Nouveau Pinned Message pour expliquer le lecteur */}
                     <div className="bg-[#a855f7]/10 border border-[#a855f7]/30 p-2.5 rounded-xl mb-3 flex gap-2.5 items-start shrink-0 shadow-inner">
                         <ShieldCheck className="w-4 h-4 text-[#a855f7] shrink-0 mt-0.5" />
@@ -3472,7 +3478,7 @@ if (partyId && partyData) {
                             {t.partyInfoPinText}
                         </p>
                     </div>
-                    
+
                     {partyData.messages?.filter(msg => !partyData.muted?.some(m => m.uid === msg.uid)).map((msg, i) => {
                         if (msg.isSystem) {
                             let sysText = msg.text || "";
@@ -3505,7 +3511,7 @@ if (partyId && partyData) {
                             <div onClick={(e) => { e.stopPropagation(); if(msg.uid !== user?.uid) openMemberMenu(msg); }} className="w-6 h-6 rounded-full bg-[#151520] flex items-center justify-center font-black text-[10px] text-[#a855f7] mr-2.5 shrink-0 border border-white/10 shadow-sm mt-0.5 hover:opacity-80">
                                 {msg.name?.charAt(0).toUpperCase() || '?'}
                             </div>
-                            
+
                             <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5" onClick={() => { if(msg.uid !== user?.uid) setReplyingTo({ name: msg.name, text: msg.text }) }}>
                                 {/* Reply Indicator */}
                                 {msg.replyTo && (
@@ -3636,7 +3642,7 @@ return (
     <Info className="w-3 h-3 inline mr-1" /> {t.audioTip}
     </p>
     <div className="flex flex-wrap gap-3">
-    
+
     {AVAILABLE_SERVERS.map(srv => (
     <button key={srv.id} onClick={() => handlePlayRequest(srv.id)} className={`px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase transition-all outline-none ${selectedServer === srv.id ? 'bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'}`}>
     {srv.name}
@@ -3686,7 +3692,7 @@ return (
 
     {/* BOUTONS D'ACTION DU FILM */}
     <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-8">
-        
+
         {/* Play */}
         <button onClick={() => handlePlayRequest(selectedServer)} className="flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl text-xs md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-[0_0_30px_rgba(168,85,247,0.4)] active:scale-95 outline-none">
             <Play className="w-5 h-5 fill-white" /> <span>{t.playMovie}</span>
