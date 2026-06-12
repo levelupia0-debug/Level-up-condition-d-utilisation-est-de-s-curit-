@@ -4404,9 +4404,8 @@ signInAnonymously(auth).catch(e => console.error("Initialisation anonyme impossi
 function showDash(u) {
 // Masquer le slider PWA mobile si l'utilisateur se connecte
 if (window._pwaSlider) window._pwaSlider.hide();
-// Masquer le bouton connexion du slider
-var _slb = document.getElementById('pwaSliderLoginBtn');
-if (_slb) _slb.style.display = 'none';
+// Fermer le sheet de login mobile
+if (window.closeMobileLoginSheet) window.closeMobileLoginSheet();
 const landing = document.getElementById('landing');
 const dashboard = document.getElementById('dashboard');
 const mobileNav = document.getElementById('mobileNav');
@@ -4430,6 +4429,23 @@ window.refreshUI();
 if(window.updateFabContext) window.updateFabContext();
 // Sauvegarder session pour persistance iOS
 try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL, ts: Date.now() })); } catch(_) {}
+
+// Notification clé manquante — après 1.5s pour laisser le dashboard se charger
+setTimeout(function() {
+  var isMob = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent);
+  if (!isMob) return;
+  if (window._ud && !window._ud.apiKey && !document.getElementById('keyMissingNotif')) {
+    var notif = document.createElement('div');
+    notif.id = 'keyMissingNotif';
+    notif.style.cssText = 'position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);left:12px;right:12px;z-index:9000;background:linear-gradient(135deg,#1a0533,#16132a);border:1px solid rgba(168,85,247,.35);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.7);animation:tIn .3s ease';
+    notif.innerHTML = '<div style="width:36px;height:36px;border-radius:10px;background:rgba(168,85,247,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-key" style="color:#a855f7;font-size:.9rem"></i></div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:.82rem;font-weight:700;color:#fff;margin-bottom:2px">Clé LevelUp non détectée</div><div style="font-size:.74rem;color:rgba(255,255,255,.45);line-height:1.4">Vous ne voyez pas votre clé ? Générez-la maintenant</div></div>'
+      + '<button onclick="pnl(\'keys\');document.getElementById(\'keyMissingNotif\').remove()" style="background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:10px;padding:8px 12px;color:#fff;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Générer →</button>'
+      + '<button onclick="this.parentNode.remove()" style="background:rgba(255,255,255,.05);border:none;border-radius:8px;width:28px;height:28px;color:rgba(255,255,255,.35);cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-xmark"></i></button>';
+    document.body.appendChild(notif);
+    setTimeout(function(){ var n=document.getElementById('keyMissingNotif'); if(n) n.remove(); }, 8000);
+  }
+}, 1500);
 
 }
 
@@ -7025,13 +7041,16 @@ window.openSearch = function() {
     const ov = document.getElementById('searchOverlay');
     if (!ov) return;
     ov.classList.remove('hidden');
+    ov.style.zIndex = '999990'; // au-dessus du slider PWA mobile
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     setTimeout(() => { const inp = document.getElementById('searchInput'); if (inp) inp.focus(); }, 120);
 };
 window.closeSearch = function() {
     const ov = document.getElementById('searchOverlay');
-    if (ov) ov.classList.add('hidden');
+    if (ov) { ov.classList.add('hidden'); ov.style.zIndex = ''; }
     document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
 };
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
@@ -8562,7 +8581,7 @@ window.scrollTo(0, 0);
 </div>
 
 <!-- Bottom-sheet login (mobile — glisse du bas) -->
-<div id="mobileLoginSheet" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:flex-end;justify-content:center">
+<div id="mobileLoginSheet" style="display:none;position:fixed;inset:0;z-index:99999;background:linear-gradient(to bottom,transparent 0%,transparent 35%,rgba(0,0,0,.72) 65%,rgba(0,0,0,.96) 100%);align-items:flex-end;justify-content:center">
   <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px 52px;box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto">
     <div style="width:40px;height:4px;background:rgba(255,255,255,.2);border-radius:4px;margin:0 auto 24px"></div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
@@ -8588,8 +8607,8 @@ window.scrollTo(0, 0);
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.75)" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
     </div>
 
-    <!-- Cloudflare Turnstile — caché, bypass immédiat activé -->
-    <div id="cfTurnstile" style="display:none"></div>
+    <!-- Cloudflare Turnstile -->
+    <div id="cfTurnstile" style="margin-bottom:14px;border-radius:10px;overflow:hidden;min-height:65px"></div>
 
     <!-- Conditions d'utilisation -->
     <div style="text-align:center">
@@ -8771,22 +8790,17 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
   <div id="pwaSliderTrack" style="position:absolute;inset:0"></div>
   <div id="pwaSliderCaption"></div>
   <div id="pwaSliderDots"></div>
-  <div id="pwaSliderLoginBtn">
-    <button onclick="if(window.openMobileLoginSheet)window.openMobileLoginSheet()" style="width:100%;max-width:320px;padding:16px 28px;border-radius:16px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:white;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:-.01em;box-shadow:0 4px 28px rgba(168,85,247,.6);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-      <svg style="width:20px;height:20px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Sign In
-    </button>
-  </div>
+  <!-- Bouton "Se connecter" retiré — le sheet s'ouvre automatiquement -->
 </div>
 <script>
 (function(){
   var FALLBACKS=[
-    {url:'',caption:'Bienvenue sur LevelUp Ecosystem',bg:'linear-gradient(145deg,#1a0533 0%,#0d0b1e 60%,#0a0812 100%)'},
-    {url:'',caption:'LevelMovie — Films & Séries en streaming premium',bg:'linear-gradient(145deg,#0f1a2e 0%,#1a0533 60%,#0a0812 100%)'},
-    {url:'',caption:'LevelMusic — La musique sans limites ni frontières',bg:'linear-gradient(145deg,#0d1f14 0%,#0f1a2e 60%,#0a0812 100%)'},
-    {url:'',caption:'Level IA — L\'intelligence artificielle à votre service',bg:'linear-gradient(145deg,#1c1408 0%,#1a0533 60%,#0a0812 100%)'},
-    {url:'',caption:'LevelUp Tools — Tous vos outils réunis en un seul endroit',bg:'linear-gradient(145deg,#0f1a2e 0%,#0d1f14 60%,#0a0812 100%)'},
-    {url:'',caption:'Une plateforme. Un écosystème. LevelUp.',bg:'linear-gradient(145deg,#1a0533 0%,#0d0b1e 40%,#0a0812 100%)'},
+    {url:'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1920&q=75',caption:'LevelMovie — Films & Séries en streaming premium',bg:'linear-gradient(145deg,#0f1a2e 0%,#1a0533 60%,#0a0812 100%)'},
+    {url:'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1920&q=75',caption:'Bienvenue sur LevelUp Ecosystem',bg:'linear-gradient(145deg,#1a0533 0%,#0d0b1e 60%,#0a0812 100%)'},
+    {url:'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1920&q=75',caption:'LevelMusic — La musique sans limites ni frontières',bg:'linear-gradient(145deg,#0d1f14 0%,#0f1a2e 60%,#0a0812 100%)'},
+    {url:'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1920&q=75',caption:'Level IA — Votre assistant IA personnel',bg:'linear-gradient(145deg,#1c1408 0%,#1a0533 60%,#0a0812 100%)'},
+    {url:'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=75',caption:'LevelUp Tools — Tous vos outils réunis',bg:'linear-gradient(145deg,#0f1a2e 0%,#0d1f14 60%,#0a0812 100%)'},
+    {url:'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=75',caption:'Une plateforme. Un écosystème. LevelUp.',bg:'linear-gradient(145deg,#1a0533 0%,#0d0b1e 40%,#0a0812 100%)'},
   ];
   var _slides=[],_cur=0,_timer=null,_capTimer=null;
   function _build(items){
@@ -8855,9 +8869,11 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
       var el=document.getElementById('pwaMobileSlider');
       if(!el)return;
       el.classList.add('active');
-      // Afficher les fallbacks immédiatement, puis mettre à jour avec Firebase si données valides
       _build(FALLBACKS);
-      _loadSliderImages(0);
+      // Ouvrir le sheet auth automatiquement après l'animation d'entrée
+      setTimeout(function(){
+        if(!window._user && window.openMobileLoginSheet) window.openMobileLoginSheet();
+      },1200);
     },
     hide:function(){
       clearInterval(_timer); clearTimeout(_capTimer);
