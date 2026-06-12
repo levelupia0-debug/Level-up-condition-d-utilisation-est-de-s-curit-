@@ -3347,11 +3347,19 @@ btn.innerHTML = orig;
 window.execLogout = async function() {
 document.getElementById('logoutOv').classList.add('hidden');
 
-// Afficher l'animation de déconnexion
+// Sur PWA mobile : masquer immédiatement le dashboard (évite la page noire)
+var _lo_isPWA = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+if (_lo_isPWA) {
+    var _lo_dash = document.getElementById('dashboard');
+    var _lo_mob = document.getElementById('mobileNav');
+    if (_lo_dash) { _lo_dash.style.transition = 'opacity .2s'; _lo_dash.style.opacity = '0'; }
+    if (_lo_mob)  { _lo_mob.classList.remove('vis'); }
+    if (window._pwaSlider) window._pwaSlider.show();
+}
+
 const loader = document.getElementById('logoutLoadingOv');
 if (loader) loader.classList.remove('hidden');
 
-// Nettoyage de la session en arrière-plan
 localStorage.removeItem('lm_key');
 localStorage.removeItem('lm_uid');
 localStorage.removeItem('lm_name');
@@ -3359,7 +3367,6 @@ localStorage.removeItem('lm_photo');
 localStorage.removeItem('lm_login_mode');
 try { await window._fb.signOut(window._auth); } catch(e){}
 
-// Rechargement après l'animation de déconnexion
 setTimeout(() => {
     window.location.reload();
 }, 700);
@@ -4143,7 +4150,7 @@ window.saveNotifPref = function(type, enabled) {
         const prefs = JSON.parse(localStorage.getItem('lvl_notif_prefs') || '{}');
         prefs[type] = enabled;
         localStorage.setItem('lvl_notif_prefs', JSON.stringify(prefs));
-        toast_(enabled ? 'Notifications activées ✓' : 'Notifications désactivées', 'info');
+        // toast supprimé — pas de notification inutile dans les paramètres
     } catch(_) {}
 };
 window.getNotifPref = function(type) {
@@ -6874,7 +6881,7 @@ window._handleLoginAlertToggle = async function(checked) {
     try {
         const uRef = window._fb.doc(window._db, 'artifacts', 'level-ia-premium', 'users', uid);
         await window._fb.setDoc(uRef, { loginAlerts: checked }, { merge: true });
-        toast_(checked ? '🔔 Alertes de connexion activées.' : '🔕 Alertes de connexion désactivées.', 'success');
+        // pas de toast pour le toggle connexion
     } catch(e) {
         toast_('Erreur lors de la sauvegarde.', 'error');
         _syncSettingsNotifToggles();
@@ -7138,7 +7145,7 @@ MODALE ALERTE SÉCURITÉ
     }
     // Déclencher uniquement quand l'auth est prête (après login)
     document.addEventListener('lvl_auth_ready', function() {
-        setTimeout(_triggerPushPopupOnce, 2000);
+        setTimeout(_triggerPushPopupOnce, 3000);
     });
     // Fallback si l'événement n'est pas déclenché : attendre 5s
     setTimeout(function() {
@@ -8724,7 +8731,7 @@ window.scrollTo(0, 0);
 
 <!-- Bottom-sheet login (mobile — glisse du bas) -->
 <div id="mobileLoginSheet" style="display:none;position:fixed;inset:0;z-index:99999;background:linear-gradient(to bottom,transparent 0%,transparent 35%,rgba(0,0,0,.72) 65%,#0d0b1e 100%);align-items:flex-end;justify-content:center;touch-action:none;overscroll-behavior:none">
-  <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px calc(20px + env(safe-area-inset-bottom, 16px));box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto;overflow:hidden;touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none">
+  <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px env(safe-area-inset-bottom, 12px);box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto;overflow:hidden;touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
       <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp" style="width:48px;height:48px;object-fit:contain;flex-shrink:0;border-radius:10px;filter:drop-shadow(0 0 12px rgba(168,85,247,.55))">
       <div>
@@ -8903,6 +8910,7 @@ Images chargées depuis Firestore : artifacts/level-ia-premium/config/slider
 Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affiché" }
 ════════════════════════════════════════════ -->
 <style>
+@keyframes slideUp{from{transform:translateY(32px);opacity:0}to{transform:translateY(0);opacity:1}}
 #pwaMobileSlider{display:none;position:fixed;inset:0;z-index:99990;background:#0a0812;overflow:hidden;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
 #pwaMobileSlider.active{display:flex}
 .pwa-slide-item{position:absolute;top:0;left:0;right:0;height:58dvh;background-size:cover;background-position:center center;opacity:0;transition:opacity 1.1s ease}
@@ -8999,22 +9007,80 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
     }
     // Les fallbacks sont déjà affichés — on ne rappelle pas _build(FALLBACKS) en cas d'échec
   }
+  // ── Popup notification gate PWA (avant le login sheet) ──
+  var _NOTIF_GATE_KEY = '_lvl_notif_gate_done';
+  function _showNotifGateThenLogin() {
+    // Si déjà vu OU permission déjà répondue → aller direct au login
+    var alreadyDone = localStorage.getItem(_NOTIF_GATE_KEY);
+    var permAlready = typeof Notification !== 'undefined' && Notification.permission !== 'default';
+    if (alreadyDone || permAlready) {
+      if (window.openMobileLoginSheet) window.openMobileLoginSheet();
+      return;
+    }
+    // Créer le popup notification
+    var gate = document.getElementById('_pwaNotifGate');
+    if (!gate) {
+      gate = document.createElement('div');
+      gate.id = '_pwaNotifGate';
+      gate.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;justify-content:center;padding:0;pointer-events:all;background:linear-gradient(to bottom,transparent 35%,rgba(10,8,18,.98) 65%,#0a0812 100%)';
+      gate.innerHTML = '\
+<div style="width:100%;max-width:480px;padding:28px 24px calc(20px + env(safe-area-inset-bottom,16px));animation:slideUp .38s cubic-bezier(.32,.72,0,1)">\
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">\
+  <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;box-shadow:0 0 20px rgba(168,85,247,.5)">🔔</div>\
+  <div><div style="font-size:1rem;font-weight:800;color:#fff;letter-spacing:-.02em">Activer les notifications</div><div style="font-size:.75rem;color:rgba(255,255,255,.45);margin-top:2px">LevelUp Ecosystem</div></div>\
+</div>\
+<p style="font-size:.82rem;color:rgba(255,255,255,.62);line-height:1.7;margin-bottom:20px">Recevez les alertes LevelUp — nouvelles clés disponibles, outils ajoutés, et sécurité de votre compte.</p>\
+<button id="_pwaNotifYes" style="width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 20px rgba(168,85,247,.45)">Activer les notifications</button>\
+<button id="_pwaNotifNo" style="width:100%;padding:12px;border:none;border-radius:14px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:.82rem;cursor:pointer">Plus tard</button>\
+</div>';
+      document.body.appendChild(gate);
+    }
+    gate.style.display = 'flex';
+    function _done() {
+      localStorage.setItem(_NOTIF_GATE_KEY, '1');
+      gate.style.display = 'none';
+      setTimeout(function() { if (window.openMobileLoginSheet) window.openMobileLoginSheet(); }, 200);
+    }
+    document.getElementById('_pwaNotifYes').onclick = function() {
+      if (typeof Notification !== 'undefined') {
+        Notification.requestPermission().then(function(p) {
+          if (p === 'granted' && typeof _registerFCMAnonOrUser === 'function') {
+            try { _registerFCMAnonOrUser(); } catch(_) {}
+          }
+          _done();
+        }).catch(_done);
+      } else { _done(); }
+    };
+    document.getElementById('_pwaNotifNo').onclick = _done;
+  }
+
   window._pwaSlider={
     show:function(){
       var el=document.getElementById('pwaMobileSlider');
       if(!el)return;
       el.classList.add('active');
-      // Mêmes images que le panneau héro web (image_ou_video_fond de Firebase)
-      var appImgs=[];
+      // Afficher d'abord les fallbacks pendant le chargement TMDB
+      _build(FALLBACKS);
+      // Charger les affiches TMDB trending (backdrops paysage)
+      var _TMDB_KEY = '027cc951d888c64e5f15dcb853c7347a';
+      var _TMDB_IMG = 'https://image.tmdb.org/t/p/w1280';
       try {
-        var raw=window._appsStatus&&window._appsStatus.image_ou_video_fond;
-        if(raw){ var arr=Array.isArray(raw)?raw:[raw];
-          appImgs=arr.filter(function(u){return u&&typeof u==='string'&&u.indexOf('http')===0;})
-                     .map(function(u){return {url:u,caption:''};}); }
-      }catch(_){}
-      _build(appImgs.length?appImgs:FALLBACKS);
-      // Login sheet immédiat — toujours visible dès le départ
-      if(!window._user && window.openMobileLoginSheet) window.openMobileLoginSheet();
+        fetch('https://api.themoviedb.org/3/trending/movie/week?api_key='+_TMDB_KEY+'&language=fr-FR')
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            var movies = (data.results||[]).filter(function(m){ return m.backdrop_path; }).slice(0,10);
+            if (!movies.length) return;
+            var slides = movies.map(function(m){
+              return {
+                url: _TMDB_IMG + m.backdrop_path,
+                caption: m.title + (m.vote_average ? ' ⭐ ' + m.vote_average.toFixed(1) : '')
+              };
+            });
+            _build(slides);
+          }).catch(function(){});
+      } catch(_) {}
+      // Popup notification AVANT le login (pour nouveaux installeurs)
+      if (!window._user) _showNotifGateThenLogin();
     },
     hide:function(){
       clearInterval(_timer); clearTimeout(_capTimer);
