@@ -39,7 +39,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--sa
 
 #s-login{background:var(--bg)}
 .login-card{background:var(--surf);border:1px solid var(--bdr-hi);border-radius:var(--r24);width:100%;max-width:380px;padding:40px;text-align:center}
-.login-logo{width:60px;height:60px;border-radius:var(--r16);background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.15));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.4rem;color:var(--purple)}
+.login-logo{width:60px;height:60px;border-radius:var(--r16);background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.15));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
 .login-card h1{font-family:var(--display);font-size:1.5rem;margin-bottom:6px}
 .login-card p{font-size:.84rem;margin-bottom:28px}
 .btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border-radius:var(--r12);background:#fff;border:1px solid #dadce0;color:#3c4043;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:var(--sans)}
@@ -315,14 +315,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- ── LOGIN SCREEN ── -->
 <div id="s-login" class="screen hidden">
   <div class="login-card">
-    <div class="login-logo"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="login-logo"><img src="https://levelup-ecosystem.com/icon-eco.svg" style="width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(168,85,247,.5))"></div>
     <h1>Admin Center</h1>
     <p style="color:var(--muted)">LevelUp Ecosystem — Accès réservé</p>
     <button class="btn-google" onclick="doGoogleLogin()">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continuer avec Google
     </button>
-    <p class="login-note">Seuls les comptes autorisés par un super-admin ont accès à cette interface.</p>
+    <p class="login-note">Interface d'administration centrale. Accès strictement réservé au personnel habilité.</p>
   </div>
 </div>
 
@@ -1991,6 +1991,8 @@ window.openToolModal = async function(idx) {
   } else {
     ['toolName','toolDesc','toolUrl','toolIcon','toolBadge'].forEach(id => $$(id).value = '');
   }
+  const saveBtn = document.querySelector('#modalTool .modal-foot .btn-p');
+  if (saveBtn) saveBtn.onclick = window.saveTool;
   openModal('modalTool');
 };
 window.saveTool = async function() {
@@ -2044,7 +2046,6 @@ window.loadServices = async function() {
       : '<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-box"></i><p>Aucun service configuré</p></div>';
   } catch(e) { toast('Erreur chargement services', 'err'); }
 };
-window.openServiceModal = window.openToolModal; // reuse tool modal for now
 window.saveService = async function() {
   try {
     const snap = await getDoc(servDoc());
@@ -2792,7 +2793,26 @@ window.onGlobalSearch = function(q) {
 // ══════════════════════════════════════════
 // EXPOSE & INIT
 // ══════════════════════════════════════════
-window.openToolModal    = window.openToolModal;
+window.openToolModal = async function(idx) {
+  $$('toolModalTitle').textContent = idx === null ? 'Ajouter un outil' : 'Modifier l\'outil';
+  $$('toolEditId').value = idx !== null ? idx : '';
+  if (idx !== null) {
+    const snap = await getDoc(toolsDoc());
+    const tools = snap.exists() ? (snap.data().tools||[]) : [];
+    const t = tools[idx] || {};
+    $$('toolName').value = t.name || '';
+    $$('toolDesc').value = t.description || '';
+    $$('toolUrl').value  = t.url || '';
+    $$('toolIcon').value = t.icon || '';
+    $$('toolBadge').value = t.badge || '';
+  } else {
+    ['toolName','toolDesc','toolUrl','toolIcon','toolBadge'].forEach(id => $$(id).value = '');
+  }
+  const saveBtn = document.querySelector('#modalTool .modal-foot .btn-p');
+  if (saveBtn) saveBtn.onclick = window.saveTool;
+  openModal('modalTool');
+};
+
 window.openServiceModal = async function(idx) {
   $$('toolModalTitle').textContent = idx === null ? 'Ajouter un service' : 'Modifier le service';
   $$('toolEditId').value = idx !== null ? idx : '';
@@ -2808,13 +2828,11 @@ window.openServiceModal = async function(idx) {
   } else {
     ['toolName','toolDesc','toolUrl','toolIcon','toolBadge'].forEach(id => $$(id).value = '');
   }
-  $$('toolModalTitle').textContent = idx === null ? 'Ajouter un service' : 'Modifier le service';
   // Rebind save
-  document.querySelector('#modalTool .modal-foot .btn-p').onclick = window.saveService;
+  const saveBtn = document.querySelector('#modalTool .modal-foot .btn-p');
+  if (saveBtn) saveBtn.onclick = window.saveService;
   openModal('modalTool');
 };
-// Reset tool modal save button each time
-document.querySelector('#modalTool .modal-foot .btn-p')?.addEventListener = () => {};
 
 // Init notification types display
 window.toggleNotifType('inapp'); // set inapp on by default
