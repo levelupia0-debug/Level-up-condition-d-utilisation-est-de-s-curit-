@@ -969,9 +969,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ── CONFIG FIREBASE ──
+// authDomain adaptatif : custom domain sur prod, Firebase par défaut ailleurs
+// (le custom domain cause un iframe cross-origin qui bloque sur Replit/localhost)
+const _onProd = window.location.hostname === 'levelup-ecosystem.com';
 const cfg = {
   apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-  authDomain: "levelup-ecosystem.com",
+  authDomain: _onProd ? "levelup-ecosystem.com" : "levelup-ia.firebaseapp.com",
   projectId: "levelup-ia",
   storageBucket: "levelup-ia.firebasestorage.app",
   messagingSenderId: "229420004282",
@@ -982,6 +985,18 @@ const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 const gp = new GoogleAuthProvider();
 gp.setCustomParameters({ prompt: 'select_account' });
+
+// ── FALLBACK ULTRA-TÔT : si Firebase Auth ne répond pas en 3s → afficher login ──
+// Placé ici (avant tout autre code) pour garantir qu'il s'enregistre même si
+// une erreur survient plus bas dans le module. Manipulation DOM directe (pas de showScreen).
+const _authFallback = setTimeout(() => {
+  const loading = document.getElementById('s-loading');
+  const login   = document.getElementById('s-login');
+  if (loading && !loading.classList.contains('hidden')) {
+    loading.classList.add('hidden');
+    if (login) login.classList.remove('hidden');
+  }
+}, 3000);
 
 // ── PATHS ──
 const APP_MAIN = 'level-ia-premium';
@@ -1222,12 +1237,6 @@ window.confirmLogout = function() {
   confirm_('Déconnexion', 'Voulez-vous vous déconnecter de l\'Admin Center ?', doLogout, 'Déconnexion', 'btn-r');
 };
 
-// Fallback : si Firebase ne répond pas en 7s → afficher login
-const _authFallback = setTimeout(() => {
-  if (document.getElementById('s-loading') && !document.getElementById('s-loading').classList.contains('hidden')) {
-    showScreen('s-login');
-  }
-}, 7000);
 
 onAuthStateChanged(auth, async (user) => {
   clearTimeout(_authFallback);
