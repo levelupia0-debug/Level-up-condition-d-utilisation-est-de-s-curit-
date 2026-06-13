@@ -39,7 +39,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--sa
 
 #s-login{background:var(--bg)}
 .login-card{background:var(--surf);border:1px solid var(--bdr-hi);border-radius:var(--r24);width:100%;max-width:380px;padding:40px;text-align:center}
-.login-logo{width:60px;height:60px;border-radius:var(--r16);background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.15));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+.login-logo{width:80px;height:80px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
 .login-card h1{font-family:var(--display);font-size:1.5rem;margin-bottom:6px}
 .login-card p{font-size:.84rem;margin-bottom:28px}
 .btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border-radius:var(--r12);background:#fff;border:1px solid #dadce0;color:#3c4043;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:var(--sans)}
@@ -315,14 +315,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- ── LOGIN SCREEN ── -->
 <div id="s-login" class="screen hidden">
   <div class="login-card">
-    <div class="login-logo"><img src="https://levelup-ecosystem.com/icon-eco.svg" style="width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(168,85,247,.5))"></div>
+    <div class="login-logo"><img src="https://levelup-ecosystem.com/icon-eco.svg" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 15px rgba(168,85,247,.6))"></div>
     <h1>Admin Center</h1>
-    <p style="color:var(--muted)">LevelUp Ecosystem — Accès réservé</p>
+    <p style="color:var(--muted)">Interface d'administration centrale. Accès strictement réservé au personnel habilité.</p>
     <button class="btn-google" onclick="doGoogleLogin()">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continuer avec Google
     </button>
-    <p class="login-note">Interface d'administration centrale. Accès strictement réservé au personnel habilité.</p>
   </div>
 </div>
 
@@ -331,7 +330,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <div class="denied-ico"><i class="fa-solid fa-ban"></i></div>
   <h2>Accès refusé</h2>
   <p>Votre compte n'a pas les droits nécessaires pour accéder à l'Admin Center.</p>
-  <button class="btn btn-g" style="margin-top:8px" onclick="doLogout()"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+  <a class="btn btn-p" style="margin-top:8px" href="https://levelup-ecosystem.com"><i class="fa-solid fa-arrow-up-right-from-square"></i> Rejoignez-nous</a>
 </div>
 
 <!-- ── MOBILE SIDEBAR OVERLAY ── -->
@@ -1413,22 +1412,51 @@ window.loadUsers = async function() {
   $$('usersTbody').innerHTML = '<tr><td colspan="6" class="tbl-loading">Chargement…</td></tr>';
   try {
     const filter = $$('usersFilter').value;
-    let q = query(usersStatusCol(), limit(200));
+    // On augmente la limite pour capter un maximum de comptes
+    let q = query(usersStatusCol(), limit(2000));
     const snap = await getDocs(q);
 
-    let users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (filter !== 'all') users = users.filter(u => u.status === filter);
+    let usersMap = {};
+    snap.docs.forEach(d => {
+      usersMap[d.id] = { id: d.id, ...d.data() };
+    });
 
-    // Also get keys
+    // On récupère AUSSI toutes les clés pour inclure les comptes anonymes/invités qui n'ont pas de "users_status"
     const keysSnap = await getDocs(collectionGroup(db, 'security'));
     const keyMap = {};
     keysSnap.docs.forEach(d => {
       const data = d.data();
       const uid = data.uid || d.ref.parent?.parent?.id;
-      if (uid) keyMap[uid] = data;
+      if (uid) {
+        keyMap[uid] = data;
+        // Si l'utilisateur n'est pas dans usersMap, c'est un compte anonyme
+        if (!usersMap[uid]) {
+          usersMap[uid] = {
+            id: uid,
+            email: data.email || data.owner || '',
+            displayName: data.displayName || data.name || 'Anonyme',
+            photoURL: data.photoURL || data.avatar || '',
+            status: 'active',
+            createdAt: data.keyCreatedAt || data.lastSeen || null,
+            lastSeen: data.lastSeen || null,
+            isAnonymous: true
+          };
+        }
+      }
     });
 
-    _usersCache = users.map(u => ({ ...u, keyData: keyMap[u.id] || keyMap[u.uid] }));
+    let users = Object.values(usersMap);
+    if (filter !== 'all') users = users.filter(u => u.status === filter);
+
+    _usersCache = users.map(u => ({ ...u, keyData: keyMap[u.id] || null }));
+    
+    // Trier par date décroissante (le plus récent en haut)
+    _usersCache.sort((a, b) => {
+      const ta = a.lastSeen?.seconds || a.createdAt?.seconds || (new Date(a.lastSeen || a.createdAt)).getTime()/1000 || 0;
+      const tb = b.lastSeen?.seconds || b.createdAt?.seconds || (new Date(b.lastSeen || b.createdAt)).getTime()/1000 || 0;
+      return tb - ta;
+    });
+
     $$('userCount').textContent = `${_usersCache.length} utilisateur${_usersCache.length !== 1 ? 's' : ''}`;
     renderUsersTable(_usersCache);
 
@@ -1449,12 +1477,17 @@ function renderUsersTable(users) {
     const keyDisplay = canDo('users_see_key')
       ? (u.keyData?.apiKey || u.keyData?.key || '—')
       : (hasKey ? maskKey(u.keyData?.apiKey || u.keyData?.key || '') : '—');
+      
+    // Détection d'un compte anonyme
+    const isAnon = !u.email || u.isAnonymous || u.email === '';
+    const emailHtml = isAnon ? `<span class="pill pill-d">Compte Anonyme</span>` : `<span style="font-size:.79rem;color:var(--muted)">${u.email}</span>`;
+
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:9px">
-        ${u.photoURL ? `<img class="avatar" src="${u.photoURL}">` : `<div class="avatar-t" style="font-size:.7rem">${initials(u.displayName||u.email||'?')}</div>`}
-        <div><div style="font-size:.82rem;font-weight:600">${u.displayName||'—'}</div><div style="font-size:.71rem;color:var(--dim)">${u.id.slice(0,12)}…</div></div>
+        ${u.photoURL ? `<img class="avatar" src="${u.photoURL}">` : `<div class="avatar-t" style="font-size:.7rem">${initials(u.displayName||u.email||'A')}</div>`}
+        <div><div style="font-size:.82rem;font-weight:600">${u.displayName||'Anonyme'}</div><div style="font-size:.71rem;color:var(--dim)">${u.id.slice(0,12)}…</div></div>
       </div></td>
-      <td style="font-size:.79rem;color:var(--muted)">${u.email||'—'}</td>
+      <td>${emailHtml}</td>
       <td><code style="font-size:.71rem;color:var(--purple);background:rgba(168,85,247,.08);padding:2px 7px;border-radius:5px">${keyDisplay}</code></td>
       <td>${statusPill(u.status||'active')}</td>
       <td style="font-size:.77rem;color:var(--dim)">${fmtDate(u.createdAt||u.lastSeen)}</td>
@@ -1482,11 +1515,13 @@ window.openUserDetail = function(uid) {
   const u = _usersCache.find(x => x.id === uid);
   if (!u) return;
   const kd = u.keyData || {};
+  const isAnon = !u.email || u.isAnonymous || u.email === '';
+  
   $$('slideUserBd').innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-      ${u.photoURL ? `<img src="${u.photoURL}" style="width:54px;height:54px;border-radius:50%;object-fit:cover">` : `<div class="avatar-t" style="width:54px;height:54px;font-size:1rem">${initials(u.displayName||u.email||'?')}</div>`}
-      <div><div style="font-size:1rem;font-weight:700">${u.displayName||'—'}</div>
-        <div style="font-size:.8rem;color:var(--muted)">${u.email||'—'}</div>
+      ${u.photoURL ? `<img src="${u.photoURL}" style="width:54px;height:54px;border-radius:50%;object-fit:cover">` : `<div class="avatar-t" style="width:54px;height:54px;font-size:1rem">${initials(u.displayName||u.email||'A')}</div>`}
+      <div><div style="font-size:1rem;font-weight:700">${u.displayName||'Anonyme'}</div>
+        <div style="font-size:.8rem;color:var(--muted)">${isAnon ? 'Compte Anonyme' : u.email}</div>
         <div style="margin-top:4px">${statusPill(u.status||'active')}</div>
       </div>
     </div>
