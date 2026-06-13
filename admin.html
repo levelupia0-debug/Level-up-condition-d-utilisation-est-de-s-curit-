@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="robots" content="noindex, nofollow">
-<title>LevelUp — Admin Center</title>
+<title>LevelUp OS</title>
+<link rel="icon" href="https://levelup-ecosystem.com/icon-eco.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="https://levelup-ecosystem.com/icon-eco.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
@@ -185,6 +187,23 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .perm-item.on .perm-cb{background:var(--purple);border-color:var(--purple);color:#fff}
 .perm-name{font-size:.78rem;font-weight:500;color:var(--muted);transition:color .2s}
 .perm-item.on .perm-name{color:var(--txt)}
+
+/* REMOTE LOGS TERMINAL */
+.log-entry{display:flex;gap:10px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03);animation:logIn .15s ease;align-items:flex-start;cursor:pointer}
+.log-entry:hover{background:rgba(255,255,255,.03);border-radius:4px}
+@keyframes logIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.log-ts{color:rgba(255,255,255,.25);white-space:nowrap;flex-shrink:0;font-size:.7rem;padding-top:1px}
+.log-lvl{font-weight:700;font-size:.68rem;width:38px;text-align:center;flex-shrink:0;padding:1px 4px;border-radius:3px}
+.log-lvl.error{background:rgba(239,68,68,.18);color:#f87171}
+.log-lvl.warn{background:rgba(234,179,8,.14);color:#fbbf24}
+.log-lvl.info{background:rgba(59,130,246,.14);color:#60a5fa}
+.log-lvl.debug{background:rgba(255,255,255,.06);color:rgba(255,255,255,.35)}
+.log-app{color:rgba(168,85,247,.7);font-size:.69rem;width:60px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-msg{color:rgba(255,255,255,.75);flex:1;word-break:break-all;font-size:.73rem}
+.log-msg.error{color:#fca5a5}
+.log-msg.warn{color:#fde68a}
+.log-detail{display:none;background:rgba(255,255,255,.03);border-radius:4px;padding:8px 10px;margin:4px 0 6px 88px;font-size:.7rem;color:rgba(255,255,255,.45);white-space:pre-wrap;word-break:break-all;border-left:2px solid rgba(255,255,255,.08)}
+.log-entry.expanded .log-detail{display:block}
 
 /* SLIDE PANEL */
 .slide-panel{position:fixed;top:0;right:-440px;width:440px;max-width:95vw;height:100%;background:var(--elev);border-left:1px solid var(--bdr);z-index:300;transition:right .35s cubic-bezier(.25,.8,.25,1);display:flex;flex-direction:column;overflow:hidden}
@@ -673,26 +692,70 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <!-- ═══ PANEL 13 : BUGS ═══ -->
       <section id="p-bugs" class="panel">
         <div class="panel-hd">
-          <div><h2 class="pt">Bugs & Erreurs</h2><p class="ps">Logs d'erreurs remontées</p></div>
-          <div class="panel-actions">
+          <div><h2 class="pt">Bugs & Erreurs</h2><p class="ps">Logs d'erreurs remontées par les apps</p></div>
+          <div class="panel-actions" id="bugsActionsReported">
             <button class="btn btn-g btn-sm" onclick="loadBugs()"><i class="fa-solid fa-arrows-rotate"></i></button>
             <button class="btn btn-g btn-sm" onclick="exportBugsCSV()"><i class="fa-solid fa-download"></i> CSV</button>
           </div>
-        </div>
-        <div class="stats-row" id="bugsStats"></div>
-        <div class="tbl-wrap">
-          <div class="tbl-top">
-            <span class="tbl-title" id="bugsCount">— erreurs</span>
-            <select id="bugsFilter" class="form-select btn-sm" style="width:auto;padding:6px 28px 6px 10px" onchange="loadBugs()">
-              <option value="open">Ouvertes</option>
-              <option value="resolved">Résolues</option>
-              <option value="all">Toutes</option>
+          <div class="panel-actions hidden" id="bugsActionsConsole">
+            <select id="logsLevelFilter" class="form-select btn-sm" style="width:auto;padding:6px 28px 6px 10px" onchange="applyLogsFilter()">
+              <option value="all">Tous les niveaux</option>
+              <option value="error">Erreurs</option>
+              <option value="warn">Warnings</option>
+              <option value="info">Info</option>
+              <option value="debug">Debug</option>
             </select>
+            <select id="logsAppFilter" class="form-select btn-sm" style="width:auto;padding:6px 28px 6px 10px" onchange="applyLogsFilter()">
+              <option value="all">Toutes les apps</option>
+            </select>
+            <button class="btn btn-g btn-sm" id="logsAutoScrollBtn" onclick="toggleLogsAutoScroll()" title="Auto-scroll"><i class="fa-solid fa-arrow-down"></i></button>
+            <button class="btn btn-r btn-sm" onclick="clearRemoteLogs()"><i class="fa-solid fa-trash"></i> Vider</button>
           </div>
-          <div style="overflow-x:auto">
-            <table><thead><tr><th>Type</th><th>Message</th><th>User</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
-            <tbody id="bugsTbody"><tr><td colspan="6" class="tbl-loading">Chargement…</td></tr></tbody>
-            </table>
+        </div>
+
+        <!-- Onglets -->
+        <div class="tab-bar" style="margin-bottom:16px">
+          <button class="tab-btn active" id="bugTab-reported" onclick="switchBugsTab('reported')">
+            <i class="fa-solid fa-bug" style="margin-right:5px"></i>Bugs rapportés
+          </button>
+          <button class="tab-btn" id="bugTab-console" onclick="switchBugsTab('console')">
+            <i class="fa-solid fa-terminal" style="margin-right:5px"></i>Console Live
+            <span id="consoleLiveBadge" class="hidden" style="background:var(--red);color:#fff;font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:10px;margin-left:4px">0</span>
+          </button>
+        </div>
+
+        <!-- TAB : Bugs rapportés -->
+        <div id="bugTabContent-reported">
+          <div class="stats-row" id="bugsStats"></div>
+          <div class="tbl-wrap">
+            <div class="tbl-top">
+              <span class="tbl-title" id="bugsCount">— erreurs</span>
+              <select id="bugsFilter" class="form-select btn-sm" style="width:auto;padding:6px 28px 6px 10px" onchange="loadBugs()">
+                <option value="open">Ouvertes</option>
+                <option value="resolved">Résolues</option>
+                <option value="all">Toutes</option>
+              </select>
+            </div>
+            <div style="overflow-x:auto">
+              <table><thead><tr><th>Type</th><th>Message</th><th>User</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+              <tbody id="bugsTbody"><tr><td colspan="6" class="tbl-loading">Chargement…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB : Console Live -->
+        <div id="bugTabContent-console" class="hidden">
+          <div id="logsStats" class="stats-row" style="margin-bottom:12px"></div>
+          <div id="logsTerminal" style="
+            background:#0a0a0f;border:1px solid rgba(255,255,255,.07);border-radius:var(--r12);
+            font-family:'Fira Code','Courier New',monospace;font-size:.74rem;line-height:1.6;
+            height:520px;overflow-y:auto;padding:12px 14px;position:relative;">
+            <div id="logsContent"><div style="color:rgba(255,255,255,.2);text-align:center;padding:40px 0">En attente des logs… les entrées apparaîtront ici en temps réel.</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.72rem;color:var(--dim)">
+            <span id="logsLiveIndicator" style="display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s infinite"></span>En direct</span>
+            <span id="logsEntryCount" style="margin-left:auto">0 entrées</span>
           </div>
         </div>
       </section>
@@ -769,26 +832,51 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
 <!-- ── MODAL : AJOUTER ADMIN ── -->
 <div id="modalAddAdmin" class="modal-bg hidden">
-  <div class="modal-card" style="max-width:460px">
+  <div class="modal-card" style="max-width:500px;max-height:90vh;overflow-y:auto">
     <div class="modal-icon modal-icon-p"><i class="fa-solid fa-user-shield"></i></div>
     <h3>Ajouter un admin</h3>
-    <p>Saisissez l'email Google du nouveau membre. Il devra se connecter une première fois pour activer son compte.</p>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">L'utilisateur devra se connecter avec son compte Google pour activer son accès.</p>
+
     <div class="form-group">
-      <label class="form-label">Email Google</label>
+      <label class="form-label">Email Google <span style="color:var(--red)">*</span></label>
       <input type="email" id="newAdminEmail" class="form-input" placeholder="admin@gmail.com">
     </div>
     <div class="form-group">
       <label class="form-label">Nom affiché</label>
       <input type="text" id="newAdminName" class="form-input" placeholder="Prénom Nom">
     </div>
-    <div class="form-group" style="margin-bottom:0">
+    <div class="form-group">
       <label class="form-label">Rôle</label>
       <select id="newAdminRole" class="form-select">
         <option value="admin">Admin</option>
         <option value="super">Super Admin</option>
       </select>
     </div>
-    <div class="modal-foot" style="margin-top:20px">
+    <div class="form-group">
+      <label class="form-label" style="display:flex;align-items:center;gap:6px">
+        UID Firebase
+        <span style="font-size:.7rem;font-weight:400;color:var(--muted);background:rgba(255,255,255,.05);border:1px solid var(--bdr);border-radius:4px;padding:1px 6px">optionnel</span>
+      </label>
+      <input type="text" id="newAdminUid" class="form-input" placeholder="Si connu — sinon laissez vide (migration auto)">
+      <div style="font-size:.72rem;color:var(--dim);margin-top:4px"><i class="fa-solid fa-circle-info" style="margin-right:3px"></i>Si vide, l'accès s'activera automatiquement au premier login Google.</div>
+    </div>
+
+    <div style="margin-top:4px;margin-bottom:4px">
+      <div style="font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Modules accessibles</div>
+      <div id="newAdminModulesGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:5px"></div>
+    </div>
+
+    <div style="margin-top:12px;margin-bottom:4px">
+      <div style="font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Permissions spéciales</div>
+      <div id="newAdminPermsGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:5px"></div>
+    </div>
+
+    <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px;margin-bottom:14px">
+      <button class="btn btn-g btn-xs" onclick="selectNewAdminPerms(true)"><i class="fa-solid fa-check-double"></i> Tout</button>
+      <button class="btn btn-g btn-xs" onclick="selectNewAdminPerms(false)"><i class="fa-solid fa-xmark"></i> Aucun</button>
+    </div>
+
+    <div class="modal-foot" style="margin-top:4px">
       <button class="btn btn-g" onclick="closeModal('modalAddAdmin')">Annuler</button>
       <button class="btn btn-p" onclick="createAdminDoc()"><i class="fa-solid fa-user-plus"></i> Créer le compte</button>
     </div>
@@ -906,7 +994,8 @@ const toolsDoc  = () => doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'config
 const servDoc   = () => doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'config', 'services_hub');
 const promptDoc = () => doc(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt');
 const notifsCol = () => collection(db, 'artifacts', APP_ECO, 'public', 'data', 'notifications');
-const bannedIPsCol = () => collection(db, 'artifacts', APP_ECO, 'banned_ips');
+const bannedIPsCol   = () => collection(db, 'artifacts', APP_ECO, 'banned_ips');
+const remoteLogsCol  = () => collection(db, 'artifacts', APP_ECO, 'remote_logs');
 const banHistCol   = () => collection(db, 'artifacts', APP_ECO, 'ban_history');
 const reportsCol   = () => collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'reports');
 const bugsCol      = () => collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'error_logs');
@@ -1077,6 +1166,10 @@ async function logAction(action, target, details = '') {
 // ── NAVIGATION ──
 function nav(modId) {
   if (!canAccess(modId)) { toast('Accès non autorisé', 'err'); return; }
+  // Cleanup Console Live listener si on quitte bugs
+  if (_currentModule === 'bugs' && modId !== 'bugs' && _logsUnsubscribe) {
+    _logsUnsubscribe(); _logsUnsubscribe = null;
+  }
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
   document.querySelectorAll('.sbi').forEach(b => b.classList.remove('on'));
   const panel = $$(`p-${modId}`);
@@ -1129,11 +1222,46 @@ window.confirmLogout = function() {
   confirm_('Déconnexion', 'Voulez-vous vous déconnecter de l\'Admin Center ?', doLogout, 'Déconnexion', 'btn-r');
 };
 
+// Fallback : si Firebase ne répond pas en 7s → afficher login
+const _authFallback = setTimeout(() => {
+  if (document.getElementById('s-loading') && !document.getElementById('s-loading').classList.contains('hidden')) {
+    showScreen('s-login');
+  }
+}, 7000);
+
 onAuthStateChanged(auth, async (user) => {
+  clearTimeout(_authFallback);
   if (!user) { showScreen('s-login'); _user = null; _profile = null; return; }
   showScreen('s-loading');
   try {
-    const snap = await getDoc(adminDoc(user.uid));
+    // Timeout de 8s sur le getDoc (règles Firestore bloquantes = hang infini)
+    let snap = await Promise.race([
+      getDoc(adminDoc(user.uid)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout — vérifier les règles Firestore')), 8000))
+    ]);
+
+    // ── INVITATION PENDING : si pas de doc UID, chercher par email (premier login) ──
+    if (!snap.exists() && user.email) {
+      const emailKey = user.email.toLowerCase().replace(/[.@]/g, '_');
+      const pendingSnap = await getDoc(doc(db, 'artifacts', APP_ECO, 'admins', emailKey)).catch(() => null);
+      if (pendingSnap?.exists() && pendingSnap.data().pending === true) {
+        const pd = pendingSnap.data();
+        // Migration : créer le vrai doc sous l'UID Firebase
+        await setDoc(adminDoc(user.uid), {
+          ...pd,
+          uid: user.uid,
+          photo: user.photoURL || pd.photo || null,
+          name: pd.name || user.displayName || user.email.split('@')[0],
+          pending: false,
+          activatedAt: serverTimestamp(),
+          lastLogin: serverTimestamp()
+        });
+        // Supprimer l'ancien doc temporaire
+        await deleteDoc(pendingSnap.ref).catch(() => {});
+        snap = await getDoc(adminDoc(user.uid));
+      }
+    }
+
     if (!snap.exists()) { await signOut(auth); showScreen('s-denied'); return; }
     const p = snap.data();
     if (!p.active) { await signOut(auth); showScreen('s-denied'); return; }
@@ -1164,6 +1292,7 @@ onAuthStateChanged(auth, async (user) => {
 
     buildSidebar();
     showScreen('app');
+    startLogsBadgeWatcher();
     nav('dashboard');
 
   } catch(err) {
@@ -2187,6 +2316,160 @@ window.exportBugsCSV = async function() {
 };
 
 // ══════════════════════════════════════════
+// MODULE 13b — CONSOLE LIVE (REMOTE LOGS)
+// ══════════════════════════════════════════
+let _logsUnsubscribe = null;
+let _logsAutoScroll  = true;
+let _allLogs         = [];
+let _currentBugsTab  = 'reported';
+
+window.switchBugsTab = function(tab) {
+  _currentBugsTab = tab;
+  ['reported','console'].forEach(t => {
+    $$(`bugTab-${t}`)?.classList.toggle('active', t === tab);
+    $$(`bugTabContent-${t}`)?.classList.toggle('hidden', t !== tab);
+  });
+  $$('bugsActionsReported')?.classList.toggle('hidden', tab !== 'reported');
+  $$('bugsActionsConsole')?.classList.toggle('hidden', tab !== 'console');
+
+  if (tab === 'console') {
+    $$('consoleLiveBadge')?.classList.add('hidden');
+    initRemoteLogs();
+  } else {
+    if (_logsUnsubscribe) { _logsUnsubscribe(); _logsUnsubscribe = null; }
+  }
+};
+
+window.initRemoteLogs = function() {
+  if (_logsUnsubscribe) return; // déjà actif
+  const q = query(remoteLogsCol(), orderBy('timestamp','desc'), limit(300));
+  _logsUnsubscribe = onSnapshot(q, snap => {
+    _allLogs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Mettre à jour liste apps disponibles
+    const apps = [...new Set(_allLogs.map(l => l.app).filter(Boolean))];
+    const appSel = $$('logsAppFilter');
+    const prevApp = appSel.value;
+    appSel.innerHTML = '<option value="all">Toutes les apps</option>' +
+      apps.map(a => `<option value="${a}"${prevApp===a?' selected':''}>${a}</option>`).join('');
+
+    renderLogs();
+  }, err => {
+    console.warn('Remote logs error:', err);
+    $$('logsContent').innerHTML = `<div style="color:#f87171;padding:20px 0;text-align:center">Erreur Firestore : ${err.message}</div>`;
+  });
+};
+
+function renderLogs() {
+  const lvlF = $$('logsLevelFilter')?.value || 'all';
+  const appF = $$('logsAppFilter')?.value   || 'all';
+
+  let filtered = _allLogs;
+  if (lvlF !== 'all') filtered = filtered.filter(l => l.level === lvlF);
+  if (appF !== 'all') filtered = filtered.filter(l => l.app   === appF);
+
+  // Stats
+  const errs  = _allLogs.filter(l => l.level === 'error').length;
+  const warns  = _allLogs.filter(l => l.level === 'warn').length;
+  const infos  = _allLogs.filter(l => l.level === 'info').length;
+  $$('logsStats').innerHTML = `
+    <div class="stat-card"><div class="sc-label">Total</div><div class="sc-val">${_allLogs.length}</div></div>
+    <div class="stat-card"><div class="sc-label">Erreurs</div><div class="sc-val sc-r">${errs}</div></div>
+    <div class="stat-card"><div class="sc-label">Warnings</div><div class="sc-val sc-y">${warns}</div></div>
+    <div class="stat-card"><div class="sc-label">Info</div><div class="sc-val sc-b">${infos}</div></div>`;
+
+  $$('logsEntryCount').textContent = `${filtered.length} entrée${filtered.length!==1?'s':''}`;
+
+  if (!filtered.length) {
+    $$('logsContent').innerHTML = '<div style="color:rgba(255,255,255,.2);text-align:center;padding:40px 0">Aucun log correspondant aux filtres.</div>';
+    return;
+  }
+
+  $$('logsContent').innerHTML = filtered.map(l => {
+    const ts  = l.timestamp?.seconds ? new Date(l.timestamp.seconds*1000) : new Date(l.clientTs||0);
+    const tsStr = ts.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const dateStr = ts.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+    const lvl = l.level || 'info';
+    const msg = escHtml(String(l.message||'').slice(0,300));
+    const app = escHtml(l.app || '—');
+
+    // Détails dépliables
+    const details = [];
+    if (l.stack)      details.push('📍 Stack:\n' + l.stack.slice(0,800));
+    if (l.file)       details.push('📂 Fichier: ' + l.file);
+    if (l.fn)         details.push('⚙️ Fonction: ' + l.fn);
+    if (l.uid)        details.push('👤 UID: ' + l.uid);
+    if (l.userEmail)  details.push('✉️ Email: ' + l.userEmail);
+    if (l.url)        details.push('🔗 URL: ' + l.url);
+    if (l.userAgent)  details.push('🖥️ UA: ' + l.userAgent.slice(0,120));
+    if (l.sessionId)  details.push('🔑 Session: ' + l.sessionId);
+    if (l.extra)      details.push('📎 Extra: ' + JSON.stringify(l.extra).slice(0,300));
+    const detailHtml  = details.length ? escHtml(details.join('\n')) : '';
+
+    return `<div class="log-entry${detailHtml?' has-detail':''}" onclick="toggleLogEntry(this)">
+      <span class="log-ts">${dateStr} ${tsStr}</span>
+      <span class="log-lvl ${lvl}">${lvl.toUpperCase()}</span>
+      <span class="log-app" title="${app}">${app}</span>
+      <span class="log-msg ${lvl}">${msg}</span>
+      ${detailHtml ? `<div class="log-detail">${detailHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  if (_logsAutoScroll) {
+    const terminal = $$('logsTerminal');
+    if (terminal) terminal.scrollTop = 0; // plus récent en haut
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+window.toggleLogEntry = function(el) {
+  el.classList.toggle('expanded');
+};
+
+window.applyLogsFilter = function() { renderLogs(); };
+
+window.toggleLogsAutoScroll = function() {
+  _logsAutoScroll = !_logsAutoScroll;
+  const btn = $$('logsAutoScrollBtn');
+  if (btn) btn.style.opacity = _logsAutoScroll ? '1' : '0.4';
+  toast(_logsAutoScroll ? 'Auto-scroll activé' : 'Auto-scroll désactivé', 'info');
+};
+
+window.clearRemoteLogs = async function() {
+  confirm_('Vider les logs', 'Tous les logs remote seront supprimés définitivement.', async () => {
+    try {
+      const snap = await getDocs(query(remoteLogsCol(), limit(500)));
+      const batch = [];
+      snap.docs.forEach(d => batch.push(deleteDoc(d.ref)));
+      await Promise.all(batch);
+      _allLogs = [];
+      renderLogs();
+      toast('Logs effacés', 'ok');
+    } catch(e) { toast('Erreur suppression : ' + e.message, 'err'); }
+  }, 'Vider', 'btn-r');
+};
+
+// Badge "nouveaux logs" — lancé uniquement après login (appelé dans le onAuthStateChanged)
+let _logsWatchUnsub = null;
+function startLogsBadgeWatcher() {
+  if (_logsWatchUnsub) return;
+  let _lastLogCount = 0;
+  const q = query(remoteLogsCol(), orderBy('timestamp','desc'), limit(1));
+  _logsWatchUnsub = onSnapshot(q, () => {
+    if (_currentBugsTab !== 'console' && _currentModule === 'bugs') {
+      const badge = $$('consoleLiveBadge');
+      if (!badge) return;
+      _lastLogCount++;
+      badge.textContent = _lastLogCount > 99 ? '99+' : _lastLogCount;
+      badge.classList.remove('hidden');
+    }
+  }, () => {}); // ignore les erreurs silencieusement
+}
+
+// ══════════════════════════════════════════
 // MODULE 14 — ANALYTICS
 // ══════════════════════════════════════════
 window.loadAnalytics = async function() {
@@ -2302,34 +2585,80 @@ window.openAddAdminModal = function() {
   $$('newAdminEmail').value = '';
   $$('newAdminName').value  = '';
   $$('newAdminRole').value  = 'admin';
+  $$('newAdminUid').value   = '';
+
+  // Remplir grille modules
+  const modPerms = MODULES.filter(m => !m.superOnly);
+  $$('newAdminModulesGrid').innerHTML = modPerms.map(mod => `
+    <div class="perm-item on" data-new-perm="module_${mod.id}" onclick="this.classList.toggle('on')">
+      <div class="perm-cb"><i class="fa-solid fa-check"></i></div>
+      <span class="perm-name"><i class="fa-solid ${mod.icon}" style="margin-right:4px;font-size:.68rem;color:var(--dim)"></i>${mod.label}</span>
+    </div>`).join('');
+
+  // Remplir grille permissions granulaires
+  $$('newAdminPermsGrid').innerHTML = GRANULAR_PERMS.map(p => `
+    <div class="perm-item" data-new-perm="${p.id}" onclick="this.classList.toggle('on')">
+      <div class="perm-cb"><i class="fa-solid fa-check"></i></div>
+      <span class="perm-name">${p.label}</span>
+    </div>`).join('');
+
   openModal('modalAddAdmin');
 };
 
+window.selectNewAdminPerms = function(val) {
+  document.querySelectorAll('[data-new-perm]').forEach(el => {
+    if (val) el.classList.add('on');
+    else el.classList.remove('on');
+  });
+};
+
 window.createAdminDoc = async function() {
-  const email = $$('newAdminEmail').value.trim().toLowerCase();
-  const name  = $$('newAdminName').value.trim();
-  const role  = $$('newAdminRole').value;
+  const email   = $$('newAdminEmail').value.trim().toLowerCase();
+  const name    = $$('newAdminName').value.trim();
+  const role    = $$('newAdminRole').value;
+  const uidDirect = $$('newAdminUid').value.trim();
   if (!email) { toast('Email requis', 'warn'); return; }
 
+  // Lire les permissions sélectionnées dans le modal
+  const permissions = {};
+  document.querySelectorAll('[data-new-perm]').forEach(el => {
+    permissions[el.dataset.newPerm] = el.classList.contains('on');
+  });
+
   try {
-    // We create the doc with email as key (the UID is unknown until they log in)
-    // On first login, the auth guard reads by UID — so we also store email to match
-    const tempId = email.replace(/[.@]/g, '_');
-    await setDoc(doc(db, 'artifacts', APP_ECO, 'admins', tempId), {
-      email, name: name || email.split('@')[0],
-      isAdminSuper: role === 'super', isAdmin: true,
-      active: true, pending: true,
-      createdAt: serverTimestamp(),
-      createdBy: _user.uid, createdByEmail: _user.email,
-      permissions: {}
-    });
-    await logAction('Admin créé', email, `Rôle: ${role}`);
+    if (uidDirect) {
+      // ── Mode UID direct : doc immédiatement actif ──
+      await setDoc(adminDoc(uidDirect), {
+        uid: uidDirect, email,
+        name: name || email.split('@')[0],
+        isAdminSuper: role === 'super', isAdmin: true,
+        active: true, pending: false,
+        createdAt: serverTimestamp(),
+        createdBy: _user.uid, createdByEmail: _user.email,
+        permissions
+      });
+      await logAction('Admin créé (UID direct)', email, `Rôle: ${role}, UID: ${uidDirect}`);
+      toast('Compte admin créé et actif immédiatement.', 'ok');
+    } else {
+      // ── Mode invitation email : pending → migration au premier login ──
+      const tempId = email.replace(/[.@]/g, '_');
+      await setDoc(doc(db, 'artifacts', APP_ECO, 'admins', tempId), {
+        email,
+        name: name || email.split('@')[0],
+        isAdminSuper: role === 'super', isAdmin: true,
+        active: true, pending: true,
+        createdAt: serverTimestamp(),
+        createdBy: _user.uid, createdByEmail: _user.email,
+        permissions
+      });
+      await logAction('Admin invité', email, `Rôle: ${role} — en attente du premier login`);
+      toast('Invitation créée. L\'accès s\'activera automatiquement au premier login Google.', 'info');
+    }
     closeModal('modalAddAdmin');
-    toast('Compte admin créé. L\'utilisateur devra se connecter pour activer son accès.', 'info');
     loadTeam();
   } catch(e) {
     console.error(e);
-    toast('Erreur création admin', 'err');
+    toast('Erreur création admin : ' + e.message, 'err');
   }
 };
 
