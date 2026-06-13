@@ -1,0 +1,2485 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<title>LevelUp — Admin Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root {
+  --bg:#030303;--surf:#0a0a0a;--elev:#111111;--elev2:#181818;
+  --bdr:rgba(255,255,255,.06);--bdr-hi:rgba(255,255,255,.12);--bdr-s:rgba(255,255,255,.2);
+  --txt:#ffffff;--muted:#a1a1aa;--dim:#52525b;--xdim:#3f3f46;
+  --purple:#a855f7;--purple-d:#7c3aed;--purple-g:rgba(168,85,247,.12);
+  --blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--orange:#f97316;
+  --sans:'Inter',system-ui,sans-serif;--display:'Syne',sans-serif;
+  --hdr:60px;--sb:240px;
+  --r8:8px;--r12:12px;--r16:16px;--r20:20px;--r24:24px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--sans);overflow:hidden}
+.hidden{display:none!important}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px}
+::selection{background:rgba(168,85,247,.3)}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center}
+#s-loading{background:var(--bg);flex-direction:column;gap:16px}
+.spin-ring{width:40px;height:40px;border:2px solid rgba(168,85,247,.15);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#s-login{background:var(--bg)}
+.login-card{background:var(--surf);border:1px solid var(--bdr-hi);border-radius:var(--r24);width:100%;max-width:380px;padding:40px;text-align:center}
+.login-logo{width:60px;height:60px;border-radius:var(--r16);background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.15));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.4rem;color:var(--purple)}
+.login-card h1{font-family:var(--display);font-size:1.5rem;margin-bottom:6px}
+.login-card p{font-size:.84rem;margin-bottom:28px}
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border-radius:var(--r12);background:#fff;border:1px solid #dadce0;color:#3c4043;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.btn-google:hover{background:#f8f9fa;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.login-note{margin-top:16px;font-size:.74rem;color:var(--dim);line-height:1.6}
+
+#s-denied{background:var(--bg);flex-direction:column;gap:16px;text-align:center}
+.denied-ico{width:70px;height:70px;border-radius:50%;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--red);margin:0 auto}
+#s-denied h2{font-family:var(--display);font-size:1.4rem}
+#s-denied p{font-size:.85rem;color:var(--muted);max-width:320px}
+
+/* ── APP SHELL ── */
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+
+/* HEADER */
+header{height:var(--hdr);background:var(--surf);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;z-index:100;position:relative}
+.hdr-brand{display:flex;align-items:center;gap:9px;font-family:var(--display);font-size:1.1rem;font-weight:800;letter-spacing:-.04em;flex-shrink:0;user-select:none}
+.hdr-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--purple);box-shadow:0 0 8px var(--purple);animation:bdot 2s ease infinite;flex-shrink:0}
+@keyframes bdot{0%,100%{box-shadow:0 0 4px var(--purple)}50%{box-shadow:0 0 12px var(--purple),0 0 20px var(--purple)}}
+.hdr-search{flex:1;max-width:400px;position:relative}
+.hdr-search input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:var(--r12);padding:8px 14px 8px 36px;color:var(--txt);font-size:.84rem;font-family:var(--sans);outline:none;transition:border-color .2s}
+.hdr-search input:focus{border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.04)}
+.hdr-search input::placeholder{color:var(--dim)}
+.hdr-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:.8rem}
+.hdr-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.hdr-badge{padding:3px 10px;border-radius:100px;font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.badge-super{background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.15));color:#d8b4fe;border:1px solid rgba(168,85,247,.3)}
+.badge-admin{background:rgba(59,130,246,.1);color:#93c5fd;border:1px solid rgba(59,130,246,.25)}
+.hdr-user{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:var(--r12);background:transparent;border:1px solid var(--bdr);cursor:pointer;transition:all .2s}
+.hdr-user:hover{border-color:var(--bdr-hi);background:rgba(255,255,255,.03)}
+.hdr-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.hdr-avatar-t{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple-d),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0}
+.hdr-name{font-size:.82rem;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-logout{width:34px;height:34px;border-radius:var(--r8);background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);color:var(--red);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:.8rem}
+.hdr-logout:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3)}
+
+/* BODY */
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+aside{width:var(--sb);min-width:var(--sb);background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
+.sb-section{padding:10px 8px}
+.sb-label{font-size:.62rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;padding:0 10px;margin-bottom:5px;margin-top:8px}
+.sbi{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;border:1px solid transparent;user-select:none;width:100%;background:none;text-align:left;position:relative}
+.sbi i{width:16px;text-align:center;font-size:.82rem;flex-shrink:0}
+.sbi:hover{color:var(--txt);background:rgba(255,255,255,.04)}
+.sbi.on{color:var(--txt);background:rgba(168,85,247,.08);border-color:rgba(168,85,247,.18)}
+.sbi.on i{color:var(--purple)}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:100px;flex-shrink:0}
+.sb-sep{height:1px;background:var(--bdr);margin:6px 8px}
+
+/* MAIN */
+main{flex:1;overflow-y:auto;background:var(--bg)}
+.panel{display:none;padding:28px;min-height:100%}
+.panel.on{display:block}
+.panel-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.pt{font-size:1.4rem;font-weight:700;font-family:var(--display);margin-bottom:3px;line-height:1.2}
+.ps{font-size:.84rem;color:var(--muted)}
+.panel-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;border-radius:var(--r12);font-size:.84rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .2s;font-family:var(--sans);white-space:nowrap}
+.btn-p{background:linear-gradient(135deg,var(--purple-d),var(--purple));color:#fff;box-shadow:0 4px 14px rgba(168,85,247,.25)}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(168,85,247,.4)}
+.btn-g{background:rgba(255,255,255,.04);color:var(--txt);border-color:var(--bdr)}
+.btn-g:hover{background:rgba(255,255,255,.08);border-color:var(--bdr-hi)}
+.btn-r{background:rgba(239,68,68,.08);color:var(--red);border-color:rgba(239,68,68,.2)}
+.btn-r:hover{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.35)}
+.btn-y{background:rgba(234,179,8,.08);color:var(--yellow);border-color:rgba(234,179,8,.2)}
+.btn-sm{padding:6px 13px;font-size:.78rem;border-radius:var(--r8)}
+.btn-xs{padding:4px 9px;font-size:.72rem;border-radius:6px}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:22px}
+.stat-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r16);padding:18px;transition:border-color .2s}
+.stat-card:hover{border-color:var(--bdr-hi)}
+.sc-label{font-size:.68rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.sc-val{font-size:1.9rem;font-weight:800;font-family:var(--display);line-height:1;margin-bottom:4px}
+.sc-sub{font-size:.73rem;color:var(--muted)}
+.sc-p{color:var(--purple)}.sc-g{color:var(--green)}.sc-b{color:var(--blue)}.sc-r{color:var(--red)}.sc-y{color:var(--yellow)}
+
+/* TABLE */
+.tbl-wrap{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r16);overflow:hidden}
+.tbl-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bdr);gap:12px;flex-wrap:wrap}
+.tbl-title{font-size:.88rem;font-weight:700}
+.tbl-tools{display:flex;gap:8px;align-items:center}
+.search-input{background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:var(--r8);padding:7px 12px;color:var(--txt);font-size:.8rem;font-family:var(--sans);outline:none;width:200px;transition:border-color .2s}
+.search-input:focus{border-color:rgba(168,85,247,.3)}
+.search-input::placeholder{color:var(--dim)}
+table{width:100%;border-collapse:collapse}
+thead{background:rgba(255,255,255,.02)}
+th{padding:11px 14px;font-size:.72rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;text-align:left;border-bottom:1px solid var(--bdr);white-space:nowrap}
+td{padding:12px 14px;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.tbl-empty{padding:40px;text-align:center;color:var(--dim);font-size:.84rem}
+.tbl-loading{padding:40px;text-align:center;color:var(--muted);font-size:.84rem}
+
+/* BADGES */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:.68rem;font-weight:600}
+.pill-g{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.pill-r{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.pill-y{background:rgba(234,179,8,.1);color:var(--yellow);border:1px solid rgba(234,179,8,.2)}
+.pill-p{background:rgba(168,85,247,.1);color:var(--purple);border:1px solid rgba(168,85,247,.2)}
+.pill-b{background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+.pill-d{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--bdr)}
+.pill::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+
+/* CARDS */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r16);padding:20px;margin-bottom:14px}
+.card-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:10px}
+.card-title{font-size:.9rem;font-weight:700}
+.card-sub{font-size:.77rem;color:var(--muted);margin-top:2px}
+
+/* FORM */
+.form-group{margin-bottom:16px}
+.form-label{font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:6px;display:block}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:var(--r12);padding:10px 13px;color:var(--txt);font-size:.85rem;font-family:var(--sans);outline:none;transition:border-color .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.03)}
+.form-select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2352525b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.form-textarea{resize:vertical;min-height:100px;line-height:1.6}
+.form-select option{background:var(--elev);color:var(--txt)}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-info h5{font-size:.83rem;font-weight:600}
+.toggle-info p{font-size:.73rem;color:var(--muted);margin-top:1px}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:100px;cursor:pointer;transition:all .25s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.toggle input:checked + .toggle-slider{background:var(--purple)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(18px)}
+
+/* PERMISSION GRID */
+.perm-section{margin-bottom:20px}
+.perm-section-title{font-size:.78rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bdr)}
+.perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.perm-item{display:flex;align-items:center;gap:9px;padding:9px 12px;background:rgba(255,255,255,.02);border:1px solid var(--bdr);border-radius:var(--r8);cursor:pointer;transition:all .2s;user-select:none}
+.perm-item:hover{border-color:var(--bdr-hi);background:rgba(255,255,255,.04)}
+.perm-item.on{border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.06)}
+.perm-cb{width:16px;height:16px;border:1.5px solid var(--dim);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:.6rem;color:transparent}
+.perm-item.on .perm-cb{background:var(--purple);border-color:var(--purple);color:#fff}
+.perm-name{font-size:.78rem;font-weight:500;color:var(--muted);transition:color .2s}
+.perm-item.on .perm-name{color:var(--txt)}
+
+/* SLIDE PANEL */
+.slide-panel{position:fixed;top:0;right:-440px;width:440px;max-width:95vw;height:100%;background:var(--elev);border-left:1px solid var(--bdr);z-index:300;transition:right .35s cubic-bezier(.25,.8,.25,1);display:flex;flex-direction:column;overflow:hidden}
+.slide-panel.open{right:0}
+.slide-hd{padding:18px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.slide-title{font-size:1rem;font-weight:700}
+.slide-close{width:32px;height:32px;border-radius:var(--r8);background:rgba(255,255,255,.05);border:1px solid var(--bdr);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:all .2s}
+.slide-close:hover{background:rgba(255,255,255,.1);color:var(--txt)}
+.slide-bd{flex:1;overflow-y:auto;padding:20px}
+.slide-ft{padding:14px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;flex-shrink:0}
+.slide-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:299;opacity:0;pointer-events:none;transition:opacity .3s}
+.slide-overlay.on{opacity:1;pointer-events:auto}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
+.modal-card{background:var(--surf);border:1px solid var(--bdr-hi);border-radius:var(--r24);width:100%;max-width:420px;padding:28px;animation:mIn .28s cubic-bezier(.34,1.46,.64,1)}
+@keyframes mIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.modal-icon{width:52px;height:52px;border-radius:var(--r16);display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:16px}
+.modal-icon-r{background:rgba(239,68,68,.1);color:var(--red)}
+.modal-icon-p{background:rgba(168,85,247,.1);color:var(--purple)}
+.modal-icon-g{background:rgba(34,197,94,.1);color:var(--green)}
+.modal-card h3{font-size:1.1rem;font-weight:700;margin-bottom:7px}
+.modal-card p{font-size:.84rem;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end}
+
+/* TOAST */
+#toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--elev2);border:1px solid var(--bdr-hi);border-radius:var(--r12);padding:11px 15px;font-size:.82rem;font-weight:500;display:flex;align-items:center;gap:9px;pointer-events:auto;animation:tIn .25s ease;box-shadow:0 8px 24px rgba(0,0,0,.7);max-width:320px}
+.toast.ok{border-color:rgba(34,197,94,.3);color:var(--green)}
+.toast.err{border-color:rgba(239,68,68,.3);color:var(--red)}
+.toast.info{border-color:rgba(168,85,247,.3);color:var(--purple)}
+.toast.warn{border-color:rgba(234,179,8,.3);color:var(--yellow)}
+@keyframes tIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* MISC */
+.log-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.log-item:last-child{border-bottom:none}
+.log-ico{width:30px;height:30px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0;background:rgba(168,85,247,.08);color:var(--purple)}
+.log-txt{flex:1;min-width:0}
+.log-txt b{font-size:.8rem;font-weight:600;display:block;margin-bottom:1px}
+.log-txt span{font-size:.74rem;color:var(--dim)}
+.avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.avatar-t{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--purple-d),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:700;flex-shrink:0}
+.empty-state{padding:60px 20px;text-align:center;color:var(--dim)}
+.empty-state i{font-size:2rem;margin-bottom:12px;display:block;color:var(--xdim)}
+.empty-state p{font-size:.84rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.section-title{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;margin-top:20px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.82rem}
+.info-row:last-child{border-bottom:none}
+.info-row .key{color:var(--dim)}
+.info-row .val{font-weight:500;text-align:right;max-width:60%;word-break:break-all}
+.two-col{display:grid;grid-template-columns:var(--sb) 1fr;gap:20px}
+@media(max-width:1100px){.two-col{grid-template-columns:1fr}}
+
+/* MOBILE SIDEBAR */
+@media(max-width:768px){
+  aside{position:fixed;left:-100%;top:var(--hdr);bottom:0;z-index:200;transition:left .3s;width:240px}
+  aside.mob-open{left:0}
+  .mob-overlay{position:fixed;inset:0;top:var(--hdr);background:rgba(0,0,0,.6);z-index:199;display:none}
+  .mob-overlay.on{display:block}
+  .hdr-menu-btn{display:flex}
+  main{overflow-y:auto}
+  .panel{padding:16px}
+  .stats-row{grid-template-columns:1fr 1fr}
+}
+.hdr-menu-btn{width:34px;height:34px;border-radius:var(--r8);background:rgba(255,255,255,.04);border:1px solid var(--bdr);color:var(--muted);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;flex-shrink:0}
+@media(max-width:768px){.hdr-menu-btn{display:flex}.hdr-search{display:none}}
+
+/* NOTIFY FORM */
+.notif-targets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.notif-target-btn{padding:6px 14px;border-radius:100px;font-size:.78rem;font-weight:600;border:1px solid var(--bdr);color:var(--muted);cursor:pointer;transition:all .2s;background:none;font-family:var(--sans)}
+.notif-target-btn.on{border-color:rgba(168,85,247,.4);color:var(--purple);background:rgba(168,85,247,.08)}
+
+/* CONFIG SECTION */
+.cfg-block{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r16);padding:20px;margin-bottom:16px}
+.cfg-block-title{font-size:.85rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.cfg-block-title i{color:var(--purple)}
+
+/* PROMPT */
+.prompt-editor{width:100%;min-height:280px;background:rgba(0,0,0,.4);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px;color:var(--txt);font-size:.84rem;font-family:'Courier New',monospace;outline:none;resize:vertical;line-height:1.7;transition:border-color .2s}
+.prompt-editor:focus{border-color:rgba(168,85,247,.35)}
+
+/* ANALYTICS */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:120px;margin-bottom:8px}
+.bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.bar-fill{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--purple),var(--purple-d));min-height:4px;transition:height .6s ease;position:relative;bottom:0}
+.bar-label{font-size:.62rem;color:var(--dim);white-space:nowrap}
+.country-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.82rem}
+.country-row:last-child{border-bottom:none}
+.country-bar{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
+.country-fill{height:100%;background:var(--purple);border-radius:100px}
+.country-pct{font-size:.74rem;color:var(--dim);width:36px;text-align:right}
+</style>
+</head>
+<body>
+
+<!-- ── TOASTS ── -->
+<div id="toasts"></div>
+
+<!-- ── LOADING SCREEN ── -->
+<div id="s-loading" class="screen">
+  <div class="spin-ring"></div>
+  <p style="font-size:.84rem;color:var(--muted)">Vérification des droits…</p>
+</div>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="s-login" class="screen hidden">
+  <div class="login-card">
+    <div class="login-logo"><i class="fa-solid fa-shield-halved"></i></div>
+    <h1>Admin Center</h1>
+    <p style="color:var(--muted)">LevelUp Ecosystem — Accès réservé</p>
+    <button class="btn-google" onclick="doGoogleLogin()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuer avec Google
+    </button>
+    <p class="login-note">Seuls les comptes autorisés par un super-admin ont accès à cette interface.</p>
+  </div>
+</div>
+
+<!-- ── DENIED SCREEN ── -->
+<div id="s-denied" class="screen hidden">
+  <div class="denied-ico"><i class="fa-solid fa-ban"></i></div>
+  <h2>Accès refusé</h2>
+  <p>Votre compte n'a pas les droits nécessaires pour accéder à l'Admin Center.</p>
+  <button class="btn btn-g" style="margin-top:8px" onclick="doLogout()"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+</div>
+
+<!-- ── MOBILE SIDEBAR OVERLAY ── -->
+<div id="mobOverlay" class="mob-overlay" onclick="closeMobSidebar()"></div>
+
+<!-- ── SLIDE PANEL OVERLAY ── -->
+<div id="slideOverlay" class="slide-overlay" onclick="closeSlide()"></div>
+
+<!-- ── APP ── -->
+<div id="app" class="hidden">
+
+  <!-- HEADER -->
+  <header>
+    <button class="hdr-menu-btn" onclick="toggleMobSidebar()"><i class="fa-solid fa-bars"></i></button>
+    <div class="hdr-brand">
+      <div class="dot"></div>
+      <span>Admin Center</span>
+    </div>
+    <div class="hdr-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="globalSearch" placeholder="Rechercher user, clé, email…" oninput="onGlobalSearch(this.value)">
+    </div>
+    <div class="hdr-right">
+      <span id="hdrRoleBadge" class="hdr-badge"></span>
+      <div class="hdr-user" onclick="nav('team')" title="Profil & Équipe">
+        <img id="hdrAvatarImg" class="hdr-avatar hidden" src="" alt="">
+        <div id="hdrAvatarTxt" class="hdr-avatar-t"></div>
+        <span id="hdrName" class="hdr-name"></span>
+      </div>
+      <div class="hdr-logout" onclick="confirmLogout()" title="Déconnexion"><i class="fa-solid fa-right-from-bracket"></i></div>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <div class="app-body">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="sb-section">
+        <div id="sidebarNav"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main id="mainArea">
+
+      <!-- ═══ PANEL 1 : DASHBOARD ═══ -->
+      <section id="p-dashboard" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Dashboard</h2><p class="ps">Vue d'ensemble de l'écosystème</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-g btn-sm" onclick="loadDashboard()"><i class="fa-solid fa-arrows-rotate"></i> Actualiser</button>
+          </div>
+        </div>
+        <div id="dashStats" class="stats-row"></div>
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="tbl-wrap">
+            <div class="tbl-top"><span class="tbl-title">Dernières inscriptions</span></div>
+            <div id="dashRecentUsers"><div class="tbl-loading">Chargement…</div></div>
+          </div>
+          <div class="tbl-wrap">
+            <div class="tbl-top"><span class="tbl-title">Journal admin récent</span></div>
+            <div id="dashLogs" style="padding:12px 16px"><div class="tbl-loading">Chargement…</div></div>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-top"><span class="tbl-title">Statut des applications</span></div>
+          <div id="dashAppStatus" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px"></div>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 2 : UTILISATEURS ═══ -->
+      <section id="p-users" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Utilisateurs</h2><p class="ps">Gestion des comptes</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-g btn-sm" onclick="loadUsers()"><i class="fa-solid fa-arrows-rotate"></i></button>
+            <select id="usersFilter" class="form-select btn-sm" style="width:auto;padding:6px 28px 6px 10px" onchange="loadUsers()">
+              <option value="all">Tous</option>
+              <option value="active">Actifs</option>
+              <option value="banned">Bannis</option>
+              <option value="suspended">Suspendus</option>
+            </select>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-top">
+            <span class="tbl-title" id="userCount">— utilisateurs</span>
+            <div class="tbl-tools">
+              <input class="search-input" id="userSearch" type="text" placeholder="Nom, email, UID…" oninput="filterUsers(this.value)">
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr>
+                <th>Utilisateur</th><th>Email</th><th>Clé LVL</th><th>Statut</th><th>Inscription</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="usersTbody"><tr><td colspan="6" class="tbl-loading">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 3 : CLÉS LVL ═══ -->
+      <section id="p-keys" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Clés LVL</h2><p class="ps">Gestion des clés d'accès</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-g btn-sm" onclick="loadKeys()"><i class="fa-solid fa-arrows-rotate"></i></button>
+          </div>
+        </div>
+        <div class="stats-row" id="keysStats"></div>
+        <div class="tbl-wrap">
+          <div class="tbl-top">
+            <span class="tbl-title" id="keysCount">— clés</span>
+            <div class="tbl-tools">
+              <select id="keysFilter" class="form-select btn-sm" style="width:auto;padding:6px 28px 6px 10px" onchange="loadKeys()">
+                <option value="all">Toutes</option>
+                <option value="active">Actives</option>
+                <option value="revoked">Révoquées</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Utilisateur</th><th>Clé</th><th>PIN</th><th>Statut</th><th>Créée le</th><th>Actions</th></tr></thead>
+              <tbody id="keysTbody"><tr><td colspan="6" class="tbl-loading">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 4 : MODÉRATION ═══ -->
+      <section id="p-moderation" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Modération & Bans</h2><p class="ps">Gestion des sanctions</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-p btn-sm" onclick="openBanModal(null)"><i class="fa-solid fa-plus"></i> Nouveau ban</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="notif-target-btn on" id="modTab-accounts" onclick="switchModTab('accounts')">Comptes bannis</button>
+          <button class="notif-target-btn" id="modTab-ips" onclick="switchModTab('ips')">IPs bloquées</button>
+          <button class="notif-target-btn" id="modTab-history" onclick="switchModTab('history')">Historique</button>
+        </div>
+        <div id="modContent"><div class="tbl-loading">Chargement…</div></div>
+      </section>
+
+      <!-- ═══ PANEL 5 : SIGNALEMENTS ═══ -->
+      <section id="p-reports" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Signalements</h2><p class="ps">Reports utilisateurs</p></div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-top">
+            <span class="tbl-title" id="reportsCount">— signalements</span>
+            <select id="reportsFilter" class="form-select btn-sm" style="width:auto;padding:6px 28px 6px 10px" onchange="loadReports()">
+              <option value="pending">En attente</option>
+              <option value="resolved">Résolus</option>
+              <option value="all">Tous</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Type</th><th>Signalé par</th><th>Description</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+              <tbody id="reportsTbody"><tr><td colspan="6" class="tbl-loading">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 6 : AVIS ═══ -->
+      <section id="p-reviews" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Avis & Feedbacks</h2><p class="ps">Évaluations des utilisateurs</p></div>
+        </div>
+        <div id="reviewsContent"><div class="tbl-loading">Chargement…</div></div>
+      </section>
+
+      <!-- ═══ PANEL 7 : WATCH PARTIES ═══ -->
+      <section id="p-parties" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Watch Parties</h2><p class="ps">Salles de visionnage actives</p></div>
+        </div>
+        <div id="partiesContent"><div class="tbl-loading">Chargement…</div></div>
+      </section>
+
+      <!-- ═══ PANEL 8 : CONFIG LIVE ═══ -->
+      <section id="p-config" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Config Live</h2><p class="ps">Paramètres appliqués en temps réel sur le site</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-g btn-sm" onclick="loadConfig()"><i class="fa-solid fa-arrows-rotate"></i> Recharger</button>
+            <button class="btn btn-p btn-sm" onclick="saveConfig()"><i class="fa-solid fa-check"></i> Appliquer</button>
+          </div>
+        </div>
+        <div id="configForm">
+          <!-- Maintenance globale -->
+          <div class="cfg-block">
+            <div class="cfg-block-title"><i class="fa-solid fa-triangle-exclamation"></i> Maintenance Globale</div>
+            <div class="toggle-row">
+              <div class="toggle-info"><h5>Mode maintenance</h5><p>Désactive l'accès à toutes les apps</p></div>
+              <label class="toggle"><input type="checkbox" id="cfg-maintenance"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="form-group" style="margin-top:12px;margin-bottom:0">
+              <label class="form-label">Message de maintenance</label>
+              <input type="text" id="cfg-maint-msg" class="form-input" placeholder="Ex: Maintenance planifiée jusqu'à 18h…">
+            </div>
+          </div>
+          <!-- Statut des apps -->
+          <div class="cfg-block">
+            <div class="cfg-block-title"><i class="fa-solid fa-sliders"></i> Statut des Applications</div>
+            <div id="cfgAppsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px"></div>
+          </div>
+          <!-- Accès -->
+          <div class="cfg-block">
+            <div class="cfg-block-title"><i class="fa-solid fa-lock-open"></i> Accès (Libre vs Clé)</div>
+            <div id="cfgAccessGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px"></div>
+          </div>
+          <!-- Hero -->
+          <div class="cfg-block">
+            <div class="cfg-block-title"><i class="fa-solid fa-image"></i> Panneau Hero (Images)</div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">URLs d'images (une par ligne)</label>
+              <textarea id="cfg-hero-imgs" class="form-textarea" rows="4" placeholder="https://…&#10;https://…"></textarea>
+            </div>
+          </div>
+          <!-- Badges & Annonces -->
+          <div class="cfg-block">
+            <div class="cfg-block-title"><i class="fa-solid fa-tag"></i> Badges & Annonces</div>
+            <div class="grid-2">
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Badge Outils</label>
+                <input type="text" id="cfg-tools-badge" class="form-input" placeholder="Ex: NEW">
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Badge IA FAB</label>
+                <input type="text" id="cfg-ia-badge" class="form-input" placeholder="Ex: HOT">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 9 : OUTILS HUB ═══ -->
+      <section id="p-tools" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Outils Hub</h2><p class="ps">Gestion des outils intégrés</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-p btn-sm" onclick="openToolModal(null)"><i class="fa-solid fa-plus"></i> Ajouter</button>
+          </div>
+        </div>
+        <div id="toolsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
+          <div class="tbl-loading">Chargement…</div>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 10 : SERVICES HUB ═══ -->
+      <section id="p-services" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Services Hub</h2><p class="ps">Gestion des services partenaires</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-p btn-sm" onclick="openServiceModal(null)"><i class="fa-solid fa-plus"></i> Ajouter</button>
+          </div>
+        </div>
+        <div id="servicesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+          <div class="tbl-loading">Chargement…</div>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 11 : NOTIFICATIONS ═══ -->
+      <section id="p-notifications" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Notifications</h2><p class="ps">Push & in-app</p></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:20px">
+          <button class="notif-target-btn on" id="notifTab-send" onclick="switchNotifTab('send')">Envoyer</button>
+          <button class="notif-target-btn" id="notifTab-history" onclick="switchNotifTab('history')">Historique</button>
+        </div>
+        <div id="notifSendPanel">
+          <div class="card">
+            <p class="section-title" style="margin-top:0">Cible</p>
+            <div class="notif-targets">
+              <button class="notif-target-btn on" id="nt-all" onclick="setNotifTarget('all')">Tous les utilisateurs</button>
+              <button class="notif-target-btn" id="nt-user" onclick="setNotifTarget('user')">Utilisateur spécifique</button>
+            </div>
+            <div id="notifUserTarget" class="form-group hidden">
+              <label class="form-label">UID ou Email</label>
+              <input type="text" id="notifTargetUid" class="form-input" placeholder="uid ou email@…">
+            </div>
+            <p class="section-title">Message</p>
+            <div class="form-group">
+              <label class="form-label">Titre</label>
+              <input type="text" id="notifTitle" class="form-input" placeholder="Titre de la notification">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Corps du message</label>
+              <textarea id="notifBody" class="form-textarea" rows="3" placeholder="Contenu de la notification…"></textarea>
+            </div>
+            <div class="grid-2">
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">URL image (optionnel)</label>
+                <input type="text" id="notifImage" class="form-input" placeholder="https://…">
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">URL de destination</label>
+                <input type="text" id="notifUrl" class="form-input" placeholder="https://levelup-ecosystem.com">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+              <button class="btn btn-g" id="btnNotifInApp" onclick="toggleNotifType('inapp')"><i class="fa-solid fa-bell"></i> In-App <span id="inappCheck"></span></button>
+              <button class="btn btn-g" id="btnNotifPush" onclick="toggleNotifType('push')"><i class="fa-solid fa-mobile-screen"></i> Push FCM <span id="pushCheck"></span></button>
+            </div>
+            <button class="btn btn-p" style="margin-top:16px;width:100%" onclick="sendNotification()"><i class="fa-solid fa-paper-plane"></i> Envoyer la notification</button>
+          </div>
+        </div>
+        <div id="notifHistoryPanel" class="hidden">
+          <div class="tbl-wrap">
+            <div class="tbl-top"><span class="tbl-title">Historique des notifications</span></div>
+            <div style="overflow-x:auto">
+              <table><thead><tr><th>Titre</th><th>Type</th><th>Cible</th><th>Envoyée par</th><th>Date</th></tr></thead>
+              <tbody id="notifHistTbody"><tr><td colspan="5" class="tbl-loading">Chargement…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 12 : PROMPT IA ═══ -->
+      <section id="p-prompt" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Prompt IA</h2><p class="ps">Instructions système de Level IA</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-g btn-sm" onclick="loadPrompt()"><i class="fa-solid fa-arrows-rotate"></i></button>
+            <button class="btn btn-p btn-sm" onclick="savePrompt()"><i class="fa-solid fa-floppy-disk"></i> Sauvegarder</button>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <p class="section-title" style="margin-top:0">Éditeur</p>
+            <textarea id="promptEditor" class="prompt-editor" placeholder="Chargement du prompt…"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+              <span id="promptChars" style="font-size:.74rem;color:var(--dim)">0 caractères</span>
+              <button class="btn btn-g btn-sm" onclick="testPrompt()"><i class="fa-solid fa-flask"></i> Tester</button>
+            </div>
+          </div>
+          <div>
+            <p class="section-title" style="margin-top:0">Historique des versions</p>
+            <div id="promptHistory"></div>
+          </div>
+        </div>
+        <div id="promptTestResult" class="card hidden" style="margin-top:16px">
+          <div class="card-hd"><span class="card-title">Réponse du test</span></div>
+          <p id="promptTestText" style="font-size:.84rem;line-height:1.7;color:var(--muted)"></p>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 13 : BUGS ═══ -->
+      <section id="p-bugs" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Bugs & Erreurs</h2><p class="ps">Logs d'erreurs remontées</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-g btn-sm" onclick="loadBugs()"><i class="fa-solid fa-arrows-rotate"></i></button>
+            <button class="btn btn-g btn-sm" onclick="exportBugsCSV()"><i class="fa-solid fa-download"></i> CSV</button>
+          </div>
+        </div>
+        <div class="stats-row" id="bugsStats"></div>
+        <div class="tbl-wrap">
+          <div class="tbl-top">
+            <span class="tbl-title" id="bugsCount">— erreurs</span>
+            <select id="bugsFilter" class="form-select btn-sm" style="width:auto;padding:6px 28px 6px 10px" onchange="loadBugs()">
+              <option value="open">Ouvertes</option>
+              <option value="resolved">Résolues</option>
+              <option value="all">Toutes</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto">
+            <table><thead><tr><th>Type</th><th>Message</th><th>User</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="bugsTbody"><tr><td colspan="6" class="tbl-loading">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ PANEL 14 : ANALYTICS ═══ -->
+      <section id="p-analytics" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Trafic & Analytics</h2><p class="ps">Activité de la plateforme</p></div>
+          <div class="panel-actions">
+            <button class="btn btn-g btn-sm" onclick="loadAnalytics()"><i class="fa-solid fa-arrows-rotate"></i></button>
+          </div>
+        </div>
+        <div id="analyticsContent"></div>
+      </section>
+
+      <!-- ═══ PANEL 15 : ÉQUIPE ═══ -->
+      <section id="p-team" class="panel">
+        <div class="panel-hd">
+          <div><h2 class="pt">Équipe Admin</h2><p class="ps">Gestion des accès et permissions</p></div>
+          <div class="panel-actions" id="teamActionsBar">
+            <button class="btn btn-p btn-sm" onclick="openAddAdminModal()"><i class="fa-solid fa-user-plus"></i> Ajouter un admin</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-top"><span class="tbl-title" id="teamCount">— membres</span></div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Membre</th><th>Rôle</th><th>Statut</th><th>Dernière connexion</th><th>Ajouté par</th><th>Actions</th></tr></thead>
+              <tbody id="teamTbody"><tr><td colspan="6" class="tbl-loading">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main><!-- /main -->
+  </div><!-- /app-body -->
+</div><!-- /app -->
+
+<!-- ── SLIDE PANEL : DÉTAIL UTILISATEUR ── -->
+<div id="slideUser" class="slide-panel">
+  <div class="slide-hd">
+    <span class="slide-title">Détail utilisateur</span>
+    <button class="slide-close" onclick="closeSlide()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="slide-bd" id="slideUserBd"></div>
+  <div class="slide-ft" id="slideUserFt"></div>
+</div>
+
+<!-- ── SLIDE PANEL : GESTION ADMIN ── -->
+<div id="slideAdmin" class="slide-panel">
+  <div class="slide-hd">
+    <span class="slide-title" id="slideAdminTitle">Permissions admin</span>
+    <button class="slide-close" onclick="closeSlide()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="slide-bd" id="slideAdminBd"></div>
+  <div class="slide-ft">
+    <button class="btn btn-r btn-sm" id="slideAdminDeactivate" onclick="toggleAdminActive()"></button>
+    <button class="btn btn-p" style="flex:1" onclick="saveAdminPerms()"><i class="fa-solid fa-floppy-disk"></i> Sauvegarder</button>
+  </div>
+</div>
+
+<!-- ── MODAL : CONFIRMER ── -->
+<div id="modalConfirm" class="modal-bg hidden">
+  <div class="modal-card">
+    <div class="modal-icon modal-icon-r" id="mConfirmIco"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h3 id="mConfirmTitle">Confirmer l'action</h3>
+    <p id="mConfirmText">Cette action est irréversible.</p>
+    <div class="modal-foot">
+      <button class="btn btn-g" onclick="closeModal('modalConfirm')">Annuler</button>
+      <button class="btn btn-r" id="mConfirmBtn">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : AJOUTER ADMIN ── -->
+<div id="modalAddAdmin" class="modal-bg hidden">
+  <div class="modal-card" style="max-width:460px">
+    <div class="modal-icon modal-icon-p"><i class="fa-solid fa-user-shield"></i></div>
+    <h3>Ajouter un admin</h3>
+    <p>Saisissez l'email Google du nouveau membre. Il devra se connecter une première fois pour activer son compte.</p>
+    <div class="form-group">
+      <label class="form-label">Email Google</label>
+      <input type="email" id="newAdminEmail" class="form-input" placeholder="admin@gmail.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nom affiché</label>
+      <input type="text" id="newAdminName" class="form-input" placeholder="Prénom Nom">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Rôle</label>
+      <select id="newAdminRole" class="form-select">
+        <option value="admin">Admin</option>
+        <option value="super">Super Admin</option>
+      </select>
+    </div>
+    <div class="modal-foot" style="margin-top:20px">
+      <button class="btn btn-g" onclick="closeModal('modalAddAdmin')">Annuler</button>
+      <button class="btn btn-p" onclick="createAdminDoc()"><i class="fa-solid fa-user-plus"></i> Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : BAN ── -->
+<div id="modalBan" class="modal-bg hidden">
+  <div class="modal-card">
+    <div class="modal-icon modal-icon-r"><i class="fa-solid fa-ban"></i></div>
+    <h3>Sanctionner un utilisateur</h3>
+    <input type="hidden" id="banTargetUid">
+    <div class="form-group">
+      <label class="form-label">Type de sanction</label>
+      <select id="banType" class="form-select">
+        <option value="suspended">Suspension temporaire</option>
+        <option value="banned">Bannissement permanent</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Raison</label>
+      <select id="banReason" class="form-select" style="margin-bottom:8px">
+        <option>Violation des CGU</option>
+        <option>Spam</option>
+        <option>Contenu inapproprié</option>
+        <option>Comportement abusif</option>
+        <option>Autre</option>
+      </select>
+      <input type="text" id="banReasonCustom" class="form-input" placeholder="Précisions (optionnel)">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Durée (suspension uniquement)</label>
+      <select id="banDuration" class="form-select">
+        <option value="24h">24 heures</option>
+        <option value="7j">7 jours</option>
+        <option value="30j">30 jours</option>
+        <option value="permanent">Permanente</option>
+      </select>
+    </div>
+    <div class="modal-foot" style="margin-top:20px">
+      <button class="btn btn-g" onclick="closeModal('modalBan')">Annuler</button>
+      <button class="btn btn-r" onclick="executeBan()"><i class="fa-solid fa-ban"></i> Appliquer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : OUTIL / SERVICE ── -->
+<div id="modalTool" class="modal-bg hidden">
+  <div class="modal-card" style="max-width:500px">
+    <h3 id="toolModalTitle">Ajouter un outil</h3>
+    <input type="hidden" id="toolEditId">
+    <div class="form-group">
+      <label class="form-label">Nom</label>
+      <input type="text" id="toolName" class="form-input" placeholder="Nom de l'outil">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input type="text" id="toolDesc" class="form-input" placeholder="Courte description">
+    </div>
+    <div class="grid-2">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">URL</label>
+        <input type="text" id="toolUrl" class="form-input" placeholder="https://…">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Icône (FA class ou emoji)</label>
+        <input type="text" id="toolIcon" class="form-input" placeholder="fa-wrench ou 🔧">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="form-label">Badge (optionnel)</label>
+      <input type="text" id="toolBadge" class="form-input" placeholder="NEW, HOT…">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-g" onclick="closeModal('modalTool')">Annuler</button>
+      <button class="btn btn-p" onclick="saveTool()"><i class="fa-solid fa-floppy-disk"></i> Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
+  collection, collectionGroup, query, where, orderBy, limit, onSnapshot,
+  serverTimestamp, Timestamp
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+// ── CONFIG FIREBASE ──
+const cfg = {
+  apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+  authDomain: "levelup-ecosystem.com",
+  projectId: "levelup-ia",
+  storageBucket: "levelup-ia.firebasestorage.app",
+  messagingSenderId: "229420004282",
+  appId: "1:229420004282:web:6735f059a947f0936ae383"
+};
+const fbApp = initializeApp(cfg);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+const gp = new GoogleAuthProvider();
+gp.setCustomParameters({ prompt: 'select_account' });
+
+// ── PATHS ──
+const APP_MAIN = 'level-ia-premium';
+const APP_ECO  = 'levelup-ecosystem';
+const adminsCol = () => collection(db, 'artifacts', APP_ECO, 'admins');
+const adminDoc  = uid => doc(db, 'artifacts', APP_ECO, 'admins', uid);
+const logsCol   = () => collection(db, 'artifacts', APP_ECO, 'admin_logs');
+const cfgDoc    = () => doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'config', 'apps');
+const toolsDoc  = () => doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'config', 'tools_hub');
+const servDoc   = () => doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'config', 'services_hub');
+const promptDoc = () => doc(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt');
+const notifsCol = () => collection(db, 'artifacts', APP_ECO, 'public', 'data', 'notifications');
+const bannedIPsCol = () => collection(db, 'artifacts', APP_ECO, 'banned_ips');
+const banHistCol   = () => collection(db, 'artifacts', APP_ECO, 'ban_history');
+const reportsCol   = () => collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'reports');
+const bugsCol      = () => collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'error_logs');
+const usersStatusCol = () => collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'users_status');
+const fcmTokensCol   = () => collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'fcm_tokens');
+
+// ── MODULES CONFIG ──
+const MODULES = [
+  { id:'dashboard',     label:'Dashboard',        icon:'fa-chart-line',       superOnly:false },
+  { id:'users',         label:'Utilisateurs',      icon:'fa-users',            superOnly:false },
+  { id:'keys',          label:'Cl\u00e9s LVL',     icon:'fa-key',              superOnly:false },
+  { id:'moderation',    label:'Mod\u00e9ration',   icon:'fa-shield-halved',    superOnly:false },
+  { id:'reports',       label:'Signalements',      icon:'fa-flag',             superOnly:false },
+  { id:'reviews',       label:'Avis',              icon:'fa-star',             superOnly:false },
+  { id:'parties',       label:'Watch Parties',     icon:'fa-film',             superOnly:false },
+  { id:'config',        label:'Config Live',       icon:'fa-sliders',          superOnly:false },
+  { id:'tools',         label:'Outils Hub',        icon:'fa-wrench',           superOnly:false },
+  { id:'services',      label:'Services Hub',      icon:'fa-box',              superOnly:false },
+  { id:'notifications', label:'Notifications',     icon:'fa-bell',             superOnly:false },
+  { id:'prompt',        label:'Prompt IA',         icon:'fa-robot',            superOnly:false },
+  { id:'bugs',          label:'Bugs & Erreurs',    icon:'fa-bug',              superOnly:false },
+  { id:'analytics',     label:'Trafic',            icon:'fa-chart-bar',        superOnly:false },
+  { id:'team',          label:'\u00c9quipe',       icon:'fa-user-shield',      superOnly:true  }
+];
+
+const GRANULAR_PERMS = [
+  { id:'users_see_key',      label:'Voir les cl\u00e9s en clair',    cat:'S\u00e9curit\u00e9' },
+  { id:'users_delete',       label:'Supprimer un compte',             cat:'S\u00e9curit\u00e9' },
+  { id:'users_ban',          label:'Bannir / Suspendre',              cat:'Mod\u00e9ration' },
+  { id:'notifications_push', label:'Envoyer des notifications push',  cat:'Notifications' },
+  { id:'keys_revoke',        label:'R\u00e9voquer une cl\u00e9',      cat:'Cl\u00e9s' },
+  { id:'config_write',       label:'Modifier la config live',         cat:'Configuration' },
+  { id:'prompt_write',       label:'Modifier le prompt IA',           cat:'IA' }
+];
+
+// ── STATE ──
+let _user = null;
+let _profile = null;
+let _perms = {};
+let _currentModule = null;
+let _usersCache = [];
+let _editingAdminUid = null;
+let _notifTypes = { inapp: true, push: false };
+let _notifTarget = 'all';
+let _currentModTab = 'accounts';
+let _currentNotifTab = 'send';
+
+// ── HELPERS ──
+function $$( id ){ return document.getElementById(id); }
+
+function toast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icons = { ok:'fa-check', err:'fa-xmark', info:'fa-circle-info', warn:'fa-triangle-exclamation' };
+  t.innerHTML = `<i class="fa-solid ${icons[type]||'fa-circle-info'}"></i><span>${msg}</span>`;
+  $$('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3800);
+}
+
+function showScreen(id) {
+  ['s-loading','s-login','s-denied','app'].forEach(s => {
+    const el = document.getElementById(s);
+    if (!el) return;
+    if (s === id) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+  });
+}
+
+function confirm_( title, text, onConfirm, btnLabel = 'Confirmer', btnClass = 'btn-r' ) {
+  $$('mConfirmTitle').textContent = title;
+  $$('mConfirmText').textContent  = text;
+  const btn = $$('mConfirmBtn');
+  btn.textContent = btnLabel;
+  btn.className   = `btn ${btnClass}`;
+  btn.onclick = () => { closeModal('modalConfirm'); onConfirm(); };
+  $$('modalConfirm').classList.remove('hidden');
+}
+
+function closeModal(id) { $$(id).classList.add('hidden'); }
+function openModal(id)  { $$(id).classList.remove('hidden'); }
+
+function openSlide(id) {
+  $$('slideOverlay').classList.add('on');
+  $$(id).classList.add('open');
+}
+function closeSlide() {
+  $$('slideOverlay').classList.remove('on');
+  document.querySelectorAll('.slide-panel').forEach(el => el.classList.remove('open'));
+  _editingAdminUid = null;
+}
+
+function toggleMobSidebar() {
+  $$('sidebar').classList.toggle('mob-open');
+  $$('mobOverlay').classList.toggle('on');
+}
+function closeMobSidebar() {
+  $$('sidebar').classList.remove('mob-open');
+  $$('mobOverlay').classList.remove('on');
+}
+
+function fmtDate(val) {
+  if (!val) return '—';
+  let d;
+  if (val?.toDate) d = val.toDate();
+  else if (val?.seconds) d = new Date(val.seconds * 1000);
+  else d = new Date(val);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtDateTime(val) {
+  if (!val) return '—';
+  let d;
+  if (val?.toDate) d = val.toDate();
+  else if (val?.seconds) d = new Date(val.seconds * 1000);
+  else d = new Date(val);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+function timeAgo(val) {
+  if (!val) return '—';
+  let d;
+  if (val?.toDate) d = val.toDate();
+  else if (val?.seconds) d = new Date(val.seconds * 1000);
+  else d = new Date(val);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (diff < 60) return 'À l\'instant';
+  if (diff < 3600) return `Il y a ${Math.floor(diff/60)}min`;
+  if (diff < 86400) return `Il y a ${Math.floor(diff/3600)}h`;
+  return `Il y a ${Math.floor(diff/86400)}j`;
+}
+function maskKey(k) { if (!k) return '—'; return k.slice(0,8) + '•••••••••'; }
+function initials(name) { if (!name) return '?'; return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
+function statusPill(s) {
+  if (s === 'active' || s === 'online') return `<span class="pill pill-g">Actif</span>`;
+  if (s === 'banned') return `<span class="pill pill-r">Banni</span>`;
+  if (s === 'suspended') return `<span class="pill pill-y">Suspendu</span>`;
+  return `<span class="pill pill-d">${s||'—'}</span>`;
+}
+
+// ── PERMISSIONS ──
+function canAccess(modId) {
+  if (!_profile) return false;
+  if (_profile.isAdminSuper) return true;
+  if (MODULES.find(m => m.id === modId)?.superOnly) return false;
+  return _perms[`module_${modId}`] === true;
+}
+function canDo(action) {
+  if (!_profile) return false;
+  if (_profile.isAdminSuper) return true;
+  return _perms[action] === true;
+}
+
+// ── LOG ADMIN ACTION ──
+async function logAction(action, target, details = '') {
+  if (!_user || !_profile) return;
+  try {
+    await addDoc(logsCol(), {
+      adminUid:   _user.uid,
+      adminEmail: _user.email,
+      adminName:  _profile.name || _user.displayName || _user.email,
+      adminRole:  _profile.isAdminSuper ? 'super_admin' : 'admin',
+      action, target, details,
+      ts: serverTimestamp()
+    });
+  } catch(e) { /* silencieux */ }
+}
+
+// ── NAVIGATION ──
+function nav(modId) {
+  if (!canAccess(modId)) { toast('Accès non autorisé', 'err'); return; }
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.sbi').forEach(b => b.classList.remove('on'));
+  const panel = $$(`p-${modId}`);
+  if (panel) panel.classList.add('on');
+  const btn = document.querySelector(`.sbi[data-mod="${modId}"]`);
+  if (btn) btn.classList.add('on');
+  _currentModule = modId;
+  closeMobSidebar();
+  // Auto-load module
+  const loaders = {
+    dashboard: loadDashboard, users: loadUsers, keys: loadKeys,
+    moderation: loadModeration, reports: loadReports, config: loadConfig,
+    tools: loadTools, services: loadServices, notifications: () => loadNotifHistory(),
+    prompt: loadPrompt, bugs: loadBugs, analytics: loadAnalytics,
+    team: loadTeam, reviews: loadReviews, parties: loadParties
+  };
+  if (loaders[modId]) loaders[modId]();
+}
+window.nav = nav;
+
+// ── BUILD SIDEBAR ──
+function buildSidebar() {
+  const nav = $$('sidebarNav');
+  const accessible = MODULES.filter(m => canAccess(m.id));
+  let html = '';
+  accessible.forEach(m => {
+    html += `<button class="sbi" data-mod="${m.id}" onclick="nav('${m.id}')">
+      <i class="fa-solid ${m.icon}"></i><span>${m.label}</span>
+      ${m.id === 'reports' ? '<span id="badge-reports" class="sb-badge hidden">!</span>' : ''}
+    </button>`;
+    if (m.id === 'parties' || m.id === 'analytics') {
+      html += '<div class="sb-sep"></div>';
+    }
+  });
+  nav.innerHTML = html;
+}
+
+// ── AUTH ──
+window.doGoogleLogin = async function() {
+  try {
+    await signInWithPopup(auth, gp);
+  } catch(e) {
+    if (e.code !== 'auth/popup-closed-by-user') toast('Erreur de connexion', 'err');
+  }
+};
+window.doLogout = async function() {
+  try { await signOut(auth); } catch(e) {}
+};
+window.confirmLogout = function() {
+  confirm_('Déconnexion', 'Voulez-vous vous déconnecter de l\'Admin Center ?', doLogout, 'Déconnexion', 'btn-r');
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { showScreen('s-login'); _user = null; _profile = null; return; }
+  showScreen('s-loading');
+  try {
+    const snap = await getDoc(adminDoc(user.uid));
+    if (!snap.exists()) { await signOut(auth); showScreen('s-denied'); return; }
+    const p = snap.data();
+    if (!p.active) { await signOut(auth); showScreen('s-denied'); return; }
+    if (!p.isAdmin && !p.isAdminSuper) { await signOut(auth); showScreen('s-denied'); return; }
+
+    _user    = user;
+    _profile = p;
+    _perms   = p.permissions || {};
+
+    // Update lastLogin
+    updateDoc(adminDoc(user.uid), { lastLogin: serverTimestamp() }).catch(() => {});
+
+    // Build UI
+    const nameEl = $$('hdrName');
+    const roleBadge = $$('hdrRoleBadge');
+    nameEl.textContent = p.name || user.displayName || user.email.split('@')[0];
+    roleBadge.textContent = p.isAdminSuper ? 'Super Admin' : 'Admin';
+    roleBadge.className = `hdr-badge ${p.isAdminSuper ? 'badge-super' : 'badge-admin'}`;
+
+    const img = $$('hdrAvatarImg');
+    const txt = $$('hdrAvatarTxt');
+    const photo = p.photo || user.photoURL;
+    if (photo) { img.src = photo; img.classList.remove('hidden'); txt.classList.add('hidden'); }
+    else { txt.textContent = initials(p.name || user.displayName || user.email); }
+
+    // Team section only for super admin
+    if (!p.isAdminSuper) $$('teamActionsBar').classList.add('hidden');
+
+    buildSidebar();
+    showScreen('app');
+    nav('dashboard');
+
+  } catch(err) {
+    console.error('Auth error', err);
+    showScreen('s-denied');
+  }
+});
+
+// ══════════════════════════════════════════
+// MODULE 1 — DASHBOARD
+// ══════════════════════════════════════════
+window.loadDashboard = async function() {
+  $$('dashStats').innerHTML = '<div class="tbl-loading" style="grid-column:1/-1">Chargement des stats…</div>';
+
+  try {
+    // Parallel reads
+    const [adminsSnap, logsSnap, usersSnap, keysSnap, cfgSnap] = await Promise.all([
+      getDocs(adminsCol()),
+      getDocs(query(logsCol(), orderBy('ts','desc'), limit(10))),
+      getDocs(query(usersStatusCol(), limit(200))),
+      getDocs(collectionGroup(db, 'security')),
+      getDoc(cfgDoc())
+    ]);
+
+    const totalAdmins  = adminsSnap.size;
+    const totalKeys    = keysSnap.size;
+    const activeKeys   = keysSnap.docs.filter(d => !d.data().revoked).length;
+    const totalUsers   = usersSnap.size;
+    const onlineUsers  = usersSnap.docs.filter(d => {
+      const ls = d.data().lastSeen;
+      if (!ls) return false;
+      const t = ls.seconds ? new Date(ls.seconds*1000) : new Date(ls);
+      return Date.now() - t.getTime() < 5 * 60 * 1000;
+    }).length;
+
+    $$('dashStats').innerHTML = `
+      <div class="stat-card"><div class="sc-label">Utilisateurs total</div><div class="sc-val sc-p">${totalUsers}</div><div class="sc-sub">inscrits</div></div>
+      <div class="stat-card"><div class="sc-label">En ligne maintenant</div><div class="sc-val sc-g">${onlineUsers}</div><div class="sc-sub">&lt; 5 minutes</div></div>
+      <div class="stat-card"><div class="sc-label">Clés actives</div><div class="sc-val sc-b">${activeKeys}</div><div class="sc-sub">sur ${totalKeys} total</div></div>
+      <div class="stat-card"><div class="sc-label">Équipe admin</div><div class="sc-val sc-p">${totalAdmins}</div><div class="sc-sub">membres</div></div>
+    `;
+
+    // Recent users
+    const recentUsers = usersSnap.docs
+      .filter(d => d.data().email)
+      .sort((a,b) => {
+        const ta = a.data().lastSeen?.seconds||0;
+        const tb = b.data().lastSeen?.seconds||0;
+        return tb - ta;
+      }).slice(0,5);
+
+    $$('dashRecentUsers').innerHTML = recentUsers.length
+      ? `<table style="width:100%"><tbody>${recentUsers.map(d => {
+          const u = d.data();
+          return `<tr>
+            <td><div style="display:flex;align-items:center;gap:8px">
+              ${u.photoURL ? `<img class="avatar" src="${u.photoURL}">` : `<div class="avatar-t">${initials(u.displayName||u.email||'?')}</div>`}
+              <span style="font-size:.81rem;font-weight:600">${u.displayName||u.email||'—'}</span>
+            </div></td>
+            <td><span style="font-size:.75rem;color:var(--dim)">${timeAgo(u.lastSeen)}</span></td>
+          </tr>`;
+        }).join('')}</tbody></table>`
+      : '<div class="tbl-empty">Aucun utilisateur récent</div>';
+
+    // Logs
+    $$('dashLogs').innerHTML = logsSnap.docs.length
+      ? logsSnap.docs.map(d => {
+          const l = d.data();
+          return `<div class="log-item">
+            <div class="log-ico"><i class="fa-solid fa-bolt"></i></div>
+            <div class="log-txt"><b>${l.action||'Action'}</b><span>${l.adminName||'?'} · ${timeAgo(l.ts)}</span></div>
+          </div>`;
+        }).join('')
+      : '<div class="empty-state"><i class="fa-solid fa-clock"></i><p>Aucune action récente</p></div>';
+
+    // App status
+    const cfg = cfgSnap.exists() ? cfgSnap.data() : {};
+    const apps = [
+      { id:'movie', label:'LevelMovie', icon:'fa-film', color:'blue' },
+      { id:'music', label:'LevelMusic', icon:'fa-music', color:'blue' },
+      { id:'ia',    label:'Level IA',   icon:'fa-robot', color:'purple' }
+    ];
+    $$('dashAppStatus').innerHTML = apps.map(a => {
+      const st = cfg[`${a.id}_status`] || 'active';
+      const pill = st === 'active' ? 'pill-g' : st === 'maintenance' ? 'pill-y' : 'pill-d';
+      const label = st === 'active' ? 'En ligne' : st === 'maintenance' ? 'Maintenance' : 'Bientôt';
+      return `<div class="card" style="margin-bottom:0">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:38px;height:38px;border-radius:var(--r12);background:rgba(${a.color==='purple'?'168,85,247':'59,130,246'},.1);display:flex;align-items:center;justify-content:center;color:var(--${a.color}); font-size:.9rem"><i class="fa-solid ${a.icon}"></i></div>
+          <div><div style="font-size:.87rem;font-weight:700">${a.label}</div>
+            <span class="pill ${pill}" style="margin-top:4px">${label}</span>
+          </div>
+          <button class="btn btn-g btn-xs" style="margin-left:auto" onclick="nav('config')"><i class="fa-solid fa-gear"></i></button>
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    console.error(e);
+    toast('Erreur de chargement', 'err');
+    $$('dashStats').innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--red);padding:20px">Erreur de lecture Firebase</div>';
+  }
+};
+
+// ══════════════════════════════════════════
+// MODULE 2 — UTILISATEURS
+// ══════════════════════════════════════════
+window.loadUsers = async function() {
+  $$('usersTbody').innerHTML = '<tr><td colspan="6" class="tbl-loading">Chargement…</td></tr>';
+  try {
+    const filter = $$('usersFilter').value;
+    let q = query(usersStatusCol(), limit(200));
+    const snap = await getDocs(q);
+
+    let users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (filter !== 'all') users = users.filter(u => u.status === filter);
+
+    // Also get keys
+    const keysSnap = await getDocs(collectionGroup(db, 'security'));
+    const keyMap = {};
+    keysSnap.docs.forEach(d => {
+      const data = d.data();
+      const uid = data.uid || d.ref.parent?.parent?.id;
+      if (uid) keyMap[uid] = data;
+    });
+
+    _usersCache = users.map(u => ({ ...u, keyData: keyMap[u.id] || keyMap[u.uid] }));
+    $$('userCount').textContent = `${_usersCache.length} utilisateur${_usersCache.length !== 1 ? 's' : ''}`;
+    renderUsersTable(_usersCache);
+
+  } catch(e) {
+    console.error(e);
+    $$('usersTbody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--red)">Erreur de lecture</td></tr>';
+    toast('Erreur chargement utilisateurs', 'err');
+  }
+};
+
+function renderUsersTable(users) {
+  if (!users.length) {
+    $$('usersTbody').innerHTML = '<tr><td colspan="6" class="tbl-empty">Aucun utilisateur trouvé</td></tr>';
+    return;
+  }
+  $$('usersTbody').innerHTML = users.map(u => {
+    const hasKey = !!u.keyData;
+    const keyDisplay = canDo('users_see_key')
+      ? (u.keyData?.apiKey || u.keyData?.key || '—')
+      : (hasKey ? maskKey(u.keyData?.apiKey || u.keyData?.key || '') : '—');
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:9px">
+        ${u.photoURL ? `<img class="avatar" src="${u.photoURL}">` : `<div class="avatar-t" style="font-size:.7rem">${initials(u.displayName||u.email||'?')}</div>`}
+        <div><div style="font-size:.82rem;font-weight:600">${u.displayName||'—'}</div><div style="font-size:.71rem;color:var(--dim)">${u.id.slice(0,12)}…</div></div>
+      </div></td>
+      <td style="font-size:.79rem;color:var(--muted)">${u.email||'—'}</td>
+      <td><code style="font-size:.71rem;color:var(--purple);background:rgba(168,85,247,.08);padding:2px 7px;border-radius:5px">${keyDisplay}</code></td>
+      <td>${statusPill(u.status||'active')}</td>
+      <td style="font-size:.77rem;color:var(--dim)">${fmtDate(u.createdAt||u.lastSeen)}</td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn btn-g btn-xs" onclick="openUserDetail('${u.id}')"><i class="fa-solid fa-eye"></i></button>
+        ${canDo('users_ban') ? `<button class="btn btn-y btn-xs" onclick="openBanModal('${u.id}')"><i class="fa-solid fa-ban"></i></button>` : ''}
+        ${canDo('users_delete') ? `<button class="btn btn-r btn-xs" onclick="confirmDeleteUser('${u.id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+window.filterUsers = function(q) {
+  if (!q) { renderUsersTable(_usersCache); return; }
+  const lq = q.toLowerCase();
+  const filtered = _usersCache.filter(u =>
+    (u.displayName||'').toLowerCase().includes(lq) ||
+    (u.email||'').toLowerCase().includes(lq) ||
+    (u.id||'').toLowerCase().includes(lq)
+  );
+  renderUsersTable(filtered);
+};
+
+window.openUserDetail = function(uid) {
+  const u = _usersCache.find(x => x.id === uid);
+  if (!u) return;
+  const kd = u.keyData || {};
+  $$('slideUserBd').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      ${u.photoURL ? `<img src="${u.photoURL}" style="width:54px;height:54px;border-radius:50%;object-fit:cover">` : `<div class="avatar-t" style="width:54px;height:54px;font-size:1rem">${initials(u.displayName||u.email||'?')}</div>`}
+      <div><div style="font-size:1rem;font-weight:700">${u.displayName||'—'}</div>
+        <div style="font-size:.8rem;color:var(--muted)">${u.email||'—'}</div>
+        <div style="margin-top:4px">${statusPill(u.status||'active')}</div>
+      </div>
+    </div>
+    <div class="section-title" style="margin-top:0">Informations</div>
+    <div class="info-row"><span class="key">UID</span><span class="val" style="font-size:.72rem">${uid}</span></div>
+    <div class="info-row"><span class="key">Pays</span><span class="val">${u.country||'—'}</span></div>
+    <div class="info-row"><span class="key">Ville</span><span class="val">${u.city||'—'}</span></div>
+    <div class="info-row"><span class="key">Appareil</span><span class="val">${u.device||u.userAgent?.slice(0,30)||'—'}</span></div>
+    <div class="info-row"><span class="key">Dernière connexion</span><span class="val">${fmtDateTime(u.lastSeen||u.lastLoginAt)}</span></div>
+    <div class="info-row"><span class="key">Inscription</span><span class="val">${fmtDate(u.createdAt)}</span></div>
+    <div class="section-title">Clé LVL</div>
+    <div class="info-row"><span class="key">Clé</span><span class="val" style="font-family:monospace;font-size:.75rem;color:var(--purple)">${canDo('users_see_key') ? (kd.apiKey||kd.key||'—') : maskKey(kd.apiKey||kd.key||'')}</span></div>
+    <div class="info-row"><span class="key">PIN configuré</span><span class="val">${kd.pinHash ? '✓ Oui' : '✗ Non'}</span></div>
+    <div class="info-row"><span class="key">Créée le</span><span class="val">${fmtDate(kd.keyCreatedAt)}</span></div>
+    <div class="info-row"><span class="key">Révoquée</span><span class="val">${kd.revoked ? `<span class="pill pill-r">Oui</span>` : '<span class="pill pill-g">Non</span>'}</span></div>
+  `;
+  const ft = $$('slideUserFt');
+  ft.innerHTML = '';
+  if (canDo('users_ban')) {
+    const banBtn = document.createElement('button');
+    banBtn.className = 'btn btn-y btn-sm';
+    banBtn.innerHTML = '<i class="fa-solid fa-ban"></i> Sanctionner';
+    banBtn.onclick = () => { closeSlide(); openBanModal(uid); };
+    ft.appendChild(banBtn);
+  }
+  if (canDo('keys_revoke') && kd.apiKey && !kd.revoked) {
+    const rvkBtn = document.createElement('button');
+    rvkBtn.className = 'btn btn-r btn-sm';
+    rvkBtn.innerHTML = '<i class="fa-solid fa-key"></i> Révoquer clé';
+    rvkBtn.onclick = () => revokeKey(uid, kd);
+    ft.appendChild(rvkBtn);
+  }
+  openSlide('slideUser');
+};
+
+window.confirmDeleteUser = function(uid) {
+  if (!canDo('users_delete')) return;
+  confirm_('Supprimer le compte', `Supprimer définitivement le compte ${uid.slice(0,12)}… ? Cette action est irréversible.`, async () => {
+    try {
+      await deleteDoc(doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'users_status', uid));
+      await logAction('Suppression compte', uid, 'Compte supprimé');
+      toast('Compte supprimé', 'ok');
+      loadUsers();
+    } catch(e) { toast('Erreur', 'err'); }
+  });
+};
+
+async function revokeKey(uid, kd) {
+  try {
+    // The security subcollection path
+    const secRef = doc(db, 'artifacts', APP_MAIN, 'users', uid, 'security', 'key');
+    await updateDoc(secRef, { revoked: true, revokedAt: serverTimestamp(), revokedBy: _user.email });
+    await logAction('Révocation clé', uid, `Clé ${kd.apiKey||kd.key} révoquée`);
+    toast('Clé révoquée', 'ok');
+    closeSlide();
+    loadUsers();
+  } catch(e) { toast('Erreur révocation clé', 'err'); }
+}
+
+// ══════════════════════════════════════════
+// MODULE 3 — CLÉS LVL
+// ══════════════════════════════════════════
+window.loadKeys = async function() {
+  $$('keysTbody').innerHTML = '<tr><td colspan="6" class="tbl-loading">Chargement…</td></tr>';
+  try {
+    const snap = await getDocs(collectionGroup(db, 'security'));
+    const filter = $$('keysFilter').value;
+    let keys = snap.docs.map(d => ({ id: d.id, ...d.data(), _ref: d.ref }));
+    if (filter === 'active')  keys = keys.filter(k => !k.revoked);
+    if (filter === 'revoked') keys = keys.filter(k => k.revoked);
+
+    $$('keysCount').textContent = `${keys.length} clé${keys.length !== 1 ? 's' : ''}`;
+
+    const actives  = keys.filter(k => !k.revoked).length;
+    const revoked  = keys.filter(k =>  k.revoked).length;
+    const withPin  = keys.filter(k =>  k.pinHash).length;
+    $$('keysStats').innerHTML = `
+      <div class="stat-card"><div class="sc-label">Total</div><div class="sc-val sc-p">${keys.length}</div></div>
+      <div class="stat-card"><div class="sc-label">Actives</div><div class="sc-val sc-g">${actives}</div></div>
+      <div class="stat-card"><div class="sc-label">Révoquées</div><div class="sc-val sc-r">${revoked}</div></div>
+      <div class="stat-card"><div class="sc-label">Avec PIN</div><div class="sc-val sc-b">${withPin}</div></div>
+    `;
+
+    $$('keysTbody').innerHTML = keys.length
+      ? keys.map(k => {
+          const uid = k.uid || k._ref.parent?.parent?.id || '—';
+          const keyVal = canDo('users_see_key') ? (k.apiKey||k.key||'—') : maskKey(k.apiKey||k.key||'');
+          return `<tr>
+            <td style="font-size:.78rem;color:var(--muted)">${k.displayName||k.email||uid.slice(0,12)||'—'}</td>
+            <td><code style="font-size:.72rem;color:var(--purple)">${keyVal}</code></td>
+            <td>${k.pinHash ? '<span class="pill pill-g">Oui</span>' : '<span class="pill pill-d">Non</span>'}</td>
+            <td>${k.revoked ? '<span class="pill pill-r">Révoquée</span>' : '<span class="pill pill-g">Active</span>'}</td>
+            <td style="font-size:.77rem;color:var(--dim)">${fmtDate(k.keyCreatedAt)}</td>
+            <td>${!k.revoked && canDo('keys_revoke') ? `<button class="btn btn-r btn-xs" onclick="confirmRevokeKey('${uid}')"><i class="fa-solid fa-ban"></i> Révoquer</button>` : '—'}</td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="6" class="tbl-empty">Aucune clé trouvée</td></tr>';
+
+  } catch(e) {
+    console.error(e);
+    toast('Erreur chargement clés', 'err');
+  }
+};
+
+window.confirmRevokeKey = function(uid) {
+  if (!canDo('keys_revoke')) return;
+  confirm_('Révoquer la clé', `Révoquer la clé de l'utilisateur ${uid.slice(0,12)}… ?`, async () => {
+    try {
+      const secRef = doc(db, 'artifacts', APP_MAIN, 'users', uid, 'security', 'key');
+      await updateDoc(secRef, { revoked: true, revokedAt: serverTimestamp(), revokedBy: _user.email });
+      await logAction('Révocation clé', uid, '');
+      toast('Clé révoquée', 'ok');
+      loadKeys();
+    } catch(e) { toast('Erreur', 'err'); }
+  });
+};
+
+// ══════════════════════════════════════════
+// MODULE 4 — MODÉRATION
+// ══════════════════════════════════════════
+window.loadModeration = function() { switchModTab(_currentModTab); };
+window.switchModTab = async function(tab) {
+  _currentModTab = tab;
+  ['accounts','ips','history'].forEach(t => {
+    const b = $$(`modTab-${t}`);
+    if (b) b.classList.toggle('on', t === tab);
+  });
+  const c = $$('modContent');
+  c.innerHTML = '<div class="tbl-loading">Chargement…</div>';
+
+  try {
+    if (tab === 'accounts') {
+      // Banned/suspended users from users_status
+      const snap = await getDocs(query(usersStatusCol(), where('status', 'in', ['banned','suspended']), limit(100)));
+      if (!snap.size) { c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-shield-halved"></i><p>Aucune sanction active</p></div>'; return; }
+      c.innerHTML = `<div class="tbl-wrap">
+        <table><thead><tr><th>Utilisateur</th><th>Email</th><th>Type</th><th>Raison</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody>${snap.docs.map(d => {
+          const u = d.data();
+          return `<tr>
+            <td style="font-size:.82rem;font-weight:600">${u.displayName||'—'}</td>
+            <td style="font-size:.78rem;color:var(--muted)">${u.email||'—'}</td>
+            <td>${statusPill(u.status)}</td>
+            <td style="font-size:.77rem;color:var(--dim)">${u.banReason||'—'}</td>
+            <td style="font-size:.77rem;color:var(--dim)">${fmtDate(u.bannedAt)}</td>
+            <td>${canDo('users_ban') ? `<button class="btn btn-g btn-xs" onclick="unbanUser('${d.id}')"><i class="fa-solid fa-unlock"></i> Débannir</button>` : '—'}</td>
+          </tr>`;
+        }).join('')}</tbody></table></div>`;
+
+    } else if (tab === 'ips') {
+      const snap = await getDocs(bannedIPsCol());
+      c.innerHTML = `<div style="margin-bottom:12px;display:flex;gap:8px">
+        <input type="text" id="newBanIP" class="form-input" style="max-width:240px" placeholder="Adresse IP">
+        <input type="text" id="newBanIPReason" class="form-input" style="max-width:220px" placeholder="Raison">
+        <button class="btn btn-p btn-sm" onclick="addBanIP()"><i class="fa-solid fa-plus"></i> Bloquer</button>
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>IP</th><th>Raison</th><th>Bloquée le</th><th>Actions</th></tr></thead>
+      <tbody>${snap.docs.map(d => {
+        const b = d.data();
+        return `<tr>
+          <td><code style="font-size:.8rem;color:var(--yellow)">${d.id}</code></td>
+          <td style="font-size:.77rem;color:var(--muted)">${b.reason||'—'}</td>
+          <td style="font-size:.77rem;color:var(--dim)">${fmtDate(b.bannedAt)}</td>
+          <td><button class="btn btn-g btn-xs" onclick="unbanIP('${d.id}')"><i class="fa-solid fa-unlock"></i></button></td>
+        </tr>`;
+      }).join('')||'<tr><td colspan="4" class="tbl-empty">Aucune IP bloquée</td></tr>'}</tbody></table></div>`;
+
+    } else if (tab === 'history') {
+      const snap = await getDocs(query(banHistCol(), orderBy('ts','desc'), limit(50)));
+      c.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Cible</th><th>Type</th><th>Raison</th><th>Admin</th><th>Date</th></tr></thead>
+      <tbody>${snap.docs.map(d => {
+        const b = d.data();
+        return `<tr>
+          <td style="font-size:.8rem;font-weight:600">${b.targetEmail||b.target||'—'}</td>
+          <td>${statusPill(b.type||'banned')}</td>
+          <td style="font-size:.77rem;color:var(--dim)">${b.reason||'—'}</td>
+          <td style="font-size:.77rem;color:var(--muted)">${b.adminEmail||'—'}</td>
+          <td style="font-size:.77rem;color:var(--dim)">${fmtDateTime(b.ts)}</td>
+        </tr>`;
+      }).join('')||'<tr><td colspan="5" class="tbl-empty">Aucun historique</td></tr>'}</tbody></table></div>`;
+    }
+  } catch(e) {
+    console.error(e);
+    c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Erreur de lecture</p></div>';
+  }
+};
+
+window.openBanModal = function(uid) {
+  if (!canDo('users_ban')) { toast('Permission insuffisante', 'err'); return; }
+  $$('banTargetUid').value = uid || '';
+  openModal('modalBan');
+};
+window.executeBan = async function() {
+  const uid = $$('banTargetUid').value;
+  const type = $$('banType').value;
+  const reason = $$('banReasonCustom').value || $$('banReason').value;
+  const duration = $$('banDuration').value;
+
+  try {
+    if (uid) {
+      // Update user status in users_status
+      const usRef = doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'users_status', uid);
+      await updateDoc(usRef, {
+        status: type, banReason: reason,
+        bannedAt: serverTimestamp(), bannedBy: _user.email,
+        banExpires: duration !== 'permanent' ? duration : null
+      });
+    }
+    // Write to ban_history
+    await addDoc(banHistCol(), {
+      target: uid || 'manual',
+      type, reason, duration,
+      adminUid: _user.uid, adminEmail: _user.email,
+      ts: serverTimestamp()
+    });
+    await logAction(`Ban ${type}`, uid, reason);
+    closeModal('modalBan');
+    toast('Sanction appliquée', 'ok');
+    if (_currentModule === 'users') loadUsers();
+    if (_currentModule === 'moderation') loadModeration();
+  } catch(e) {
+    console.error(e);
+    toast('Erreur lors du ban', 'err');
+  }
+};
+
+window.unbanUser = async function(uid) {
+  try {
+    const usRef = doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'users_status', uid);
+    await updateDoc(usRef, { status: 'active', bannedAt: null, banReason: null });
+    await logAction('Débannissement', uid, '');
+    toast('Compte débanni', 'ok');
+    loadModeration();
+  } catch(e) { toast('Erreur', 'err'); }
+};
+window.addBanIP = async function() {
+  const ip = $$('newBanIP')?.value?.trim();
+  const reason = $$('newBanIPReason')?.value?.trim() || '—';
+  if (!ip) { toast('IP requise', 'warn'); return; }
+  try {
+    await setDoc(doc(db, 'artifacts', APP_ECO, 'banned_ips', ip), {
+      reason, bannedAt: serverTimestamp(), bannedBy: _user.email
+    });
+    await logAction('Ban IP', ip, reason);
+    toast('IP bloquée', 'ok');
+    switchModTab('ips');
+  } catch(e) { toast('Erreur', 'err'); }
+};
+window.unbanIP = async function(ip) {
+  try {
+    await deleteDoc(doc(db, 'artifacts', APP_ECO, 'banned_ips', ip));
+    await logAction('Débannissement IP', ip, '');
+    toast('IP débloquée', 'ok');
+    switchModTab('ips');
+  } catch(e) { toast('Erreur', 'err'); }
+};
+
+// ══════════════════════════════════════════
+// MODULE 5 — SIGNALEMENTS
+// ══════════════════════════════════════════
+window.loadReports = async function() {
+  $$('reportsTbody').innerHTML = '<tr><td colspan="6" class="tbl-loading">Chargement…</td></tr>';
+  try {
+    const filter = $$('reportsFilter').value;
+    let q = query(reportsCol(), orderBy('createdAt','desc'), limit(100));
+    const snap = await getDocs(q);
+    let reports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (filter !== 'all') reports = reports.filter(r => (r.status||'pending') === filter);
+    $$('reportsCount').textContent = `${reports.length} signalement${reports.length !== 1 ? 's' : ''}`;
+
+    // Badge
+    const pending = snap.docs.filter(d => !d.data().status || d.data().status === 'pending').length;
+    const badge = $$('badge-reports');
+    if (badge) { badge.textContent = pending; badge.classList.toggle('hidden', pending === 0); }
+
+    $$('reportsTbody').innerHTML = reports.length
+      ? reports.map(r => `<tr>
+          <td><span class="pill pill-y">${r.type||'bug'}</span></td>
+          <td style="font-size:.78rem">${r.reporterEmail||r.reporterUid?.slice(0,10)||'—'}</td>
+          <td style="font-size:.77rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis">${(r.description||'—').slice(0,80)}</td>
+          <td style="font-size:.77rem;color:var(--dim)">${fmtDate(r.createdAt)}</td>
+          <td>${r.status === 'resolved' ? '<span class="pill pill-g">Résolu</span>' : r.status === 'ignored' ? '<span class="pill pill-d">Ignoré</span>' : '<span class="pill pill-y">En attente</span>'}</td>
+          <td><div style="display:flex;gap:4px">
+            <button class="btn btn-g btn-xs" onclick="resolveReport('${r.id}','resolved')"><i class="fa-solid fa-check"></i></button>
+            <button class="btn btn-g btn-xs" onclick="resolveReport('${r.id}','ignored')"><i class="fa-solid fa-xmark"></i></button>
+          </div></td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" class="tbl-empty">Aucun signalement</td></tr>';
+  } catch(e) { toast('Erreur chargement signalements', 'err'); }
+};
+window.resolveReport = async function(id, status) {
+  try {
+    await updateDoc(doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'reports', id), {
+      status, resolvedBy: _user.email, resolvedAt: serverTimestamp()
+    });
+    await logAction(`Signalement ${status}`, id, '');
+    toast(status === 'resolved' ? 'Résolu ✓' : 'Ignoré', 'ok');
+    loadReports();
+  } catch(e) { toast('Erreur', 'err'); }
+};
+
+// ══════════════════════════════════════════
+// MODULE 6 — AVIS
+// ══════════════════════════════════════════
+window.loadReviews = async function() {
+  const c = $$('reviewsContent');
+  c.innerHTML = '<div class="tbl-loading">Chargement…</div>';
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'reviews'),
+      orderBy('createdAt','desc'), limit(100)
+    ));
+    if (!snap.size) { c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-star"></i><p>Aucun avis pour le moment</p></div>'; return; }
+    const reviews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const avg = reviews.reduce((s,r) => s + (r.rating||0), 0) / reviews.length;
+    c.innerHTML = `
+      <div class="stats-row" style="margin-bottom:20px">
+        <div class="stat-card"><div class="sc-label">Note moyenne</div><div class="sc-val sc-y">${avg.toFixed(1)} ★</div></div>
+        <div class="stat-card"><div class="sc-label">Total avis</div><div class="sc-val sc-p">${reviews.length}</div></div>
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>Utilisateur</th><th>Note</th><th>Commentaire</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody>${reviews.map(r => `<tr>
+        <td style="font-size:.82rem;font-weight:600">${r.authorName||'—'}</td>
+        <td><span style="color:var(--yellow)">${'★'.repeat(r.rating||0)}${'☆'.repeat(5-(r.rating||0))}</span></td>
+        <td style="font-size:.77rem;color:var(--muted);max-width:250px">${(r.comment||'—').slice(0,100)}</td>
+        <td style="font-size:.75rem;color:var(--dim)">${fmtDate(r.createdAt)}</td>
+        <td><button class="btn btn-r btn-xs" onclick="deleteReview('${r.id}')"><i class="fa-solid fa-trash"></i></button></td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch(e) { c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Erreur de lecture</p></div>'; }
+};
+window.deleteReview = async function(id) {
+  confirm_('Supprimer l\'avis', 'Cet avis sera supprimé définitivement.', async () => {
+    try {
+      await deleteDoc(doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'reviews', id));
+      await logAction('Suppression avis', id, '');
+      toast('Avis supprimé', 'ok');
+      loadReviews();
+    } catch(e) { toast('Erreur', 'err'); }
+  });
+};
+
+// ══════════════════════════════════════════
+// MODULE 7 — WATCH PARTIES
+// ══════════════════════════════════════════
+window.loadParties = async function() {
+  const c = $$('partiesContent');
+  c.innerHTML = '<div class="tbl-loading">Chargement…</div>';
+  try {
+    const snap = await getDocs(collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'parties'));
+    if (!snap.size) { c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-film"></i><p>Aucune Watch Party active</p></div>'; return; }
+    const parties = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    c.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Code</th><th>Hôte</th><th>Film en cours</th><th>Membres</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>${parties.map(p => `<tr>
+      <td><code style="font-size:.8rem;color:var(--purple)">${p.roomCode||p.id.slice(0,8)}</code></td>
+      <td style="font-size:.81rem">${p.hostName||p.hostEmail||'—'}</td>
+      <td style="font-size:.78rem;color:var(--muted)">${p.movieTitle||'—'}</td>
+      <td style="font-size:.82rem;font-weight:700">${(p.members||[]).length}</td>
+      <td>${p.status === 'active' ? '<span class="pill pill-g">Active</span>' : '<span class="pill pill-d">Terminée</span>'}</td>
+      <td>${p.status === 'active' ? `<button class="btn btn-r btn-xs" onclick="closeParty('${p.id}')"><i class="fa-solid fa-stop"></i> Fermer</button>` : '—'}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+  } catch(e) { c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Erreur de lecture</p></div>'; }
+};
+window.closeParty = async function(id) {
+  confirm_('Fermer la salle', 'La Watch Party sera fermée pour tous les membres.', async () => {
+    try {
+      await updateDoc(doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'parties', id), {
+        status: 'closed', closedAt: serverTimestamp(), closedBy: _user.email
+      });
+      await logAction('Fermeture Watch Party', id, '');
+      toast('Salle fermée', 'ok');
+      loadParties();
+    } catch(e) { toast('Erreur', 'err'); }
+  });
+};
+
+// ══════════════════════════════════════════
+// MODULE 8 — CONFIG LIVE
+// ══════════════════════════════════════════
+let _cfgData = {};
+const APPS_CFG = [
+  { id:'movie', label:'LevelMovie' },
+  { id:'music', label:'LevelMusic' },
+  { id:'ia',    label:'Level IA' }
+];
+
+window.loadConfig = async function() {
+  try {
+    const snap = await getDoc(cfgDoc());
+    _cfgData = snap.exists() ? snap.data() : {};
+    const d = _cfgData;
+
+    $$('cfg-maintenance').checked  = !!d.globalMaintenance;
+    $$('cfg-maint-msg').value      = d.maintenanceMessage || '';
+    $$('cfg-tools-badge').value    = d.tools_badge || '';
+    $$('cfg-ia-badge').value       = d.ia_fab_badge || '';
+
+    const heroImgs = Array.isArray(d.heroImages) ? d.heroImages.join('\n') : (d.heroImages || '');
+    $$('cfg-hero-imgs').value = heroImgs;
+
+    $$('cfgAppsGrid').innerHTML = APPS_CFG.map(a => `
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title" style="margin-bottom:10px">${a.label}</div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Statut</label>
+          <select class="form-select" id="cfg-${a.id}-status">
+            <option value="active" ${(d[a.id+'_status']||'active')==='active'?'selected':''}>En ligne</option>
+            <option value="maintenance" ${d[a.id+'_status']==='maintenance'?'selected':''}>Maintenance</option>
+            <option value="coming_soon" ${d[a.id+'_status']==='coming_soon'?'selected':''}>Bientôt</option>
+          </select>
+        </div>
+      </div>`).join('');
+
+    $$('cfgAccessGrid').innerHTML = APPS_CFG.map(a => `
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title" style="margin-bottom:10px">${a.label}</div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Accès</label>
+          <select class="form-select" id="cfg-${a.id}-access">
+            <option value="key"  ${(d[a.id+'_access']||'key')==='key'?'selected':''}>Clé requise</option>
+            <option value="free" ${d[a.id+'_access']==='free'?'selected':''}>Gratuit (libre)</option>
+          </select>
+        </div>
+      </div>`).join('');
+
+    toast('Config chargée', 'ok');
+  } catch(e) {
+    console.error(e);
+    toast('Erreur chargement config', 'err');
+  }
+};
+
+window.saveConfig = async function() {
+  if (!canDo('config_write')) { toast('Permission insuffisante', 'err'); return; }
+  try {
+    const heroRaw = $$('cfg-hero-imgs').value;
+    const heroImgs = heroRaw.split('\n').map(s => s.trim()).filter(Boolean);
+    const updates = {
+      globalMaintenance: $$('cfg-maintenance').checked,
+      maintenanceMessage: $$('cfg-maint-msg').value,
+      heroImages: heroImgs,
+      tools_badge: $$('cfg-tools-badge').value,
+      ia_fab_badge: $$('cfg-ia-badge').value
+    };
+    APPS_CFG.forEach(a => {
+      updates[`${a.id}_status`]  = $$(  `cfg-${a.id}-status`)?.value  || 'active';
+      updates[`${a.id}_access`] = $$(`cfg-${a.id}-access`)?.value || 'key';
+    });
+    await setDoc(cfgDoc(), updates, { merge: true });
+    await logAction('Config mise à jour', 'apps config', JSON.stringify(updates).slice(0,200));
+    toast('Config appliquée sur le site !', 'ok');
+  } catch(e) {
+    console.error(e);
+    toast('Erreur sauvegarde config', 'err');
+  }
+};
+
+// ══════════════════════════════════════════
+// MODULE 9 — OUTILS HUB
+// ══════════════════════════════════════════
+window.loadTools = async function() {
+  $$('toolsGrid').innerHTML = '<div class="tbl-loading" style="grid-column:1/-1">Chargement…</div>';
+  try {
+    const snap = await getDoc(toolsDoc());
+    const tools = snap.exists() ? (snap.data().tools || []) : [];
+    if (!tools.length) {
+      $$('toolsGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-wrench"></i><p>Aucun outil configuré</p></div>';
+      return;
+    }
+    $$('toolsGrid').innerHTML = tools.map((t, i) => `
+      <div class="card" style="margin-bottom:0">
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+          <div style="width:38px;height:38px;border-radius:var(--r12);background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:var(--purple);flex-shrink:0">
+            ${t.icon?.startsWith('fa') ? `<i class="fa-solid ${t.icon}"></i>` : `<span>${t.icon||'🔧'}</span>`}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.86rem;font-weight:700">${t.name||'—'}</div>
+            <div style="font-size:.74rem;color:var(--muted);margin-top:2px">${(t.description||'').slice(0,60)}</div>
+          </div>
+          ${t.active ? '<span class="pill pill-g" style="flex-shrink:0">Actif</span>' : '<span class="pill pill-d" style="flex-shrink:0">Inactif</span>'}
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-g btn-xs" onclick="openToolModal(${i})"><i class="fa-solid fa-pencil"></i></button>
+          <button class="btn btn-r btn-xs" onclick="deleteTool(${i})"><i class="fa-solid fa-trash"></i></button>
+          <a href="${t.url||'#'}" target="_blank" class="btn btn-g btn-xs"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+        </div>
+      </div>`).join('');
+  } catch(e) { toast('Erreur chargement outils', 'err'); }
+};
+
+window.openToolModal = async function(idx) {
+  $$('toolModalTitle').textContent = idx === null ? 'Ajouter un outil' : 'Modifier l\'outil';
+  $$('toolEditId').value = idx !== null ? idx : '';
+  if (idx !== null) {
+    const snap = await getDoc(toolsDoc());
+    const tools = snap.exists() ? (snap.data().tools||[]) : [];
+    const t = tools[idx] || {};
+    $$('toolName').value = t.name || '';
+    $$('toolDesc').value = t.description || '';
+    $$('toolUrl').value  = t.url || '';
+    $$('toolIcon').value = t.icon || '';
+    $$('toolBadge').value = t.badge || '';
+  } else {
+    ['toolName','toolDesc','toolUrl','toolIcon','toolBadge'].forEach(id => $$(id).value = '');
+  }
+  openModal('modalTool');
+};
+window.saveTool = async function() {
+  try {
+    const snap = await getDoc(toolsDoc());
+    let tools = snap.exists() ? (snap.data().tools||[]) : [];
+    const idx = $$('toolEditId').value;
+    const toolData = {
+      name: $$('toolName').value, description: $$('toolDesc').value,
+      url: $$('toolUrl').value, icon: $$('toolIcon').value,
+      badge: $$('toolBadge').value, active: true
+    };
+    if (idx !== '') tools[parseInt(idx)] = toolData;
+    else tools.push(toolData);
+    await setDoc(toolsDoc(), { tools }, { merge: true });
+    await logAction('Outil ' + (idx !== '' ? 'modifié' : 'ajouté'), toolData.name, '');
+    closeModal('modalTool');
+    toast('Outil sauvegardé', 'ok');
+    loadTools();
+  } catch(e) { toast('Erreur sauvegarde', 'err'); }
+};
+window.deleteTool = async function(idx) {
+  confirm_('Supprimer l\'outil', 'Cet outil sera retiré de l\'hub.', async () => {
+    try {
+      const snap = await getDoc(toolsDoc());
+      let tools = snap.exists() ? (snap.data().tools||[]) : [];
+      tools.splice(idx, 1);
+      await setDoc(toolsDoc(), { tools }, { merge: true });
+      toast('Outil supprimé', 'ok');
+      loadTools();
+    } catch(e) { toast('Erreur', 'err'); }
+  });
+};
+
+// Services Hub — similar to tools
+window.loadServices = async function() {
+  $$('servicesGrid').innerHTML = '<div class="tbl-loading" style="grid-column:1/-1">Chargement…</div>';
+  try {
+    const snap = await getDoc(servDoc());
+    const services = snap.exists() ? (snap.data().services || []) : [];
+    $$('servicesGrid').innerHTML = services.length
+      ? services.map((s, i) => `<div class="card" style="margin-bottom:0">
+          <div style="font-size:.88rem;font-weight:700;margin-bottom:4px">${s.name||'—'}</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-bottom:10px">${(s.description||'').slice(0,80)}</div>
+          <div style="font-size:.74rem;color:var(--dim);margin-bottom:10px">${s.price||''}</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-g btn-xs" onclick="openServiceModal(${i})"><i class="fa-solid fa-pencil"></i></button>
+            <button class="btn btn-r btn-xs" onclick="deleteService(${i})"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>`).join('')
+      : '<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-box"></i><p>Aucun service configuré</p></div>';
+  } catch(e) { toast('Erreur chargement services', 'err'); }
+};
+window.openServiceModal = window.openToolModal; // reuse tool modal for now
+window.saveService = async function() {
+  try {
+    const snap = await getDoc(servDoc());
+    let services = snap.exists() ? (snap.data().services||[]) : [];
+    const idx = $$('toolEditId').value;
+    const sData = {
+      name: $$('toolName').value, description: $$('toolDesc').value,
+      url: $$('toolUrl').value, price: $$('toolBadge').value, active: true
+    };
+    if (idx !== '') services[parseInt(idx)] = sData;
+    else services.push(sData);
+    await setDoc(servDoc(), { services }, { merge: true });
+    closeModal('modalTool');
+    toast('Service sauvegardé', 'ok');
+    loadServices();
+  } catch(e) { toast('Erreur', 'err'); }
+};
+window.deleteService = async function(idx) {
+  confirm_('Supprimer le service', 'Ce service sera retiré de l\'hub.', async () => {
+    try {
+      const snap = await getDoc(servDoc());
+      let services = snap.exists() ? (snap.data().services||[]) : [];
+      services.splice(idx, 1);
+      await setDoc(servDoc(), { services }, { merge: true });
+      toast('Service supprimé', 'ok');
+      loadServices();
+    } catch(e) { toast('Erreur', 'err'); }
+  });
+};
+
+// ══════════════════════════════════════════
+// MODULE 11 — NOTIFICATIONS
+// ══════════════════════════════════════════
+window.switchNotifTab = function(tab) {
+  _currentNotifTab = tab;
+  $$('notifSendPanel').classList.toggle('hidden', tab !== 'send');
+  $$('notifHistoryPanel').classList.toggle('hidden', tab !== 'history');
+  $$('notifTab-send').classList.toggle('on', tab === 'send');
+  $$('notifTab-history').classList.toggle('on', tab === 'history');
+  if (tab === 'history') loadNotifHistory();
+};
+window.setNotifTarget = function(t) {
+  _notifTarget = t;
+  $$('nt-all').classList.toggle('on', t === 'all');
+  $$('nt-user').classList.toggle('on', t === 'user');
+  $$('notifUserTarget').classList.toggle('hidden', t !== 'user');
+};
+window.toggleNotifType = function(type) {
+  _notifTypes[type] = !_notifTypes[type];
+  $$(`btnNotif${type === 'inapp' ? 'InApp' : 'Push'}`).classList.toggle('btn-p', _notifTypes[type]);
+  $$(`${type === 'inapp' ? 'inapp' : 'push'}Check`).textContent = _notifTypes[type] ? ' ✓' : '';
+};
+window.sendNotification = async function() {
+  const title = $$('notifTitle').value.trim();
+  const body  = $$('notifBody').value.trim();
+  if (!title || !body) { toast('Titre et corps requis', 'warn'); return; }
+  if (!_notifTypes.inapp && !_notifTypes.push) { toast('Sélectionne au moins un type', 'warn'); return; }
+
+  try {
+    const notifData = {
+      title, body,
+      image: $$('notifImage').value.trim() || null,
+      url: $$('notifUrl').value.trim() || 'https://levelup-ecosystem.com',
+      target: _notifTarget,
+      targetUid: _notifTarget === 'user' ? $$('notifTargetUid').value.trim() : null,
+      types: { ..._notifTypes },
+      sentBy: _user.email,
+      sentAt: serverTimestamp()
+    };
+
+    // Write in-app notification
+    if (_notifTypes.inapp) {
+      await addDoc(notifsCol(), notifData);
+    }
+
+    // Send push via API
+    if (_notifTypes.push && canDo('notifications_push')) {
+      try {
+        const res = await fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, body, image: notifData.image, url: notifData.url,
+            target: _notifTarget, targetUid: notifData.targetUid })
+        });
+        if (!res.ok) throw new Error('API error');
+      } catch(e) {
+        toast('Push API échoué (in-app envoyé quand même)', 'warn');
+      }
+    }
+
+    // Log
+    await addDoc(collection(db, 'artifacts', APP_ECO, 'notif_history'), notifData);
+    await logAction('Notification envoyée', `target: ${_notifTarget}`, title);
+    toast('Notification envoyée !', 'ok');
+    ['notifTitle','notifBody','notifImage'].forEach(id => $$(id).value = '');
+
+  } catch(e) {
+    console.error(e);
+    toast('Erreur envoi notification', 'err');
+  }
+};
+window.loadNotifHistory = async function() {
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'artifacts', APP_ECO, 'notif_history'),
+      orderBy('sentAt','desc'), limit(50)
+    ));
+    $$('notifHistTbody').innerHTML = snap.docs.length
+      ? snap.docs.map(d => {
+          const n = d.data();
+          const types = [n.types?.inapp && 'In-App', n.types?.push && 'Push'].filter(Boolean).join(' + ');
+          return `<tr>
+            <td style="font-size:.83rem;font-weight:600">${n.title||'—'}</td>
+            <td><span class="pill pill-p">${types||'—'}</span></td>
+            <td style="font-size:.77rem">${n.target === 'all' ? 'Tous' : n.targetUid||'—'}</td>
+            <td style="font-size:.77rem;color:var(--muted)">${n.sentBy||'—'}</td>
+            <td style="font-size:.75rem;color:var(--dim)">${fmtDateTime(n.sentAt)}</td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="5" class="tbl-empty">Aucun historique</td></tr>';
+  } catch(e) {}
+};
+
+// ══════════════════════════════════════════
+// MODULE 12 — PROMPT IA
+// ══════════════════════════════════════════
+window.loadPrompt = async function() {
+  try {
+    const snap = await getDoc(promptDoc());
+    const d = snap.exists() ? snap.data() : {};
+    $$('promptEditor').value = d.prompt || d.content || '';
+    updatePromptChars();
+
+    // History
+    const histSnap = await getDocs(query(
+      collection(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt_history'),
+      orderBy('savedAt','desc'), limit(5)
+    ));
+    $$('promptHistory').innerHTML = histSnap.docs.length
+      ? histSnap.docs.map(d => {
+          const h = d.data();
+          return `<div class="card" style="margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div>
+                <div style="font-size:.8rem;font-weight:600">${fmtDateTime(h.savedAt)}</div>
+                <div style="font-size:.73rem;color:var(--dim)">${(h.prompt||h.content||'').slice(0,60)}…</div>
+              </div>
+              <button class="btn btn-g btn-xs" onclick="restorePrompt('${d.id}')"><i class="fa-solid fa-rotate-left"></i></button>
+            </div>
+          </div>`;
+        }).join('')
+      : '<div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><p>Aucun historique</p></div>';
+  } catch(e) { toast('Erreur chargement prompt', 'err'); }
+};
+window.updatePromptChars = function() {
+  const len = ($$('promptEditor').value||'').length;
+  $$('promptChars').textContent = `${len.toLocaleString('fr')} caractères`;
+};
+$$('promptEditor')?.addEventListener('input', window.updatePromptChars);
+
+window.savePrompt = async function() {
+  if (!canDo('prompt_write')) { toast('Permission insuffisante', 'err'); return; }
+  const content = $$('promptEditor').value;
+  if (!content.trim()) { toast('Le prompt ne peut pas être vide', 'warn'); return; }
+  try {
+    // Save history first
+    const cur = await getDoc(promptDoc());
+    if (cur.exists()) {
+      const curData = cur.data();
+      await addDoc(collection(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt_history'), {
+        ...curData, savedAt: serverTimestamp()
+      });
+    }
+    // Save new
+    await setDoc(promptDoc(), { prompt: content, updatedAt: serverTimestamp(), updatedBy: _user.email });
+    await logAction('Prompt IA mis à jour', 'ia_prompt', `${content.length} chars`);
+    toast('Prompt sauvegardé !', 'ok');
+    loadPrompt();
+  } catch(e) { toast('Erreur sauvegarde prompt', 'err'); }
+};
+window.restorePrompt = async function(histId) {
+  confirm_('Restaurer cette version', 'Le prompt actuel sera remplacé par cette version.', async () => {
+    try {
+      const snap = await getDoc(doc(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt_history', histId));
+      const d = snap.data();
+      $$('promptEditor').value = d.prompt || d.content || '';
+      updatePromptChars();
+      toast('Version restaurée dans l\'éditeur — sauvegardez pour appliquer', 'info');
+    } catch(e) { toast('Erreur restauration', 'err'); }
+  });
+};
+window.testPrompt = async function() {
+  const prompt = $$('promptEditor').value.trim();
+  if (!prompt) { toast('Éditeur vide', 'warn'); return; }
+  const r = $$('promptTestResult');
+  const t = $$('promptTestText');
+  r.classList.remove('hidden');
+  t.textContent = 'Test en cours…';
+  // This would require a backend endpoint; for now just confirm the prompt length
+  setTimeout(() => {
+    t.textContent = `Prompt de ${prompt.length} caractères chargé. Connectez un endpoint /api/test-prompt pour tester contre Gemini.`;
+  }, 800);
+};
+
+// ══════════════════════════════════════════
+// MODULE 13 — BUGS
+// ══════════════════════════════════════════
+window.loadBugs = async function() {
+  $$('bugsTbody').innerHTML = '<tr><td colspan="6" class="tbl-loading">Chargement…</td></tr>';
+  try {
+    const filter = $$('bugsFilter').value;
+    const snap = await getDocs(query(bugsCol(), orderBy('timestamp','desc'), limit(200)));
+    let bugs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (filter === 'open')     bugs = bugs.filter(b => !b.resolved);
+    if (filter === 'resolved') bugs = bugs.filter(b =>  b.resolved);
+
+    $$('bugsCount').textContent = `${bugs.length} erreur${bugs.length !== 1 ? 's' : ''}`;
+
+    const today = bugs.filter(b => {
+      const t = b.timestamp?.seconds ? new Date(b.timestamp.seconds*1000) : new Date(b.timestamp||0);
+      return Date.now() - t.getTime() < 86400000;
+    }).length;
+    $$('bugsStats').innerHTML = `
+      <div class="stat-card"><div class="sc-label">Total</div><div class="sc-val sc-r">${bugs.length}</div></div>
+      <div class="stat-card"><div class="sc-label">Aujourd'hui</div><div class="sc-val sc-y">${today}</div></div>
+      <div class="stat-card"><div class="sc-label">Résolues</div><div class="sc-val sc-g">${bugs.filter(b=>b.resolved).length}</div></div>
+    `;
+
+    $$('bugsTbody').innerHTML = bugs.length
+      ? bugs.map(b => `<tr>
+          <td><span class="pill ${b.type === 'js_error' ? 'pill-r' : 'pill-y'}">${b.type||'error'}</span></td>
+          <td style="font-size:.77rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis">${(b.message||'—').slice(0,70)}</td>
+          <td style="font-size:.75rem;color:var(--dim)">${b.userEmail||b.userUid?.slice(0,10)||'—'}</td>
+          <td style="font-size:.75rem;color:var(--dim)">${fmtDateTime(b.timestamp)}</td>
+          <td>${b.resolved ? '<span class="pill pill-g">Résolu</span>' : '<span class="pill pill-r">Ouvert</span>'}</td>
+          <td><div style="display:flex;gap:4px">
+            ${!b.resolved ? `<button class="btn btn-g btn-xs" onclick="resolveBug('${b.id}')"><i class="fa-solid fa-check"></i></button>` : ''}
+            <button class="btn btn-r btn-xs" onclick="deleteBug('${b.id}')"><i class="fa-solid fa-trash"></i></button>
+          </div></td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" class="tbl-empty">Aucune erreur trouvée</td></tr>';
+  } catch(e) { toast('Erreur chargement bugs', 'err'); }
+};
+window.resolveBug = async function(id) {
+  try {
+    await updateDoc(doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'error_logs', id), {
+      resolved: true, resolvedBy: _user.email, resolvedAt: serverTimestamp()
+    });
+    await logAction('Bug résolu', id, '');
+    toast('Marqué résolu', 'ok');
+    loadBugs();
+  } catch(e) { toast('Erreur', 'err'); }
+};
+window.deleteBug = async function(id) {
+  confirm_('Supprimer cette erreur', 'Ce log sera supprimé.', async () => {
+    try {
+      await deleteDoc(doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'error_logs', id));
+      toast('Supprimé', 'ok');
+      loadBugs();
+    } catch(e) { toast('Erreur', 'err'); }
+  });
+};
+window.exportBugsCSV = async function() {
+  try {
+    const snap = await getDocs(query(bugsCol(), orderBy('timestamp','desc'), limit(500)));
+    const rows = [['type','message','user','url','device','date','resolved']];
+    snap.docs.forEach(d => {
+      const b = d.data();
+      rows.push([b.type||'',b.message||'',b.userEmail||b.userUid||'',b.url||'',b.userAgent||'',fmtDateTime(b.timestamp),b.resolved?'oui':'non']);
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = `bugs_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    toast('CSV exporté', 'ok');
+  } catch(e) { toast('Erreur export', 'err'); }
+};
+
+// ══════════════════════════════════════════
+// MODULE 14 — ANALYTICS
+// ══════════════════════════════════════════
+window.loadAnalytics = async function() {
+  const c = $$('analyticsContent');
+  c.innerHTML = '<div class="tbl-loading">Chargement des données…</div>';
+  try {
+    const snap = await getDocs(query(usersStatusCol(), limit(500)));
+    const users = snap.docs.map(d => d.data());
+
+    // Countries
+    const countryCounts = {};
+    users.forEach(u => {
+      const cc = u.country || 'Inconnu';
+      countryCounts[cc] = (countryCounts[cc]||0) + 1;
+    });
+    const topCountries = Object.entries(countryCounts).sort((a,b) => b[1]-a[1]).slice(0,8);
+
+    // Devices
+    const mobile = users.filter(u => /mobile|android|iphone/i.test(u.userAgent||'')).length;
+    const desktop = users.length - mobile;
+
+    // Logins by day (last 7 days)
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const label = d.toLocaleDateString('fr-FR', { weekday:'short' });
+      const count = users.filter(u => {
+        const ls = u.lastSeen;
+        if (!ls) return false;
+        const t = ls.seconds ? new Date(ls.seconds*1000) : new Date(ls);
+        const diff = d.getTime() - t.getTime();
+        return diff >= 0 && diff < 86400000;
+      }).length;
+      days.push({ label, count });
+    }
+    const maxCount = Math.max(...days.map(d => d.count), 1);
+
+    c.innerHTML = `
+      <div class="stats-row" style="margin-bottom:24px">
+        <div class="stat-card"><div class="sc-label">Utilisateurs total</div><div class="sc-val sc-p">${users.length}</div></div>
+        <div class="stat-card"><div class="sc-label">Mobile</div><div class="sc-val sc-b">${mobile}</div><div class="sc-sub">${Math.round(mobile/users.length*100)||0}%</div></div>
+        <div class="stat-card"><div class="sc-label">Desktop</div><div class="sc-val sc-g">${desktop}</div><div class="sc-sub">${Math.round(desktop/users.length*100)||0}%</div></div>
+        <div class="stat-card"><div class="sc-label">Pays distincts</div><div class="sc-val sc-y">${Object.keys(countryCounts).length}</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="tbl-wrap" style="padding:20px">
+          <div class="tbl-title" style="margin-bottom:16px">Activité 7 jours</div>
+          <div class="bar-chart">
+            ${days.map(d => `<div class="bar-item">
+              <div class="bar-fill" style="height:${Math.round(d.count/maxCount*100)||4}%"></div>
+              <div class="bar-label">${d.label}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+        <div class="tbl-wrap" style="padding:20px">
+          <div class="tbl-title" style="margin-bottom:12px">Top pays</div>
+          ${topCountries.map(([c, n]) => `
+            <div class="country-row">
+              <span style="width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem">${c}</span>
+              <div class="country-bar"><div class="country-fill" style="width:${Math.round(n/topCountries[0][1]*100)}%"></div></div>
+              <span style="font-size:.78rem;font-weight:600;width:24px;text-align:right">${n}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    `;
+  } catch(e) {
+    c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Erreur de lecture analytics</p></div>';
+    toast('Erreur analytics', 'err');
+  }
+};
+
+// ══════════════════════════════════════════
+// MODULE 15 — ÉQUIPE ADMIN
+// ══════════════════════════════════════════
+window.loadTeam = async function() {
+  if (!_profile?.isAdminSuper) {
+    $$('teamTbody').innerHTML = '<tr><td colspan="6" class="tbl-empty" style="color:var(--red)">Réservé aux super-admins</td></tr>';
+    return;
+  }
+  $$('teamTbody').innerHTML = '<tr><td colspan="6" class="tbl-loading">Chargement…</td></tr>';
+  try {
+    const snap = await getDocs(adminsCol());
+    const members = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    $$('teamCount').textContent = `${members.length} membre${members.length !== 1 ? 's' : ''}`;
+
+    $$('teamTbody').innerHTML = members.length
+      ? members.map(m => {
+          const role = m.isAdminSuper ? '<span class="pill pill-p">Super Admin</span>' : '<span class="pill pill-b">Admin</span>';
+          const status = m.active ? '<span class="pill pill-g">Actif</span>' : '<span class="pill pill-r">Inactif</span>';
+          return `<tr>
+            <td><div style="display:flex;align-items:center;gap:9px">
+              ${m.photo ? `<img class="avatar" src="${m.photo}">` : `<div class="avatar-t" style="font-size:.7rem">${initials(m.name||m.email||'?')}</div>`}
+              <div><div style="font-size:.82rem;font-weight:600">${m.name||'—'}</div>
+                <div style="font-size:.71rem;color:var(--dim)">${m.email||'—'}</div></div>
+            </div></td>
+            <td>${role}</td>
+            <td>${status}</td>
+            <td style="font-size:.75rem;color:var(--dim)">${timeAgo(m.lastLogin)}</td>
+            <td style="font-size:.75rem;color:var(--dim)">${m.createdByEmail||m.createdBy||'—'}</td>
+            <td><div style="display:flex;gap:5px">
+              ${m.id !== _user.uid ? `<button class="btn btn-g btn-xs" onclick="openEditAdmin('${m.id}')"><i class="fa-solid fa-sliders"></i> Permissions</button>` : '<span style="font-size:.74rem;color:var(--dim)">Vous</span>'}
+            </div></td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="6" class="tbl-empty">Aucun membre</td></tr>';
+  } catch(e) {
+    toast('Erreur chargement équipe', 'err');
+  }
+};
+
+window.openAddAdminModal = function() {
+  if (!_profile?.isAdminSuper) return;
+  $$('newAdminEmail').value = '';
+  $$('newAdminName').value  = '';
+  $$('newAdminRole').value  = 'admin';
+  openModal('modalAddAdmin');
+};
+
+window.createAdminDoc = async function() {
+  const email = $$('newAdminEmail').value.trim().toLowerCase();
+  const name  = $$('newAdminName').value.trim();
+  const role  = $$('newAdminRole').value;
+  if (!email) { toast('Email requis', 'warn'); return; }
+
+  try {
+    // We create the doc with email as key (the UID is unknown until they log in)
+    // On first login, the auth guard reads by UID — so we also store email to match
+    const tempId = email.replace(/[.@]/g, '_');
+    await setDoc(doc(db, 'artifacts', APP_ECO, 'admins', tempId), {
+      email, name: name || email.split('@')[0],
+      isAdminSuper: role === 'super', isAdmin: true,
+      active: true, pending: true,
+      createdAt: serverTimestamp(),
+      createdBy: _user.uid, createdByEmail: _user.email,
+      permissions: {}
+    });
+    await logAction('Admin créé', email, `Rôle: ${role}`);
+    closeModal('modalAddAdmin');
+    toast('Compte admin créé. L\'utilisateur devra se connecter pour activer son accès.', 'info');
+    loadTeam();
+  } catch(e) {
+    console.error(e);
+    toast('Erreur création admin', 'err');
+  }
+};
+
+window.openEditAdmin = async function(uid) {
+  if (!_profile?.isAdminSuper) return;
+  _editingAdminUid = uid;
+  try {
+    const snap = await getDoc(adminDoc(uid));
+    if (!snap.exists()) { toast('Admin introuvable', 'err'); return; }
+    const m = snap.data();
+
+    $$('slideAdminTitle').textContent = m.name || m.email || 'Permissions';
+    $$('slideAdminDeactivate').textContent = m.active ? 'Désactiver le compte' : 'Réactiver le compte';
+    $$('slideAdminDeactivate').className = `btn btn-sm ${m.active ? 'btn-r' : 'btn-g'}`;
+
+    const curPerms = m.permissions || {};
+
+    // Build permission grid
+    const modPerms = MODULES.filter(mod => !mod.superOnly);
+    const modulesGrid = modPerms.map(mod => {
+      const key = `module_${mod.id}`;
+      const on = curPerms[key] === true;
+      return `<div class="perm-item ${on?'on':''}" data-perm="${key}" onclick="togglePermItem(this)">
+        <div class="perm-cb"><i class="fa-solid fa-check"></i></div>
+        <span class="perm-name"><i class="fa-solid ${mod.icon}" style="margin-right:5px;font-size:.7rem;color:var(--dim)"></i>${mod.label}</span>
+      </div>`;
+    }).join('');
+
+    const gPermsGrid = GRANULAR_PERMS.map(p => {
+      const on = curPerms[p.id] === true;
+      return `<div class="perm-item ${on?'on':''}" data-perm="${p.id}" onclick="togglePermItem(this)">
+        <div class="perm-cb"><i class="fa-solid fa-check"></i></div>
+        <span class="perm-name">${p.label}</span>
+      </div>`;
+    }).join('');
+
+    $$('slideAdminBd').innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px;background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.12);border-radius:var(--r12)">
+        ${m.photo ? `<img src="${m.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">` : `<div class="avatar-t">${initials(m.name||m.email||'?')}</div>`}
+        <div>
+          <div style="font-size:.9rem;font-weight:700">${m.name||'—'}</div>
+          <div style="font-size:.76rem;color:var(--muted)">${m.email||'—'}</div>
+        </div>
+        <div style="margin-left:auto">
+          ${m.isAdminSuper ? '<span class="pill pill-p">Super Admin</span>' : '<span class="pill pill-b">Admin</span>'}
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:12px">
+        <button class="btn btn-g btn-xs" onclick="selectAllPerms(true)"><i class="fa-solid fa-check-double"></i> Tout sélectionner</button>
+        <button class="btn btn-g btn-xs" onclick="selectAllPerms(false)"><i class="fa-solid fa-xmark"></i> Tout déselectionner</button>
+      </div>
+      <div class="perm-section">
+        <div class="perm-section-title">Modules visibles</div>
+        <div class="perm-grid" id="permModulesGrid">${modulesGrid}</div>
+      </div>
+      <div class="perm-section">
+        <div class="perm-section-title">Permissions granulaires</div>
+        <div class="perm-grid" id="permGranularGrid">${gPermsGrid}</div>
+      </div>
+    `;
+
+    openSlide('slideAdmin');
+  } catch(e) {
+    console.error(e);
+    toast('Erreur chargement permissions', 'err');
+  }
+};
+
+window.togglePermItem = function(el) {
+  el.classList.toggle('on');
+};
+window.selectAllPerms = function(val) {
+  document.querySelectorAll('.perm-item').forEach(el => {
+    if (val) el.classList.add('on');
+    else el.classList.remove('on');
+  });
+};
+
+window.saveAdminPerms = async function() {
+  if (!_editingAdminUid) return;
+  try {
+    const permissions = {};
+    document.querySelectorAll('.perm-item').forEach(el => {
+      const key = el.dataset.perm;
+      if (key) permissions[key] = el.classList.contains('on');
+    });
+    await updateDoc(adminDoc(_editingAdminUid), { permissions });
+    await logAction('Permissions mises à jour', _editingAdminUid, Object.keys(permissions).filter(k => permissions[k]).join(', '));
+    toast('Permissions sauvegardées', 'ok');
+    closeSlide();
+    loadTeam();
+  } catch(e) {
+    console.error(e);
+    toast('Erreur sauvegarde permissions', 'err');
+  }
+};
+
+window.toggleAdminActive = async function() {
+  if (!_editingAdminUid) return;
+  try {
+    const snap = await getDoc(adminDoc(_editingAdminUid));
+    const cur = snap.data()?.active;
+    await updateDoc(adminDoc(_editingAdminUid), { active: !cur });
+    await logAction(cur ? 'Admin désactivé' : 'Admin réactivé', _editingAdminUid, '');
+    toast(cur ? 'Compte désactivé' : 'Compte réactivé', 'ok');
+    closeSlide();
+    loadTeam();
+  } catch(e) { toast('Erreur', 'err'); }
+};
+
+// ══════════════════════════════════════════
+// RECHERCHE GLOBALE
+// ══════════════════════════════════════════
+window.onGlobalSearch = function(q) {
+  if (!q || q.length < 2) return;
+  // Filter users in cache if already loaded
+  if (_currentModule === 'users' && _usersCache.length) {
+    filterUsers(q);
+  }
+};
+
+// ══════════════════════════════════════════
+// EXPOSE & INIT
+// ══════════════════════════════════════════
+window.openToolModal    = window.openToolModal;
+window.openServiceModal = async function(idx) {
+  $$('toolModalTitle').textContent = idx === null ? 'Ajouter un service' : 'Modifier le service';
+  $$('toolEditId').value = idx !== null ? idx : '';
+  if (idx !== null) {
+    const snap = await getDoc(servDoc());
+    const services = snap.exists() ? (snap.data().services||[]) : [];
+    const s = services[idx] || {};
+    $$('toolName').value  = s.name || '';
+    $$('toolDesc').value  = s.description || '';
+    $$('toolUrl').value   = s.url || '';
+    $$('toolIcon').value  = s.icon || '';
+    $$('toolBadge').value = s.price || '';
+  } else {
+    ['toolName','toolDesc','toolUrl','toolIcon','toolBadge'].forEach(id => $$(id).value = '');
+  }
+  $$('toolModalTitle').textContent = idx === null ? 'Ajouter un service' : 'Modifier le service';
+  // Rebind save
+  document.querySelector('#modalTool .modal-foot .btn-p').onclick = window.saveService;
+  openModal('modalTool');
+};
+// Reset tool modal save button each time
+document.querySelector('#modalTool .modal-foot .btn-p')?.addEventListener = () => {};
+
+// Init notification types display
+window.toggleNotifType('inapp'); // set inapp on by default
+</script>
+</body>
+</html>
