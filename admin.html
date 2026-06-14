@@ -259,10 +259,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .hdr-menu-btn{width:34px;height:34px;border-radius:var(--r8);background:rgba(255,255,255,.04);border:1px solid var(--bdr);color:var(--muted);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;flex-shrink:0}
 @media(max-width:768px){.hdr-menu-btn{display:flex}.hdr-search{display:none}}
 
-/* NOTIFY FORM */
+/* NOTIFY FORM & PREVIEW */
 .notif-targets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .notif-target-btn{padding:6px 14px;border-radius:100px;font-size:.78rem;font-weight:600;border:1px solid var(--bdr);color:var(--muted);cursor:pointer;transition:all .2s;background:none;font-family:var(--sans)}
 .notif-target-btn.on{border-color:rgba(168,85,247,.4);color:var(--purple);background:rgba(168,85,247,.08)}
+.email-preview-card { background:#ffffff; color:#0f172a; border-radius:var(--r12); padding:24px; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; box-shadow:0 10px 25px rgba(0,0,0,0.5); }
+.email-preview-btn { display:inline-block; background-color:#a855f7; color:#ffffff !important; font-weight:600; font-size:14px; text-decoration:none; padding:12px 24px; border-radius:6px; margin-top:20px; transition:background-color 0.2s; }
+.email-preview-btn:hover { background-color:#9333ea; }
 
 /* CONFIG SECTION */
 .cfg-block{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r16);padding:20px;margin-bottom:16px}
@@ -551,6 +554,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
               <input type="text" id="cfg-maint-msg" class="form-input" placeholder="Ex: Maintenance planifiée jusqu'à 18h…">
             </div>
           </div>
+          <!-- Clés API Gemini -->
+          <div class="cfg-block">
+            <div class="cfg-block-title"><i class="fa-solid fa-key"></i> Clés API Gemini (Moteur IA)</div>
+            <div id="apiKeysContainer" class="flex flex-col gap-2 mb-4"></div>
+            <div class="flex gap-2">
+              <input type="text" id="newApiKeyInput" class="form-input" placeholder="AIzaSy...">
+              <button class="btn btn-g" onclick="window.addApiKey()"><i class="fa-solid fa-plus"></i> Injecter</button>
+            </div>
+          </div>
           <!-- Statut des apps -->
           <div class="cfg-block">
             <div class="cfg-block-title"><i class="fa-solid fa-sliders"></i> Statut des Applications</div>
@@ -612,10 +624,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
         </div>
       </section>
 
-      <!-- ═══ PANEL 11 : NOTIFICATIONS ═══ -->
+      <!-- ═══ PANEL 11 : NOTIFICATIONS & EMAIL ═══ -->
       <section id="p-notifications" class="panel">
         <div class="panel-hd">
-          <div><h2 class="pt">Notifications</h2><p class="ps">Push & in-app</p></div>
+          <div><h2 class="pt">Messages & Notifications</h2><p class="ps">Envoi de Push, in-app et Emails (Resend)</p></div>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:20px">
           <button class="notif-target-btn on" id="notifTab-send" onclick="window.switchNotifTab('send')">Envoyer</button>
@@ -629,40 +641,60 @@ tr:hover td{background:rgba(255,255,255,.02)}
               <button class="notif-target-btn" id="nt-user" onclick="window.setNotifTarget('user')">Utilisateur spécifique</button>
             </div>
             <div id="notifUserTarget" class="form-group hidden">
-              <label class="form-label">UID ou Email</label>
+              <label class="form-label">UID ou Email Google</label>
               <input type="text" id="notifTargetUid" class="form-input" placeholder="uid ou email@…">
             </div>
+            
             <p class="section-title">Message</p>
             <div class="form-group">
-              <label class="form-label">Titre</label>
-              <input type="text" id="notifTitle" class="form-input" placeholder="Titre de la notification">
+              <label class="form-label">Sujet / Titre</label>
+              <input type="text" id="notifTitle" class="form-input" placeholder="Titre de la notification ou Sujet de l'email" oninput="window.updateNotifPreview()">
             </div>
             <div class="form-group">
-              <label class="form-label">Corps du message</label>
-              <textarea id="notifBody" class="form-textarea" rows="3" placeholder="Contenu de la notification…"></textarea>
+              <label class="form-label">Corps du message (Supporte sauts de ligne)</label>
+              <textarea id="notifBody" class="form-textarea" rows="4" placeholder="Contenu du message…" oninput="window.updateNotifPreview()"></textarea>
             </div>
             <div class="grid-2">
               <div class="form-group" style="margin-bottom:0">
-                <label class="form-label">URL image (optionnel)</label>
-                <input type="text" id="notifImage" class="form-input" placeholder="https://…">
+                <label class="form-label">URL image (optionnel, pour Push/In-App)</label>
+                <input type="text" id="notifImage" class="form-input" placeholder="https://…" oninput="window.updateNotifPreview()">
               </div>
               <div class="form-group" style="margin-bottom:0">
-                <label class="form-label">URL de destination</label>
-                <input type="text" id="notifUrl" class="form-input" placeholder="https://levelup-ecosystem.com">
+                <label class="form-label">Lien d'action (Bouton)</label>
+                <input type="text" id="notifUrl" class="form-input" placeholder="https://levelup-ecosystem.com" oninput="window.updateNotifPreview()">
               </div>
             </div>
-            <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+            
+            <p class="section-title" style="margin-top:20px">Canaux d'envoi</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-g" id="btnNotifInApp" onclick="window.toggleNotifType('inapp')"><i class="fa-solid fa-bell"></i> In-App <span id="inappCheck"></span></button>
               <button class="btn btn-g" id="btnNotifPush" onclick="window.toggleNotifType('push')"><i class="fa-solid fa-mobile-screen"></i> Push FCM <span id="pushCheck"></span></button>
+              <button class="btn btn-g" id="btnNotifEmail" onclick="window.toggleNotifType('email')"><i class="fa-solid fa-envelope"></i> Email (Resend) <span id="emailCheck"></span></button>
             </div>
-            <button class="btn btn-p" style="margin-top:16px;width:100%" onclick="window.sendNotification()"><i class="fa-solid fa-paper-plane"></i> Envoyer la notification</button>
+            
+            <!-- APERÇU EMAIL -->
+            <div id="emailPreviewBox" class="hidden" style="margin-top:24px; border-left: 3px solid var(--purple); background:rgba(255,255,255,.02); border-radius:var(--r12); padding:20px;">
+              <h4 style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px"><i class="fa-solid fa-eye" style="margin-right:6px"></i>Aperçu de l'Email</h4>
+              <div class="email-preview-card">
+                <h1 id="epTitle" style="font-size:1.4rem; font-weight:800; margin-bottom:16px; color:#000;">Titre de l'email</h1>
+                <div id="epBody" style="font-size:15px; line-height:1.6; color:#333; white-space:pre-wrap;">Corps du message apparaîtra ici...</div>
+                <div style="text-align:center; margin-top:24px;">
+                  <a id="epBtn" href="#" target="_blank" class="email-preview-btn" style="display:none;">Voir plus</a>
+                </div>
+                <div style="margin-top:30px; font-size:12px; color:#888; text-align:center; border-top:1px solid #eee; padding-top:15px;">
+                  Envoyé par LevelUp Ecosystem.
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-p" style="margin-top:24px;width:100%;font-size:.95rem;padding:12px" onclick="window.sendNotification()"><i class="fa-solid fa-paper-plane"></i> Diffuser le message</button>
           </div>
         </div>
         <div id="notifHistoryPanel" class="hidden">
           <div class="tbl-wrap">
-            <div class="tbl-top"><span class="tbl-title">Historique des notifications</span></div>
+            <div class="tbl-top"><span class="tbl-title">Historique des envois</span></div>
             <div style="overflow-x:auto">
-              <table><thead><tr><th>Titre</th><th>Type</th><th>Cible</th><th>Envoyée par</th><th>Date</th></tr></thead>
+              <table><thead><tr><th>Titre</th><th>Canaux</th><th>Cible</th><th>Envoyé par</th><th>Date</th></tr></thead>
               <tbody id="notifHistTbody"><tr><td colspan="5" class="tbl-loading">Chargement…</td></tr></tbody>
               </table>
             </div>
@@ -1023,10 +1055,10 @@ const APP_ECO  = 'levelup-ecosystem';
 const adminsCol = () => collection(db, 'artifacts', APP_ECO, 'admins');
 const adminDoc  = uid => doc(db, 'artifacts', APP_ECO, 'admins', uid);
 const logsCol   = () => collection(db, 'artifacts', APP_ECO, 'admin_logs');
-const cfgDoc    = () => doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'config', 'apps');
+const cfgDoc    = () => doc(db, 'artifacts', APP_MAIN, 'system', 'config');
 const toolsDoc  = () => doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'config', 'tools_hub');
 const servDoc   = () => doc(db, 'artifacts', APP_MAIN, 'public', 'data', 'config', 'services_hub');
-const promptDoc = () => doc(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt');
+const promptDoc = () => doc(db, 'artifacts', APP_MAIN, 'system', 'config');
 const notifsCol = () => collection(db, 'artifacts', APP_ECO, 'public', 'data', 'notifications');
 const bannedIPsCol   = () => collection(db, 'artifacts', APP_ECO, 'banned_ips');
 const remoteLogsCol  = () => collection(db, 'artifacts', APP_ECO, 'remote_logs');
@@ -1047,7 +1079,7 @@ const MODULES = [
   { id:'config',        label:'Config Live',       icon:'fa-sliders',          superOnly:false },
   { id:'tools',         label:'Outils Hub',        icon:'fa-wrench',           superOnly:false },
   { id:'services',      label:'Services Hub',      icon:'fa-box',              superOnly:false },
-  { id:'notifications', label:'Notifications',     icon:'fa-bell',             superOnly:false },
+  { id:'notifications', label:'Messages & Mails',  icon:'fa-paper-plane',      superOnly:false },
   { id:'prompt',        label:'Prompt IA',         icon:'fa-robot',            superOnly:false },
   { id:'bugs',          label:'Bugs & Erreurs',    icon:'fa-bug',              superOnly:false },
   { id:'analytics',     label:'Trafic',            icon:'fa-chart-bar',        superOnly:false },
@@ -1072,7 +1104,7 @@ let _perms = {};
 let _currentModule = null;
 let _usersCache = [];
 let _editingAdminUid = null;
-let _notifTypes = { inapp: true, push: false };
+let _notifTypes = { inapp: true, push: false, email: false };
 let _notifTarget = 'all';
 let _currentModTab = 'accounts';
 let _currentNotifTab = 'send';
@@ -1210,7 +1242,7 @@ async function logAction(action, target, details = '') {
 
 // ── NAVIGATION ──
 window.nav = function(modId) {
-  if (!canAccess(modId)) { toast('Accès non autorisé', 'err'); return; }
+  if (!canAccess(modId)) { window.toast('Accès non autorisé', 'err'); return; }
   if (_currentModule === 'bugs' && modId !== 'bugs' && _logsUnsubscribe) {
     _logsUnsubscribe(); _logsUnsubscribe = null;
   }
@@ -1252,12 +1284,12 @@ function buildSidebar() {
 // ── AUTH ──
 window.doGoogleLogin = async function() {
   try { await signInWithPopup(auth, gp); } catch(e) {
-    if (e.code !== 'auth/popup-closed-by-user') toast('Erreur de connexion', 'err');
+    if (e.code !== 'auth/popup-closed-by-user') window.toast('Erreur de connexion', 'err');
   }
 };
 window.doLogout = async function() { try { await signOut(auth); } catch(e) {} };
 window.confirmLogout = function() {
-  confirm_('Déconnexion', 'Voulez-vous vous déconnecter de l\'Admin Center ?', window.doLogout, 'Déconnexion', 'btn-r');
+  window.confirm_('Déconnexion', 'Voulez-vous vous déconnecter de l\'Admin Center ?', window.doLogout, 'Déconnexion', 'btn-r');
 };
 
 onAuthStateChanged(auth, async (user) => {
@@ -1328,7 +1360,7 @@ window.loadDashboard = async function() {
     const totalKeys    = keysSnap.size; 
     const activeKeys   = keysSnap.docs.filter(d => !d.data().revoked).length;
     
-    // Déduction via les clés pour respect des règles Firebase
+    // Déduction via les clés
     let allKeysData = keysSnap.docs.map(d => ({...d.data(), id: d.ref.parent?.parent?.id}));
     allKeysData.sort((a, b) => {
       const ta = a.lastSeen?.seconds ? a.lastSeen.seconds : (new Date(a.lastSeen || a.keyCreatedAt)).getTime()/1000 || 0;
@@ -1389,69 +1421,107 @@ window.loadDashboard = async function() {
       </div>`;
     }).join('');
 
-  } catch(e) { toast('Erreur Dashboard', 'err'); }
+  } catch(e) { window.toast('Erreur Dashboard', 'err'); }
 };
 
 // ══════════════════════════════════════════
-// UTILISATEURS (ASPIRATION GLOBALE 100% REGLES RESPECTEES)
+// UTILISATEURS (LE RADAR ABSOLU)
 // ══════════════════════════════════════════
 window.loadUsers = async function() {
-  $$('usersTbody').innerHTML = '<tr><td colspan="6" class="tbl-loading">Chargement…</td></tr>';
+  $$('usersTbody').innerHTML = '<tr><td colspan="6" class="tbl-loading">Recherche globale des utilisateurs…</td></tr>';
   try {
     const filter = $$('usersFilter').value;
     
-    const [keysSnap, statusSnap, errorsSnap] = await Promise.all([
+    // Pour ne rater ABSOLUMENT PERSONNE, on fouille dans presque toutes les collections publiques
+    // que Firebase autorise à lire.
+    const promises = [
       getDocs(collectionGroup(db, 'security')).catch(() => ({docs:[]})),
       getDocs(query(usersStatusCol(), limit(2000))).catch(() => ({docs:[]})),
-      getDocs(query(bugsCol(), limit(1000))).catch(() => ({docs:[]})) 
-    ]);
+      getDocs(query(bugsCol(), limit(1000))).catch(() => ({docs:[]})),
+      getDocs(query(collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'fcm_tokens'), limit(1000))).catch(() => ({docs:[]})),
+      getDocs(query(collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'parties'), limit(500))).catch(() => ({docs:[]})),
+      getDocs(query(reportsCol(), limit(500))).catch(() => ({docs:[]})),
+      getDocs(query(collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'reviews'), limit(500))).catch(() => ({docs:[]}))
+    ];
+    
+    const [keysSnap, statusSnap, errorsSnap, fcmSnap, partiesSnap, reportsSnap, reviewsSnap] = await Promise.all(promises);
 
     let usersMap = {};
 
+    function addGhost(uid, payload) {
+      if (!uid || uid.length < 5) return;
+      if (!usersMap[uid]) {
+        usersMap[uid] = { 
+          id: uid, isAnonymous: true, displayName: "Utilisateur de l'écosystème", 
+          status: 'active', lastIp: '', country: '', city: '' 
+        };
+      }
+      // Fusion intelligente (on garde la valeur la plus récente ou complète)
+      Object.keys(payload).forEach(k => {
+        if (payload[k] && !usersMap[uid][k]) usersMap[uid][k] = payload[k];
+      });
+    }
+
+    // 1. Base Officielle (users_status)
     statusSnap.docs.forEach(d => {
-      const uid = d.id;
-      usersMap[uid] = { id: uid, isAnonymous: !d.data().email, ...d.data() };
+      const u = d.data();
+      addGhost(d.id, { ...u, isAnonymous: !u.email });
     });
 
+    // 2. Extractions secondaires (Fouiller pour trouver les anonymes sans session status)
     errorsSnap.docs.forEach(d => {
-       const uid = d.data().userUid;
-       if (uid && !usersMap[uid]) {
-           usersMap[uid] = {
-               id: uid, isAnonymous: true, displayName: "Utilisateur Fantôme",
-               status: 'active', lastSeen: d.data().timestamp,
-               lastIp: d.data().ip || '', country: d.data().country || ''
-           };
-       }
+      const u = d.data();
+      addGhost(u.userUid, { lastSeen: u.timestamp, lastIp: u.ip, country: u.country, email: u.userEmail });
+    });
+    
+    fcmSnap.docs.forEach(d => {
+      addGhost(d.id, { lastSeen: d.data().updatedAt });
     });
 
+    reportsSnap.docs.forEach(d => {
+      const u = d.data();
+      addGhost(u.reporterUid, { email: u.reporterEmail, lastSeen: u.createdAt });
+    });
+
+    reviewsSnap.docs.forEach(d => {
+      const u = d.data();
+      addGhost(u.authorUid, { displayName: u.authorName, lastSeen: u.createdAt });
+    });
+
+    partiesSnap.docs.forEach(d => {
+      const p = d.data();
+      addGhost(p.hostUid, { email: p.hostEmail, displayName: p.hostName });
+      (p.members || []).forEach(m => {
+         if(typeof m === 'object' && m.uid) addGhost(m.uid, { displayName: m.name, email: m.email });
+      });
+    });
+
+    // 3. Fusion avec les clés SDK
     const keyMap = {};
     keysSnap.docs.forEach(d => {
       const data = d.data();
       const uid = data.uid || d.ref.parent?.parent?.id;
       if (uid) {
         keyMap[uid] = data;
-        if (!usersMap[uid]) {
-          usersMap[uid] = {
-            id: uid, email: data.email || data.owner || '',
-            displayName: data.displayName || data.name || "Utilisateur de l'écosystème",
-            photoURL: data.photoURL || data.avatar || '', status: 'active',
-            createdAt: data.keyCreatedAt || data.lastSeen || null,
-            lastSeen: data.lastSeen || null, lastIp: data.lastIp || '',
-            country: data.country || '', city: data.city || '',
-            isAnonymous: !(data.email || data.owner)
-          };
-        } else {
-            if(data.lastIp) usersMap[uid].lastIp = data.lastIp;
-            if(data.country) usersMap[uid].country = data.country;
-            if(data.city) usersMap[uid].city = data.city;
-        }
+        addGhost(uid, {
+          email: data.email || data.owner,
+          displayName: data.displayName || data.name,
+          photoURL: data.photoURL || data.avatar,
+          createdAt: data.keyCreatedAt,
+          lastSeen: data.lastSeen,
+          lastIp: data.lastIp,
+          country: data.country, city: data.city
+        });
       }
     });
 
+    // Finalisation
     let users = Object.values(usersMap);
     users.forEach(u => {
       u.keyData = keyMap[u.id] || null;
-      if (!u.email || u.email === '') u.isAnonymous = true;
+      // Si on a finalement trouvé un email, il n'est plus anonyme
+      if (u.email && u.email.includes('@')) u.isAnonymous = false;
+      else u.isAnonymous = true;
     });
 
     if (filter !== 'all') users = users.filter(u => (u.status || 'active') === filter);
@@ -1477,34 +1547,30 @@ window.renderUsersTable = function(users) {
     return;
   }
   $$('usersTbody').innerHTML = users.map(u => {
-    const hasKey = !!u.keyData;
-    const keyDisplay = canDo('users_see_key') ? (u.keyData?.apiKey || u.keyData?.key || '—') : (hasKey ? maskKey(u.keyData?.apiKey || u.keyData?.key || '') : '—');
     const isAnon = u.isAnonymous;
-    const dispName = isAnon ? "Utilisateur de l'écosystème" : (u.displayName || "Utilisateur");
-    const emailHtml = isAnon ? `<span class="pill pill-d">Compte invité / Session</span>` : `<span class="ellipsis" style="display:block; font-size:.79rem;color:var(--muted)">${u.email}</span>`;
+    const isSuper = _profile && _profile.isAdminSuper;
+    const hasKey = !!u.keyData;
 
-    const showPhoto = canDo('users_see_photo');
-    const avatarHtml = (u.photoURL && showPhoto) ? `<img class="avatar" src="${u.photoURL}">` : `<div class="avatar-t" style="font-size:.7rem">${initials(dispName)}</div>`;
+    let dispName, emailHtml, avatarHtml, viewBtn, banBtn, delBtn, keyDisplay;
 
-    const restrictAnon = isAnon && !_profile.isAdminSuper;
-    const msgRestreint = "Action bloquée : compte anonyme (Niveau Super-Admin requis)";
+    if (isAnon && !isSuper) {
+        dispName = "Utilisateur Restreint";
+        emailHtml = `<span class="pill pill-d border-slate-700 bg-slate-800/50 text-slate-500"><i class="fa-solid fa-lock mr-1"></i> Masqué</span>`;
+        avatarHtml = `<div class="avatar-t" style="background:#27272a;color:#71717a"><i class="fa-solid fa-user-secret"></i></div>`;
+        keyDisplay = "••••••••";
+        viewBtn = `<button class="btn btn-g btn-xs opacity-50" onclick="window.toast('Accès réservé aux Super-Admins', 'err')"><i class="fa-solid fa-eye-slash"></i></button>`;
+        banBtn = `<button class="btn btn-y btn-xs opacity-50" onclick="window.toast('Accès réservé aux Super-Admins', 'err')"><i class="fa-solid fa-ban"></i></button>`;
+        delBtn = `<button class="btn btn-r btn-xs opacity-50" onclick="window.toast('Accès réservé aux Super-Admins', 'err')"><i class="fa-solid fa-trash"></i></button>`;
+    } else {
+        dispName = isAnon ? "Utilisateur de l'écosystème" : (u.displayName || "Utilisateur");
+        emailHtml = isAnon ? `<span class="pill pill-d">Compte invité / Session</span>` : `<span class="ellipsis" style="display:block; font-size:.79rem;color:var(--muted)">${u.email}</span>`;
+        const showPhoto = canDo('users_see_photo');
+        avatarHtml = (u.photoURL && showPhoto) ? `<img class="avatar" src="${u.photoURL}">` : `<div class="avatar-t" style="font-size:.7rem">${initials(dispName)}</div>`;
+        keyDisplay = canDo('users_see_key') ? (u.keyData?.apiKey || u.keyData?.key || '—') : (hasKey ? maskKey(u.keyData?.apiKey || u.keyData?.key || '') : '—');
 
-    let viewBtn = restrictAnon 
-      ? `<button class="btn btn-g btn-xs" onclick="window.toast('${msgRestreint}', 'warn')"><i class="fa-solid fa-eye"></i></button>`
-      : `<button class="btn btn-g btn-xs" onclick="window.openUserDetail('${u.id}')"><i class="fa-solid fa-eye"></i></button>`;
-
-    let banBtn = '';
-    if (canDo('users_ban')) {
-      banBtn = restrictAnon
-        ? `<button class="btn btn-y btn-xs" onclick="window.toast('${msgRestreint}', 'warn')"><i class="fa-solid fa-ban"></i></button>`
-        : `<button class="btn btn-y btn-xs" onclick="window.openBanModal('${u.id}')"><i class="fa-solid fa-ban"></i></button>`;
-    }
-
-    let delBtn = '';
-    if (canDo('users_delete')) {
-      delBtn = restrictAnon
-        ? `<button class="btn btn-r btn-xs" onclick="window.toast('${msgRestreint}', 'warn')"><i class="fa-solid fa-trash"></i></button>`
-        : `<button class="btn btn-r btn-xs" onclick="window.confirmDeleteUser('${u.id}')"><i class="fa-solid fa-trash"></i></button>`;
+        viewBtn = `<button class="btn btn-g btn-xs" onclick="window.openUserDetail('${u.id}')"><i class="fa-solid fa-eye"></i></button>`;
+        banBtn = canDo('users_ban') ? `<button class="btn btn-y btn-xs" onclick="window.openBanModal('${u.id}')"><i class="fa-solid fa-ban"></i></button>` : '';
+        delBtn = canDo('users_delete') ? `<button class="btn btn-r btn-xs" onclick="window.confirmDeleteUser('${u.id}')"><i class="fa-solid fa-trash"></i></button>` : '';
     }
 
     return `<tr>
@@ -1645,7 +1711,7 @@ window.confirmRevokeKey = function(uid) {
 };
 
 // ══════════════════════════════════════════
-// MODÉRATION (AVEC CORRECTION BANS REGIONAUX)
+// MODÉRATION
 // ══════════════════════════════════════════
 window.loadModeration = function() { window.switchModTab(_currentModTab); };
 window.switchModTab = async function(tab) {
@@ -1690,7 +1756,6 @@ window.switchModTab = async function(tab) {
       }).join('')||'<tr><td colspan="4" class="tbl-empty">Aucune IP bloquée</td></tr>'}</tbody></table></div>`;
 
     } else if (tab === 'regions') {
-      // FIX : Lecture dans system/restrictions respectant tes règles Firebase
       const snap = await getDoc(doc(db, 'artifacts', APP_MAIN, 'system', 'restrictions'));
       const data = snap.exists() ? snap.data() : {};
       const bannedRegions = data.banned_regions || {};
@@ -1924,12 +1989,34 @@ window.closeParty = async function(id) {
 // ══════════════════════════════════════════
 // CONFIG, OUTILS & SERVICES
 // ══════════════════════════════════════════
+let _apiKeys = [];
+window.renderApiKeys = function() {
+  const c = $$('apiKeysContainer');
+  if(!c) return;
+  c.innerHTML = _apiKeys.map((k, i) => `
+    <div class="flex justify-between items-center bg-black/20 border border-white/5 p-2 rounded">
+       <span class="font-mono text-sm text-purple-400">${k.slice(0,8)}...${k.slice(-4)}</span>
+       <button class="text-red-500 hover:text-red-400" onclick="window.removeApiKey(${i})"><i class="fa-solid fa-trash"></i></button>
+    </div>
+  `).join('');
+};
+window.addApiKey = function() {
+  const v = $$('newApiKeyInput').value.trim();
+  if(v) { _apiKeys.push(v); $$('newApiKeyInput').value = ''; window.renderApiKeys(); }
+};
+window.removeApiKey = function(i) { _apiKeys.splice(i, 1); window.renderApiKeys(); };
+
 window.loadConfig = async function() {
   try {
     const snap = await getDoc(cfgDoc()); const d = snap.exists() ? snap.data() : {};
-    $$('cfg-maintenance').checked  = !!d.globalMaintenance; $$('cfg-maint-msg').value = d.maintenanceMessage || '';
+    $$('cfg-maintenance').checked  = !!(d.maintenance || d.globalMaintenance); 
+    $$('cfg-maint-msg').value = d.maintenanceMessage || '';
     $$('cfg-tools-badge').value    = d.tools_badge || ''; $$('cfg-ia-badge').value  = d.ia_fab_badge || '';
     $$('cfg-hero-imgs').value = Array.isArray(d.heroImages) ? d.heroImages.join('\n') : (d.heroImages || '');
+    
+    _apiKeys = d.gemini_api_keys || (d.gemini_api_key ? [d.gemini_api_key] : []);
+    window.renderApiKeys();
+
     $$('cfgAppsGrid').innerHTML = APPS_CFG.map(a => `
       <div class="card" style="margin-bottom:0"><div class="card-title" style="margin-bottom:10px">${a.label}</div>
         <div class="form-group" style="margin-bottom:0"><label class="form-label">Statut</label>
@@ -1952,7 +2039,15 @@ window.saveConfig = async function() {
   if (!canDo('config_write')) { window.toast('Permission insuffisante', 'err'); return; }
   try {
     const heroRaw = $$('cfg-hero-imgs').value; const heroImgs = heroRaw.split('\n').map(s => s.trim()).filter(Boolean);
-    const updates = { globalMaintenance: $$('cfg-maintenance').checked, maintenanceMessage: $$('cfg-maint-msg').value, heroImages: heroImgs, tools_badge: $$('cfg-tools-badge').value, ia_fab_badge: $$('cfg-ia-badge').value };
+    const updates = { 
+        maintenance: $$('cfg-maintenance').checked,
+        globalMaintenance: $$('cfg-maintenance').checked, 
+        maintenanceMessage: $$('cfg-maint-msg').value, 
+        heroImages: heroImgs, 
+        tools_badge: $$('cfg-tools-badge').value, 
+        ia_fab_badge: $$('cfg-ia-badge').value,
+        gemini_api_keys: _apiKeys
+    };
     APPS_CFG.forEach(a => { updates[`${a.id}_status`] = $$(`cfg-${a.id}-status`)?.value || 'active'; updates[`${a.id}_access`] = $$(`cfg-${a.id}-access`)?.value || 'key'; });
     await setDoc(cfgDoc(), updates, { merge: true }); await logAction('Config mise à jour', 'apps config', ''); window.toast('Config appliquée sur le site !', 'ok');
   } catch(e) { window.toast('Erreur sauvegarde config', 'err'); }
@@ -2026,7 +2121,7 @@ window.deleteService = async function(idx) {
 };
 
 // ══════════════════════════════════════════
-// NOTIFICATIONS & PROMPT
+// NOTIFICATIONS & EMAILS (RESEND)
 // ══════════════════════════════════════════
 window.switchNotifTab = function(tab) {
   _currentNotifTab = tab;
@@ -2039,29 +2134,97 @@ window.setNotifTarget = function(t) {
 };
 window.toggleNotifType = function(type) {
   _notifTypes[type] = !_notifTypes[type];
-  $$(`btnNotif${type === 'inapp' ? 'InApp' : 'Push'}`).classList.toggle('btn-p', _notifTypes[type]);
-  $$(`${type === 'inapp' ? 'inapp' : 'push'}Check`).textContent = _notifTypes[type] ? ' ✓' : '';
+  if(type === 'inapp') {
+      $$(`btnNotifInApp`).classList.toggle('btn-p', _notifTypes.inapp);
+      $$(`inappCheck`).textContent = _notifTypes.inapp ? ' ✓' : '';
+  } else if(type === 'push') {
+      $$(`btnNotifPush`).classList.toggle('btn-p', _notifTypes.push);
+      $$(`pushCheck`).textContent = _notifTypes.push ? ' ✓' : '';
+  } else if(type === 'email') {
+      $$(`btnNotifEmail`).classList.toggle('btn-p', _notifTypes.email);
+      $$(`emailCheck`).textContent = _notifTypes.email ? ' ✓' : '';
+      window.updateNotifPreview(); // Actualiser le preview si on bascule
+  }
 };
+
+window.updateNotifPreview = function() {
+    if(!_notifTypes.email) {
+        $$('emailPreviewBox').classList.add('hidden');
+        return;
+    }
+    $$('emailPreviewBox').classList.remove('hidden');
+    $$('epTitle').textContent = $$('notifTitle').value || "Titre de l'email";
+    $$('epBody').textContent = $$('notifBody').value || "Corps du message apparaîtra ici...";
+    
+    const url = $$('notifUrl').value;
+    const btn = $$('epBtn');
+    if(url) {
+        btn.style.display = 'inline-block';
+        btn.href = url;
+    } else {
+        btn.style.display = 'none';
+    }
+};
+
 window.sendNotification = async function() {
   const title = $$('notifTitle').value.trim(); const body  = $$('notifBody').value.trim();
   if (!title || !body) { window.toast('Titre et corps requis', 'warn'); return; }
-  if (!_notifTypes.inapp && !_notifTypes.push) { window.toast('Sélectionne un type', 'warn'); return; }
+  if (!_notifTypes.inapp && !_notifTypes.push && !_notifTypes.email) { window.toast('Sélectionne un canal (In-App, Push ou Email)', 'warn'); return; }
+  
   try {
-    const notifData = { title, body, image: $$('notifImage').value.trim() || null, url: $$('notifUrl').value.trim() || 'https://levelup-ecosystem.com', target: _notifTarget, targetUid: _notifTarget === 'user' ? $$('notifTargetUid').value.trim() : null, types: { ..._notifTypes }, sentBy: _user.email, sentAt: serverTimestamp() };
+    const notifData = { 
+        title, body, 
+        image: $$('notifImage').value.trim() || null, 
+        url: $$('notifUrl').value.trim() || 'https://levelup-ecosystem.com', 
+        target: _notifTarget, 
+        targetUid: _notifTarget === 'user' ? $$('notifTargetUid').value.trim() : null, 
+        types: { ..._notifTypes }, 
+        sentBy: _user.email, sentAt: serverTimestamp() 
+    };
+
+    // 1. In-App Firebase
     if (_notifTypes.inapp) await addDoc(notifsCol(), notifData);
-    if (_notifTypes.push && canDo('notifications_push')) {
-      try { await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body, image: notifData.image, url: notifData.url, target: _notifTarget, targetUid: notifData.targetUid }) }); } catch(e) { window.toast('Push API échoué', 'warn'); }
+
+    // 2. Push & Email (via ton API Vercel)
+    if ((_notifTypes.push || _notifTypes.email) && canDo('notifications_push')) {
+      try { 
+          // Ajuste l'URL de ton API Resend Vercel si besoin
+          await fetch('https://levelup-ecosystem.com/api/notify', { 
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' }, 
+              body: JSON.stringify({ 
+                  title, body, 
+                  image: notifData.image, 
+                  url: notifData.url, 
+                  target: _notifTarget, 
+                  targetUid: notifData.targetUid,
+                  sendPush: _notifTypes.push,
+                  sendEmail: _notifTypes.email // Flag transmis à ton backend Resend
+              }) 
+          }); 
+      } catch(e) { window.toast('API Vercel (Push/Email) échouée', 'warn'); }
     }
+    
     await addDoc(collection(db, 'artifacts', APP_ECO, 'notif_history'), notifData);
-    await logAction('Notification envoyée', '', title); window.toast('Notification envoyée !', 'ok');
+    await logAction('Notification/Email envoyé', '', title); 
+    window.toast('Diffusion terminée !', 'ok');
+    
     ['notifTitle','notifBody','notifImage'].forEach(id => $$(id).value = '');
+    window.updateNotifPreview();
   } catch(e) { window.toast('Erreur', 'err'); }
 };
+
 window.loadNotifHistory = async function() {
   try {
     const snap = await getDocs(query(collection(db, 'artifacts', APP_ECO, 'notif_history'), orderBy('sentAt','desc'), limit(50)));
     $$('notifHistTbody').innerHTML = snap.docs.length ? snap.docs.map(d => {
-      const n = d.data(); const types = [n.types?.inapp && 'In-App', n.types?.push && 'Push'].filter(Boolean).join(' + ');
+      const n = d.data(); 
+      const typesList = [];
+      if(n.types?.inapp) typesList.push('In-App');
+      if(n.types?.push) typesList.push('Push');
+      if(n.types?.email) typesList.push('Email');
+      const types = typesList.join(' + ');
+      
       return `<tr><td class="ellipsis" style="font-size:.83rem;font-weight:600">${n.title||'—'}</td><td><span class="pill pill-p">${types||'—'}</span></td><td class="ellipsis" style="font-size:.77rem">${n.target === 'all' ? 'Tous' : n.targetUid||'—'}</td><td class="ellipsis" style="font-size:.77rem;color:var(--muted)">${n.sentBy||'—'}</td><td style="font-size:.75rem;color:var(--dim)">${fmtDateTime(n.sentAt)}</td></tr>`;
     }).join('') : '<tr><td colspan="5" class="tbl-empty">Aucun historique</td></tr>';
   } catch(e) {}
@@ -2070,10 +2233,10 @@ window.loadNotifHistory = async function() {
 window.loadPrompt = async function() {
   try {
     const snap = await getDoc(promptDoc()); const d = snap.exists() ? snap.data() : {};
-    $$('promptEditor').value = d.prompt || d.content || ''; window.updatePromptChars();
+    $$('promptEditor').value = d.global_prompt || d.prompt || d.content || ''; window.updatePromptChars();
     const histSnap = await getDocs(query(collection(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt_history'), orderBy('savedAt','desc'), limit(5)));
     $$('promptHistory').innerHTML = histSnap.docs.length ? histSnap.docs.map(d => {
-      const h = d.data(); return `<div class="card" style="margin-bottom:8px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div><div style="font-size:.8rem;font-weight:600">${fmtDateTime(h.savedAt)}</div><div class="ellipsis" style="font-size:.73rem;color:var(--dim);max-width:180px">${h.prompt||h.content||''}</div></div><button class="btn btn-g btn-xs" onclick="window.restorePrompt('${d.id}')"><i class="fa-solid fa-rotate-left"></i></button></div></div>`;
+      const h = d.data(); return `<div class="card" style="margin-bottom:8px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div><div style="font-size:.8rem;font-weight:600">${fmtDateTime(h.savedAt)}</div><div class="ellipsis" style="font-size:.73rem;color:var(--dim);max-width:180px">${h.global_prompt||h.prompt||h.content||''}</div></div><button class="btn btn-g btn-xs" onclick="window.restorePrompt('${d.id}')"><i class="fa-solid fa-rotate-left"></i></button></div></div>`;
     }).join('') : '<div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><p>Aucun historique</p></div>';
   } catch(e) { window.toast('Erreur', 'err'); }
 };
@@ -2084,14 +2247,14 @@ window.savePrompt = async function() {
   const content = $$('promptEditor').value; if (!content.trim()) return;
   try {
     const cur = await getDoc(promptDoc());
-    if (cur.exists()) await addDoc(collection(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt_history'), { ...cur.data(), savedAt: serverTimestamp() });
-    await setDoc(promptDoc(), { prompt: content, updatedAt: serverTimestamp(), updatedBy: _user.email });
+    if (cur.exists()) await addDoc(collection(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt_history'), { global_prompt: content, savedAt: serverTimestamp() });
+    await setDoc(promptDoc(), { global_prompt: content }, { merge: true });
     await logAction('Prompt IA mis à jour', '', `${content.length} chars`); window.toast('Sauvegardé !', 'ok'); window.loadPrompt();
   } catch(e) { window.toast('Erreur', 'err'); }
 };
 window.restorePrompt = async function(histId) {
   window.confirm_('Restaurer version', 'Le prompt actuel sera remplacé.', async () => {
-    try { const snap = await getDoc(doc(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt_history', histId)); $$('promptEditor').value = snap.data().prompt || snap.data().content || ''; window.updatePromptChars(); window.toast('Restauré dans l\'éditeur', 'info'); } catch(e) {}
+    try { const snap = await getDoc(doc(db, 'artifacts', APP_MAIN, 'system', 'ia_prompt_history', histId)); $$('promptEditor').value = snap.data().global_prompt || snap.data().prompt || snap.data().content || ''; window.updatePromptChars(); window.toast('Restauré dans l\'éditeur', 'info'); } catch(e) {}
   });
 };
 window.testPrompt = function() {
