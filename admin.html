@@ -189,6 +189,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .perm-name{font-size:.78rem;font-weight:500;color:var(--muted);transition:color .2s}
 .perm-item.on .perm-name{color:var(--txt)}
 
+/* GEO PANEL (BLOCUS) */
+.geo-panel{transition:transform 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.4s;}
+.svg-icon-btn{transition:all 0.2s;}
+.svg-icon-btn.selected{border-color:var(--orange) !important; background:rgba(249,115,22,0.2) !important; transform:scale(1.1);}
+
 /* SLIDE PANEL */
 .slide-panel{position:fixed;top:0;right:-440px;width:440px;max-width:95vw;height:100%;background:var(--elev);border-left:1px solid var(--bdr);z-index:300;transition:right .35s cubic-bezier(.25,.8,.25,1);display:flex;flex-direction:column;overflow:hidden}
 .slide-panel.open{right:0}
@@ -489,7 +494,132 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <button class="notif-target-btn" id="modTab-regions" onclick="window.switchModTab('regions')">Bans Régionaux</button>
           <button class="notif-target-btn" id="modTab-history" onclick="window.switchModTab('history')">Historique</button>
         </div>
-        <div id="modContent"><div class="tbl-loading">Chargement…</div></div>
+        
+        <div id="modContent" class="hidden"><div class="tbl-loading">Chargement…</div></div>
+        
+        <!-- UI DES BANS REGIONAUX (BLOCUS) -->
+        <div id="modRegions" class="hidden relative h-[600px] border border-bdr rounded-xl overflow-hidden bg-black/20">
+            <!-- ETAPE 1 : CONTINENTS -->
+            <div id="blocus-step-1" class="geo-panel absolute inset-0 p-4 md:p-8 overflow-y-auto custom-scrollbar">
+                <p class="text-[10px] text-orange-500/50 font-mono mb-4 text-center uppercase">Sélectionnez un continent</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mt-4">
+                    <div class="card border-orange-500/20 text-center group cursor-pointer" onclick="window.openContinent('Afrique')">
+                        <i class="fas fa-earth-africa text-5xl text-orange-500/50 group-hover:text-orange-500 transition-all mb-4"></i>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-widest">Afrique</h3>
+                    </div>
+                    <div class="card border-orange-500/20 text-center group cursor-pointer" onclick="window.openContinent('Amérique')">
+                        <i class="fas fa-earth-americas text-5xl text-orange-500/50 group-hover:text-orange-500 transition-all mb-4"></i>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-widest">Amérique</h3>
+                    </div>
+                    <div class="card border-orange-500/20 text-center group cursor-pointer" onclick="window.openContinent('Asie')">
+                        <i class="fas fa-earth-asia text-5xl text-orange-500/50 group-hover:text-orange-500 transition-all mb-4"></i>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-widest">Asie</h3>
+                    </div>
+                    <div class="card border-orange-500/20 text-center group cursor-pointer" onclick="window.openContinent('Moyen-Orient')">
+                        <i class="fas fa-mosque text-5xl text-orange-500/50 group-hover:text-orange-500 transition-all mb-4"></i>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-widest">Moyen-Orient</h3>
+                    </div>
+                    <div class="card border-orange-500/20 text-center group cursor-pointer" onclick="window.openContinent('Europe')">
+                        <i class="fas fa-earth-europe text-5xl text-orange-500/50 group-hover:text-orange-500 transition-all mb-4"></i>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-widest">Europe</h3>
+                    </div>
+                    <div class="card border-orange-500/20 text-center group cursor-pointer" onclick="window.openContinent('Océanie')">
+                        <i class="fas fa-earth-oceania text-5xl text-orange-500/50 group-hover:text-orange-500 transition-all mb-4"></i>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-widest">Océanie</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ETAPE 2 : PAYS -->
+            <div id="blocus-step-2" class="geo-panel absolute inset-0 p-4 md:p-8 overflow-y-auto custom-scrollbar transform translate-x-full opacity-0 pointer-events-none">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 max-w-7xl mx-auto">
+                    <button onclick="window.backToStep1()" class="btn btn-g btn-sm"><i class="fas fa-undo mr-2"></i> CONTINENTS</button>
+                    <div class="flex-1 max-w-md w-full">
+                        <input type="text" id="countrySearchInput" placeholder="Rechercher un pays..." class="form-input focus:border-orange-500 font-mono">
+                    </div>
+                    <div class="flex items-center gap-3 bg-black/40 border border-red-500/30 px-4 py-2.5 rounded-xl w-full md:w-auto justify-between md:justify-start">
+                        <span id="continentToggleLabel" class="text-slate-400 font-mono text-[10px] font-bold uppercase tracking-widest">FERMER CONTINENT</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="continentBanToggle" onchange="window.handleContinentToggle(this)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto" id="countriesGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- ETAPE 3 : CONFIG PAYS -->
+            <div id="blocus-step-3" class="geo-panel absolute inset-0 p-4 md:p-8 overflow-y-auto custom-scrollbar transform translate-x-full opacity-0 pointer-events-none">
+                <div class="max-w-4xl mx-auto">
+                    <button onclick="window.backToStep2()" class="btn btn-g btn-sm mb-6"><i class="fas fa-undo mr-2"></i> RETOUR PAYS</button>
+                    <div class="card border border-orange-500/30 relative overflow-hidden p-6 md:p-8">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-600 to-red-600"></div>
+                        <div class="flex items-center gap-4 mb-8 border-b border-white/5 pb-6">
+                            <span id="configCountryEmoji" class="text-5xl">🏳️</span>
+                            <div>
+                                <h3 id="configCountryName" class="text-3xl font-extrabold text-white uppercase tracking-widest">PAYS</h3>
+                                <p class="text-[10px] text-orange-400 font-mono tracking-widest">PANNEAU DE CONTRÔLE GÉOGRAPHIQUE</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-8">
+                            <div class="flex items-center justify-between bg-red-950/20 border border-red-500/30 p-5 rounded-2xl">
+                                <div>
+                                    <h4 class="font-bold text-red-400 text-lg uppercase tracking-widest">BANNIR TOUT LE PAYS</h4>
+                                    <p class="text-xs text-red-400/50 font-mono mt-1">Coupe l'accès à toute personne provenant de ce pays.</p>
+                                </div>
+                                <label class="toggle" style="width:50px;height:26px">
+                                    <input type="checkbox" id="countryBanToggle">
+                                    <span class="toggle-slider" style="background:var(--xdim)"></span>
+                                </label>
+                            </div>
+
+                            <hr class="border-white/5">
+
+                            <div>
+                                <h4 class="font-bold text-white text-sm uppercase tracking-widest mb-4">Verrouillage par Ville (Top 5)</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="configCitiesList">
+                                    <!-- JS -->
+                                </div>
+                            </div>
+
+                            <hr class="border-white/5">
+
+                            <div>
+                                <h4 class="font-bold text-white text-sm uppercase tracking-widest mb-4">Personnalisation du Bannissement</h4>
+                                <label class="form-label uppercase tracking-widest">Nom de l'App (Écran de chargement local)</label>
+                                <input type="text" id="configAppName" placeholder="Ex: Level IA (Service Suspendu)" class="form-input mb-6">
+
+                                <label class="form-label uppercase tracking-widest">Message de Ban (Raison)</label>
+                                <textarea id="configBanMsg" rows="3" placeholder="Saisir la raison visible par l'utilisateur..." class="form-textarea mb-6"></textarea>
+
+                                <label class="form-label uppercase tracking-widest">Icône d'accompagnement (SVG)</label>
+                                <div class="grid grid-cols-5 gap-3" id="iconSelector">
+                                    <button class="svg-icon-btn border border-white/10 rounded-xl p-3 flex justify-center text-slate-400 hover:text-orange-400" data-icon="shield">
+                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                                    </button>
+                                    <button class="svg-icon-btn border border-white/10 rounded-xl p-3 flex justify-center text-slate-400 hover:text-orange-400" data-icon="globe">
+                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                                    </button>
+                                    <button class="svg-icon-btn border border-white/10 rounded-xl p-3 flex justify-center text-slate-400 hover:text-orange-400" data-icon="gavel">
+                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M14 7l-3 3 7 7 3-3-7-7zm-1-1l-3-3-3 3 3 3 3-3zm-4 4l-4 4 4 4 4-4-4-4zm-4 4l-2 2 2 2 2-2-2-2z"/></svg>
+                                    </button>
+                                    <button class="svg-icon-btn border border-white/10 rounded-xl p-3 flex justify-center text-slate-400 hover:text-orange-400" data-icon="warning">
+                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                                    </button>
+                                    <button class="svg-icon-btn border border-white/10 rounded-xl p-3 flex justify-center text-slate-400 hover:text-orange-400" data-icon="ghost">
+                                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-2.97 1.61-5.54 4-6.92V7c0 1.1.9 2 2 2h2c.55 0 1-.45 1-1v-.46c2.2.82 3.84 2.8 3.98 5.25.01.12.02.24.02.37 0 4.41-3.59 8-8 8z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <button id="saveCountryConfigBtn" class="btn btn-y w-full py-4 text-sm mt-6" style="background:#ea580c;color:#fff;border:none">APPLIQUER LA CONFIGURATION</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
       </section>
 
       <!-- ═══ PANEL 5 : SIGNALEMENTS ═══ -->
@@ -714,7 +844,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="grid-2">
           <div>
             <p class="section-title" style="margin-top:0">Éditeur</p>
-            <textarea id="promptEditor" class="prompt-editor" placeholder="Chargement du prompt…"></textarea>
+            <textarea id="promptEditor" class="prompt-editor" placeholder="Chargement de l'Oracle…"></textarea>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
               <span id="promptChars" style="font-size:.74rem;color:var(--dim)">0 caractères</span>
               <button class="btn btn-g btn-sm" onclick="window.testPrompt()"><i class="fa-solid fa-flask"></i> Tester</button>
@@ -1049,6 +1179,286 @@ const _authFallback = setTimeout(() => {
   }
 }, 3000);
 
+// ── GEO DATA (POUR LE BLOCUS RÉGIONAL) ──
+const GEO_DATA = {
+    "Afrique": [
+        { name: "Afrique du Sud", emoji: "🇿🇦", cities: ["Johannesburg", "Le Cap", "Durban", "Pretoria", "Port Elizabeth"] },
+        { name: "Algérie", emoji: "🇩🇿", cities: ["Alger", "Oran", "Constantine", "Annaba", "Blida"] },
+        { name: "Angola", emoji: "🇦🇴", cities: ["Luanda", "Cabinda", "Huambo", "Lubango", "Kuito"] },
+        { name: "Bénin", emoji: "🇧🇯", cities: ["Cotonou", "Porto-Novo", "Parakou", "Djougou", "Bohicon"] },
+        { name: "Botswana", emoji: "🇧🇼", cities: ["Gaborone", "Francistown", "Molepolole", "Selebi-Phikwe", "Maun"] },
+        { name: "Burkina Faso", emoji: "🇧🇫", cities: ["Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora", "Ouahigouya"] },
+        { name: "Burundi", emoji: "🇧🇮", cities: ["Bujumbura", "Gitega", "Muyinga", "Ngozi", "Rumonge"] },
+        { name: "Cameroun", emoji: "🇨🇲", cities: ["Douala", "Yaoundé", "Garoua", "Bamenda", "Maroua"] },
+        { name: "Cap-Vert", emoji: "🇨🇻", cities: ["Praia", "Mindelo", "Santa Maria", "Assomada", "Pedra Badejo"] },
+        { name: "RCA", emoji: "🇨🇫", cities: ["Bangui", "Bimbo", "Berbérati", "Carnot", "Bria"] },
+        { name: "Comores", emoji: "🇰🇲", cities: ["Moroni", "Mutsamudu", "Fomboni", "Domoni", "Tsembéhou"] },
+        { name: "Congo-Brazzaville", emoji: "🇨🇬", cities: ["Brazzaville", "Pointe-Noire", "Dolisie", "Nkayi", "Ouesso"] },
+        { name: "RDC", emoji: "🇨🇩", cities: ["Kinshasa", "Lubumbashi", "Mbuji-Mayi", "Kisangani", "Goma"] },
+        { name: "Côte d'Ivoire", emoji: "🇨🇮", cities: ["Abidjan", "Bouaké", "Daloa", "Korhogo", "Yamoussoukro"] },
+        { name: "Djibouti", emoji: "🇩🇯", cities: ["Djibouti", "Ali Sabieh", "Tadjourah", "Obock", "Dikhil"] },
+        { name: "Égypte", emoji: "🇪🇬", cities: ["Le Caire", "Alexandrie", "Gizeh", "Port-Saïd", "Suez"] },
+        { name: "Érythrée", emoji: "🇪🇷", cities: ["Asmara", "Keren", "Massaoua", "Assab", "Mendefera"] },
+        { name: "Éthiopie", emoji: "🇪🇹", cities: ["Addis-Abeba", "Dire Dawa", "Mekele", "Gondar", "Bahir Dar"] },
+        { name: "Gabon", emoji: "🇬🇦", cities: ["Libreville", "Port-Gentil", "Franceville", "Oyem", "Moanda"] },
+        { name: "Gambie", emoji: "🇬🇲", cities: ["Banjul", "Brikama", "Bakau", "Farafenni", "Lamin"] },
+        { name: "Ghana", emoji: "🇬🇭", cities: ["Accra", "Kumasi", "Tamale", "Takoradi", "Ashaiman"] },
+        { name: "Guinée", emoji: "🇬🇳", cities: ["Conakry", "Nzérékoré", "Kankan", "Kindia", "Siguiri"] },
+        { name: "Guinée-Bissau", emoji: "🇬🇼", cities: ["Bissau", "Bafatá", "Gabu", "Bissorã", "Bolama"] },
+        { name: "Guinée équatoriale", emoji: "🇬🇶", cities: ["Malabo", "Bata", "Ebebiyín", "Aconibe", "Añisoc"] },
+        { name: "Kenya", emoji: "🇰🇪", cities: ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret"] },
+        { name: "Lesotho", emoji: "🇱🇸", cities: ["Maseru", "Teyateyaneng", "Mafeteng", "Hlotse", "Mohale's Hoek"] },
+        { name: "Liberia", emoji: "🇱🇷", cities: ["Monrovia", "Gbarnga", "Buchanan", "Ganta", "Kakata"] },
+        { name: "Libye", emoji: "🇱🇾", cities: ["Tripoli", "Benghazi", "Misrata", "Baïda", "Zaouïa"] },
+        { name: "Madagascar", emoji: "🇲🇬", cities: ["Antananarivo", "Toamasina", "Antsirabe", "Mahajanga", "Fianarantsoa"] },
+        { name: "Malawi", emoji: "🇲🇼", cities: ["Lilongwe", "Blantyre", "Mzuzu", "Zomba", "Kasungu"] },
+        { name: "Mali", emoji: "🇲🇱", cities: ["Bamako", "Sikasso", "Mopti", "Koutiala", "Kayes"] },
+        { name: "Maroc", emoji: "🇲🇦", cities: ["Casablanca", "Rabat", "Fès", "Marrakech", "Tanger"] },
+        { name: "Maurice", emoji: "🇲🇺", cities: ["Port-Louis", "Vacoas", "Curepipe", "Quatre Bornes", "Triolet"] },
+        { name: "Mauritanie", emoji: "🇲🇷", cities: ["Nouakchott", "Nouadhibou", "Rosso", "Boghé", "Zouérat"] },
+        { name: "Mozambique", emoji: "🇲🇿", cities: ["Maputo", "Matola", "Beira", "Nampula", "Chimoio"] },
+        { name: "Namibie", emoji: "🇳🇦", cities: ["Windhoek", "Rundu", "Walvis Bay", "Swakopmund", "Oshakati"] },
+        { name: "Niger", emoji: "🇳🇪", cities: ["Niamey", "Zinder", "Maradi", "Tahoua", "Agadez"] },
+        { name: "Nigeria", emoji: "🇳🇬", cities: ["Lagos", "Kano", "Ibadan", "Kaduna", "Port Harcourt"] },
+        { name: "Ouganda", emoji: "🇺🇬", cities: ["Kampala", "Nansana", "Kira", "Mbarara", "Mukono"] },
+        { name: "Rwanda", emoji: "🇷🇼", cities: ["Kigali", "Butare", "Gitarama", "Ruhengeri", "Gisenyi"] },
+        { name: "Sao Tomé-et-Principe", emoji: "🇸🇹", cities: ["São Tomé", "Trindade", "Neves", "Santana", "Santo Amaro"] },
+        { name: "Sénégal", emoji: "🇸🇳", cities: ["Dakar", "Touba", "Thiès", "Rufisque", "Kaolack"] },
+        { name: "Seychelles", emoji: "🇸🇨", cities: ["Victoria", "De Quincey", "Anse Boileau", "Anse Royale", "Cascade"] },
+        { name: "Sierra Leone", emoji: "🇸🇱", cities: ["Freetown", "Bo", "Kenema", "Makeni", "Koidu"] },
+        { name: "Somalie", emoji: "🇸🇴", cities: ["Mogadiscio", "Hargeisa", "Merca", "Berbera", "Kismaayo"] },
+        { name: "Soudan", emoji: "🇸🇩", cities: ["Khartoum", "Omdurman", "Nyala", "Port-Soudan", "Kassala"] },
+        { name: "Soudan du Sud", emoji: "🇸🇸", cities: ["Djouba", "Wau", "Malakal", "Yambio", "Yei"] },
+        { name: "Tanzanie", emoji: "🇹🇿", cities: ["Dar es Salam", "Mwanza", "Zanzibar", "Arusha", "Mbeya"] },
+        { name: "Tchad", emoji: "🇹🇩", cities: ["N'Djaména", "Moundou", "Sarh", "Abéché", "Kélo"] },
+        { name: "Togo", emoji: "🇹🇬", cities: ["Lomé", "Sokodé", "Kara", "Kpalimé", "Atakpamé"] },
+        { name: "Tunisie", emoji: "🇹🇳", cities: ["Tunis", "Sfax", "Sousse", "Kairouan", "Bizerte"] },
+        { name: "Zambie", emoji: "🇿🇲", cities: ["Lusaka", "Kitwe", "Ndola", "Kabwe", "Chingola"] },
+        { name: "Zimbabwe", emoji: "🇿🇼", cities: ["Harare", "Bulawayo", "Chitungwiza", "Mutare", "Gweru"] }
+    ],
+    "Amérique": [
+        { name: "Antigua-et-Barbuda", emoji: "🇦🇬", cities: ["St. John's", "All Saints", "Liberta", "Bolands", "Swetes"] },
+        { name: "Argentine", emoji: "🇦🇷", cities: ["Buenos Aires", "Córdoba", "Rosario", "Mendoza", "La Plata"] },
+        { name: "Bahamas", emoji: "🇧🇸", cities: ["Nassau", "Freeport", "West End", "Coopers Town", "Marsh Harbour"] },
+        { name: "Barbade", emoji: "🇧🇧", cities: ["Bridgetown", "Speightstown", "Oistins", "Bathsheba", "Holetown"] },
+        { name: "Belize", emoji: "🇧🇿", cities: ["Belize City", "San Ignacio", "Orange Walk", "Belmopan", "Dangriga"] },
+        { name: "Bolivie", emoji: "🇧🇴", cities: ["Santa Cruz", "El Alto", "La Paz", "Cochabamba", "Oruro"] },
+        { name: "Brésil", emoji: "🇧🇷", cities: ["São Paulo", "Rio de Janeiro", "Brasilia", "Salvador", "Fortaleza"] },
+        { name: "Canada", emoji: "🇨🇦", cities: ["Toronto", "Montréal", "Vancouver", "Calgary", "Ottawa"] },
+        { name: "Chili", emoji: "🇨🇱", cities: ["Santiago", "Puente Alto", "Antofagasta", "Viña del Mar", "Valparaíso"] },
+        { name: "Colombie", emoji: "🇨🇴", cities: ["Bogotá", "Medellín", "Cali", "Barranquilla", "Carthagène"] },
+        { name: "Costa Rica", emoji: "🇨🇷", cities: ["San José", "Limón", "Alajuela", "San Francisco", "Desamparados"] },
+        { name: "Cuba", emoji: "🇨🇺", cities: ["La Havane", "Santiago de Cuba", "Camagüey", "Holguín", "Guantánamo"] },
+        { name: "Rép. Dominicaine", emoji: "🇩🇴", cities: ["Saint-Domingue", "Santiago", "Los Alcarrizos", "La Romana", "San Pedro"] },
+        { name: "Dominique", emoji: "🇩🇲", cities: ["Roseau", "Portsmouth", "Berekua", "Marigot", "Oistins"] },
+        { name: "Équateur", emoji: "🇪🇨", cities: ["Guayaquil", "Quito", "Cuenca", "Santo Domingo", "Machala"] },
+        { name: "États-Unis", emoji: "🇺🇸", cities: ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"] },
+        { name: "Grenade", emoji: "🇬🇩", cities: ["St. George's", "Gouyave", "Grenville", "Victoria", "St. David's"] },
+        { name: "Guatemala", emoji: "🇬🇹", cities: ["Guatemala", "Mixco", "Villa Nueva", "Cobán", "Quetzaltenango"] },
+        { name: "Guyana", emoji: "🇬🇾", cities: ["Georgetown", "Linden", "New Amsterdam", "Anna Regina", "Bartica"] },
+        { name: "Haïti", emoji: "🇭🇹", cities: ["Port-au-Prince", "Carrefour", "Delmas", "Pétion-Ville", "Gonaïves"] },
+        { name: "Honduras", emoji: "🇭🇳", cities: ["Tegucigalpa", "San Pedro Sula", "Choloma", "La Ceiba", "El Progreso"] },
+        { name: "Jamaïque", emoji: "🇯🇲", cities: ["Kingston", "Portmore", "Spanish Town", "Montego Bay", "May Pen"] },
+        { name: "Mexique", emoji: "🇲🇽", cities: ["Mexico", "Guadalajara", "Monterrey", "Puebla", "Tijuana"] },
+        { name: "Nicaragua", emoji: "🇳🇮", cities: ["Managua", "León", "Masaya", "Matagalpa", "Chinande"] },
+        { name: "Panama", emoji: "🇵🇦", cities: ["Panama", "San Miguelito", "Tocumen", "David", "Arraiján"] },
+        { name: "Paraguay", emoji: "🇵🇾", cities: ["Asunción", "Ciudad del Este", "San Lorenzo", "Luque", "Capiatá"] },
+        { name: "Pérou", emoji: "🇵🇪", cities: ["Lima", "Arequipa", "Trujillo", "Chiclayo", "Piura"] },
+        { name: "Saint-Kitts-et-Nevis", emoji: "🇰🇳", cities: ["Basseterre", "Charlestown", "Saint Paul's", "Sadlers", "Middle Island"] },
+        { name: "Sainte-Lucie", emoji: "🇱🇨", cities: ["Castries", "Bisee", "Vieux Fort", "Micoud", "Soufrière"] },
+        { name: "Saint-Vincent", emoji: "🇻🇨", cities: ["Kingstown", "Georgetown", "Byera", "Biabou", "Chateaubelair"] },
+        { name: "El Salvador", emoji: "🇸🇻", cities: ["San Salvador", "Soyapango", "Santa Ana", "San Miguel", "Mejicanos"] },
+        { name: "Suriname", emoji: "🇸🇷", cities: ["Paramaribo", "Lelydorp", "Brokopondo", "Nieuw Nickerie", "Meerzorg"] },
+        { name: "Trinité-et-Tobago", emoji: "🇹🇹", cities: ["Chaguanas", "San Fernando", "Port of Spain", "Arima", "Marabella"] },
+        { name: "Uruguay", emoji: "🇺🇾", cities: ["Montevideo", "Salto", "Paysandú", "Las Piedras", "Rivera"] },
+        { name: "Venezuela", emoji: "🇻🇪", cities: ["Caracas", "Maracaibo", "Valencia", "Barquisimeto", "Maracay"] }
+    ],
+    "Asie": [
+        { name: "Afghanistan", emoji: "🇦🇫", cities: ["Kaboul", "Kandahar", "Herat", "Mazar-e-Charif", "Jalalabad"] },
+        { name: "Bangladesh", emoji: "🇧🇩", cities: ["Dacca", "Chittagong", "Khulna", "Rajshahi", "Sylhet"] },
+        { name: "Bhoutan", emoji: "🇧🇹", cities: ["Thimphou", "Phuntsholing", "Punakha", "Samdrup Jongkhar", "Gelephu"] },
+        { name: "Brunei", emoji: "🇧🇳", cities: ["Bandar Seri Begawan", "Kuala Belait", "Seria", "Tutong", "Bangar"] },
+        { name: "Cambodge", emoji: "🇰🇭", cities: ["Phnom Penh", "Siem Reap", "Battambang", "Sihanoukville", "Poipet"] },
+        { name: "Chine", emoji: "🇨🇳", cities: ["Pékin", "Shanghai", "Guangzhou", "Shenzhen", "Chengdu"] },
+        { name: "Corée du Nord", emoji: "🇰🇵", cities: ["Pyongyang", "Hamhung", "Chongjin", "Nampo", "Wonsan"] },
+        { name: "Corée du Sud", emoji: "🇰🇷", cities: ["Séoul", "Busan", "Incheon", "Daegu", "Daejeon"] },
+        { name: "Inde", emoji: "🇮🇳", cities: ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai"] },
+        { name: "Indonésie", emoji: "🇮🇩", cities: ["Jakarta", "Surabaya", "Bandung", "Medan", "Semarang"] },
+        { name: "Japon", emoji: "🇯🇵", cities: ["Tokyo", "Yokohama", "Osaka", "Nagoya", "Sapporo"] },
+        { name: "Kazakhstan", emoji: "🇰🇿", cities: ["Almaty", "Noursoultan", "Chimkent", "Karaganda", "Aktobé"] },
+        { name: "Kirghizistan", emoji: "🇰🇬", cities: ["Bichkek", "Och", "Djalal-Abad", "Karakol", "Tokmok"] },
+        { name: "Laos", emoji: "🇱🇦", cities: ["Vientiane", "Pakse", "Savannakhet", "Luang Prabang", "Xam Neua"] },
+        { name: "Malaisie", emoji: "🇲🇾", cities: ["Kuala Lumpur", "George Town", "Ipoh", "Shah Alam", "Petaling Jaya"] },
+        { name: "Maldives", emoji: "🇲🇻", cities: ["Malé", "Addu", "Fuvahmulah", "Kulhudhuffushi", "Thinadhoo"] },
+        { name: "Mongolie", emoji: "🇲🇳", cities: ["Oulan-Bator", "Erdenet", "Darkhan", "Choibalsan", "Mörön"] },
+        { name: "Myanmar", emoji: "🇲🇲", cities: ["Rangoun", "Mandalay", "Naypyidaw", "Mawlamyine", "Bago"] },
+        { name: "Népal", emoji: "🇳🇵", cities: ["Katmandou", "Pokhara", "Lalitpur", "Biratnagar", "Birganj"] },
+        { name: "Ouzbékistan", emoji: "🇺🇿", cities: ["Tachkent", "Namangan", "Samarcande", "Andijan", "Boukhara"] },
+        { name: "Pakistan", emoji: "🇵🇰", cities: ["Karachi", "Lahore", "Faisalabad", "Rawalpindi", "Gujranwala"] },
+        { name: "Philippines", emoji: "🇵🇭", cities: ["Manille", "Quezon City", "Davao", "Caloocan", "Cebu"] },
+        { name: "Singapour", emoji: "🇸🇬", cities: ["Singapour", "Woodlands", "Jurong East", "Tampines", "Bedok"] },
+        { name: "Sri Lanka", emoji: "🇱🇰", cities: ["Colombo", "Dehiwala", "Moratuwa", "Kotte", "Negombo"] },
+        { name: "Tadjikistan", emoji: "🇹🇯", cities: ["Douchanbé", "Khodjent", "Kulob", "Qurghonteppa", "Istaravchan"] },
+        { name: "Taïwan", emoji: "🇹🇼", cities: ["Taipei", "Kaohsiung", "New Taipei", "Taichung", "Tainan"] },
+        { name: "Thaïlande", emoji: "🇹🇭", cities: ["Bangkok", "Nonthaburi", "Nakhon Ratchasima", "Chiang Mai", "Hat Yai"] },
+        { name: "Turkménistan", emoji: "🇹🇲", cities: ["Achgabat", "Türkmenabat", "Daşoguz", "Mary", "Balkanabat"] },
+        { name: "Viêt Nam", emoji: "🇻🇳", cities: ["Hô Chi Minh", "Hanoï", "Da Nang", "Haïphong", "Bien Hoa"] }
+    ],
+    "Moyen-Orient": [
+        { name: "Arabie Saoudite", emoji: "🇸🇦", cities: ["Riyad", "Djeddah", "La Mecque", "Médine", "Dammam"] },
+        { name: "Bahreïn", emoji: "🇧🇭", cities: ["Manama", "Riffa", "Muharraq", "Hamad Town", "A'ali"] },
+        { name: "Émirats Arabes Unis", emoji: "🇦🇪", cities: ["Dubaï", "Abou Dabi", "Charjah", "Al-Aïn", "Ajman"] },
+        { name: "Irak", emoji: "🇮🇶", cities: ["Bagdad", "Bassorah", "Mossoul", "Erbil", "Kirkouk"] },
+        { name: "Iran", emoji: "🇮🇷", cities: ["Téhéran", "Mechhed", "Ispahan", "Karaj", "Chiraz"] },
+        { name: "Israël", emoji: "🇮🇱", cities: ["Jérusalem", "Tel-Aviv", "Haïfa", "Rishon LeZion", "Petah Tikva"] },
+        { name: "Jordanie", emoji: "🇯🇴", cities: ["Amman", "Zarqa", "Irbid", "Roussseifa", "Aqaba"] },
+        { name: "Koweït", emoji: "🇰🇼", cities: ["Koweït", "Al Ahmadi", "Hawalli", "As Salimiyah", "Sabah as Salim"] },
+        { name: "Liban", emoji: "🇱🇧", cities: ["Beyrouth", "Tripoli", "Sidon", "Tyr", "Nabatieh"] },
+        { name: "Oman", emoji: "🇴🇲", cities: ["Mascate", "Salalah", "Sohar", "Nizwa", "Sur"] },
+        { name: "Palestine", emoji: "🇵🇸", cities: ["Gaza", "Hébron", "Naplouse", "Khan Younès", "Jabalia"] },
+        { name: "Qatar", emoji: "🇶🇦", cities: ["Doha", "Al Rayyan", "Umm Salal", "Al Wakrah", "Al Khor"] },
+        { name: "Syrie", emoji: "🇸🇾", cities: ["Alep", "Damas", "Homs", "Lattaquié", "Hama"] },
+        { name: "Yémen", emoji: "🇾🇪", cities: ["Sanaa", "Aden", "Ta'izz", "Al-Hodeïda", "Mukalla"] }
+    ],
+    "Europe": [
+        { name: "Albanie", emoji: "🇦🇱", cities: ["Tirana", "Durrës", "Vlora", "Elbasan", "Shkodër"] },
+        { name: "Allemagne", emoji: "🇩🇪", cities: ["Berlin", "Hambourg", "Munich", "Cologne", "Francfort"] },
+        { name: "Andorre", emoji: "🇦🇩", cities: ["Andorre-la-Vieille", "Escaldes", "Encamp", "Sant Julià", "La Massana"] },
+        { name: "Arménie", emoji: "🇦🇲", cities: ["Erevan", "Gyumri", "Vanadzor", "Vagharshapat", "Abovyan"] },
+        { name: "Autriche", emoji: "🇦🇹", cities: ["Vienne", "Graz", "Linz", "Salzbourg", "Innsbruck"] },
+        { name: "Azerbaïdjan", emoji: "🇦🇿", cities: ["Bakou", "Gandja", "Sumqayit", "Mingachevir", "Qaraçuxur"] },
+        { name: "Belgique", emoji: "🇧🇪", cities: ["Bruxelles", "Anvers", "Gand", "Charleroi", "Liège"] },
+        { name: "Biélorussie", emoji: "🇧🇾", cities: ["Minsk", "Gomel", "Mogilev", "Vitebsk", "Grodno"] },
+        { name: "Bosnie", emoji: "🇧🇦", cities: ["Sarajevo", "Banja Luka", "Tuzla", "Zenica", "Mostar"] },
+        { name: "Bulgarie", emoji: "🇧🇬", cities: ["Sofia", "Plovdiv", "Varna", "Bourgas", "Roussé"] },
+        { name: "Chypre", emoji: "🇨🇾", cities: ["Nicosie", "Limassol", "Larnaca", "Paphos", "Famagouste"] },
+        { name: "Croatie", emoji: "🇭🇷", cities: ["Zagreb", "Split", "Rijeka", "Osijek", "Zadar"] },
+        { name: "Danemark", emoji: "🇩🇰", cities: ["Copenhague", "Aarhus", "Odense", "Aalborg", "Esbjerg"] },
+        { name: "Espagne", emoji: "🇪🇸", cities: ["Madrid", "Barcelone", "Valence", "Séville", "Saragosse"] },
+        { name: "Estonie", emoji: "🇪🇪", cities: ["Tallinn", "Tartu", "Narva", "Pärnu", "Kohtla-Järve"] },
+        { name: "Finlande", emoji: "🇫🇮", cities: ["Helsinki", "Espoo", "Tampere", "Vantaa", "Oulu"] },
+        { name: "France", emoji: "🇫🇷", cities: ["Paris", "Marseille", "Lyon", "Toulouse", "Nice"] },
+        { name: "Géorgie", emoji: "🇬🇪", cities: ["Tbilissi", "Batoumi", "Koutaïssi", "Roustavi", "Gori"] },
+        { name: "Grèce", emoji: "🇬🇷", cities: ["Athènes", "Thessalonique", "Patras", "Héraklion", "Larissa"] },
+        { name: "Hongrie", emoji: "🇭🇺", cities: ["Budapest", "Debrecen", "Szeged", "Miskolc", "Pécs"] },
+        { name: "Irlande", emoji: "🇮🇪", cities: ["Dublin", "Cork", "Limerick", "Galway", "Waterford"] },
+        { name: "Islande", emoji: "🇮🇸", cities: ["Reykjavik", "Kópavogur", "Hafnarfjörður", "Akureyri", "Keflavík"] },
+        { name: "Italie", emoji: "🇮🇹", cities: ["Rome", "Milan", "Naples", "Turin", "Palerme"] },
+        { name: "Lettonie", emoji: "🇱🇻", cities: ["Riga", "Daugavpils", "Liepāja", "Jelgava", "Jūrmala"] },
+        { name: "Liechtenstein", emoji: "🇱🇮", cities: ["Schaan", "Vaduz", "Triesen", "Balzers", "Eschen"] },
+        { name: "Lituanie", emoji: "🇱🇹", cities: ["Vilnius", "Kaunas", "Klaipėda", "Šiauliai", "Panevėžys"] },
+        { name: "Luxembourg", emoji: "🇱🇺", cities: ["Luxembourg", "Esch", "Differdange", "Dudelange", "Pétange"] },
+        { name: "Macédoine", emoji: "🇲🇰", cities: ["Skopje", "Bitola", "Kumanovo", "Prilep", "Tetovo"] },
+        { name: "Malte", emoji: "🇲🇹", cities: ["Birkirkara", "Qormi", "Mosta", "Żabbar", "St. Paul's Bay"] },
+        { name: "Moldavie", emoji: "🇲🇩", cities: ["Chișinău", "Tiraspol", "Bălți", "Bender", "Rîbnița"] },
+        { name: "Monaco", emoji: "🇲🇨", cities: ["Monaco", "Monte-Carlo", "La Condamine", "Fontvieille", "Les Moneghetti"] },
+        { name: "Monténégro", emoji: "🇲🇪", cities: ["Podgorica", "Nikšić", "Pljevlja", "Bijelo Polje", "Cetinje"] },
+        { name: "Norvège", emoji: "🇳🇴", cities: ["Oslo", "Bergen", "Trondheim", "Stavanger", "Bærum"] },
+        { name: "Pays-Bas", emoji: "🇳🇱", cities: ["Amsterdam", "Rotterdam", "La Haye", "Utrecht", "Eindhoven"] },
+        { name: "Pologne", emoji: "🇵🇱", cities: ["Varsovie", "Cracovie", "Łódź", "Wrocław", "Poznań"] },
+        { name: "Portugal", emoji: "🇵🇹", cities: ["Lisbonne", "Porto", "Gaia", "Amadora", "Braga"] },
+        { name: "Rép. Tchèque", emoji: "🇨🇿", cities: ["Prague", "Brno", "Ostrava", "Plzeň", "Liberec"] },
+        { name: "Roumanie", emoji: "🇷🇴", cities: ["Bucarest", "Cluj-Napoca", "Timișoara", "Iași", "Constanța"] },
+        { name: "Royaume-Uni", emoji: "🇬🇧", cities: ["Londres", "Birmingham", "Manchester", "Glasgow", "Liverpool"] },
+        { name: "Russie", emoji: "🇷🇺", cities: ["Moscou", "Saint-Pétersbourg", "Novossibirsk", "Iekaterinbourg", "Kazan"] },
+        { name: "Saint-Marin", emoji: "🇸🇲", cities: ["Dogana", "Borgo Maggiore", "Saint-Marin", "Domagnano", "Fiorentino"] },
+        { name: "Serbie", emoji: "🇷🇸", cities: ["Belgrade", "Novi Sad", "Niš", "Kragujevac", "Subotica"] },
+        { name: "Slovaquie", emoji: "🇸🇰", cities: ["Bratislava", "Košice", "Prešov", "Žilina", "Banská Bystrica"] },
+        { name: "Slovénie", emoji: "🇸🇮", cities: ["Ljubljana", "Maribor", "Celje", "Kranj", "Velenje"] },
+        { name: "Suède", emoji: "🇸🇪", cities: ["Stockholm", "Göteborg", "Malmö", "Uppsala", "Västerås"] },
+        { name: "Suisse", emoji: "🇨🇭", cities: ["Zurich", "Genève", "Bâle", "Lausanne", "Berne"] },
+        { name: "Turquie", emoji: "🇹🇷", cities: ["Istanbul", "Ankara", "Izmir", "Bursa", "Antalya"] },
+        { name: "Ukraine", emoji: "🇺🇦", cities: ["Kiev", "Kharkiv", "Odessa", "Dnipro", "Donetsk"] }
+    ],
+    "Océanie": [
+        { name: "Australie", emoji: "🇦🇺", cities: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adélaïde"] },
+        { name: "Fidji", emoji: "🇫🇯", cities: ["Suva", "Lautoka", "Nadi", "Labasa", "Ba"] },
+        { name: "Îles Marshall", emoji: "🇲🇭", cities: ["Majuro", "Ebeye", "Arno", "Jaluit", "Kili"] },
+        { name: "Îles Salomon", emoji: "🇸🇧", cities: ["Honiara", "Auki", "Gizo", "Buala", "Tulagi"] },
+        { name: "Kiribati", emoji: "🇰🇮", cities: ["Tarawa", "Betio", "Bikenibeu", "Bairiki", "Bonriki"] },
+        { name: "Micronésie", emoji: "🇫🇲", cities: ["Palikir", "Weno", "Kolonia", "Lelu", "Tofol"] },
+        { name: "Nauru", emoji: "🇳🇷", cities: ["Yaren", "Denigomodu", "Meneng", "Aiwo", "Boe"] },
+        { name: "Nouvelle-Zélande", emoji: "🇳🇿", cities: ["Auckland", "Wellington", "Christchurch", "Hamilton", "Tauranga"] },
+        { name: "Palaos", emoji: "🇵🇼", cities: ["Koror", "Meyuns", "Airai", "Kloulklubed", "Ngerkeai"] },
+        { name: "Papouasie", emoji: "🇵🇬", cities: ["Port Moresby", "Lae", "Arawa", "Mount Hagen", "Popondetta"] },
+        { name: "Samoa", emoji: "🇼🇸", cities: ["Apia", "Vaitele", "Faleasiu", "Vailele", "Leauvaa"] },
+        { name: "Tonga", emoji: "🇹🇴", cities: ["Nukuʻalofa", "Neiafu", "Haveluloto", "Vaini", "Pangai"] },
+        { name: "Tuvalu", emoji: "🇹🇻", cities: ["Funafuti", "Vaiaku", "Asau", "Lolua", "Fongafale"] },
+        { name: "Vanuatu", emoji: "🇻🇺", cities: ["Funafuti", "Vaiaku", "Asau", "Lolua", "Fongafale"] }
+    ]
+};
+
+const getFlagForCountry = (countryName, countryCode) => {
+    if (countryCode && typeof countryCode === 'string' && countryCode.trim().length === 2) {
+        const codePoints = countryCode.trim().toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+        return String.fromCodePoint(...codePoints);
+    }
+    if (!countryName) return "🏳️";
+    let searchName = String(countryName).trim();
+    if (!searchName || searchName.toLowerCase() === 'inconnu') return "🏳️";
+
+    if (searchName.length === 2) {
+        const codePoints = searchName.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+        return String.fromCodePoint(...codePoints);
+    }
+    const codeMatch = searchName.match(/\b([A-Z]{2})\b/);
+    if (codeMatch && codeMatch[1] && searchName.length <= 20) {
+        const codePoints = codeMatch[1].toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+        return String.fromCodePoint(...codePoints);
+    }
+    if (searchName.includes('/')) searchName = searchName.split('/').pop().replace(/_/g, ' ');
+    searchName = searchName.toLowerCase();
+    const engToFr = {
+        "united states": "États-Unis", "usa": "États-Unis", "us": "États-Unis", "united kingdom": "Royaume-Uni", "uk": "Royaume-Uni",
+        "algeria": "Algérie", "morocco": "Maroc", "tunisia": "Tunisie", "germany": "Allemagne", "spain": "Espagne", "italy": "Italie",
+        "brazil": "Brésil", "south africa": "Afrique du Sud", "russia": "Russie", "russian federation": "Russie", "japan": "Japon", "china": "Chine", "india": "Inde",
+        "egypt": "Égypte", "switzerland": "Suisse", "belgium": "Belgique", "netherlands": "Pays-Bas", "sweden": "Suède",
+        "turkey": "Turquie", "mexico": "Mexique", "colombia": "Colombie", "argentina": "Argentine", "saudi arabia": "Arabie Saoudite",
+        "uae": "Émirats Arabes Unis", "united arab emirates": "Émirats Arabes Unis", "ivory coast": "Côte d'Ivoire",
+        "côte d'ivoire": "Côte d'Ivoire", "senegal": "Sénégal", "cameroon": "Cameroun", "lebanon": "Liban",
+        "south korea": "Corée du Sud", "north korea": "Corée du Nord", "dr congo": "RDC", "congo": "Congo-Brazzaville",
+        "france": "France", "french": "France", "canada": "Canada"
+    };
+    if (engToFr[searchName]) searchName = engToFr[searchName].toLowerCase();
+    const removeAccents = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalizedSearch = removeAccents(searchName);
+
+    for (const continent in GEO_DATA) {
+        const found = GEO_DATA[continent].find(c => {
+            const cNameLower = c.name.toLowerCase();
+            const cNameNorm = removeAccents(cNameLower);
+            return cNameLower === searchName || cNameNorm === normalizedSearch || (searchName.length > 3 && (searchName.includes(cNameLower) || searchName.includes(cNameNorm) || cNameLower.includes(searchName) || cNameNorm.includes(normalizedSearch)));
+        });
+        if (found) return found.emoji;
+    }
+    for (const continent in GEO_DATA) {
+        for (const c of GEO_DATA[continent]) {
+            if (c.cities && c.cities.some(ci => {
+                const ciNorm = removeAccents(ci.toLowerCase());
+                return ciNorm === normalizedSearch || ci.toLowerCase() === searchName || (searchName.length > 3 && searchName.includes(ciNorm));
+            })) { return c.emoji; }
+        }
+    }
+    let debugText = String(countryName).substring(0, 10).trim();
+    return `🏴 ${debugText}`;
+};
+
+const getUserLocationStr = (u) => {
+    let city = u.city || u.cityName || u.city_name || (u.location && (u.location.city || u.location.cityName || u.location.city_name)) || (u.geo && (u.geo.city || u.geo.cityName || u.geo.city_name));
+    let country = u.country || u.countryName || u.country_name || (u.location && (u.location.country || u.location.countryName || u.location.country_name)) || (u.geo && (u.geo.country || u.geo.countryName || u.geo.country_name));
+    let code = u.countryCode || u.country_code || u.isoCode || (u.location && (u.location.countryCode || u.location.country_code || u.location.isoCode)) || (u.geo && (u.geo.countryCode || u.geo.country_code || u.geo.isoCode));
+    let lat = u.latitude || u.lat || (u.location && (u.location.lat || u.location.latitude)) || (u.geo && (u.geo.lat || u.geo.latitude));
+    if (!city && !country && !code && lat) return { city: "GPS", country: "Localisé", code: "", flag: "🌍" };
+    if (!city) city = '?';
+    if (!country) country = 'Inconnu';
+    let flag = getFlagForCountry(country, code);
+    if (flag.includes("🏴") && city !== '?') {
+       const cityFlag = getFlagForCountry(city, null);
+       if (!cityFlag.includes("🏴") && cityFlag !== "🏳️") flag = cityFlag;
+    }
+    return { city, country, code, flag };
+};
+
 // ── PATHS FIREBASE ──
 const APP_MAIN = 'level-ia-premium';
 const APP_ECO  = 'levelup-ecosystem';
@@ -1108,6 +1518,8 @@ let _notifTypes = { inapp: true, push: false, email: false };
 let _notifTarget = 'all';
 let _currentModTab = 'accounts';
 let _currentNotifTab = 'send';
+let _geoRestrictions = { countries: {} };
+let _currentCountryContext = null;
 window._partiesCache = [];
 
 // ── UTILS (EXPORTS TO WINDOW FOR HTML BINDINGS) ──
@@ -1456,19 +1868,16 @@ window.loadUsers = async function() {
           status: 'active', lastIp: '', country: '', city: '' 
         };
       }
-      // Fusion intelligente (on garde la valeur la plus récente ou complète)
       Object.keys(payload).forEach(k => {
         if (payload[k] && !usersMap[uid][k]) usersMap[uid][k] = payload[k];
       });
     }
 
-    // 1. Base Officielle (users_status)
     statusSnap.docs.forEach(d => {
       const u = d.data();
       addGhost(d.id, { ...u, isAnonymous: !u.email });
     });
 
-    // 2. Extractions secondaires (Fouiller pour trouver les anonymes sans session status)
     errorsSnap.docs.forEach(d => {
       const u = d.data();
       addGhost(u.userUid, { lastSeen: u.timestamp, lastIp: u.ip, country: u.country, email: u.userEmail });
@@ -1496,7 +1905,6 @@ window.loadUsers = async function() {
       });
     });
 
-    // 3. Fusion avec les clés SDK
     const keyMap = {};
     keysSnap.docs.forEach(d => {
       const data = d.data();
@@ -1515,11 +1923,9 @@ window.loadUsers = async function() {
       }
     });
 
-    // Finalisation
     let users = Object.values(usersMap);
     users.forEach(u => {
       u.keyData = keyMap[u.id] || null;
-      // Si on a finalement trouvé un email, il n'est plus anonyme
       if (u.email && u.email.includes('@')) u.isAnonymous = false;
       else u.isAnonymous = true;
     });
@@ -1711,87 +2117,78 @@ window.confirmRevokeKey = function(uid) {
 };
 
 // ══════════════════════════════════════════
-// MODÉRATION
+// MODÉRATION & BANS RÉGIONAUX
 // ══════════════════════════════════════════
 window.loadModeration = function() { window.switchModTab(_currentModTab); };
 window.switchModTab = async function(tab) {
   _currentModTab = tab;
   ['accounts','ips','regions','history'].forEach(t => { $$(`modTab-${t}`)?.classList.toggle('on', t === tab); });
-  const c = $$('modContent'); c.innerHTML = '<div class="tbl-loading">Chargement…</div>';
+  
+  const modContent = $$('modContent');
+  const modRegions = $$('modRegions');
 
-  try {
-    if (tab === 'accounts') {
-      const snap = await getDocs(query(usersStatusCol(), where('status', 'in', ['banned','suspended']), limit(100)));
-      if (!snap.size) { c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-shield-halved"></i><p>Aucune sanction active</p></div>'; return; }
-      c.innerHTML = `<div class="tbl-wrap"><table><colgroup><col style="width:20%"><col style="width:20%"><col style="width:15%"><col style="width:20%"><col style="width:15%"><col style="width:10%"></colgroup>
-        <thead><tr><th>Utilisateur</th><th>Email</th><th>Type</th><th>Raison</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody>${snap.docs.map(d => {
-          const u = d.data();
-          return `<tr>
-            <td class="ellipsis" style="font-size:.82rem;font-weight:600">${u.displayName||'—'}</td>
-            <td class="ellipsis" style="font-size:.78rem;color:var(--muted)">${u.email||'—'}</td>
-            <td>${statusPill(u.status)}</td>
-            <td class="ellipsis" style="font-size:.77rem;color:var(--dim)">${u.banReason||'—'}</td>
-            <td style="font-size:.77rem;color:var(--dim)">${fmtDate(u.bannedAt)}</td>
-            <td>${canDo('users_ban') ? `<button class="btn btn-g btn-xs" onclick="window.unbanUser('${d.id}')"><i class="fa-solid fa-unlock"></i> Débannir</button>` : '—'}</td>
-          </tr>`;
-        }).join('')}</tbody></table></div>`;
+  if(tab === 'regions') {
+      modContent.classList.add('hidden');
+      modRegions.classList.remove('hidden');
+      window.openContinent('Europe'); // Default open to init
+  } else {
+      modRegions.classList.add('hidden');
+      modContent.classList.remove('hidden');
+      modContent.innerHTML = '<div class="tbl-loading">Chargement…</div>';
 
-    } else if (tab === 'ips') {
-      const snap = await getDocs(bannedIPsCol());
-      c.innerHTML = `<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
-        <input type="text" id="newBanIP" class="form-input" style="width:200px" placeholder="Adresse IP">
-        <input type="text" id="newBanIPReason" class="form-input" style="width:200px" placeholder="Raison">
-        <button class="btn btn-p btn-sm" onclick="window.addBanIP()"><i class="fa-solid fa-plus"></i> Bloquer</button>
-      </div>
-      <div class="tbl-wrap"><table><thead><tr><th>IP</th><th>Raison</th><th>Bloquée le</th><th>Actions</th></tr></thead>
-      <tbody>${snap.docs.map(d => {
-        const b = d.data();
-        return `<tr>
-          <td><code style="font-size:.8rem;color:var(--yellow)">${d.id}</code></td>
-          <td style="font-size:.77rem;color:var(--muted)">${b.reason||'—'}</td>
-          <td style="font-size:.77rem;color:var(--dim)">${fmtDate(b.bannedAt)}</td>
-          <td><button class="btn btn-g btn-xs" onclick="window.unbanIP('${d.id}')"><i class="fa-solid fa-unlock"></i></button></td>
-        </tr>`;
-      }).join('')||'<tr><td colspan="4" class="tbl-empty">Aucune IP bloquée</td></tr>'}</tbody></table></div>`;
+      try {
+        if (tab === 'accounts') {
+          const snap = await getDocs(query(usersStatusCol(), where('status', 'in', ['banned','suspended']), limit(100)));
+          if (!snap.size) { modContent.innerHTML = '<div class="empty-state"><i class="fa-solid fa-shield-halved"></i><p>Aucune sanction active</p></div>'; return; }
+          modContent.innerHTML = `<div class="tbl-wrap"><table><colgroup><col style="width:20%"><col style="width:20%"><col style="width:15%"><col style="width:20%"><col style="width:15%"><col style="width:10%"></colgroup>
+            <thead><tr><th>Utilisateur</th><th>Email</th><th>Type</th><th>Raison</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>${snap.docs.map(d => {
+              const u = d.data();
+              return `<tr>
+                <td class="ellipsis" style="font-size:.82rem;font-weight:600">${u.displayName||'—'}</td>
+                <td class="ellipsis" style="font-size:.78rem;color:var(--muted)">${u.email||'—'}</td>
+                <td>${statusPill(u.status)}</td>
+                <td class="ellipsis" style="font-size:.77rem;color:var(--dim)">${u.banReason||'—'}</td>
+                <td style="font-size:.77rem;color:var(--dim)">${fmtDate(u.bannedAt)}</td>
+                <td>${canDo('users_ban') ? `<button class="btn btn-g btn-xs" onclick="window.unbanUser('${d.id}')"><i class="fa-solid fa-unlock"></i> Débannir</button>` : '—'}</td>
+              </tr>`;
+            }).join('')}</tbody></table></div>`;
 
-    } else if (tab === 'regions') {
-      const snap = await getDoc(doc(db, 'artifacts', APP_MAIN, 'system', 'restrictions'));
-      const data = snap.exists() ? snap.data() : {};
-      const bannedRegions = data.banned_regions || {};
-      const regionsList = Object.keys(bannedRegions).map(k => ({ id: k, ...bannedRegions[k] }));
+        } else if (tab === 'ips') {
+          const snap = await getDocs(bannedIPsCol());
+          modContent.innerHTML = `<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <input type="text" id="newBanIP" class="form-input" style="width:200px" placeholder="Adresse IP">
+            <input type="text" id="newBanIPReason" class="form-input" style="width:200px" placeholder="Raison">
+            <button class="btn btn-p btn-sm" onclick="window.addBanIP()"><i class="fa-solid fa-plus"></i> Bloquer</button>
+          </div>
+          <div class="tbl-wrap"><table><thead><tr><th>IP</th><th>Raison</th><th>Bloquée le</th><th>Actions</th></tr></thead>
+          <tbody>${snap.docs.map(d => {
+            const b = d.data();
+            return `<tr>
+              <td><code style="font-size:.8rem;color:var(--yellow)">${d.id}</code></td>
+              <td style="font-size:.77rem;color:var(--muted)">${b.reason||'—'}</td>
+              <td style="font-size:.77rem;color:var(--dim)">${fmtDate(b.bannedAt)}</td>
+              <td><button class="btn btn-g btn-xs" onclick="window.unbanIP('${d.id}')"><i class="fa-solid fa-unlock"></i></button></td>
+            </tr>`;
+          }).join('')||'<tr><td colspan="4" class="tbl-empty">Aucune IP bloquée</td></tr>'}</tbody></table></div>`;
 
-      c.innerHTML = `<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
-        <select id="banRegionType" class="form-select" style="width:140px"><option value="country">Pays (Code)</option><option value="city">Ville</option></select>
-        <input type="text" id="newBanRegion" class="form-input" style="width:160px" placeholder="Ex: FR, Paris">
-        <input type="text" id="newBanRegionReason" class="form-input" style="width:200px" placeholder="Raison">
-        <button class="btn btn-p btn-sm" onclick="window.addBanRegion()"><i class="fa-solid fa-plus"></i> Bloquer</button>
-      </div>
-      <div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Région</th><th>Raison</th><th>Bloquée le</th><th>Actions</th></tr></thead>
-      <tbody>${regionsList.map(b => `<tr>
-          <td>${b.type === 'country' ? '<span class="pill pill-y">Pays</span>' : '<span class="pill pill-b">Ville</span>'}</td>
-          <td style="font-weight:700">${b.region}</td>
-          <td style="font-size:.77rem;color:var(--muted)">${b.reason||'—'}</td>
-          <td style="font-size:.77rem;color:var(--dim)">${fmtDate(b.bannedAt)}</td>
-          <td><button class="btn btn-g btn-xs" onclick="window.unbanRegion('${b.id}')"><i class="fa-solid fa-unlock"></i></button></td>
-        </tr>`).join('')||'<tr><td colspan="5" class="tbl-empty">Aucune région bloquée</td></tr>'}</tbody></table></div>`;
-
-    } else if (tab === 'history') {
-      const snap = await getDocs(query(banHistCol(), orderBy('ts','desc'), limit(50)));
-      c.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Cible</th><th>Type</th><th>Raison</th><th>Admin</th><th>Date</th></tr></thead>
-      <tbody>${snap.docs.map(d => {
-        const b = d.data();
-        return `<tr>
-          <td class="ellipsis" style="font-size:.8rem;font-weight:600">${b.targetEmail||b.target||'—'}</td>
-          <td>${statusPill(b.type||'banned')}</td>
-          <td class="ellipsis" style="font-size:.77rem;color:var(--dim)">${b.reason||'—'}</td>
-          <td class="ellipsis" style="font-size:.77rem;color:var(--muted)">${b.adminEmail||'—'}</td>
-          <td style="font-size:.77rem;color:var(--dim)">${fmtDateTime(b.ts)}</td>
-        </tr>`;
-      }).join('')||'<tr><td colspan="5" class="tbl-empty">Aucun historique</td></tr>'}</tbody></table></div>`;
-    }
-  } catch(e) {
-    console.error(e); c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Erreur de lecture</p></div>';
+        } else if (tab === 'history') {
+          const snap = await getDocs(query(banHistCol(), orderBy('ts','desc'), limit(50)));
+          modContent.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Cible</th><th>Type</th><th>Raison</th><th>Admin</th><th>Date</th></tr></thead>
+          <tbody>${snap.docs.map(d => {
+            const b = d.data();
+            return `<tr>
+              <td class="ellipsis" style="font-size:.8rem;font-weight:600">${b.targetEmail||b.target||'—'}</td>
+              <td>${statusPill(b.type||'banned')}</td>
+              <td class="ellipsis" style="font-size:.77rem;color:var(--dim)">${b.reason||'—'}</td>
+              <td class="ellipsis" style="font-size:.77rem;color:var(--muted)">${b.adminEmail||'—'}</td>
+              <td style="font-size:.77rem;color:var(--dim)">${fmtDateTime(b.ts)}</td>
+            </tr>`;
+          }).join('')||'<tr><td colspan="5" class="tbl-empty">Aucun historique</td></tr>'}</tbody></table></div>`;
+        }
+      } catch(e) {
+        console.error(e); modContent.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Erreur de lecture</p></div>';
+      }
   }
 };
 
@@ -1840,25 +2237,248 @@ window.unbanIP = async function(ip) {
   } catch(e) { window.toast('Erreur', 'err'); }
 };
 
-window.addBanRegion = async function() {
-  const type = $$('banRegionType').value; const region = $$('newBanRegion')?.value?.trim(); const reason = $$('newBanRegionReason')?.value?.trim() || '—';
-  if (!region) { window.toast('Région requise', 'warn'); return; }
-  try {
-    const docId = `${type}_${region.toLowerCase()}`;
-    const ref = doc(db, 'artifacts', APP_MAIN, 'system', 'restrictions');
-    await setDoc(ref, {
-      banned_regions: { [docId]: { type, region, reason, bannedAt: serverTimestamp(), bannedBy: _user.email } }
-    }, { merge: true });
-    await logAction('Ban Régional', region, reason); window.toast('Région bloquée', 'ok'); window.switchModTab('regions');
-  } catch(e) { window.toast('Erreur', 'err'); }
+// --- LOGIQUE GEODATA (BANS REGIONAUX 3 ÉTAPES) ---
+window.openContinent = async (continentName) => {
+    const s1 = $$('blocus-step-1'); const s2 = $$('blocus-step-2');
+    const csi = $$('countrySearchInput');
+    if(csi) { csi.dataset.continent = continentName; csi.value = ''; }
+    
+    // Fetch latest restrictions
+    try {
+        const snap = await getDoc(doc(db, 'artifacts', APP_MAIN, 'system', 'restrictions'));
+        if(snap.exists()) _geoRestrictions = snap.data();
+        if(!_geoRestrictions.countries) _geoRestrictions.countries = {};
+    } catch(e) {}
+
+    window.renderCountriesForContinent(continentName, '');
+
+    if(s1) s1.classList.add('-translate-x-full', 'opacity-0', 'pointer-events-none');
+    if(s2) s2.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
 };
-window.unbanRegion = async function(docId) {
-  try {
-    const ref = doc(db, 'artifacts', APP_MAIN, 'system', 'restrictions');
-    await updateDoc(ref, { [`banned_regions.${docId}`]: deleteField() });
-    await logAction('Débannissement Régional', docId, ''); window.toast('Région débloquée', 'ok'); window.switchModTab('regions');
-  } catch(e) { window.toast('Erreur', 'err'); }
+
+window.renderCountriesForContinent = function(continentName, search) {
+    const grid = $$('countriesGrid');
+    if(!grid) return;
+
+    if (GEO_DATA[continentName]) {
+        let banCount = 0;
+        let htmlContent = ''; 
+
+        GEO_DATA[continentName].forEach(c => {
+            const rInfo = _geoRestrictions.countries[c.name] || {};
+            const isBanned = rInfo.banned === true;
+            if(isBanned) banCount++;
+
+            if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return;
+
+            const statusIndicator = isBanned ? '<div class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_red]"></div>' : '<div class="w-3 h-3 rounded-full bg-slate-700"></div>';
+            const safeName = c.name.replace(/'/g, "\\'"); 
+
+            htmlContent += `
+                <div class="card border-orange-500/20 p-4 flex items-center justify-between group cursor-pointer mb-0" onclick="window.openCountryConfig('${continentName}', '${safeName}')">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">${c.emoji}</span>
+                        <span class="text-white font-bold text-sm tracking-wide group-hover:text-orange-400 transition-colors">${c.name}</span>
+                    </div>
+                    ${statusIndicator}
+                </div>
+            `;
+        });
+
+        grid.innerHTML = htmlContent; 
+
+        const toggleSwitch = $$('continentBanToggle');
+        const toggleLabel = $$('continentToggleLabel');
+        const isMajorityBanned = banCount > (GEO_DATA[continentName].length / 2);
+
+        if(toggleSwitch) toggleSwitch.checked = isMajorityBanned;
+        if(toggleLabel) {
+            toggleLabel.innerText = isMajorityBanned ? "CONTINENT FERMÉ" : "FERMER CONTINENT";
+            toggleLabel.className = isMajorityBanned ? "text-red-500 font-mono text-[10px] font-bold uppercase tracking-widest" : "text-slate-400 font-mono text-[10px] font-bold uppercase tracking-widest";
+        }
+    }
 };
+
+if($$('countrySearchInput')) {
+    $$('countrySearchInput').addEventListener('input', (e) => {
+        const continent = e.target.dataset.continent;
+        window.renderCountriesForContinent(continent, e.target.value);
+    });
+}
+
+window.handleContinentToggle = async (checkboxElement) => {
+    try {
+        const searchInp = $$('countrySearchInput');
+        const continent = searchInp ? searchInp.dataset.continent : null;
+
+        if(!continent || !GEO_DATA[continent]) {
+            checkboxElement.checked = !checkboxElement.checked;
+            return;
+        }
+
+        const isBanning = checkboxElement.checked;
+        const actionText = isBanning ? "FERMER" : "OUVRIR";
+
+        window.confirm_(
+            "Protocole Continental", 
+            `Voulez-vous vraiment ${actionText} tout le continent ${continent} ?`, 
+            async () => {
+                if (!_geoRestrictions.countries) _geoRestrictions.countries = {};
+                const engToFr = { "United States": "États-Unis", "United Kingdom": "Royaume-Uni", "Algeria": "Algérie", "Morocco": "Maroc", "Tunisia": "Tunisie", "Germany": "Allemagne", "Spain": "Espagne", "Italy": "Italie", "Brazil": "Brésil", "South Africa": "Afrique du Sud", "Russia": "Russie", "Japan": "Japon", "China": "Chine", "India": "Inde", "Egypt": "Égypte", "Switzerland": "Suisse", "Belgium": "Belgique", "Netherlands": "Pays-Bas", "Sweden": "Suède", "Turkey": "Turquie", "Mexico": "Mexique", "Colombia": "Colombie", "Argentina": "Argentine", "Saudi Arabia": "Arabie Saoudite", "United Arab Emirates": "Émirats Arabes Unis", "Ivory Coast": "Côte d'Ivoire", "Senegal": "Sénégal", "Cameroon": "Cameroun", "Lebanon": "Liban" };
+
+                GEO_DATA[continent].forEach(c => {
+                    const cName = c.name;
+                    const cConfig = _geoRestrictions.countries[cName] || { bannedCities: [], disabledModes: [], banMessage: "", banIcon: "warning", customAppName: "" };
+                    cConfig.banned = isBanning;
+
+                    _geoRestrictions.countries[cName] = cConfig;
+                    const englishAliases = Object.keys(engToFr).filter(k => engToFr[k] === cName);
+                    englishAliases.forEach(alias => { _geoRestrictions.countries[alias] = cConfig; });
+                    const unaccented = cName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    if (unaccented !== cName) _geoRestrictions.countries[unaccented] = cConfig;
+                });
+
+                try {
+                    await setDoc(doc(db, "artifacts", APP_MAIN, "system", "restrictions"), _geoRestrictions, {merge: true});
+                    window.toast(`CONTINENT ${isBanning ? 'FERMÉ' : 'OUVERT'} !`, "ok");
+                    window.renderCountriesForContinent(continent, searchInp ? searchInp.value : '');
+                } catch(err) { 
+                    window.toast("ERREUR DE SAUVEGARDE", "err"); 
+                    checkboxElement.checked = !isBanning; 
+                }
+            },
+            actionText,
+            isBanning ? 'btn-r' : 'btn-g'
+        );
+    } catch(fatalErr) {
+        checkboxElement.checked = !checkboxElement.checked;
+    }
+};
+
+window.backToStep1 = () => {
+    const s1 = $$('blocus-step-1'); const s2 = $$('blocus-step-2');
+    if(s2) s2.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+    if(s1) s1.classList.remove('-translate-x-full', 'opacity-0', 'pointer-events-none');
+};
+
+window.openCountryConfig = (continentName, countryName) => {
+    const s2 = $$('blocus-step-2'); const s3 = $$('blocus-step-3');
+
+    const countryObj = GEO_DATA[continentName].find(c => c.name === countryName);
+    if(!countryObj) return;
+
+    _currentCountryContext = countryObj; 
+    if (!_geoRestrictions.countries) _geoRestrictions.countries = {};
+
+    const cData = _geoRestrictions.countries[countryName] || { 
+        banned: false, bannedCities: [], disabledModes: [], banMessage: "", banIcon: "shield", customAppName: "" 
+    };
+
+    $$('configCountryEmoji').textContent = countryObj.emoji;
+    $$('configCountryName').textContent = countryObj.name;
+
+    const cToggle = $$('countryBanToggle');
+    if(cToggle) cToggle.checked = cData.banned === true;
+
+    const citiesDiv = $$('configCitiesList');
+    if(citiesDiv) {
+        let citiesHtml = ''; 
+        countryObj.cities.forEach(city => {
+            const isCityBanned = (cData.bannedCities || []).includes(city);
+            citiesHtml += `
+                <div class="flex justify-between items-center bg-black/40 border border-white/5 p-3 rounded-lg">
+                    <span class="text-xs font-mono text-slate-300">${city}</span>
+                    <label class="toggle" style="width:40px;height:20px">
+                        <input type="checkbox" class="toggle-city" data-city="${city}" ${isCityBanned ? 'checked' : ''}>
+                        <span class="toggle-slider" style="background:var(--xdim)"></span>
+                    </label>
+                </div>
+            `;
+        });
+        citiesDiv.innerHTML = citiesHtml; 
+    }
+
+    if($$('configAppName')) $$('configAppName').value = cData.customAppName || "";
+    if($$('configBanMsg')) $$('configBanMsg').value = cData.banMessage || "";
+
+    const currentIcon = cData.banIcon || 'shield';
+    document.querySelectorAll('.svg-icon-btn').forEach(btn => {
+        if(btn.dataset.icon === currentIcon) btn.classList.add('selected');
+        else btn.classList.remove('selected');
+    });
+
+    if(s2) s2.classList.add('-translate-x-full', 'opacity-0', 'pointer-events-none');
+    if(s3) s3.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+};
+
+window.backToStep2 = () => {
+    const s2 = $$('blocus-step-2'); const s3 = $$('blocus-step-3');
+    if(s3) s3.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+    if(s2) s2.classList.remove('-translate-x-full', 'opacity-0', 'pointer-events-none');
+    _currentCountryContext = null;
+};
+
+document.querySelectorAll('.svg-icon-btn').forEach(btn => {
+    btn.onclick = (e) => {
+        document.querySelectorAll('.svg-icon-btn').forEach(b => b.classList.remove('selected'));
+        e.currentTarget.classList.add('selected');
+    };
+});
+
+if($$('saveCountryConfigBtn')) {
+    $$('saveCountryConfigBtn').onclick = async () => {
+        if(!_currentCountryContext) return;
+        const btn = $$('saveCountryConfigBtn');
+        if(btn) btn.innerText = "SAUVEGARDE EN COURS...";
+
+        const cName = _currentCountryContext.name;
+        const cToggle = $$('countryBanToggle');
+        const isBanned = cToggle ? cToggle.checked : false;
+
+        const bannedCities = [];
+        document.querySelectorAll('.toggle-city:checked').forEach(c => bannedCities.push(c.dataset.city));
+
+        const confAppName = $$('configAppName');
+        const confBanMsg = $$('configBanMsg');
+        const appName = confAppName ? confAppName.value.trim() : "";
+        const msg = confBanMsg ? confBanMsg.value.trim() : "";
+        const selIconBtn = document.querySelector('.svg-icon-btn.selected');
+        const icon = selIconBtn ? selIconBtn.dataset.icon : 'shield';
+
+        if (!_geoRestrictions.countries) _geoRestrictions.countries = {};
+
+        const ruleConfig = {
+            banned: isBanned,
+            bannedCities: bannedCities,
+            disabledModes: [],
+            banMessage: msg,
+            banIcon: icon,
+            customAppName: appName
+        };
+
+        _geoRestrictions.countries[cName] = ruleConfig;
+
+        const engToFr = { "United States": "États-Unis", "United Kingdom": "Royaume-Uni", "Algeria": "Algérie", "Morocco": "Maroc", "Tunisia": "Tunisie", "Germany": "Allemagne", "Spain": "Espagne", "Italy": "Italie", "Brazil": "Brésil", "South Africa": "Afrique du Sud", "Russia": "Russie", "Japan": "Japon", "China": "Chine", "India": "Inde", "Egypt": "Égypte", "Switzerland": "Suisse", "Belgium": "Belgique", "Netherlands": "Pays-Bas", "Sweden": "Suède", "Turkey": "Turquie", "Mexico": "Mexique", "Colombia": "Colombie", "Argentina": "Argentine", "Saudi Arabia": "Arabie Saoudite", "United Arab Emirates": "Émirats Arabes Unis", "Ivory Coast": "Côte d'Ivoire", "Senegal": "Sénégal", "Cameroon": "Cameroun", "Lebanon": "Liban" };
+        const englishAliases = Object.keys(engToFr).filter(k => engToFr[k] === cName);
+        englishAliases.forEach(alias => { _geoRestrictions.countries[alias] = ruleConfig; });
+
+        const unaccented = cName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (unaccented !== cName) _geoRestrictions.countries[unaccented] = ruleConfig;
+
+        try {
+            await setDoc(doc(db, "artifacts", APP_MAIN, "system", "restrictions"), _geoRestrictions, {merge: true});
+            window.toast("CONFIGURATION APPLIQUÉE", "ok");
+            setTimeout(() => {
+                window.backToStep2();
+                const continent = Object.keys(GEO_DATA).find(k => GEO_DATA[k].some(x => x.name === cName));
+                const ci = $$('countrySearchInput');
+                if(continent) window.renderCountriesForContinent(continent, ci ? ci.value : ""); 
+            }, 500);
+        } catch(e) { window.toast("ERREUR SAUVEGARDE", "err"); }
+        finally { if(btn) btn.innerText = "APPLIQUER LA CONFIGURATION"; }
+    };
+}
+
 
 // ══════════════════════════════════════════
 // SIGNALEMENTS & AVIS & WATCH PARTIES
