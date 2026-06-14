@@ -474,6 +474,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
           <button class="notif-target-btn on" id="modTab-accounts" onclick="switchModTab('accounts')">Comptes bannis</button>
           <button class="notif-target-btn" id="modTab-ips" onclick="switchModTab('ips')">IPs bloquées</button>
+          <button class="notif-target-btn" id="modTab-regions" onclick="switchModTab('regions')">Bans Régionaux</button>
           <button class="notif-target-btn" id="modTab-history" onclick="switchModTab('history')">Historique</button>
         </div>
         <div id="modContent"><div class="tbl-loading">Chargement…</div></div>
@@ -816,6 +817,16 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ── SLIDE PANEL : DÉTAIL WATCH PARTY ── -->
+<div id="slideParty" class="slide-panel">
+  <div class="slide-hd">
+    <span class="slide-title">Détails Watch Party</span>
+    <button class="slide-close" onclick="closeSlide()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="slide-bd" id="slidePartyBd"></div>
+  <div class="slide-ft" id="slidePartyFt"></div>
+</div>
+
 <!-- ── MODAL : CONFIRMER ── -->
 <div id="modalConfirm" class="modal-bg hidden">
   <div class="modal-card">
@@ -1037,6 +1048,7 @@ const MODULES = [
 
 const GRANULAR_PERMS = [
   { id:'users_see_key',      label:'Voir les cl\u00e9s en clair',    cat:'S\u00e9curit\u00e9' },
+  { id:'users_see_photo',    label:'Voir les photos de profil',      cat:'S\u00e9curit\u00e9' },
   { id:'users_delete',       label:'Supprimer un compte',             cat:'S\u00e9curit\u00e9' },
   { id:'users_ban',          label:'Bannir / Suspendre',              cat:'Mod\u00e9ration' },
   { id:'notifications_push', label:'Envoyer des notifications push',  cat:'Notifications' },
@@ -1316,11 +1328,11 @@ window.loadDashboard = async function() {
   $$('dashStats').innerHTML = '<div class="tbl-loading" style="grid-column:1/-1">Chargement des stats…</div>';
 
   try {
-    // Parallel reads
-    const [adminsSnap, logsSnap, usersSnap, keysSnap, cfgSnap] = await Promise.all([
+    // Parallel reads - On utilise collectionGroup('profile') pour avoir TOUS les utilisateurs
+    const [adminsSnap, logsSnap, profilesSnap, keysSnap, cfgSnap] = await Promise.all([
       getDocs(adminsCol()),
       getDocs(query(logsCol(), orderBy('ts','desc'), limit(10))),
-      getDocs(query(usersStatusCol(), limit(200))),
+      getDocs(query(collectionGroup(db, 'profile'), limit(200))).catch(()=>({docs:[]})),
       getDocs(collectionGroup(db, 'security')),
       getDoc(cfgDoc())
     ]);
@@ -1328,12 +1340,12 @@ window.loadDashboard = async function() {
     const totalAdmins  = adminsSnap.size;
     const totalKeys    = keysSnap.size;
     const activeKeys   = keysSnap.docs.filter(d => !d.data().revoked).length;
-    const totalUsers   = usersSnap.size;
-    const onlineUsers  = usersSnap.docs.filter(d => {
-      const ls = d.data().lastSeen;
+    const totalUsers   = profilesSnap.size;
+    const onlineUsers  = profilesSnap.docs.filter(d => {
+      const ls = d.data().lastLoginAt || d.data().lastSeen;
       if (!ls) return false;
-      const t = ls.seconds ? new Date(ls.seconds*1000) : new Date(ls);
-      return Date.now() - t.getTime() < 5 * 60 * 1000;
+      const t = ls.seconds ? new Date(ls.seconds*1000).getTime() : new Date(ls).getTime();
+      return Date.now() - t < 5 * 60 * 1000;
     }).length;
 
     $$('dashStats').innerHTML = `
@@ -1344,23 +1356,24 @@ window.loadDashboard = async function() {
     `;
 
     // Recent users
-    const recentUsers = usersSnap.docs
-      .filter(d => d.data().email)
+    const recentUsers = profilesSnap.docs
+      .map(d => ({ id: d.ref.parent?.parent?.id, ...d.data() }))
       .sort((a,b) => {
-        const ta = a.data().lastSeen?.seconds||0;
-        const tb = b.data().lastSeen?.seconds||0;
+        const ta = a.lastLoginAt ? new Date(a.lastLoginAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        const tb = b.lastLoginAt ? new Date(b.lastLoginAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
         return tb - ta;
       }).slice(0,5);
 
     $$('dashRecentUsers').innerHTML = recentUsers.length
-      ? `<table style="width:100%"><tbody>${recentUsers.map(d => {
-          const u = d.data();
+      ? `<table style="width:100%"><tbody>${recentUsers.map(u => {
+          const isAnon = !u.email;
+          const dispName = isAnon ? "Utilisateur de l'écosystème" : (u.displayName || "Utilisateur");
           return `<tr>
             <td><div style="display:flex;align-items:center;gap:8px">
-              ${u.photoURL ? `<img class="avatar" src="${u.photoURL}">` : `<div class="avatar-t">${initials(u.displayName||u.email||'?')}</div>`}
-              <span style="font-size:.81rem;font-weight:600">${u.displayName||u.email||'—'}</span>
+              ${u.photoURL ? `<img class="avatar" src="${u.photoURL}">` : `<div class="avatar-t">${initials(dispName)}</div>`}
+              <span style="font-size:.81rem;font-weight:600">${dispName}</span>
             </div></td>
-            <td><span style="font-size:.75rem;color:var(--dim)">${timeAgo(u.lastSeen)}</span></td>
+            <td><span style="font-size:.75rem;color:var(--dim)">${timeAgo(u.lastLoginAt || u.createdAt)}</span></td>
           </tr>`;
         }).join('')}</tbody></table>`
       : '<div class="tbl-empty">Aucun utilisateur récent</div>';
@@ -1412,48 +1425,92 @@ window.loadUsers = async function() {
   $$('usersTbody').innerHTML = '<tr><td colspan="6" class="tbl-loading">Chargement…</td></tr>';
   try {
     const filter = $$('usersFilter').value;
-    // On augmente la limite pour capter un maximum de comptes
-    let q = query(usersStatusCol(), limit(2000));
-    const snap = await getDocs(q);
+    
+    // On interroge TOUTES les collections pour unifier les comptes anonymes, les statuts et les clés
+    const [profilesSnap, keysSnap, statusSnap, errorsSnap] = await Promise.all([
+      getDocs(query(collectionGroup(db, 'profile'), limit(2000))).catch(() => ({docs:[]})),
+      getDocs(collectionGroup(db, 'security')).catch(() => ({docs:[]})),
+      getDocs(query(usersStatusCol(), limit(2000))).catch(() => ({docs:[]})),
+      getDocs(query(bugsCol(), limit(1000))).catch(() => ({docs:[]})) // Pour trouver les UIDs cachés
+    ]);
 
     let usersMap = {};
-    snap.docs.forEach(d => {
-      usersMap[d.id] = { id: d.id, ...d.data() };
+
+    // 1. Profils (contient la majorité des utilisateurs, incluant les anonymes)
+    profilesSnap.docs.forEach(d => {
+      const uid = d.ref.parent?.parent?.id;
+      if (uid) {
+        usersMap[uid] = { id: uid, ...d.data(), isAnonymous: !d.data().email };
+      }
     });
 
-    // On récupère AUSSI toutes les clés pour inclure les comptes anonymes/invités qui n'ont pas de "users_status"
-    const keysSnap = await getDocs(collectionGroup(db, 'security'));
+    // 2. Statuts (pour récupérer l'état des bans)
+    statusSnap.docs.forEach(d => {
+      const uid = d.id;
+      if (!usersMap[uid]) usersMap[uid] = { id: uid, isAnonymous: !d.data().email };
+      usersMap[uid] = { ...usersMap[uid], ...d.data() };
+    });
+
+    // 3. Collecter les UIDs depuis les logs (Fantômes absolus)
+    errorsSnap.docs.forEach(d => {
+       const uid = d.data().userUid;
+       if (uid && !usersMap[uid]) {
+           usersMap[uid] = {
+               id: uid,
+               isAnonymous: true,
+               displayName: "Utilisateur Fantôme",
+               status: 'active',
+               lastSeen: d.data().timestamp,
+               lastIp: d.data().ip || '',
+               country: d.data().country || ''
+           };
+       }
+    });
+
+    // 4. Clés (fusion avec les données de profil)
     const keyMap = {};
     keysSnap.docs.forEach(d => {
       const data = d.data();
       const uid = data.uid || d.ref.parent?.parent?.id;
       if (uid) {
         keyMap[uid] = data;
-        // Si l'utilisateur n'est pas dans usersMap, c'est un compte anonyme
         if (!usersMap[uid]) {
           usersMap[uid] = {
             id: uid,
             email: data.email || data.owner || '',
-            displayName: data.displayName || data.name || 'Anonyme',
+            displayName: data.displayName || data.name || "Utilisateur de l'écosystème",
             photoURL: data.photoURL || data.avatar || '',
             status: 'active',
             createdAt: data.keyCreatedAt || data.lastSeen || null,
             lastSeen: data.lastSeen || null,
-            isAnonymous: true
+            lastIp: data.lastIp || '',
+            country: data.country || '',
+            city: data.city || '',
+            isAnonymous: !(data.email || data.owner)
           };
+        } else {
+            // Mettre à jour l'IP depuis la clé si elle y est plus récente
+            if(data.lastIp) usersMap[uid].lastIp = data.lastIp;
+            if(data.country) usersMap[uid].country = data.country;
+            if(data.city) usersMap[uid].city = data.city;
         }
       }
     });
 
     let users = Object.values(usersMap);
-    if (filter !== 'all') users = users.filter(u => u.status === filter);
+    users.forEach(u => {
+      u.keyData = keyMap[u.id] || null;
+      if (!u.email || u.email === '') u.isAnonymous = true;
+    });
 
-    _usersCache = users.map(u => ({ ...u, keyData: keyMap[u.id] || null }));
+    if (filter !== 'all') users = users.filter(u => (u.status || 'active') === filter);
+
+    _usersCache = users;
     
-    // Trier par date décroissante (le plus récent en haut)
+    // Trier par date décroissante
     _usersCache.sort((a, b) => {
-      const ta = a.lastSeen?.seconds || a.createdAt?.seconds || (new Date(a.lastSeen || a.createdAt)).getTime()/1000 || 0;
-      const tb = b.lastSeen?.seconds || b.createdAt?.seconds || (new Date(b.lastSeen || b.createdAt)).getTime()/1000 || 0;
+      const ta = a.lastLoginAt ? new Date(a.lastLoginAt).getTime() : (a.lastSeen?.seconds ? a.lastSeen.seconds*1000 : (new Date(a.lastSeen || a.createdAt)).getTime() || 0);
+      const tb = b.lastLoginAt ? new Date(b.lastLoginAt).getTime() : (b.lastSeen?.seconds ? b.lastSeen.seconds*1000 : (new Date(b.lastSeen || b.createdAt)).getTime() || 0);
       return tb - ta;
     });
 
@@ -1478,23 +1535,50 @@ function renderUsersTable(users) {
       ? (u.keyData?.apiKey || u.keyData?.key || '—')
       : (hasKey ? maskKey(u.keyData?.apiKey || u.keyData?.key || '') : '—');
       
-    // Détection d'un compte anonyme
-    const isAnon = !u.email || u.isAnonymous || u.email === '';
-    const emailHtml = isAnon ? `<span class="pill pill-d">Compte Anonyme</span>` : `<span style="font-size:.79rem;color:var(--muted)">${u.email}</span>`;
+    const isAnon = u.isAnonymous;
+    const dispName = isAnon ? "Utilisateur de l'écosystème" : (u.displayName || "Utilisateur");
+    const emailHtml = isAnon ? `<span class="pill pill-d">Compte invité / Session</span>` : `<span style="font-size:.79rem;color:var(--muted)">${u.email}</span>`;
+
+    const showPhoto = canDo('users_see_photo');
+    const avatarHtml = (u.photoURL && showPhoto) 
+      ? `<img class="avatar" src="${u.photoURL}">` 
+      : `<div class="avatar-t" style="font-size:.7rem">${initials(dispName)}</div>`;
+
+    // Restrictions pour les admins (non super) sur les comptes anonymes
+    const restrictAnon = isAnon && !_profile.isAdminSuper;
+    const msgRestreint = "Votre organisation ne vous permet pas d\\'interagir avec ce compte (Niveau de sécurité insuffisant)";
+
+    let viewBtn = restrictAnon 
+      ? `<button class="btn btn-g btn-xs" onclick="toast('${msgRestreint}', 'warn')" title="Accès restreint"><i class="fa-solid fa-eye"></i></button>`
+      : `<button class="btn btn-g btn-xs" onclick="openUserDetail('${u.id}')"><i class="fa-solid fa-eye"></i></button>`;
+
+    let banBtn = '';
+    if (canDo('users_ban')) {
+      banBtn = restrictAnon
+        ? `<button class="btn btn-y btn-xs" onclick="toast('${msgRestreint}', 'warn')" title="Accès restreint"><i class="fa-solid fa-ban"></i></button>`
+        : `<button class="btn btn-y btn-xs" onclick="openBanModal('${u.id}')"><i class="fa-solid fa-ban"></i></button>`;
+    }
+
+    let delBtn = '';
+    if (canDo('users_delete')) {
+      delBtn = restrictAnon
+        ? `<button class="btn btn-r btn-xs" onclick="toast('${msgRestreint}', 'warn')" title="Accès restreint"><i class="fa-solid fa-trash"></i></button>`
+        : `<button class="btn btn-r btn-xs" onclick="confirmDeleteUser('${u.id}')"><i class="fa-solid fa-trash"></i></button>`;
+    }
 
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:9px">
-        ${u.photoURL ? `<img class="avatar" src="${u.photoURL}">` : `<div class="avatar-t" style="font-size:.7rem">${initials(u.displayName||u.email||'A')}</div>`}
-        <div><div style="font-size:.82rem;font-weight:600">${u.displayName||'Anonyme'}</div><div style="font-size:.71rem;color:var(--dim)">${u.id.slice(0,12)}…</div></div>
+        ${avatarHtml}
+        <div><div style="font-size:.82rem;font-weight:600">${dispName}</div><div style="font-size:.71rem;color:var(--dim)">${u.id.slice(0,12)}…</div></div>
       </div></td>
       <td>${emailHtml}</td>
       <td><code style="font-size:.71rem;color:var(--purple);background:rgba(168,85,247,.08);padding:2px 7px;border-radius:5px">${keyDisplay}</code></td>
       <td>${statusPill(u.status||'active')}</td>
-      <td style="font-size:.77rem;color:var(--dim)">${fmtDate(u.createdAt||u.lastSeen)}</td>
+      <td style="font-size:.77rem;color:var(--dim)">${fmtDate(u.lastLoginAt || u.createdAt || u.lastSeen)}</td>
       <td><div style="display:flex;gap:5px">
-        <button class="btn btn-g btn-xs" onclick="openUserDetail('${u.id}')"><i class="fa-solid fa-eye"></i></button>
-        ${canDo('users_ban') ? `<button class="btn btn-y btn-xs" onclick="openBanModal('${u.id}')"><i class="fa-solid fa-ban"></i></button>` : ''}
-        ${canDo('users_delete') ? `<button class="btn btn-r btn-xs" onclick="confirmDeleteUser('${u.id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
+        ${viewBtn}
+        ${banBtn}
+        ${delBtn}
       </div></td>
     </tr>`;
   }).join('');
@@ -1503,11 +1587,12 @@ function renderUsersTable(users) {
 window.filterUsers = function(q) {
   if (!q) { renderUsersTable(_usersCache); return; }
   const lq = q.toLowerCase();
-  const filtered = _usersCache.filter(u =>
-    (u.displayName||'').toLowerCase().includes(lq) ||
-    (u.email||'').toLowerCase().includes(lq) ||
-    (u.id||'').toLowerCase().includes(lq)
-  );
+  const filtered = _usersCache.filter(u => {
+    const dName = u.isAnonymous ? "Utilisateur de l'écosystème" : (u.displayName || "Utilisateur");
+    return dName.toLowerCase().includes(lq) ||
+           (u.email||'').toLowerCase().includes(lq) ||
+           (u.id||'').toLowerCase().includes(lq);
+  });
   renderUsersTable(filtered);
 };
 
@@ -1515,13 +1600,19 @@ window.openUserDetail = function(uid) {
   const u = _usersCache.find(x => x.id === uid);
   if (!u) return;
   const kd = u.keyData || {};
-  const isAnon = !u.email || u.isAnonymous || u.email === '';
+  const isAnon = u.isAnonymous;
+  const dispName = isAnon ? "Utilisateur de l'écosystème" : (u.displayName || "Utilisateur");
+  
+  const showPhoto = canDo('users_see_photo');
+  const avatarHtml = (u.photoURL && showPhoto) 
+    ? `<img src="${u.photoURL}" style="width:54px;height:54px;border-radius:50%;object-fit:cover">` 
+    : `<div class="avatar-t" style="width:54px;height:54px;font-size:1rem">${initials(dispName)}</div>`;
   
   $$('slideUserBd').innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-      ${u.photoURL ? `<img src="${u.photoURL}" style="width:54px;height:54px;border-radius:50%;object-fit:cover">` : `<div class="avatar-t" style="width:54px;height:54px;font-size:1rem">${initials(u.displayName||u.email||'A')}</div>`}
-      <div><div style="font-size:1rem;font-weight:700">${u.displayName||'Anonyme'}</div>
-        <div style="font-size:.8rem;color:var(--muted)">${isAnon ? 'Compte Anonyme' : u.email}</div>
+      ${avatarHtml}
+      <div><div style="font-size:1rem;font-weight:700">${dispName}</div>
+        <div style="font-size:.8rem;color:var(--muted)">${isAnon ? 'Compte invité / Session' : u.email}</div>
         <div style="margin-top:4px">${statusPill(u.status||'active')}</div>
       </div>
     </div>
@@ -1529,8 +1620,9 @@ window.openUserDetail = function(uid) {
     <div class="info-row"><span class="key">UID</span><span class="val" style="font-size:.72rem">${uid}</span></div>
     <div class="info-row"><span class="key">Pays</span><span class="val">${u.country||'—'}</span></div>
     <div class="info-row"><span class="key">Ville</span><span class="val">${u.city||'—'}</span></div>
+    <div class="info-row"><span class="key">Adresse IP</span><span class="val" style="font-family:monospace;color:var(--blue)">${u.lastIp||'—'}</span></div>
     <div class="info-row"><span class="key">Appareil</span><span class="val">${u.device||u.userAgent?.slice(0,30)||'—'}</span></div>
-    <div class="info-row"><span class="key">Dernière connexion</span><span class="val">${fmtDateTime(u.lastSeen||u.lastLoginAt)}</span></div>
+    <div class="info-row"><span class="key">Dernière connexion</span><span class="val">${fmtDateTime(u.lastLoginAt || u.lastSeen)}</span></div>
     <div class="info-row"><span class="key">Inscription</span><span class="val">${fmtDate(u.createdAt)}</span></div>
     <div class="section-title">Clé LVL</div>
     <div class="info-row"><span class="key">Clé</span><span class="val" style="font-family:monospace;font-size:.75rem;color:var(--purple)">${canDo('users_see_key') ? (kd.apiKey||kd.key||'—') : maskKey(kd.apiKey||kd.key||'')}</span></div>
@@ -1645,7 +1737,7 @@ window.confirmRevokeKey = function(uid) {
 window.loadModeration = function() { switchModTab(_currentModTab); };
 window.switchModTab = async function(tab) {
   _currentModTab = tab;
-  ['accounts','ips','history'].forEach(t => {
+  ['accounts','ips','regions','history'].forEach(t => {
     const b = $$(`modTab-${t}`);
     if (b) b.classList.toggle('on', t === tab);
   });
@@ -1688,6 +1780,29 @@ window.switchModTab = async function(tab) {
           <td><button class="btn btn-g btn-xs" onclick="unbanIP('${d.id}')"><i class="fa-solid fa-unlock"></i></button></td>
         </tr>`;
       }).join('')||'<tr><td colspan="4" class="tbl-empty">Aucune IP bloquée</td></tr>'}</tbody></table></div>`;
+
+    } else if (tab === 'regions') {
+      const snap = await getDocs(collection(db, 'artifacts', APP_ECO, 'banned_regions'));
+      c.innerHTML = `<div style="margin-bottom:12px;display:flex;gap:8px">
+        <select id="banRegionType" class="form-select" style="max-width:140px">
+           <option value="country">Pays (Code)</option>
+           <option value="city">Ville</option>
+        </select>
+        <input type="text" id="newBanRegion" class="form-input" style="max-width:180px" placeholder="Ex: FR, Paris">
+        <input type="text" id="newBanRegionReason" class="form-input" style="max-width:200px" placeholder="Raison">
+        <button class="btn btn-p btn-sm" onclick="addBanRegion()"><i class="fa-solid fa-plus"></i> Bloquer</button>
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Région</th><th>Raison</th><th>Bloquée le</th><th>Actions</th></tr></thead>
+      <tbody>${snap.docs.map(d => {
+        const b = d.data();
+        return `<tr>
+          <td>${b.type === 'country' ? '<span class="pill pill-y">Pays</span>' : '<span class="pill pill-b">Ville</span>'}</td>
+          <td style="font-weight:700">${b.region}</td>
+          <td style="font-size:.77rem;color:var(--muted)">${b.reason||'—'}</td>
+          <td style="font-size:.77rem;color:var(--dim)">${fmtDate(b.bannedAt)}</td>
+          <td><button class="btn btn-g btn-xs" onclick="unbanRegion('${d.id}')"><i class="fa-solid fa-unlock"></i></button></td>
+        </tr>`;
+      }).join('')||'<tr><td colspan="5" class="tbl-empty">Aucune région bloquée</td></tr>'}</tbody></table></div>`;
 
     } else if (tab === 'history') {
       const snap = await getDocs(query(banHistCol(), orderBy('ts','desc'), limit(50)));
@@ -1776,6 +1891,31 @@ window.unbanIP = async function(ip) {
     await logAction('Débannissement IP', ip, '');
     toast('IP débloquée', 'ok');
     switchModTab('ips');
+  } catch(e) { toast('Erreur', 'err'); }
+};
+
+window.addBanRegion = async function() {
+  const type = $$('banRegionType').value;
+  const region = $$('newBanRegion')?.value?.trim();
+  const reason = $$('newBanRegionReason')?.value?.trim() || '—';
+  if (!region) { toast('Région requise', 'warn'); return; }
+  try {
+    const docId = `${type}_${region.toLowerCase()}`;
+    await setDoc(doc(db, 'artifacts', APP_ECO, 'banned_regions', docId), {
+      type, region, reason, bannedAt: serverTimestamp(), bannedBy: _user.email
+    });
+    await logAction('Ban Régional', region, reason);
+    toast('Région bloquée', 'ok');
+    switchModTab('regions');
+  } catch(e) { toast('Erreur', 'err'); }
+};
+
+window.unbanRegion = async function(docId) {
+  try {
+    await deleteDoc(doc(db, 'artifacts', APP_ECO, 'banned_regions', docId));
+    await logAction('Débannissement Régional', docId, '');
+    toast('Région débloquée', 'ok');
+    switchModTab('regions');
   } catch(e) { toast('Erreur', 'err'); }
 };
 
@@ -1872,18 +2012,67 @@ window.loadParties = async function() {
   try {
     const snap = await getDocs(collection(db, 'artifacts', APP_MAIN, 'public', 'data', 'parties'));
     if (!snap.size) { c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-film"></i><p>Aucune Watch Party active</p></div>'; return; }
-    const parties = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    
+    // Store in global cache so we can open details
+    window._partiesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
     c.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Code</th><th>Hôte</th><th>Film en cours</th><th>Membres</th><th>Statut</th><th>Actions</th></tr></thead>
-    <tbody>${parties.map(p => `<tr>
+    <tbody>${window._partiesCache.map(p => `<tr>
       <td><code style="font-size:.8rem;color:var(--purple)">${p.roomCode||p.id.slice(0,8)}</code></td>
       <td style="font-size:.81rem">${p.hostName||p.hostEmail||'—'}</td>
       <td style="font-size:.78rem;color:var(--muted)">${p.movieTitle||'—'}</td>
       <td style="font-size:.82rem;font-weight:700">${(p.members||[]).length}</td>
       <td>${p.status === 'active' ? '<span class="pill pill-g">Active</span>' : '<span class="pill pill-d">Terminée</span>'}</td>
-      <td>${p.status === 'active' ? `<button class="btn btn-r btn-xs" onclick="closeParty('${p.id}')"><i class="fa-solid fa-stop"></i> Fermer</button>` : '—'}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-g btn-xs" onclick="window.openPartyDetail('${p.id}')"><i class="fa-solid fa-users"></i> Détails</button>
+          ${p.status === 'active' ? `<button class="btn btn-r btn-xs" onclick="closeParty('${p.id}')"><i class="fa-solid fa-stop"></i></button>` : ''}
+        </div>
+      </td>
     </tr>`).join('')}</tbody></table></div>`;
   } catch(e) { c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Erreur de lecture</p></div>'; }
 };
+
+window.openPartyDetail = function(id) {
+  const p = window._partiesCache?.find(x => x.id === id);
+  if (!p) return;
+
+  const membersHtml = (p.members || []).map((m, index) => {
+      // Structure m peut être un string ou un objet selon comment c'est stocké dans LevelMovie
+      const mName = typeof m === 'object' ? (m.name || m.uid || 'Membre') : m;
+      const mKey = typeof m === 'object' ? (m.key || m.apiKey || 'Clé non trouvée') : '—';
+      const mStatus = typeof m === 'object' ? (m.active ? '<span class="pill pill-g">Actif</span>' : '<span class="pill pill-d">Inactif</span>') : '';
+      
+      const keyDisplay = canDo('users_see_key') ? mKey : maskKey(mKey);
+
+      return `<div style="padding:12px; border-bottom:1px solid var(--bdr); display:flex; align-items:center; justify-content:space-between;">
+          <div>
+              <div style="font-weight:600; font-size:.85rem">${mName}</div>
+              <code style="font-size:.7rem; color:var(--purple)">${keyDisplay}</code>
+          </div>
+          <div>${mStatus}</div>
+      </div>`;
+  }).join('') || '<div style="padding:20px; text-align:center; color:var(--dim)">Aucun membre listé</div>';
+
+  $$('slidePartyBd').innerHTML = `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:1.1rem; font-weight:800; font-family:var(--display); color:var(--purple)">Salle : ${p.roomCode || p.id}</div>
+      <div style="font-size:.8rem; color:var(--muted)">Hôte : ${p.hostName || p.hostEmail || 'Inconnu'}</div>
+      <div style="font-size:.8rem; color:var(--muted)">Contenu : ${p.movieTitle || 'Aucun'}</div>
+    </div>
+    <div class="section-title">Membres et Clés LVL (${(p.members||[]).length})</div>
+    <div style="background:var(--surf); border:1px solid var(--bdr); border-radius:var(--r12); overflow:hidden;">
+        ${membersHtml}
+    </div>
+  `;
+
+  $$('slidePartyFt').innerHTML = p.status === 'active' 
+      ? `<button class="btn btn-r" style="width:100%" onclick="closeSlide(); closeParty('${p.id}')"><i class="fa-solid fa-stop"></i> Fermer cette salle de force</button>`
+      : '';
+
+  openSlide('slideParty');
+};
+
 window.closeParty = async function(id) {
   confirm_('Fermer la salle', 'La Watch Party sera fermée pour tous les membres.', async () => {
     try {
