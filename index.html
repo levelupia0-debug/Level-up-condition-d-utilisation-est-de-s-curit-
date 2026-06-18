@@ -1262,7 +1262,10 @@ NAVIGATION (INVISIBLE BACKGROUND)
 ═══════════════════════════════════════ -->
 <nav id="nav">
   <div class="brand" id="navBrand" onclick="window.goHome()" style="gap:0;padding:0;background:none;border:none">
-    <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp" style="width:38px;height:38px;object-fit:contain;border-radius:10px;filter:drop-shadow(0 0 10px rgba(168,85,247,.5))">
+    <svg width="36" height="36" viewBox="0 0 576 512" style="filter:drop-shadow(0 0 12px rgba(168,85,247,.6));display:block" aria-label="LevelUp">
+      <defs><linearGradient id="lvlStarG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
+      <path fill="url(#lvlStarG)" d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
+    </svg>
   </div>
   <div class="nav-links">
     <a onclick="sTo('apps-sec')" data-i18n="nav.applications">Applications</a>
@@ -2087,6 +2090,13 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="panel on" id="panel-home">
 <h1 class="pt" id="dbWelcome">Bonjour 👋</h1>
 <p class="ps">Bienvenue dans votre tableau de bord LevelUp Ecosystem.</p>
+<!-- Carousel tendances PWA mobile — uniquement affiché en mode PWA -->
+<div id="dashTrendingCarousel" style="display:none;margin-bottom:18px;border-radius:16px;overflow:hidden;position:relative;aspect-ratio:16/7;background:#0a0812">
+  <div id="dashTrendingSlides" style="display:flex;width:100%;height:100%;transition:transform .5s ease"></div>
+  <div id="dashTrendingDots" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px"></div>
+  <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(10,8,18,.85) 100%);pointer-events:none"></div>
+  <div id="dashTrendingTitle" style="position:absolute;bottom:12px;left:12px;right:12px;font-size:.78rem;font-weight:700;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.8);letter-spacing:-.01em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis"></div>
+</div>
 <div class="db-stats">
 <div class="db-stat"><div class="db-sl">Statut</div><div class="db-sv" style="color:var(--green);font-size:1.1rem;padding-top:2px">Actif ✓</div><div class="db-ss">Connecté</div></div>
 <div class="db-stat" style="cursor:pointer" onclick="pnl('keys')"><div class="db-sl">Clé d'accès</div><div class="db-sv" id="hKV" style="font-size:1rem">—</div><div class="db-ss" id="hKS">Aucune clé générée</div></div>
@@ -2543,14 +2553,10 @@ PC FULL-PAGE AUTH — affiché uniquement sur desktop (≥900px)
       <span>Continuer avec Facebook</span>
     </button>
 
-    <!-- Divider clé -->
-    <div class="lpa-divider">ou se connecter avec une clé LevelUp</div>
-
-    <!-- Input clé -->
-    <div id="pcKeyWrap" style="display:flex;gap:8px;width:100%;margin-bottom:4px">
-      <input id="pcKeyInput" type="text" placeholder="Entrez votre clé LVL-XXXX-XXXX" style="flex:1;padding:11px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;font-size:.85rem;font-family:var(--sans);outline:none;transition:border .2s" onfocus="this.style.borderColor='rgba(168,85,247,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'" onkeydown="if(event.key==='Enter')window._pcLoginKey()">
-      <button onclick="window._pcLoginKey()" style="padding:11px 16px;border-radius:12px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:#a855f7;cursor:pointer;font-size:.85rem;font-weight:700;transition:all .2s;font-family:var(--sans)" onmouseover="this.style.background='rgba(168,85,247,.25)'" onmouseout="this.style.background='rgba(168,85,247,.15)'"><i class="fa-solid fa-arrow-right"></i></button>
-    </div>
+    <!-- Bouton clé LevelUp -->
+    <button onclick="window._openPcKeyModal()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 18px;border-radius:12px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);color:rgba(168,85,247,.85);font-size:.85rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;margin-top:4px;margin-bottom:4px" onmouseover="this.style.background='rgba(168,85,247,.18)';this.style.borderColor='rgba(168,85,247,.5)'" onmouseout="this.style.background='rgba(168,85,247,.08)';this.style.borderColor='rgba(168,85,247,.25)'">
+      <i class="fa-solid fa-key" style="font-size:.8rem"></i> Se connecter avec une clé LevelUp
+    </button>
 
     <!-- Turnstile -->
     <div id="pcTurnstile" style="margin:16px 0;border-radius:10px;overflow:hidden;width:100%;min-height:65px"></div>
@@ -3369,16 +3375,15 @@ function _initGsi() {
     itp_support: true
   });
   window._gsiReady = true;
-  // Proposer One Tap dès le chargement si non connecté
-  setTimeout(function() {
-    if (!window._user) {
-      try { window.google.accounts.id.prompt(function(n) {
-        if (n.isNotDisplayed() || n.isSkippedMoment()) {
-          // One Tap supprimé/bloqué → pas de fallback nécessaire, bouton reste visible
-        }
-      }); } catch(_) {}
-    }
-  }, 1800);
+  // One Tap uniquement sur desktop (≥900px) — pas sur mobile PWA ni navigateur mobile
+  var _isDesktopForGsi = window.innerWidth >= 900 && !/iPad|iPhone|iPod|Android/i.test(navigator.userAgent) && !window.navigator.standalone;
+  if (_isDesktopForGsi) {
+    setTimeout(function() {
+      if (!window._user) {
+        try { window.google.accounts.id.prompt(function(n) {}); } catch(_) {}
+      }
+    }, 1800);
+  }
 }
 _initGsi();
 
@@ -4708,6 +4713,10 @@ renderNavLogged(u);
 updateLoggedUI();
 window.refreshUI();
 if(window.updateFabContext) window.updateFabContext();
+// Cookies obligatoires pour les utilisateurs connectés
+if (window._enforceCookieForUser) window._enforceCookieForUser();
+// Notifier les modules (carousel trending, etc.)
+document.dispatchEvent(new CustomEvent('lvlUserReady', { detail: { user: u } }));
 // Sauvegarder session pour persistance iOS
 try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL, ts: Date.now() })); } catch(_) {}
 
@@ -5279,18 +5288,31 @@ function _sendWelcomeNotification() {
         if (Notification.permission !== 'granted') return;
         if (localStorage.getItem('lvl_welcome_notif_sent')) return;
         localStorage.setItem('lvl_welcome_notif_sent', '1');
-        // Delay 60 seconds before showing the welcome notification
         setTimeout(function() {
-            navigator.serviceWorker.ready.then(reg => {
-                reg.showNotification('Welcome to LevelUp Ecosystem 🌟', {
-                    body: 'Thanks for enabling notifications! You will be the first to know about every new release, exclusive update, and platform change.',
-                    icon: '/icon.svg',
-                    badge: '/icon.svg',
-                    vibrate: [200, 80, 200],
-                    data: { url: 'https://levelup-ecosystem.com/' }
-                });
-            });
-        }, 60000);
+            try {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification('Bienvenue sur LevelUp Ecosystem 🌟', {
+                            body: 'Notifications activées ! Vous serez le premier informé des nouvelles sorties et mises à jour.',
+                            icon: 'https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png',
+                            badge: 'https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png',
+                            vibrate: [200, 80, 200],
+                            data: { url: 'https://levelup-ecosystem.com/' }
+                        });
+                    }).catch(function() {
+                        new Notification('Bienvenue sur LevelUp Ecosystem 🌟', {
+                            body: 'Notifications activées !',
+                            icon: 'https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png'
+                        });
+                    });
+                } else {
+                    new Notification('Bienvenue sur LevelUp Ecosystem 🌟', {
+                        body: 'Notifications activées !',
+                        icon: 'https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png'
+                    });
+                }
+            } catch(_) {}
+        }, 4000);
     } catch(_) {}
 }
 window._sendWelcomeNotification = _sendWelcomeNotification;
@@ -5595,7 +5617,8 @@ if(photo) avaEl.innerHTML = `<img src="${photo}" style="width:36px;height:36px;b
 else { avaEl.className = 'sb-ava-t'; avaEl.textContent = init; }
 }
 const snEl = document.getElementById('sbName'); if(snEl) snEl.textContent = name;
-const wEl = document.getElementById('dbWelcome'); if(wEl) wEl.textContent = `Bonjour, ${name.split(' ')[0]} 👋`;
+function _getGreeting(){var h=new Date().getHours();if(h<5)return'Bonne nuit';if(h<12)return'Bonjour';if(h<18)return'Bon après-midi';return'Bonne soirée';}
+const wEl = document.getElementById('dbWelcome'); if(wEl) wEl.textContent = `${_getGreeting()}, ${name.split(' ')[0]} 👋`;
 const snEl2 = document.getElementById('setName'); if(snEl2) snEl2.textContent = name;
 const seEl = document.getElementById('setEmail'); if(seEl) seEl.textContent = d?.email || u?.email || '—';
 const sjEl = document.getElementById('setJoined'); if(sjEl && d?.createdAt) sjEl.textContent = new Date(d.createdAt).toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
@@ -5898,14 +5921,42 @@ window._closePcAuth = function() {
 };
 
 window._pcLoginKey = function() {
-  var inp = document.getElementById('pcKeyInput');
+  var inp = document.getElementById('pcKeyModalInput');
   if (!inp) return;
   var val = (inp.value || '').trim();
   if (!val) { toast_('Entrez votre clé LevelUp','warn'); return; }
-  // Injecter la valeur dans le champ mobile existant et déclencher la même fonction
   var mob = document.getElementById('keyInput');
   if (mob) mob.value = val;
   if (typeof window.loginWithKey === 'function') window.loginWithKey(val);
+};
+
+// Ouvre la mini-modale de connexion par clé LevelUp
+window._openPcKeyModal = function() {
+  var modal = document.getElementById('_pcKeyModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = '_pcKeyModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:24px;animation:tIn .2s ease';
+    modal.onclick = function(e){ if(e.target===modal) modal.style.display='none'; };
+    modal.innerHTML = '\
+<div style="background:linear-gradient(145deg,#14082a,#0d061a);border:1px solid rgba(168,85,247,.3);border-radius:20px;padding:28px 24px;max-width:360px;width:100%;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.8)">\
+  <button onclick="document.getElementById(\'_pcKeyModal\').style.display=\'none\'" style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;font-family:inherit">✕</button>\
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">\
+    <div style="width:38px;height:38px;border-radius:10px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">\
+      <i class="fa-solid fa-key" style="color:#a855f7;font-size:.95rem"></i>\
+    </div>\
+    <div><div style="font-size:.95rem;font-weight:800;color:#fff">Connexion par clé</div><div style="font-size:.72rem;color:rgba(255,255,255,.35);margin-top:2px">Entrez votre clé LevelUp</div></div>\
+  </div>\
+  <input id="pcKeyModalInput" type="text" placeholder="LVL-XXXXX-XXXXX" autocomplete="off" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-size:.9rem;font-family:inherit;outline:none;letter-spacing:.04em;margin-bottom:12px;transition:border .2s" onfocus="this.style.borderColor=\'rgba(168,85,247,.5)\'" onblur="this.style.borderColor=\'rgba(255,255,255,.1)\'" onkeydown="if(event.key===\'Enter\')window._pcLoginKey()">\
+  <button onclick="window._pcLoginKey()" style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s" onmouseover="this.style.opacity=\'.85\'" onmouseout="this.style.opacity=\'1\'">\
+    <i class="fa-solid fa-arrow-right-to-bracket" style="margin-right:6px"></i>Se connecter\
+  </button>\
+  <p style="font-size:.7rem;color:rgba(255,255,255,.25);text-align:center;margin-top:12px;line-height:1.5">Votre clé commence par <span style="color:rgba(168,85,247,.6);font-weight:600">LVL-</span></p>\
+</div>';
+    document.body.appendChild(modal);
+  }
+  modal.style.display = 'flex';
+  setTimeout(function(){ var inp=document.getElementById('pcKeyModalInput');if(inp)inp.focus(); }, 80);
 };
 
 function _loadLpaTmdb() {
@@ -6935,6 +6986,7 @@ window.openToolsHub = function() {
     if (!ov) return;
     ov.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    window._lastOpenHub = 'tools';
 };
 // Ferme l'overlay des outils seulement — la fenêtre flottante reste indépendante
 window.closeToolsHub = function() {
@@ -6956,6 +7008,7 @@ window.openServicesHub = function() {
     ov.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     window._loadServicesHub && window._loadServicesHub();
+    window._lastOpenHub = 'services';
 };
 window.closeServicesHub = function() {
     const ov = document.getElementById('servicesOverlay');
@@ -7208,6 +7261,11 @@ window.closeToolFullscreen = function() {
     const iframe = document.getElementById('toolFsIframe');
     if (iframe) { iframe.onload = null; iframe.src = 'about:blank'; iframe.removeAttribute('srcdoc'); }
     document.body.style.overflow = '';
+    // Retourner au hub d'origine si ouvert depuis un hub
+    const hub = window._lastOpenHub;
+    window._lastOpenHub = null;
+    if (hub === 'tools') { setTimeout(function(){ window.openToolsHub && window.openToolsHub(); window._lastOpenHub = null; }, 80); }
+    else if (hub === 'services') { setTimeout(function(){ window.openServicesHub && window.openServicesHub(); window._lastOpenHub = null; }, 80); }
 };
 
 // openToolWindow : plein écran sur mobile, flottant sur desktop
@@ -9361,6 +9419,9 @@ window.scrollTo(0, 0);
     window._turnstileToken = '__bypass__';
     var container = document.getElementById('cfTurnstile');
     if (container) { container._tsRendered = false; container.innerHTML = ''; }
+    // Masquer la mobile-nav pour éviter qu'elle pousse le sheet vers le haut
+    var mobileNav = document.getElementById('mobileNav');
+    if (mobileNav) mobileNav.style.display = 'none';
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
     ov.style.display = 'flex';
@@ -9408,6 +9469,9 @@ window.scrollTo(0, 0);
       ov.style.display = 'none';
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
+      // Restaurer la mobile-nav
+      var mobileNav = document.getElementById('mobileNav');
+      if (mobileNav) mobileNav.style.display = '';
     }, 380);
   };
 
@@ -9759,6 +9823,174 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
   // Délai : 3s sur web, 1.5s sur PWA (ouvre plus vite sur app)
   var isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
   setTimeout(_show, isPWA ? 1500 : 3000);
+})();
+</script>
+
+<!-- ═══════════════════════════════════════
+COOKIE CONSENT BANNER (RGPD/GDPR)
+═══════════════════════════════════════ -->
+<div id="lvlCookieBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99995;padding:0 12px calc(env(safe-area-inset-bottom)+12px);animation:slideUp .35s cubic-bezier(.32,.72,0,1)">
+  <div style="max-width:680px;margin:0 auto;background:linear-gradient(135deg,rgba(18,12,32,.97),rgba(12,8,24,.97));border:1px solid rgba(168,85,247,.2);border-bottom:none;border-radius:18px 18px 0 0;padding:18px 20px;box-shadow:0 -8px 40px rgba(0,0,0,.55);backdrop-filter:blur(16px)">
+    <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <i class="fa-solid fa-cookie-bite" style="color:#a855f7;font-size:.9rem"></i>
+          <span style="font-size:.85rem;font-weight:700;color:#fff">Paramètres des cookies</span>
+        </div>
+        <p style="font-size:.75rem;color:rgba(255,255,255,.5);line-height:1.6;margin:0">Nous utilisons des cookies essentiels pour assurer le bon fonctionnement de LevelUp, et des cookies analytiques pour améliorer votre expérience. Aucune donnée n'est revendue.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
+        <button onclick="window._cookieDecline()" style="padding:9px 16px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap" onmouseover="this.style.background='rgba(255,255,255,.09)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Refuser</button>
+        <button onclick="window._cookieAccept()" style="padding:9px 20px;border-radius:10px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s;white-space:nowrap" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Accepter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var _COOKIE_KEY = 'lvl_cookie_consent';
+  var _banner = null;
+
+  function _getBanner(){ return _banner || (_banner = document.getElementById('lvlCookieBanner')); }
+
+  // Afficher la bannière
+  function _showCookieBanner() {
+    var b = _getBanner();
+    if (b) b.style.display = 'block';
+  }
+
+  // Cacher la bannière
+  function _hideCookieBanner() {
+    var b = _getBanner();
+    if (b) { b.style.animation = 'none'; b.style.display = 'none'; }
+  }
+
+  // Sauvegarder le choix (localStorage + Firestore si connecté)
+  async function _saveCookieChoice(val) {
+    localStorage.setItem(_COOKIE_KEY, val);
+    try {
+      if (window._user && !window._user.isAnonymous && window._db) {
+        var { doc: fiDoc, setDoc: fiSet } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+        var ref = fiDoc(window._db,'artifacts','level-ia-premium','users',window._user.uid,'profile','data');
+        await fiSet(ref, { cookie_consent: val, cookie_consent_at: Date.now() }, { merge: true });
+      }
+    } catch(_) {}
+  }
+
+  window._cookieAccept = function() {
+    _hideCookieBanner();
+    _saveCookieChoice('accepted');
+    window._cookieConsentDone = true;
+    toast_('Préférences cookies enregistrées ✓','ok');
+  };
+
+  window._cookieDecline = function() {
+    _hideCookieBanner();
+    _saveCookieChoice('declined');
+    window._cookieConsentDone = true;
+  };
+
+  // Vérifier si le choix a déjà été fait
+  function _checkCookieConsent() {
+    var stored = localStorage.getItem(_COOKIE_KEY);
+    if (stored) { window._cookieConsentDone = true; return; }
+    // Afficher après 5s pour laisser passer le Turnstile et le chargement
+    setTimeout(_showCookieBanner, 5000);
+  }
+
+  // Pour les utilisateurs connectés : cookie obligatoire si pas encore choisi
+  window._enforceCookieForUser = function() {
+    var stored = localStorage.getItem(_COOKIE_KEY);
+    if (!stored) {
+      // Utilisateur connecté sans réponse → afficher maintenant
+      setTimeout(_showCookieBanner, 800);
+    }
+  };
+
+  _checkCookieConsent();
+})();
+</script>
+
+<!-- ═══════════════════════════════════════
+CAROUSEL TRENDING DASHBOARD (PWA mobile)
+═══════════════════════════════════════ -->
+<script>
+(function(){
+  var isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  var isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || window.innerWidth < 820;
+  if (!isPWA || !isMobile) return; // Uniquement sur PWA mobile
+
+  var _TMDB_KEY = '027cc951d888c64e5f15dcb853c7347a';
+  var _carousel = null;
+  var _slides = [];
+  var _curIdx = 0;
+  var _timer = null;
+
+  function _initCarousel() {
+    var container = document.getElementById('dashTrendingCarousel');
+    if (!container) return;
+    container.style.display = 'block';
+    _carousel = container;
+    _loadTrending();
+  }
+
+  function _loadTrending() {
+    // Mélange films + anime (trending + anime)
+    var urls = [
+      'https://api.themoviedb.org/3/trending/all/week?api_key='+_TMDB_KEY+'&language=fr-FR',
+      'https://api.themoviedb.org/3/discover/tv?api_key='+_TMDB_KEY+'&with_genres=16&sort_by=popularity.desc&language=fr-FR'
+    ];
+    Promise.all(urls.map(function(u){ return fetch(u).then(function(r){ return r.json(); }).catch(function(){ return {results:[]}; }); }))
+      .then(function(all) {
+        var combined = [];
+        (all[0].results||[]).filter(function(m){ return m.backdrop_path; }).slice(0,6).forEach(function(m){ combined.push({img:'https://image.tmdb.org/t/p/w780'+m.backdrop_path,title:m.title||m.name||''}); });
+        (all[1].results||[]).filter(function(m){ return m.backdrop_path; }).slice(0,4).forEach(function(m){ combined.push({img:'https://image.tmdb.org/t/p/w780'+m.backdrop_path,title:m.name||m.title||''}); });
+        // Shuffle
+        for(var i=combined.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=combined[i];combined[i]=combined[j];combined[j]=t;}
+        _slides = combined.slice(0,8);
+        _renderCarousel();
+      }).catch(function(){});
+  }
+
+  function _renderCarousel() {
+    if (!_slides.length || !_carousel) return;
+    var slidesEl = document.getElementById('dashTrendingSlides');
+    var dotsEl = document.getElementById('dashTrendingDots');
+    if (!slidesEl || !dotsEl) return;
+    slidesEl.innerHTML = '';
+    dotsEl.innerHTML = '';
+    _slides.forEach(function(s, i) {
+      var div = document.createElement('div');
+      div.style.cssText = 'min-width:100%;height:100%;background-size:cover;background-position:center;flex-shrink:0';
+      div.style.backgroundImage = 'url('+s.img+')';
+      slidesEl.appendChild(div);
+      var dot = document.createElement('div');
+      dot.style.cssText = 'width:'+(i===0?'16':'6')+'px;height:6px;border-radius:3px;background:'+(i===0?'#a855f7':'rgba(255,255,255,.3)')+';transition:all .3s;cursor:pointer';
+      (function(idx){ dot.onclick = function(){ _goTo(idx); clearInterval(_timer); _timer = setInterval(function(){ _goTo((_curIdx+1)%_slides.length); }, 4000); }; })(i);
+      dotsEl.appendChild(dot);
+    });
+    _goTo(0);
+    _timer = setInterval(function(){ _goTo((_curIdx+1)%_slides.length); }, 4000);
+  }
+
+  function _goTo(idx) {
+    _curIdx = idx;
+    var slidesEl = document.getElementById('dashTrendingSlides');
+    if (slidesEl) slidesEl.style.transform = 'translateX(-'+idx*100+'%)';
+    var titleEl = document.getElementById('dashTrendingTitle');
+    if (titleEl) titleEl.textContent = _slides[idx] ? _slides[idx].title : '';
+    var dots = document.getElementById('dashTrendingDots');
+    if (dots) { var ds=dots.children; for(var i=0;i<ds.length;i++){ ds[i].style.width=(i===idx?'16':'6')+'px'; ds[i].style.background=(i===idx?'#a855f7':'rgba(255,255,255,.3)'); } }
+  }
+
+  // Attendre que le dashboard soit affiché
+  document.addEventListener('lvlUserReady', function() { setTimeout(_initCarousel, 800); });
+  // Fallback : si dashboard déjà affiché
+  setTimeout(function() {
+    var panel = document.getElementById('panel-home');
+    if (panel && panel.classList.contains('on')) _initCarousel();
+  }, 2000);
 })();
 </script>
 </body>
