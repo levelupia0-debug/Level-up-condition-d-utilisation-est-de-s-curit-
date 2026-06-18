@@ -480,6 +480,26 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 .auth-close:hover{background:rgba(255,255,255,.06)}
 .auth-note{font-size:.75rem;color:var(--dim);margin-top:16px;line-height:1.65}
 
+/* ═══ PC FULL-PAGE AUTH ═══ */
+#lvlPcAuth{position:fixed;inset:0;z-index:9800;display:none;flex-direction:row;background:#08060f}
+#lvlPcAuth.show{display:flex;animation:cIn .28s ease}
+.lpa-left{width:460px;min-width:320px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;padding:48px 44px;background:linear-gradient(160deg,#0d0b1a,#100e20);border-right:1px solid rgba(168,85,247,.12);overflow-y:auto;position:relative}
+.lpa-right{flex:1;position:relative;overflow:hidden;background:#08060f}
+.lpa-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:opacity 1.4s ease;opacity:0}
+.lpa-bg.on{opacity:1}
+.lpa-veil{position:absolute;inset:0;background:linear-gradient(to right,#0d0b1a 0%,rgba(13,11,26,.55) 45%,transparent 100%),linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 55%);pointer-events:none;z-index:1}
+.lpa-meta{position:absolute;bottom:32px;left:32px;z-index:2;color:#fff;max-width:340px}
+.lpa-meta h3{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;text-shadow:0 2px 18px rgba(0,0,0,.9);margin-bottom:3px}
+.lpa-meta p{font-size:.73rem;color:rgba(255,255,255,.38);margin-top:4px}
+.lpa-dots{position:absolute;bottom:32px;right:28px;z-index:2;display:flex;gap:6px}
+.lpa-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);transition:background .3s,transform .3s;cursor:pointer}
+.lpa-dot.on{background:#a855f7;transform:scale(1.3)}
+.lpa-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.5);font-size:.9rem;transition:all .2s;z-index:10}
+.lpa-close:hover{background:rgba(255,255,255,.12);color:#fff}
+.lpa-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:rgba(255,255,255,.2);font-size:.72rem;font-weight:600}
+.lpa-divider::before,.lpa-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+@media(max-width:899px){#lvlPcAuth{display:none!important}}
+
 /* PIN MODAL NATIVE */
 .pin-card{background:var(--elev);border:1px solid var(--bdr-hi);border-radius:var(--r24);width:100%;max-width:320px;padding:30px;text-align:center;animation:cIn .3s ease;margin:auto}
 .pin-ico{width:46px;height:46px;border-radius:var(--r12);background:rgba(168,85,247,.14);border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.1rem;color:var(--purple)}
@@ -1256,7 +1276,7 @@ NAVIGATION (INVISIBLE BACKGROUND)
   </button>
 
   <div class="nav-right" id="navRight">
-    <button class="btn btn-g btn-sm" onclick="window.openAuth('login')" data-i18n="nav.login">Sign In</button>
+    <button class="btn btn-g btn-sm" onclick="window.openAuth('login')" data-i18n="nav.login">Get Started</button>
     <button class="btn btn-p btn-sm hidden sm:inline-flex" onclick="window.openAuth('create')" data-i18n="nav.createAccount">
       Create Account
     </button>
@@ -1320,8 +1340,9 @@ LANDING PAGE
 <h1 id="heroTitle">Un compte.<br>Une clé.<br><span class="grd">Tout l'univers LevelUp.</span></h1>
 <p class="hero-sub" id="heroSubtitle">Connectez-vous une seule fois avec Google et accédez instantanément à LevelMovie, LevelMusic et Level IA. Votre identité numérique centralisée, sécurisée par PIN, synchronisée sur tous vos appareils en temps réel.</p>
 <div class="hero-cta" id="heroCta">
-<button class="btn btn-p" style="font-size:1rem;padding:14px 28px" onclick="window.openAuth('create')">
-Créer un compte gratuit
+<button class="google-signin-btn" onclick="window.openAuth('create')" style="font-size:1rem;padding:14px 28px;max-width:300px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.3)">
+  <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+  Créer un compte gratuit
 </button>
 <button class="btn btn-g" style="font-size:1rem;padding:14px 28px" onclick="sTo('apps-sec')">
 <i class="fa-solid fa-grid-2"></i> Explorer les apps
@@ -2440,9 +2461,69 @@ AUTH OVERLAY
 
 <div id="authDevSection" class="hidden"></div>
 
-<p class="auth-note" style="line-height:1.6">En continuant, vous acceptez nos <span onclick="openTerms();closeAuth()" style="color:var(--purple);cursor:pointer;text-decoration:underline">conditions intégrées</span>, ainsi que nos <a href="https://levelup-ecosystem.com/terms" target="_blank" style="color:var(--purple);text-decoration:underline">Conditions complètes</a> et <a href="https://levelup-ecosystem.com/privacy" target="_blank" style="color:var(--purple);text-decoration:underline">Règles de confidentialité</a>. Vos données ne sont jamais partagées ni revendues.</p>
+<p class="auth-note" style="line-height:1.6">En continuant, vous acceptez nos <a href="https://levelup-ecosystem.com/terms" target="_blank" style="color:var(--purple);text-decoration:underline">Conditions complètes</a> et <a href="https://levelup-ecosystem.com/privacy" target="_blank" style="color:var(--purple);text-decoration:underline">Règles de confidentialité</a>. Vos données ne sont jamais partagées ni revendues.</p>
 <div style="text-align:center;margin-top:16px;font-size:.6rem;color:rgba(255,255,255,.1);letter-spacing:.08em;font-family:monospace;user-select:none">v2.6 &nbsp;·&nbsp; LevelUp</div>
 </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+PC FULL-PAGE AUTH — affiché uniquement sur desktop (≥900px)
+═══════════════════════════════════════════════════════ -->
+<div id="lvlPcAuth">
+  <!-- Bouton fermer -->
+  <div class="lpa-close" onclick="window._closePcAuth()" title="Fermer"><i class="fa-solid fa-xmark"></i></div>
+
+  <!-- Colonne gauche : formulaire -->
+  <div class="lpa-left">
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:36px">
+      <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp" style="width:52px;height:52px;object-fit:contain;border-radius:14px;filter:drop-shadow(0 0 18px rgba(168,85,247,.55));margin-bottom:14px;display:block;margin-left:auto;margin-right:auto">
+      <div style="font-size:1.6rem;font-weight:900;letter-spacing:-.03em;color:#fff">LevelUp <span style="color:#a855f7">Ecosystem</span></div>
+      <div style="font-size:.8rem;color:rgba(255,255,255,.35);margin-top:5px">Un compte. Une clé. Tout l'univers.</div>
+    </div>
+
+    <!-- Bouton Google -->
+    <button class="google-signin-btn" id="pcGSignInBtn" onclick="window.googleSignIn()" style="margin-bottom:10px">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      <span id="pcGBtnTxt">Continuer avec Google</span>
+    </button>
+
+    <!-- Bouton Facebook -->
+    <button class="facebook-signin-btn" id="pcFbSignInBtn" onclick="window.facebookSignIn()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      <span>Continuer avec Facebook</span>
+    </button>
+
+    <!-- Divider clé -->
+    <div class="lpa-divider">ou se connecter avec une clé LevelUp</div>
+
+    <!-- Input clé -->
+    <div id="pcKeyWrap" style="display:flex;gap:8px;width:100%;margin-bottom:4px">
+      <input id="pcKeyInput" type="text" placeholder="Entrez votre clé LVL-XXXX-XXXX" style="flex:1;padding:11px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;font-size:.85rem;font-family:var(--sans);outline:none;transition:border .2s" onfocus="this.style.borderColor='rgba(168,85,247,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'" onkeydown="if(event.key==='Enter')window._pcLoginKey()">
+      <button onclick="window._pcLoginKey()" style="padding:11px 16px;border-radius:12px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:#a855f7;cursor:pointer;font-size:.85rem;font-weight:700;transition:all .2s;font-family:var(--sans)" onmouseover="this.style.background='rgba(168,85,247,.25)'" onmouseout="this.style.background='rgba(168,85,247,.15)'"><i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+
+    <!-- Turnstile -->
+    <div id="pcTurnstile" style="margin:16px 0;border-radius:10px;overflow:hidden;width:100%;min-height:65px"></div>
+
+    <!-- Legal -->
+    <div style="text-align:center;margin-top:4px">
+      <span style="font-size:.69rem;color:rgba(255,255,255,.25);line-height:1.7">En continuant, vous acceptez nos&#32;<a href="https://levelup-ecosystem.com/terms" target="_blank" rel="noopener" style="color:rgba(168,85,247,.6);text-decoration:none;font-weight:600">Conditions d'utilisation</a>&#32;et notre&#32;<a href="https://levelup-ecosystem.com/privacy" target="_blank" rel="noopener" style="color:rgba(168,85,247,.6);text-decoration:none;font-weight:600">Politique de confidentialité</a>.</span>
+    </div>
+
+    <!-- Version -->
+    <div style="text-align:center;margin-top:20px;font-size:.58rem;color:rgba(255,255,255,.08);letter-spacing:.08em;font-family:monospace">v2.6 · LevelUp Ecosystem</div>
+  </div>
+
+  <!-- Colonne droite : images TMDB -->
+  <div class="lpa-right" id="lpaRight">
+    <div class="lpa-veil"></div>
+    <div class="lpa-meta">
+      <h3 id="lpaTitle">Découvrez LevelMovie</h3>
+      <p id="lpaYear">Streaming illimité · HD</p>
+    </div>
+    <div class="lpa-dots" id="lpaDots"></div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -4459,22 +4540,27 @@ await window.loadAppStatus();
 showLand();
 }
 } else {
-// Vérifier si une session Google récente existait (fix persistence iOS PWA)
+// Vérifier si une session Google récente existait (fix persistence multi-plateforme)
 try {
     const saved = JSON.parse(localStorage.getItem('lvl_session') || 'null');
     if (saved && saved.uid && (Date.now() - saved.ts) < 7 * 24 * 60 * 60 * 1000) {
-        // Session récente détectée — attendre que Firebase restaure l'auth (max 2s)
-        await new Promise(r => setTimeout(r, 2000));
+        // Session récente — attendre plus longtemps que Firebase restaure (évite l'anonyme forcé)
+        await new Promise(r => setTimeout(r, 5000));
         if (auth.currentUser && !auth.currentUser.isAnonymous) return; // Firebase a restauré ✅
+        // Firebase n'a pas restauré mais session récente → NE PAS écraser avec anonyme
+        localStorage.removeItem('lvl_session');
+        return;
     }
     localStorage.removeItem('lvl_session');
 } catch(_) {}
-// Aucune session : connexion silencieuse pour initialisation
-signInAnonymously(auth).catch(e => console.error("Initialisation anonyme impossible:", e));
+// Aucune session connue : mode invité anonyme
+signInAnonymously(auth).catch(e => console.error("Init anonyme impossible:", e));
 }
 });
 
 function showDash(u) {
+// URL décorative
+try { if(location.pathname !== '/dashboard') history.pushState({page:'dashboard'}, '', '/dashboard'); } catch(_) {}
 // Masquer le slider PWA mobile si l'utilisateur se connecte
 if (window._pwaSlider) window._pwaSlider.hide();
 // Fermer le sheet de login mobile
@@ -5307,12 +5393,13 @@ const s = window._appsStatus || {};
 const navRight = document.getElementById('navRight');
 if (s.boutons_nav) {
 navRight.innerHTML = s.boutons_nav;
+
 window.smartBind(navRight, [
 () => window.openAuth('login'),
 () => window.openAuth('create')
 ]);
 } else {
-navRight.innerHTML = `<button class="btn btn-g btn-sm" onclick="window.openAuth('login')">Connexion</button><button class="btn btn-p btn-sm hidden sm:inline-flex" onclick="window.openAuth('create')">Créer un compte</button>`;
+navRight.innerHTML = `<button class="btn btn-g btn-sm" onclick="window.openAuth('login')">Get Started</button><button class="btn btn-p btn-sm hidden sm:inline-flex" onclick="window.openAuth('create')">Créer un compte</button>`;
 }
 const _nbg = document.getElementById('navBellBtn');
 if (_nbg) _nbg.style.display = 'flex';
@@ -5593,36 +5680,150 @@ if(window.updateFabContext) window.updateFabContext();
 // AUTH
 window.openAuth = function(mode = 'create') {
 if(window._user) { window.openDashboard(); return; }
-
+const isMobile = window.innerWidth < 900;
+if (!isMobile) {
+  // ── Desktop : page de connexion plein écran ──
+  window._openPcAuth(mode);
+  return;
+}
+// ── Mobile : popup existant ──
 const title = document.getElementById('authTitle');
 const desc = document.getElementById('authDesc');
 const devSec = document.getElementById('authDevSection');
-
-// On vérifie que ces éléments existent toujours (au cas où tu as mis ton propre design)
 if (title && desc) {
-if (mode === 'login') {
-title.textContent = 'Connexion';
-desc.textContent = 'Connectez-vous pour accéder à votre tableau de bord.';
-if (devSec) devSec.classList.remove('hidden');
-} else {
-title.textContent = 'Créer un compte';
-desc.textContent = "Rejoignez l'écosystème avec Google et générez votre clé gratuite.";
-if (devSec) devSec.classList.add('hidden');
+  if (mode === 'login') {
+    title.textContent = 'Connexion';
+    desc.textContent = 'Connectez-vous pour accéder à votre tableau de bord.';
+    if (devSec) devSec.classList.remove('hidden');
+  } else {
+    title.textContent = 'Créer un compte';
+    desc.textContent = "Rejoignez l'écosystème avec Google et générez votre clé gratuite.";
+    if (devSec) devSec.classList.add('hidden');
+  }
 }
-}
-
 document.getElementById('authOverlay').classList.remove('hidden');
+history.pushState({page:'login'}, '', '/login');
 };
 
 function closeAuth(){
 document.getElementById('authOverlay').classList.add('hidden');
+window._closePcAuth();
 const b=document.getElementById('gSignInBtn'); if(b) { b.disabled=false; }
 const t=document.getElementById('gBtnTxt'); if(t) t.textContent='Continuer avec Google';
+const pcG=document.getElementById('pcGBtnTxt'); if(pcG) pcG.textContent='Continuer avec Google';
 const btnKey = document.getElementById('showKeyInputBtn');
 const wrapKey = document.getElementById('keyInputWrap');
 if(btnKey) btnKey.classList.remove('hidden');
 if(wrapKey) wrapKey.classList.add('hidden');
+if(location.pathname==='/login') history.pushState({},'','/');
 }
+
+// ══════════════════════════════════════════════════════════════
+//  PC AUTH FULL-PAGE — Desktop uniquement (≥900px)
+// ══════════════════════════════════════════════════════════════
+var _lpaTimer = null;
+var _lpaItems = [];
+var _lpaIdx   = 0;
+var _lpaLoaded = false;
+
+window._openPcAuth = function(mode) {
+  if(window._user) { window.openDashboard(); return; }
+  var el = document.getElementById('lvlPcAuth');
+  if (!el) return;
+  el.classList.add('show');
+  try { history.pushState({page:'login'}, '', '/login'); } catch(_) {}
+  // Turnstile dans le panel gauche
+  var pc = document.getElementById('pcTurnstile');
+  if (pc && !pc._tsRendered) {
+    setTimeout(function(){ if(window._renderTurnstile) window._renderTurnstile('pcTurnstile'); }, 500);
+  }
+  // Charger les images TMDB une seule fois
+  if (!_lpaLoaded) { _lpaLoaded = true; _loadLpaTmdb(); }
+};
+
+window._closePcAuth = function() {
+  var el = document.getElementById('lvlPcAuth');
+  if (!el || !el.classList.contains('show')) return;
+  el.classList.remove('show');
+  try { if(location.pathname==='/login') history.pushState({},'','/'); } catch(_) {}
+  clearInterval(_lpaTimer);
+};
+
+window._pcLoginKey = function() {
+  var inp = document.getElementById('pcKeyInput');
+  if (!inp) return;
+  var val = (inp.value || '').trim();
+  if (!val) { toast_('Entrez votre clé LevelUp','warn'); return; }
+  // Injecter la valeur dans le champ mobile existant et déclencher la même fonction
+  var mob = document.getElementById('keyInput');
+  if (mob) mob.value = val;
+  if (typeof window.loginWithKey === 'function') window.loginWithKey(val);
+};
+
+function _loadLpaTmdb() {
+  var KEY = '027cc951d888c64e5f15dcb853c7347a';
+  fetch('https://api.themoviedb.org/3/trending/all/week?api_key='+KEY+'&language=fr-FR')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      _lpaItems = (data.results || []).filter(function(m){ return !!m.backdrop_path; }).slice(0, 8);
+      if (!_lpaItems.length) return;
+      var right = document.getElementById('lpaRight');
+      if (!right) return;
+      // Créer les divs d'image
+      _lpaItems.forEach(function(m, i) {
+        var div = document.createElement('div');
+        div.className = 'lpa-bg' + (i === 0 ? ' on' : '');
+        div.style.backgroundImage = 'url(https://image.tmdb.org/t/p/original' + m.backdrop_path + ')';
+        right.insertBefore(div, right.firstChild);
+      });
+      // Dots de navigation
+      var dotsEl = document.getElementById('lpaDots');
+      if (dotsEl) {
+        _lpaItems.forEach(function(_, i) {
+          var d = document.createElement('div');
+          d.className = 'lpa-dot' + (i === 0 ? ' on' : '');
+          (function(idx){ d.onclick = function(){ _lpaGoTo(idx); clearInterval(_lpaTimer); _lpaTimer = setInterval(function(){ _lpaGoTo((_lpaIdx+1)%_lpaItems.length); }, 5000); }; })(i);
+          dotsEl.appendChild(d);
+        });
+      }
+      _lpaUpdateMeta(0);
+      // Auto-slide
+      _lpaTimer = setInterval(function(){
+        _lpaGoTo((_lpaIdx + 1) % _lpaItems.length);
+      }, 5000);
+    })
+    .catch(function(){});
+}
+
+function _lpaGoTo(idx) {
+  var bgs  = document.querySelectorAll('.lpa-bg');
+  var dots = document.querySelectorAll('.lpa-dot');
+  if (bgs[_lpaIdx])  bgs[_lpaIdx].classList.remove('on');
+  if (dots[_lpaIdx]) dots[_lpaIdx].classList.remove('on');
+  _lpaIdx = idx;
+  if (bgs[_lpaIdx])  bgs[_lpaIdx].classList.add('on');
+  if (dots[_lpaIdx]) dots[_lpaIdx].classList.add('on');
+  _lpaUpdateMeta(_lpaIdx);
+}
+
+function _lpaUpdateMeta(idx) {
+  var item = _lpaItems[idx];
+  if (!item) return;
+  var t = document.getElementById('lpaTitle');
+  var y = document.getElementById('lpaYear');
+  if (t) t.textContent = item.title || item.name || '';
+  if (y) {
+    var date  = (item.release_date || item.first_air_date || '').substring(0, 4);
+    var type  = item.media_type === 'movie' ? 'Film' : 'Série';
+    var score = Math.round((item.vote_average || 0) * 10) / 10;
+    y.textContent = (date ? date + ' · ' : '') + type + (score ? ' · ' + score + '★' : '');
+  }
+}
+
+// Fermer le PC auth quand l'utilisateur se connecte (succès auth)
+document.addEventListener('lvlUserReady', function() {
+  window._closePcAuth();
+});
 
 // TERMS
 function openTerms(){
@@ -5647,6 +5848,12 @@ if(panel) panel.classList.add('on');
 const nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
 const mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
 window.scrollTo({top:0,behavior:'smooth'});
+// URL décorative par panneau
+try {
+  const _urlMap = {home:'dashboard',keys:'dashboard/keys',tools:'tools',services:'services',notif:'notifications',settings:'settings',help:'help'};
+  const _seg = _urlMap[id] || 'dashboard';
+  history.replaceState({page:id}, '', '/'+_seg);
+} catch(_) {}
 
 // ── EFFACER BADGE OUTILS À L'OUVERTURE ──
 if (id === 'tools') {
@@ -9112,14 +9319,12 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
     </div>
     <p style="font-size:.76rem;color:rgba(255,255,255,.38);line-height:1.65;margin-bottom:14px;position:relative">A quick verification to confirm you're human — this keeps bots and malicious activity off the platform.</p>
     <div id="lvlTurnstileWidget" style="border-radius:10px;overflow:hidden;min-height:65px;position:relative"></div>
-    <button onclick="document.getElementById('lvlTurnstilePopup').classList.remove('show');localStorage.setItem('lvl_ts_done','1')" style="margin-top:10px;width:100%;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.3);font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Plus tard</button>
+    <button onclick="var p=document.getElementById('lvlTurnstilePopup');if(p){p.style.opacity='0';setTimeout(function(){p.classList.remove('show');p.style.opacity='';},350);}" style="margin-top:10px;width:100%;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.3);font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Passer</button>
   </div>
 </div>
 <script>
 (function(){
-  var isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
-  if(isPWA) return;
-  if(localStorage.getItem('lvl_ts_done')) return;
+  // Turnstile affiché à chaque visite — toutes plateformes (web, PWA, mobile)
   function _show(){
     var popup=document.getElementById('lvlTurnstilePopup');
     var container=document.getElementById('lvlTurnstileWidget');
@@ -9135,22 +9340,22 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
       retry:'never',
       'refresh-expired':'never',
       callback:function(){
-        localStorage.setItem('lvl_ts_done','1');
         setTimeout(function(){
           var p=document.getElementById('lvlTurnstilePopup');
-          if(p){p.style.opacity='0';p.style.transition='opacity .4s';setTimeout(function(){p.classList.remove('show');p.style.opacity='';},420);}
-        },800);
+          if(p){p.style.opacity='0';p.style.transition='opacity .4s';setTimeout(function(){p.classList.remove('show');p.style.opacity='';container._tsRendered=false;},420);}
+        },700);
       },
       'error-callback':function(){
-        localStorage.setItem('lvl_ts_done','1');
         var p=document.getElementById('lvlTurnstilePopup');
         if(p) p.classList.remove('show');
-        // Détruire le widget pour éviter les retries infinis
         try{ window.turnstile.remove(container); }catch(_){}
+        container._tsRendered=false;
       }
     });
   }
-  setTimeout(_show,5000);
+  // Délai : 3s sur web, 1.5s sur PWA (ouvre plus vite sur app)
+  var isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  setTimeout(_show, isPWA ? 1500 : 3000);
 })();
 </script>
 </body>
