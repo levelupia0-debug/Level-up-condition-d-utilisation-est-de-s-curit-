@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>LevelUp - Écosystème</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Syne', 'sans-serif'],
+          },
+          colors: {
+            brand: '#a855f7',
+            darkbg: '#050505',
+            panel: '#121214'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: theme('colors.darkbg');
+      color: white;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden; 
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .glass-effect {
+      background: rgba(20, 20, 20, 0.75);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .safe-top { padding-top: max(1.5rem, env(safe-area-inset-top)) !important; }
+    .safe-bottom { padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 0.5rem)) !important; }
+    .top-safe { top: max(1.5rem, env(safe-area-inset-top)) !important; }
+
+    .tab-enter { animation: tabFadeIn 0.3s ease-out forwards; }
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-slide-up { animation: appSlideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+    @keyframes appSlideUp {
+      from { opacity: 0; transform: translateY(30px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* TikTok Style Snap Scrolling */
+    .snap-container {
+        scroll-snap-type: y mandatory;
+        overflow-y: scroll;
+        height: 100%;
+        width: 100%;
+    }
+    .snap-page {
+        scroll-snap-align: start;
+        height: 100%;
+        width: 100%;
+        position: relative;
+    }
+
+    /* Optimisations de performance */
+    .actu-card {
+        content-visibility: auto;
+        contain-intrinsic-size: 0 450px;
+    }
+    img { content-visibility: auto; }
+  </style>
+</head>
+
+<body class="h-[100dvh] w-screen flex flex-col relative bg-[#050505]">
+
+  <div id="toastContainer" class="fixed top-safe right-4 left-4 z-[9999] flex flex-col gap-2 pointer-events-none mt-2"></div>
+
+  <div id="mainInterface" class="flex-1 flex flex-col min-h-0 relative z-10 w-full transition-opacity duration-300">
+
+    <!-- HEADER -->
+    <header id="mainHeader" class="shrink-0 px-4 safe-top py-3 flex justify-between items-center bg-[#050505]/95 backdrop-blur-md border-b border-white/5 shadow-md shadow-black/50 relative z-40 transition-all duration-300">
+      <div class="flex items-center gap-1.5 z-10">
+        <svg class="w-5 h-5 text-brand drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" viewBox="0 0 576 512" fill="currentColor">
+          <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
+        </svg>
+        <h1 class="font-display font-bold text-[16px] tracking-tight text-white">LevelUp</h1>
+      </div>
+      <div class="flex items-center gap-2 shrink-0 z-10" id="searchBtnContainer">
+        <button onclick="window.toggleSearchBar()" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors border border-white/5">
+          <i class="fa-solid fa-magnifying-glass text-[13px]"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- BARRE DE RECHERCHE -->
+    <div id="searchBarContainer" class="hidden px-4 py-3 bg-[#050505]/95 backdrop-blur-md border-b border-white/5 relative z-30">
+       <div class="relative">
+         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm"></i>
+         <input type="text" id="searchInput" oninput="window.performSearch(this.value)" placeholder="Rechercher une actualité..." class="w-full bg-[#121214] border border-white/10 rounded-xl py-2.5 pl-9 pr-8 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand/50 transition-colors">
+         <button onclick="window.toggleSearchBar()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white w-6 h-6 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+       </div>
+    </div>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main class="flex-1 flex flex-col overflow-y-auto hide-scrollbar relative z-0 scroll-smooth" id="mainContent">
+
+      <!-- ONGLET ACTUS (OPPA) -->
+      <section id="tab-actus" class="app-section flex flex-col pb-10 tab-enter safe-bottom">
+        
+        <div class="flex items-center justify-between px-4 pt-6 pb-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.2)]">
+              <i class="fa-solid fa-fire text-lg"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-display font-bold text-white leading-tight">Oppa</h2>
+              <p class="text-[11px] text-slate-400">Toute l'actualité</p>
+            </div>
+          </div>
+          <button onclick="window.loadDynamicActus()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors border border-white/5">
+            <i class="fa-solid fa-rotate-right text-xs"></i>
+          </button>
+        </div>
+
+        <!-- Story Bar Dynamique (3 Catégories Principales) -->
+        <div id="storyBarContainer" class="flex gap-5 overflow-x-auto hide-scrollbar px-4 py-4 mb-2">
+          <div class="flex items-center justify-center w-full py-2">
+             <div class="w-6 h-6 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
+          </div>
+        </div>
+
+        <!-- Feed Principal (Mix LevelTool) -->
+        <div class="flex flex-col w-full max-w-2xl mx-auto" id="actusFeed"></div>
+      </section>
+
+      <!-- ONGLET MOMENTS (TikTok Style) -->
+      <section id="tab-moment" class="app-section hidden absolute inset-0 w-full h-full bg-black z-20 flex-col pb-16">
+          <div id="momentsFeed" class="snap-container hide-scrollbar bg-black relative">
+              <div class="flex items-center justify-center h-full w-full">
+                  <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
+              </div>
+          </div>
+      </section>
+
+      <!-- ONGLET ESPACE (CONNEXION PAR CLE) -->
+      <section id="tab-compte" class="app-section hidden flex-col gap-4 px-4 py-6 pb-24 tab-enter safe-bottom">
+        <div class="flex flex-col items-center justify-center py-6 text-center" id="profileHeaderArea">
+          <div class="w-24 h-24 rounded-full glass-effect flex items-center justify-center overflow-hidden border-2 border-white/10 mb-4 relative shadow-[0_0_20px_rgba(255,255,255,0.05)]">
+            <i class="fa-solid fa-user-lock text-3xl text-slate-500" id="profileAvatarIcon"></i>
+          </div>
+          <h2 id="profileName" class="text-2xl font-display font-bold text-white tracking-tight">Mode Invité</h2>
+          <p id="profileStatus" class="text-sm text-slate-400 mt-1">Saisissez votre clé pour accéder à l'écosystème.</p>
+        </div>
+
+        <div id="profileActionContainer" class="w-full max-w-md mx-auto">
+            <!-- Zone Saisie de clé -->
+            <div id="keyLoginArea" class="w-full rounded-[20px] p-6 glass-effect border border-brand/30 text-center bg-brand/5">
+                <div class="w-12 h-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mx-auto mb-3 text-xl">
+                  <i class="fa-solid fa-key"></i>
+                </div>
+                <h3 class="text-base font-bold text-white mb-2">Authentification LVL</h3>
+                <p class="text-xs text-slate-300 mb-5 leading-relaxed">Collez votre clé personnelle d'accès.</p>
+                
+                <input type="text" id="lvlKeyInput" placeholder="LVL-XXXXX-XXXXX" class="w-full bg-black/40 border border-brand/30 rounded-xl py-3.5 px-4 text-center tracking-widest text-sm text-white font-mono focus:outline-none focus:border-brand transition-colors mb-4 uppercase">
+                <div id="keyErrorMsg" class="hidden text-red-400 text-xs font-bold mb-3">Clé invalide.</div>
+
+                <button onclick="window.validateLvlKey()" id="btnValidateKey" class="block w-full py-3.5 bg-brand hover:bg-brand/80 text-white font-bold rounded-[14px] transition-all text-sm shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                  Déverrouiller
+                </button>
+            </div>
+
+            <!-- Zone Connectée -->
+            <div id="keyLoggedInArea" class="hidden flex-col gap-4">
+                <div class="w-full rounded-[20px] p-5 glass-effect border border-green-500/20">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                        <h4 class="text-sm font-bold text-white mb-1">Clé Connectée</h4>
+                        <p class="text-[10px] text-green-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span> Sécurisée</p>
+                        </div>
+                    </div>
+                    <div class="bg-black/60 border border-white/10 rounded-xl p-3 font-mono text-[13px] text-slate-300 text-center tracking-widest shadow-inner mb-4">
+                        <span id="displayActiveKey">LVL-•••••-•••••</span>
+                    </div>
+                    <button onclick="window.logoutKey()" class="w-full py-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 font-bold tracking-widest text-[11px] uppercase transition-all border border-red-500/20 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-sign-out-alt text-sm"></i> Se déconnecter
+                    </button>
+                </div>
+
+                <div class="w-full text-left mt-4">
+                    <h3 class="text-[11px] uppercase tracking-wider font-bold text-slate-500 mb-3 px-1">Bibliothèque Locale</h3>
+                    <div class="flex gap-3">
+                        <div class="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-center flex flex-col items-center gap-2">
+                            <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 text-lg"><i class="fa-solid fa-heart"></i></div>
+                            <span class="text-xs font-bold text-white" id="countLikes">0 J'aime</span>
+                        </div>
+                        <div class="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-center flex flex-col items-center gap-2">
+                            <div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand text-lg"><i class="fa-solid fa-bookmark"></i></div>
+                            <span class="text-xs font-bold text-white" id="countSaves">0 Enregistrés</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- BARRE DE NAVIGATION EN BAS -->
+  <nav id="mainBottomNav" class="shrink-0 w-full glass-effect rounded-t-[2rem] rounded-b-none !border-x-0 !border-b-0 border-t border-white/10 flex justify-between items-center px-10 pt-4 safe-bottom z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.7)] relative bg-[#050505]/80 transition-transform duration-300">
+    <button onclick="window.switchTab('tab-actus')" id="nav-btn-actus" class="nav-btn flex flex-col items-center gap-1.5 text-white scale-110 transition-all">
+      <i class="fa-solid fa-layer-group text-lg drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"></i>
+      <span class="text-[9px] font-bold tracking-wide">Oppa</span>
+    </button>
+    
+    <button onclick="window.switchTab('tab-moment')" id="nav-btn-moment" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all relative">
+      <div class="absolute -top-6 w-12 h-12 rounded-full bg-brand flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.6)] border-4 border-[#050505]">
+          <i class="fa-solid fa-play text-white text-lg ml-0.5"></i>
+      </div>
+      <span class="text-[9px] font-semibold tracking-wide mt-7">Moments</span>
+    </button>
+    
+    <button onclick="window.switchTab('tab-compte')" id="nav-btn-compte" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
+      <i class="fa-solid fa-key text-lg"></i>
+      <span class="text-[9px] font-semibold tracking-wide">Espace</span>
+    </button>
+  </nav>
+
+  <!-- LECTEURS AUDIO -->
+  <audio id="storyAudioPlayer" loop preload="auto" class="hidden"></audio>
+  <audio id="momentAudioPlayer" loop preload="auto" class="hidden"></audio>
+
+  <!-- MODALS -->
+  <div id="reportModal" class="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4">
+    <div class="w-full max-w-[320px] bg-[#121214] border border-white/10 rounded-[24px] p-6 text-left shadow-2xl relative animate-slide-up">
+      <button onclick="window.closeReportModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-flag text-red-500 mr-2"></i> Signaler</h3>
+      <div class="flex flex-col gap-2 mb-4 mt-3">
+        <label class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10"><input type="radio" name="reportReason" value="spam" class="accent-brand" checked><span class="text-sm text-slate-300">Spam ou trompeur</span></label>
+        <label class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10"><input type="radio" name="reportReason" value="other" class="accent-brand"><span class="text-sm text-slate-300">Autre raison...</span></label>
+      </div>
+      <button onclick="window.submitReport()" class="w-full py-3 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.3)]">Signaler et masquer</button>
+    </div>
+  </div>
+
+  <div id="trailerModal" class="fixed inset-0 z-[300] hidden flex-col justify-center items-center px-4" onclick="window.closeTrailer()">
+    <div id="trailerBackdrop" class="absolute inset-0 bg-black/90 backdrop-blur-md opacity-0 transition-opacity"></div>
+    <div id="trailerContainer" class="relative w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden scale-95 opacity-0 transition-all shadow-[0_0_50px_rgba(225,29,72,0.3)]">
+       <iframe id="trailerIframe" class="w-full h-full relative z-10" src="" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+       <button onclick="window.closeTrailer()" class="absolute top-4 right-4 w-10 h-10 bg-black/50 text-white rounded-full backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-red-600 z-20"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- STORY MODAL -->
+  <div id="storyModal" class="fixed inset-0 z-[200] bg-black hidden flex-col transition-opacity duration-300 opacity-0">
+    <div class="absolute top-safe left-0 w-full px-2 pt-3 flex gap-1 z-50" id="storyProgressContainer"></div>
+    <div class="absolute top-safe left-0 w-full px-4 pt-8 flex items-center justify-between z-50 pointer-events-none">
+      <div class="flex items-center gap-3">
+        <div id="storyCategoryAvatar" class="w-9 h-9 rounded-full border border-white/20 overflow-hidden flex items-center justify-center shadow-lg shrink-0 bg-[#050505]"></div>
+        <div class="flex flex-col drop-shadow-md">
+          <div class="flex items-center gap-1.5">
+            <span id="storyTitleSpan" class="text-white font-bold text-sm leading-tight">LevelUp</span>
+            <i class="fa-solid fa-circle-check text-brand text-[12px] drop-shadow-[0_0_5px_rgba(168,85,247,0.6)]"></i>
+          </div>
+          <div class="flex flex-col">
+            <span id="storyTime" class="text-white/70 text-[10px] font-semibold">2h</span>
+            <div id="storyMusicInline" class="hidden items-center gap-1.5 mt-0.5 cursor-pointer pointer-events-auto w-max" onclick="window.toggleStoryMute()">
+              <i id="musicStatusIcon" class="fa-solid fa-music text-brand text-[9px] animate-pulse drop-shadow-[0_0_4px_rgba(168,85,247,0.6)]"></i>
+              <span id="storyMusicTitle" class="text-[10px] text-white/90 font-medium truncate max-w-[150px] drop-shadow-md">Recherche...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button onclick="window.closeStory()" class="text-white drop-shadow-md w-10 h-10 flex items-center justify-end pointer-events-auto active:scale-90 transition-transform"><i class="fa-solid fa-xmark text-2xl"></i></button>
+    </div>
+    
+    <div class="w-full h-full absolute inset-0 bg-[#050505] z-30" id="storyBgArea"></div>
+
+    <div id="giantHeartOverlay" class="absolute inset-0 z-[70] flex items-center justify-center pointer-events-none hidden transition-all duration-300 transform scale-50 opacity-0">
+        <i class="fa-solid fa-heart text-red-500 drop-shadow-[0_0_40px_rgba(239,68,68,0.8)]" style="font-size: 120px;"></i>
+    </div>
+
+    <div class="absolute inset-0 z-40 flex">
+      <div class="w-1/3 h-full cursor-pointer" onclick="window.handleStoryTap(event, 'prev')"></div>
+      <div class="w-2/3 h-full cursor-pointer" onclick="window.handleStoryTap(event, 'next')"></div>
+    </div>
+    
+    <div class="w-full h-full absolute inset-0 z-50 pointer-events-none flex flex-col justify-end pb-12" id="storyContentArea"></div>
+  </div>
+
+  <div id="externalLinkModal" class="fixed inset-0 z-[500] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4">
+    <div class="w-full max-w-[320px] bg-[#121214] border border-white/10 rounded-[24px] p-6 text-center shadow-2xl relative animate-slide-up">
+      <div class="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center mx-auto mb-4 text-orange-500 text-xl"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+      <h3 class="text-lg font-bold text-white mb-2">Tu quittes LevelUp</h3>
+      <p class="text-xs text-slate-400 mb-6">Tu vas être redirigé vers un site externe. Veux-tu continuer ?</p>
+      <div class="flex gap-3">
+        <button onclick="window.closeExternalLinkModal()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-bold rounded-xl">Annuler</button>
+        <button onclick="window.proceedExternalLink()" class="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl shadow-[0_0_15px_rgba(249,115,22,0.3)]">Continuer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window._hiddenArticles = new Set();
+    window._savedArticles = new Set();
+    window._likedArticles = new Set();
+    window._loadedArticles = {}; 
+    window._currentReportId = null;
+    window._loadedKey = null; 
+    window._momentsData = []; 
+
+    // Variables Stories & Moments
+    window._storySequences = { flash: [], movies: [], anime: [] };
+    window._currentSeqType = 'flash';
+    window._currentStoryIndex = 0;
+    window._seenStories = new Set();
+    let storyTimeout = null;
+    let storyProgressInterval = null;
+    window._audioCache = {}; 
+    window._isStoryMuted = false;
+    window._isMomentMuted = false;
+    const TMDB_KEY = '027cc951d888c64e5f15dcb853c7347a';
+
+    // Toast Notifications
+    window.toast_ = function(msg, type='info') {
+        const c = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        const ic = {ok:'fa-check-circle text-green-400', err:'fa-circle-xmark text-red-400', info:'fa-circle-info text-brand', warn:'fa-triangle-exclamation text-yellow-400'};
+        el.className = `bg-[#121214] border border-white/10 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-3 shadow-2xl transition-all duration-300 transform translate-x-full text-white`;
+        el.innerHTML = `<i class="fa-solid ${ic[type]||ic.info} text-lg"></i> <span>${msg}</span>`;
+        c.appendChild(el);
+        requestAnimationFrame(() => el.classList.remove('translate-x-full'));
+        setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(-10px)'; setTimeout(() => el.remove(), 300); }, 3000);
+    };
+
+    window.sHash = function(s) { let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0; return h.toString(16); };
+
+    window.toggleSearchBar = function() {
+        const bar = document.getElementById('searchBarContainer');
+        const input = document.getElementById('searchInput');
+        if (bar.classList.contains('hidden')) {
+            bar.classList.remove('hidden'); setTimeout(() => input.focus(), 50);
+        } else {
+            bar.classList.add('hidden'); input.value = ''; window.performSearch('');
+        }
+    };
+
+    window.performSearch = function(query) {
+        query = query.toLowerCase().trim();
+        document.querySelectorAll('.actu-card').forEach(card => {
+            const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
+            const desc = card.querySelector('p[id^="desc-"]')?.textContent.toLowerCase() || '';
+            const matchSearch = query === '' || title.includes(query) || desc.includes(query);
+            card.style.display = matchSearch ? '' : 'none';
+        });
+    };
+
+    window.switchTab = function(tabId) {
+        document.querySelectorAll('.app-section').forEach(sec => {
+            sec.classList.add('hidden'); sec.classList.remove('flex');
+        });
+        
+        const activeTab = document.getElementById(tabId);
+        if(activeTab) { activeTab.classList.remove('hidden'); activeTab.classList.add('flex'); }
+        
+        const searchBtnContainer = document.getElementById('searchBtnContainer');
+        const mainHeader = document.getElementById('mainHeader');
+
+        if(tabId === 'tab-actus') {
+            mainHeader.classList.remove('-translate-y-full', 'opacity-0');
+            if(searchBtnContainer) searchBtnContainer.classList.remove('hidden', 'opacity-0');
+            document.getElementById('mainContent').scrollTop = 0;
+            // Stop moments music
+            document.getElementById('momentAudioPlayer').pause();
+        } else if(tabId === 'tab-moment') {
+            mainHeader.classList.add('-translate-y-full', 'opacity-0');
+            if(searchBtnContainer) searchBtnContainer.classList.add('hidden');
+        } else {
+            mainHeader.classList.remove('-translate-y-full', 'opacity-0');
+            if(searchBtnContainer) searchBtnContainer.classList.add('hidden');
+            const searchBarContainer = document.getElementById('searchBarContainer');
+            if(searchBarContainer && !searchBarContainer.classList.contains('hidden')) window.toggleSearchBar();
+            // Stop moments music
+            document.getElementById('momentAudioPlayer').pause();
+        }
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('text-white', 'scale-110'); btn.classList.add('text-slate-500');
+            const icon = btn.querySelector('i');
+            if(icon && !btn.id.includes('moment')) icon.classList.remove('drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]');
+        });
+        const activeBtn = document.getElementById(`nav-btn-${tabId.split('-')[1]}`);
+        if (activeBtn) {
+            if (tabId === 'tab-moment') { activeBtn.classList.add('scale-110'); } 
+            else {
+                activeBtn.classList.remove('text-slate-500'); activeBtn.classList.add('text-white', 'scale-110');
+                if(activeBtn.querySelector('i')) activeBtn.querySelector('i').classList.add('drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]');
+            }
+        }
+    };
+
+    window.checkAuthAction = function() {
+        if (!window._loadedKey) {
+            window.toast_('Une clé LVL est requise pour cette action.', 'warn');
+            window.switchTab('tab-compte');
+            return false;
+        }
+        return true;
+    };
+
+    window.validateLvlKey = async function() {
+        const input = document.getElementById('lvlKeyInput');
+        const btn = document.getElementById('btnValidateKey');
+        const err = document.getElementById('keyErrorMsg');
+        const key = input.value.trim().toUpperCase();
+
+        if(!/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(key)) {
+            err.textContent = 'Format invalide (Attendu: LVL-XXXXX-XXXXX)';
+            err.classList.remove('hidden'); return;
+        }
+
+        btn.innerHTML = `<div class="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto"></div>`;
+        btn.disabled = true; err.classList.add('hidden');
+
+        try {
+            const res = await fetch('https://levelup-ecosystem.com/api/validate-key', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key, appId: 'levelup-ecosystem' })
+            });
+            const data = await res.json();
+
+            if(data.valid) {
+                window._loadedKey = { key: key, ...data };
+                localStorage.setItem('lvl_local_key', key);
+                
+                document.getElementById('profileName').textContent = data.name || 'Utilisateur VIP';
+                document.getElementById('profileStatus').textContent = 'Authentifié avec succès.';
+                document.getElementById('profileAvatarIcon').className = 'fa-solid fa-user-shield text-3xl text-brand';
+                document.getElementById('displayActiveKey').textContent = key;
+                
+                document.getElementById('keyLoginArea').classList.add('hidden');
+                document.getElementById('keyLoggedInArea').classList.remove('hidden');
+                document.getElementById('keyLoggedInArea').classList.add('flex');
+
+                window.toast_('Bienvenue dans LevelUp !', 'ok');
+            } else {
+                err.textContent = data.error || 'Clé non reconnue par le système.';
+                err.classList.remove('hidden');
+            }
+        } catch(e) {
+            err.textContent = 'Erreur de connexion au serveur.'; err.classList.remove('hidden');
+        } finally {
+            btn.textContent = 'Déverrouiller'; btn.disabled = false;
+        }
+    };
+
+    window.logoutKey = function() {
+        window._loadedKey = null;
+        localStorage.removeItem('lvl_local_key');
+        
+        document.getElementById('profileName').textContent = 'Mode Invité';
+        document.getElementById('profileStatus').textContent = "Saisissez votre clé pour accéder à l'écosystème.";
+        document.getElementById('profileAvatarIcon').className = 'fa-solid fa-user-lock text-3xl text-slate-500';
+        document.getElementById('lvlKeyInput').value = '';
+        
+        document.getElementById('keyLoggedInArea').classList.add('hidden');
+        document.getElementById('keyLoggedInArea').classList.remove('flex');
+        document.getElementById('keyLoginArea').classList.remove('hidden');
+        
+        window.toast_('Clé déconnectée', 'info');
+    };
+
+    window.checkLocalKey = function() {
+        const saved = localStorage.getItem('lvl_local_key');
+        if(saved) { document.getElementById('lvlKeyInput').value = saved; window.validateLvlKey(); }
+    };
+
+    window.renderNewsFeed = function(allNews) {
+        const feedContainer = document.getElementById('actusFeed');
+        if(!feedContainer) return;
+        if (allNews.length > 0) { allNews = allNews.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 30); } 
+        else { feedContainer.innerHTML = `<div class="py-10 text-center text-slate-500 text-sm w-full">Aucune actualité disponible.</div>`; return; }
+
+        let htmlFeed = '';
+        allNews.forEach((item, index) => {
+            const articleId = 'news_' + window.sHash(item.link || index.toString());
+            window._loadedArticles[articleId] = item; 
+            if(window._hiddenArticles.has(articleId)) return;
+
+            let cleanDesc = (item.desc || '').replace(/<[^>]*>?/gm, '').trim();
+            const isLongDesc = cleanDesc.length > 150;
+            let dateObj = new Date(item.date);
+            let diffDays = Math.floor((new Date() - dateObj) / (1000 * 60 * 60 * 24));
+            let dateStr = diffDays === 0 ? "Aujourd'hui" : (diffDays === 1 ? "Hier" : `Il y a ${diffDays} j`);
+            if (isNaN(diffDays)) dateStr = "Récemment";
+
+            const isLiked = window._likedArticles.has(articleId);
+            const isSaved = window._savedArticles.has(articleId);
+
+            htmlFeed += `
+            <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-4 mb-3 w-full" id="article-${articleId}">
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-black border border-white/10 overflow-hidden shadow-lg shrink-0">
+                            <div class="w-full h-full bg-[#050505] flex items-center justify-center text-white"><i class="fa-solid fa-layer-group text-lg"></i></div>
+                        </div>
+                        <div>
+                            <p class="text-[13px] font-bold text-white leading-none uppercase tracking-wide flex items-center gap-1.5">
+                                LevelTool
+                                <i class="fa-solid fa-circle-check text-brand text-[12px] drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]"></i>
+                            </p>
+                            <p class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-4 pb-3">
+                    <h3 class="text-[15px] font-bold text-white mb-1.5 leading-tight">${item.title}</h3>
+                    <div class="relative">
+                        <p id="desc-${articleId}" class="text-[13px] text-slate-300 leading-relaxed ${isLongDesc ? 'line-clamp-2' : ''}">${cleanDesc}</p>
+                    </div>
+                </div>
+
+                ${item.img ? `
+                <div class="block w-full bg-[#0a0a0c] relative cursor-pointer group min-h-[200px] flex items-center justify-center border-y border-white/5" onclick="window.confirmExternalLink('${item.link}')">
+                     <img src="${item.img}" class="w-full max-h-[400px] object-cover relative z-10" loading="lazy" decoding="async">
+                     <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1.5 rounded-lg text-white backdrop-blur-md z-20"><i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></div>
+                </div>` : ''}
+
+                <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                    <div class="flex items-center gap-6">
+                        <button onclick="window.toggleLikeActu('${articleId}')" class="text-white hover:text-red-500 transition-colors text-2xl active:scale-90"><i class="${isLiked ? 'fa-solid text-red-500' : 'fa-regular'} fa-heart" id="like-${articleId}"></i></button>
+                        <button onclick="window.commentActu()" class="text-white hover:text-blue-400 transition-colors text-[22px] active:scale-90"><i class="fa-regular fa-comment"></i></button>
+                        <button onclick="window.shareArticle('${encodeURIComponent(item.title)}', '${item.link}')" class="text-white hover:text-green-400 transition-colors text-[22px] active:scale-90"><i class="fa-regular fa-paper-plane"></i></button>
+                    </div>
+                    <button onclick="window.saveArticle('${articleId}')" class="text-white hover:text-brand transition-colors text-2xl active:scale-90"><i class="${isSaved ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark" id="bookmark-${articleId}"></i></button>
+                </div>
+            </div>`;
+        });
+        feedContainer.innerHTML = htmlFeed;
+    };
+
+    window.toggleLikeActu = function(id) {
+        if(!window.checkAuthAction()) return;
+        const icon = document.getElementById('like-'+id);
+        if(window._likedArticles.has(id)) {
+            window._likedArticles.delete(id);
+            icon.classList.replace('fa-solid', 'fa-regular'); icon.classList.remove('text-red-500');
+        } else {
+            window._likedArticles.add(id);
+            icon.classList.replace('fa-regular', 'fa-solid'); icon.classList.add('text-red-500');
+        }
+        document.getElementById('countLikes').textContent = `${window._likedArticles.size} J'aime`;
+    };
+
+    window.saveArticle = function(id) {
+        if(!window.checkAuthAction()) return;
+        const icon = document.getElementById('bookmark-'+id);
+        if(window._savedArticles.has(id)) {
+            window._savedArticles.delete(id);
+            icon.classList.replace('fa-solid', 'fa-regular'); icon.classList.remove('text-brand');
+        } else {
+            window._savedArticles.add(id);
+            icon.classList.replace('fa-regular', 'fa-solid'); icon.classList.add('text-brand');
+            window.toast_('Article sauvegardé', 'ok');
+        }
+        document.getElementById('countSaves').textContent = `${window._savedArticles.size} Enregistrés`;
+    };
+
+    window.commentActu = function() {
+        if(!window.checkAuthAction()) return;
+        window.toast_('Seuls les commentaires officiels sont visibles.', 'info');
+    };
+
+    window.shareArticle = function(title, url) {
+        if (navigator.share) {
+            navigator.share({ title: decodeURIComponent(title), text: 'Regarde ça !', url: url }).catch(()=>{});
+        } else {
+            navigator.clipboard.writeText(url); window.toast_('Lien copié !', 'ok');
+        }
+    };
+
+    window.fetchAppleMusicSong = async function(query) {
+        if(window._audioCache[query]) return window._audioCache[query];
+        try {
+            const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`);
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                const songInfo = { url: data.results[0].previewUrl, title: data.results[0].trackName };
+                window._audioCache[query] = songInfo; return songInfo;
+            }
+        } catch (e) {}
+        return null;
+    };
+
+    window.confirmExternalLink = function(url) {
+        window._pendingExternalLink = url;
+        const modal = document.getElementById('externalLinkModal');
+        modal.classList.remove('hidden'); modal.classList.add('flex');
+    };
+    window.closeExternalLinkModal = function() {
+        document.getElementById('externalLinkModal').classList.add('hidden');
+    };
+    window.proceedExternalLink = function() {
+        if (window._pendingExternalLink) window.open(window._pendingExternalLink, '_blank');
+        window.closeExternalLinkModal();
+    };
+
+    window.playTrailer = function(embedUrl) {
+        // Pause all other audios
+        document.getElementById('storyAudioPlayer').pause();
+        document.getElementById('momentAudioPlayer').pause();
+
+        const modal = document.getElementById('trailerModal');
+        const iframe = document.getElementById('trailerIframe');
+        iframe.src = embedUrl;
+        modal.classList.remove('hidden'); modal.classList.add('flex');
+        setTimeout(() => {
+            document.getElementById('trailerBackdrop').classList.remove('opacity-0');
+            document.getElementById('trailerContainer').classList.remove('scale-95', 'opacity-0');
+        }, 10);
+    };
+
+    window.closeTrailer = function() {
+        document.getElementById('trailerBackdrop').classList.add('opacity-0');
+        document.getElementById('trailerContainer').classList.add('scale-95', 'opacity-0');
+        setTimeout(() => { 
+            document.getElementById('trailerModal').classList.add('hidden'); 
+            document.getElementById('trailerIframe').src = ""; 
+        }, 300);
+    };
+
+    window.renderMoments = function() {
+        const container = document.getElementById('momentsFeed');
+        if(window._momentsData.length === 0) {
+            container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-500">Chargement des vidéos...</div>';
+            return;
+        }
+
+        let html = '';
+        window._momentsData.forEach((vid, i) => {
+            const ytEmbed = vid.trailerId 
+                ? `https://www.youtube.com/embed/${vid.trailerId}?autoplay=1&controls=0&modestbranding=1&rel=0&loop=1&playlist=${vid.trailerId}&mute=1&playsinline=1`
+                : null;
+            
+            const trailerUrlWithSound = vid.trailerId ? `https://www.youtube.com/embed/${vid.trailerId}?autoplay=1&controls=1&modestbranding=1&rel=0` : null;
+
+            html += `
+            <div class="snap-page bg-black relative flex items-center justify-center border-b border-white/10" id="moment-${i}">
+                ${ytEmbed ? `
+                <div class="absolute inset-0 w-full h-full pointer-events-none overflow-hidden flex items-center justify-center bg-black">
+                    <iframe src="${ytEmbed}" class="w-[300%] h-[150%] max-w-none pointer-events-none opacity-90 scale-150" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/60"></div>
+                </div>` : `
+                <div class="absolute inset-0 w-full h-full bg-black">
+                    <img src="${vid.img}" class="absolute inset-0 w-full h-full object-cover opacity-80">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/80"></div>
+                </div>`}
+                
+                <div class="absolute bottom-6 left-4 right-16 z-20">
+                    <!-- Apple Music Pill -->
+                    <div id="moment-music-${i}" class="hidden items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full mb-3 w-max cursor-pointer" onclick="window.toggleMomentMusic(${i}, '${vid.musicQuery}')">
+                        <i id="moment-music-icon-${i}" class="fa-solid fa-music text-brand text-[11px] animate-pulse"></i>
+                        <span id="moment-music-title-${i}" class="text-[11px] text-white/90 font-medium truncate max-w-[150px]">Recherche audio...</span>
+                    </div>
+
+                    <div class="bg-brand/20 backdrop-blur-sm border border-brand/30 px-2 py-0.5 rounded text-[10px] text-brand font-bold uppercase inline-block mb-2 drop-shadow-md">UpMovie</div>
+                    <h3 class="text-white font-bold text-xl leading-tight mb-1.5 drop-shadow-lg">${vid.title}</h3>
+                    
+                    <div class="relative">
+                        <p id="moment-desc-${i}" class="text-slate-200 text-sm line-clamp-2 drop-shadow-md transition-all duration-300">${vid.desc}</p>
+                        <button onclick="window.toggleMomentDesc(${i})" id="moment-btn-desc-${i}" class="text-white font-bold text-[12px] mt-1 drop-shadow-md">Voir plus</button>
+                    </div>
+
+                    ${trailerUrlWithSound ? `
+                    <button onclick="window.playTrailer('${trailerUrlWithSound}')" class="mt-4 bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-[0_0_15px_rgba(220,38,38,0.5)] flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-volume-high"></i> Voir avec le son
+                    </button>` : ''}
+                </div>
+
+                <div class="absolute bottom-6 right-4 z-20 flex flex-col items-center gap-6">
+                    <button onclick="window.toggleLikeMoment(${i})" class="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+                        <div class="w-11 h-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 group-hover:bg-black/70 shadow-lg"><i class="fa-solid fa-heart text-white text-xl" id="moment-like-${i}"></i></div>
+                        <span class="text-white text-[11px] font-bold drop-shadow-md">${(vid.likes / 1000).toFixed(1)}k</span>
+                    </button>
+                    <button onclick="window.commentActu()" class="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+                        <div class="w-11 h-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 group-hover:bg-black/70 shadow-lg"><i class="fa-solid fa-comment text-white text-xl"></i></div>
+                        <span class="text-white text-[11px] font-bold drop-shadow-md">${vid.rating} / 10</span>
+                    </button>
+                    <button onclick="window.saveMoment(${i})" class="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+                        <div class="w-11 h-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 group-hover:bg-black/70 shadow-lg"><i class="fa-solid fa-bookmark text-white text-xl" id="moment-save-${i}"></i></div>
+                        <span class="text-white text-[11px] font-bold drop-shadow-md">Save</span>
+                    </button>
+                </div>
+            </div>
+            `;
+        });
+        container.innerHTML = html;
+
+        // Initiate Apple Music fetches
+        window._momentsData.forEach((vid, i) => {
+            window.fetchAppleMusicSong(vid.musicQuery).then(song => {
+                if(song) {
+                    document.getElementById(`moment-music-${i}`).classList.remove('hidden');
+                    document.getElementById(`moment-music-${i}`).classList.add('flex');
+                    document.getElementById(`moment-music-title-${i}`).textContent = song.title;
+                    vid.audioUrl = song.url;
+                }
+            });
+        });
+
+        // Intersection Observer to play audio on current snap
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    const idx = entry.target.id.split('-')[1];
+                    window.playMomentAudio(idx);
+                }
+            });
+        }, { threshold: 0.6 });
+
+        document.querySelectorAll('.snap-page').forEach(page => observer.observe(page));
+    };
+
+    window.toggleMomentDesc = function(idx) {
+        const descEl = document.getElementById(`moment-desc-${idx}`);
+        const btnEl = document.getElementById(`moment-btn-desc-${idx}`);
+        if(descEl.classList.contains('line-clamp-2')) {
+            descEl.classList.remove('line-clamp-2'); btnEl.textContent = 'Voir moins';
+        } else {
+            descEl.classList.add('line-clamp-2'); btnEl.textContent = 'Voir plus';
+        }
+    };
+
+    window.toggleMomentMusic = function(idx, query) {
+        window._isMomentMuted = !window._isMomentMuted;
+        const player = document.getElementById('momentAudioPlayer');
+        const icon = document.getElementById(`moment-music-icon-${idx}`);
+        
+        if(window._isMomentMuted) {
+            player.pause();
+            icon.classList.replace('fa-music', 'fa-volume-xmark');
+            icon.classList.remove('animate-pulse');
+            icon.classList.replace('text-brand', 'text-slate-400');
+        } else {
+            player.play();
+            icon.classList.replace('fa-volume-xmark', 'fa-music');
+            icon.classList.add('animate-pulse');
+            icon.classList.replace('text-slate-400', 'text-brand');
+        }
+    };
+
+    window.playMomentAudio = function(idx) {
+        const vid = window._momentsData[idx];
+        const player = document.getElementById('momentAudioPlayer');
+        // Reset all icons
+        document.querySelectorAll('i[id^="moment-music-icon-"]').forEach(i => {
+            i.classList.replace('fa-volume-xmark', 'fa-music');
+            i.classList.add('animate-pulse');
+            i.classList.replace('text-slate-400', 'text-brand');
+        });
+
+        if(vid && vid.audioUrl) {
+            if (player.src !== vid.audioUrl) {
+                player.src = vid.audioUrl;
+            }
+            if(!window._isMomentMuted) {
+                player.play().catch(e => console.log('Autoplay block:', e));
+            } else {
+                const icon = document.getElementById(`moment-music-icon-${idx}`);
+                if(icon) {
+                    icon.classList.replace('fa-music', 'fa-volume-xmark');
+                    icon.classList.remove('animate-pulse');
+                    icon.classList.replace('text-brand', 'text-slate-400');
+                }
+            }
+        } else {
+            player.pause();
+        }
+    };
+
+    window.toggleLikeMoment = function(idx) {
+        if(!window.checkAuthAction()) return;
+        const icon = document.getElementById('moment-like-'+idx);
+        icon.classList.toggle('text-red-500');
+    };
+
+    window.saveMoment = function(idx) {
+        if(!window.checkAuthAction()) return;
+        const icon = document.getElementById('moment-save-'+idx);
+        icon.classList.toggle('text-brand');
+        if(icon.classList.contains('text-brand')) window.toast_('Sauvegardé !', 'ok');
+    };
+
+    window.updateBubbleVisuals = function() {
+        const rings = ['flash', 'movies', 'anime'];
+        const colors = {
+            flash: 'from-brand to-orange-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]',
+            movies: 'from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)]',
+            anime: 'from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+        };
+
+        rings.forEach(cat => {
+            const el = document.getElementById('ring-' + cat);
+            if(el) {
+                if(window._seenStories.has(cat)) {
+                    el.className = 'w-[64px] h-[64px] rounded-full p-[2px] bg-slate-700/50 shadow-none transition-all duration-300';
+                } else {
+                    el.className = `w-[64px] h-[64px] rounded-full p-[2px] bg-gradient-to-tr ${colors[cat]} transition-all duration-300`;
+                }
+            }
+        });
+    };
+
+    window.getCategoryAvatar = function(category) {
+        if(category === 'movies') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-blue-500"><i class="fa-solid fa-clapperboard text-xl"></i></div>`;
+        if(category === 'anime') return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-pink-500"><i class="fa-solid fa-dragon text-xl"></i></div>`;
+        return `<div class="w-full h-full bg-[#050505] flex items-center justify-center text-orange-500"><i class="fa-solid fa-bolt text-xl"></i></div>`;
+    };
+
+    window.openStory = function(type, index) {
+        window._currentSeqType = type;
+        window._currentStoryIndex = index;
+        const modal = document.getElementById('storyModal');
+        modal.classList.remove('hidden'); modal.classList.add('flex');
+        void modal.offsetWidth; 
+        modal.classList.remove('opacity-0');
+        // Stop moment audio
+        document.getElementById('momentAudioPlayer').pause();
+        window.renderCurrentStory();
+    };
+
+    window.renderCurrentStory = function() {
+        const stories = window._storySequences[window._currentSeqType] || [];
+        if(window._currentStoryIndex >= stories.length) {
+            window._seenStories.add(window._currentSeqType);
+            window.updateBubbleVisuals();
+            window.closeStory(); return;
+        }
+        if(window._currentStoryIndex < 0) window._currentStoryIndex = 0;
+
+        const story = stories[window._currentStoryIndex];
+        document.getElementById('storyTitleSpan').textContent = story.headerTitle || "LevelUp";
+        document.getElementById('storyTime').textContent = story.time;
+        
+        const avatarContainer = document.getElementById('storyCategoryAvatar');
+        avatarContainer.innerHTML = window.getCategoryAvatar(story.categoryBadge || 'flash');
+        
+        const bgArea = document.getElementById('storyBgArea');
+        bgArea.innerHTML = `
+            ${story.contentImg ? `<img src="${story.contentImg}" class="absolute inset-0 w-full h-full object-cover">` 
+                : `<div class="absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-tr ${story.color || 'from-brand to-purple-600'} opacity-20"></div>
+                   <i class="fa-solid ${story.icon} text-8xl text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]"></i>`}
+            <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/95 pointer-events-none"></div>
+        `;
+
+        const contentArea = document.getElementById('storyContentArea');
+        contentArea.innerHTML = `
+            <div class="px-6 w-full pointer-events-auto">
+                <div class="bg-[#050505]/80 backdrop-blur-xl border border-white/10 p-5 rounded-[24px] shadow-2xl">
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-white bg-white/10 mb-3 inline-block border border-white/10">${story.tag || 'Actu'}</span>
+                    <h4 class="text-white font-display font-bold text-lg mb-2 leading-tight">
+                        ${story.title}
+                    </h4>
+                    <p class="text-slate-300 text-[13px] leading-relaxed line-clamp-[6]">${story.contentText}</p>
+                </div>
+            </div>
+        `;
+
+        // Apple Music Logic for Story
+        const player = document.getElementById('storyAudioPlayer');
+        const inlineUI = document.getElementById('storyMusicInline');
+        const titleEl = document.getElementById('storyMusicTitle');
+
+        player.pause(); player.src = "";
+        inlineUI.classList.add('hidden'); inlineUI.classList.remove('flex');
+
+        if(story.musicQuery) {
+            inlineUI.classList.remove('hidden'); inlineUI.classList.add('flex');
+            titleEl.textContent = "Recherche...";
+            window.fetchAppleMusicSong(story.musicQuery).then(musicInfo => {
+                if(window._storySequences[window._currentSeqType][window._currentStoryIndex] === story && musicInfo) {
+                    titleEl.textContent = musicInfo.title;
+                    player.src = musicInfo.url;
+                    player.muted = window._isStoryMuted;
+                    player.play().catch(e => { titleEl.textContent = "Toucher pour lire"; });
+                } else if(!musicInfo) {
+                    inlineUI.classList.add('hidden'); inlineUI.classList.remove('flex');
+                }
+            });
+        }
+
+        const progContainer = document.getElementById('storyProgressContainer');
+        progContainer.innerHTML = '';
+        stories.forEach((s, i) => {
+            const bar = document.createElement('div');
+            bar.className = 'flex-1 h-1 bg-white/20 rounded-full overflow-hidden relative backdrop-blur-md';
+            let innerW = i < window._currentStoryIndex ? '100%' : '0%';
+            bar.innerHTML = `<div class="absolute top-0 left-0 h-full bg-white rounded-full transition-all ease-linear" style="width: ${innerW}" id="storyBar-${i}"></div>`;
+            progContainer.appendChild(bar);
+        });
+
+        clearTimeout(storyTimeout); clearInterval(storyProgressInterval);
+        let progress = 0; const duration = 6500; const step = 50;
+        const currentBar = document.getElementById(`storyBar-${window._currentStoryIndex}`);
+
+        storyProgressInterval = setInterval(() => {
+            progress += step; const pct = (progress / duration) * 100;
+            if(currentBar) currentBar.style.width = `${pct}%`;
+        }, step);
+
+        storyTimeout = setTimeout(() => window.nextStory(), duration);
+    };
+
+    window.toggleStoryMute = function() {
+        const audio = document.getElementById('storyAudioPlayer');
+        const icon = document.getElementById('musicStatusIcon');
+        window._isStoryMuted = !window._isStoryMuted;
+        audio.muted = window._isStoryMuted;
+        if (window._isStoryMuted) {
+            icon.classList.replace('fa-music', 'fa-volume-xmark'); icon.classList.replace('text-brand', 'text-slate-400'); icon.classList.remove('animate-pulse');
+        } else {
+            icon.classList.replace('fa-volume-xmark', 'fa-music'); icon.classList.replace('text-slate-400', 'text-brand'); icon.classList.add('animate-pulse');
+            audio.play().catch(e => {});
+        }
+    };
+
+    window.nextStory = function() { window._currentStoryIndex++; window.renderCurrentStory(); };
+    window.prevStory = function() { window._currentStoryIndex--; window.renderCurrentStory(); };
+
+    window.closeStory = function() {
+        clearTimeout(storyTimeout); clearInterval(storyProgressInterval);
+        const player = document.getElementById('storyAudioPlayer');
+        if (player) { player.pause(); player.src = ""; }
+        const modal = document.getElementById('storyModal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => { modal.classList.add('hidden'); }, 300);
+    };
+
+    let lastTapTime = 0;
+    window._tapTimeout = null;
+    window.handleStoryTap = function(event, direction) {
+        event.stopPropagation();
+        const now = Date.now();
+        if (now - lastTapTime < 300) {
+            clearTimeout(window._tapTimeout);
+            window.handleStoryDoubleTap(); lastTapTime = 0;
+        } else {
+            lastTapTime = now;
+            window._tapTimeout = setTimeout(() => { if(direction === 'prev') window.prevStory(); else window.nextStory(); }, 300);
+        }
+    };
+
+    window.handleStoryDoubleTap = function() {
+        const bigHeart = document.getElementById('giantHeartOverlay');
+        bigHeart.classList.remove('hidden'); void bigHeart.offsetWidth;
+        bigHeart.classList.remove('scale-50', 'opacity-0'); bigHeart.classList.add('scale-100', 'opacity-100');
+        setTimeout(() => {
+            bigHeart.classList.remove('scale-100', 'opacity-100'); bigHeart.classList.add('scale-150', 'opacity-0');
+            setTimeout(() => { bigHeart.classList.add('hidden', 'scale-50'); bigHeart.classList.remove('scale-150'); }, 300);
+        }, 600);
+    };
+
+    const storyModalEl = document.getElementById('storyModal');
+    let storyTouchStartY = 0; let storyTouchCurrentY = 0;
+    storyModalEl.addEventListener('touchstart', (e) => { storyTouchStartY = e.touches[0].clientY; storyTouchCurrentY = storyTouchStartY; }, {passive: true});
+    storyModalEl.addEventListener('touchmove', (e) => { storyTouchCurrentY = e.touches[0].clientY; const deltaY = storyTouchCurrentY - storyTouchStartY; if (deltaY > 0) storyModalEl.style.transform = 'translateY(' + deltaY + 'px)'; }, {passive: true});
+    storyModalEl.addEventListener('touchend', (e) => { const deltaY = storyTouchCurrentY - storyTouchStartY; storyModalEl.style.transform = ''; if (deltaY > 120) window.closeStory(); });
+
+    window.loadDynamicActus = async function() {
+        const storyContainer = document.getElementById('storyBarContainer');
+        
+        // --- 1. GÉNÉRATION DES STORIES ---
+        const seed3min = Math.floor(Date.now() / (3 * 60 * 1000)); // Change toutes les 3 minutes
+        const seed24h = Math.floor(Date.now() / (24 * 60 * 60 * 1000)); // Change toutes les 24h
+
+        // Flash : Actualités mockées dynamiques (12+ items)
+        const mockFlashTitles = ["Alerte Météo", "Bourse mondiale en hausse", "Nouvelle découverte spatiale", "Élections: résultats partiels", "Technologie: IA de nouvelle génération", "Sport: Finale historique", "Sommet international sur le climat", "Crypto: Nouveau record", "Culture: Prix Nobel attribué", "Santé: Avancée majeure", "Géopolitique: Accord signé", "Économie: Chiffres du chômage"];
+        window._storySequences.flash = Array.from({length: 12}).map((_, i) => ({
+            headerTitle: "Flash Info", title: mockFlashTitles[(i + seed3min) % mockFlashTitles.length], 
+            contentText: "Dernières nouvelles venant du monde entier. Cet événement vient de se produire, restez connectés pour plus d'informations détaillées.",
+            contentImg: `https://picsum.photos/seed/${seed3min + i}/800/1200`,
+            icon: 'fa-bolt', color: 'from-brand to-orange-500', time: `Il y a ${(i+1)*2} min`, categoryBadge: 'flash', tag: 'Urgent'
+        }));
+
+        // Initialisation de la barre avec les 3 bulles
+        storyContainer.innerHTML = `
+          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('flash', 0)">
+            <div id="ring-flash" class="w-[64px] h-[64px] rounded-full p-[2px] bg-gradient-to-tr from-brand to-orange-500 shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all duration-300">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative flex items-center justify-center bg-black">
+                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i class="fa-solid fa-bolt text-orange-500 text-xl drop-shadow-md"></i></div>
+              </div>
+            </div>
+            <span class="text-[11px] font-bold text-slate-300 tracking-wide">Flash</span>
+          </div>
+          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('movies', 0)">
+            <div id="ring-movies" class="w-[64px] h-[64px] rounded-full p-[2px] bg-gradient-to-tr from-red-500 to-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.3)] transition-all duration-300">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
+                 ${window.getCategoryAvatar('movies')}
+              </div>
+            </div>
+            <span class="text-[11px] font-bold text-slate-300 tracking-wide">UpMovie</span>
+          </div>
+          <div class="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group" onclick="window.openStory('anime', 0)">
+            <div id="ring-anime" class="w-[64px] h-[64px] rounded-full p-[2px] bg-gradient-to-tr from-blue-400 to-indigo-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
+              <div class="w-full h-full rounded-full border-2 border-[#050505] overflow-hidden relative bg-black flex items-center justify-center">
+                 ${window.getCategoryAvatar('anime')}
+              </div>
+            </div>
+            <span class="text-[11px] font-bold text-slate-300 tracking-wide">Anime</span>
+          </div>
+        `;
+        window.updateBubbleVisuals();
+
+        // --- FETCH UP MOVIE (TMDB) ---
+        try {
+            const [trendRes, popRes] = await Promise.all([
+                fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}&language=fr-FR`),
+                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&language=fr-FR&sort_by=popularity.desc`)
+            ]);
+            const trendData = await trendRes.json();
+            const popData = await popRes.json();
+
+            let movieStories = [];
+            
+            // 1. Image au hasard 24h
+            const randomMovie = trendData.results[seed24h % trendData.results.length];
+            movieStories.push({
+                headerTitle: "UpMovie", title: "Coup de coeur du jour", contentText: randomMovie.title + " : " + randomMovie.overview,
+                contentImg: `https://image.tmdb.org/t/p/w780${randomMovie.poster_path}`,
+                icon: 'fa-film', color: 'from-red-500 to-rose-700', time: 'Aujourd\'hui', categoryBadge: 'movies', tag: 'Random 24H', musicQuery: `${randomMovie.title} soundtrack epic`
+            });
+
+            // 2. Top Semaine
+            trendData.results.slice(0, 10).forEach(m => {
+                movieStories.push({
+                    headerTitle: "UpMovie", title: m.title, contentText: m.overview,
+                    contentImg: `https://image.tmdb.org/t/p/w780${m.poster_path}`,
+                    icon: 'fa-film', color: 'from-red-500 to-rose-700', time: `Note: ${m.vote_average}/10`, categoryBadge: 'movies', tag: 'Top Semaine', musicQuery: `${m.title} theme`
+                });
+            });
+
+            // 3. Plus regardés (Populaires)
+            popData.results.slice(0, 10).forEach(m => {
+                movieStories.push({
+                    headerTitle: "UpMovie", title: m.title, contentText: m.overview,
+                    contentImg: `https://image.tmdb.org/t/p/w780${m.poster_path}`,
+                    icon: 'fa-film', color: 'from-red-500 to-rose-700', time: `${m.vote_count} votes`, categoryBadge: 'movies', tag: 'Plus regardés', musicQuery: `${m.title} song`
+                });
+            });
+
+            window._storySequences.movies = movieStories;
+
+            // --- FETCH MOMENTS DATA (TikTok) ---
+            window._momentsData = trendData.results.slice(0, 15).map(m => ({
+                id: m.id, title: m.title, desc: m.overview, img: `https://image.tmdb.org/t/p/w780${m.poster_path}`,
+                likes: m.vote_count, rating: m.vote_average, trailerId: null, musicQuery: `${m.title} soundtrack tiktok`
+            }));
+
+            // Fetch trailers for Moments
+            window._momentsData.forEach(async (vid, i) => {
+                try {
+                    const vRes = await fetch(`https://api.themoviedb.org/3/movie/${vid.id}/videos?api_key=${TMDB_KEY}`);
+                    const vData = await vRes.json();
+                    const trailer = vData.results?.find(v => v.site === 'YouTube' && v.type === 'Trailer') || vData.results?.find(v => v.site === 'YouTube');
+                    if(trailer) { window._momentsData[i].trailerId = trailer.key; window.renderMoments(); }
+                } catch(e){}
+            });
+            window.renderMoments();
+
+        } catch(e) { console.warn('TMDB Fetch error', e); }
+
+        // --- FETCH ANIME (Jikan API) ---
+        try {
+            const animeRes = await fetch(`https://api.jikan.moe/v4/top/anime?limit=25`);
+            const animeData = await animeRes.json();
+            
+            if(animeData && animeData.data) {
+                window._storySequences.anime = animeData.data.map((a, idx) => ({
+                    headerTitle: "Top Anime", title: a.title, contentText: a.synopsis,
+                    contentImg: a.images.webp.large_image_url,
+                    icon: 'fa-dragon', color: 'from-blue-400 to-indigo-600', time: `Score: ${a.score}`, categoryBadge: 'anime', tag: idx < 10 ? `Top ${idx+1}` : 'Tendance', musicQuery: `${a.title} anime opening`
+                }));
+            }
+        } catch(e) { console.warn('Jikan Fetch error', e); }
+
+        // --- FETCH GENERAL ACTUS (Le Flux Central) ---
+        try {
+            const API_URL = 'https://levelup-ecosystem.com/api/news?category=all';
+            const res = await fetch(API_URL);
+            if (res.ok) {
+                const data = await res.json();
+                let allNews = data.map(item => ({
+                    title: item.title, desc: item.desc || item.description || '', link: item.link,
+                    img: (item.img || item.thumbnail || '').replace('http://', 'https://') || null, 
+                    date: item.date || item.pubDate || new Date().toISOString()
+                }));
+                window.renderNewsFeed(allNews);
+            }
+        } catch (err) {
+            window.renderNewsFeed([{title: "Bienvenue sur LevelUp !", desc: "Découvrez toutes les actualités tech, cinéma et culture.", link: "#", date: new Date()}]);
+        }
+    };
+
+    // DÉMARRAGE
+    document.addEventListener('DOMContentLoaded', () => {
+        window.switchTab('tab-actus');
+        window.checkLocalKey();
+        window.loadDynamicActus();
+    });
+  </script>
+</body>
+</html>
