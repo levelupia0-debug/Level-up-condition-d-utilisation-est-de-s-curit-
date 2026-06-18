@@ -1226,6 +1226,8 @@ window._renderTurnstile = function(containerId) {
   } catch(e) { console.warn('Turnstile Error', e); }
 };
 </script>
+<!-- Google Identity Services (One Tap + bouton officiel) -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -1259,9 +1261,8 @@ Masqué automatiquement quand Firebase est prêt
 NAVIGATION (INVISIBLE BACKGROUND)
 ═══════════════════════════════════════ -->
 <nav id="nav">
-  <div class="brand" id="navBrand" onclick="window.goHome()">
-    <svg width="20" height="20" viewBox="0 0 576 512" fill="url(#pg)"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-    LEVELUP
+  <div class="brand" id="navBrand" onclick="window.goHome()" style="gap:0;padding:0;background:none;border:none">
+    <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp" style="width:38px;height:38px;object-fit:contain;border-radius:10px;filter:drop-shadow(0 0 10px rgba(168,85,247,.5))">
   </div>
   <div class="nav-links">
     <a onclick="sTo('apps-sec')" data-i18n="nav.applications">Applications</a>
@@ -1964,9 +1965,8 @@ Créer un compte
 </div>
 
 <div class="foot-col">
-  <h5>Dona — IA</h5>
-  <a onclick="window.open('https://levelup-ecosystem.com/dona','_blank')" style="display:flex;align-items:center;gap:6px;cursor:pointer"><i class="fa-solid fa-sparkles" style="color:#a855f7;font-size:.8rem"></i> Parler à Dona</a>
-  <a onclick="window.open('https://levelup-ecosystem.com/dona','_blank')" style="display:flex;align-items:center;gap:6px;cursor:pointer"><i class="fa-solid fa-robot" style="color:#c084fc;font-size:.8rem"></i> Assistante LevelUp</a>
+  <h5>Assistant</h5>
+  <a onclick="window.open('https://levelup-ecosystem.com/dona','_blank')" style="display:flex;align-items:center;gap:6px;cursor:pointer"><i class="fa-solid fa-sparkles" style="color:#a855f7;font-size:.8rem"></i> Assistant LevelUp</a>
 </div>
 
 </div>
@@ -2218,6 +2218,53 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="set-row" style="cursor:pointer;margin-top:6px" onclick="window.openAppsOverlay()">
   <div class="set-info"><h5>Gérer l'écosystème</h5><p>Voir et administrer toutes les applications</p></div>
   <button class="btn btn-g btn-xs"><i class="fa-solid fa-border-all"></i></button>
+</div>
+
+<!-- HERO IMAGE MODE -->
+<div class="set-row" style="flex-direction:column;align-items:flex-start;gap:10px;margin-top:6px">
+  <div class="set-info"><h5>Fond du Hero — Source des images</h5><p>Choisissez entre vos images personnalisées, les tendances TMDB ou une vidéo</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%">
+    <button class="btn btn-g btn-xs" id="adminHeroModeCustom" onclick="window._adminSetHeroMode('custom')" style="flex:1;justify-content:center"><i class="fa-solid fa-image"></i> Mes images</button>
+    <button class="btn btn-g btn-xs" id="adminHeroModeTmdb" onclick="window._adminSetHeroMode('tmdb')" style="flex:1;justify-content:center"><i class="fa-solid fa-film"></i> TMDB Tendances</button>
+    <button class="btn btn-g btn-xs" id="adminHeroModeVideo" onclick="window._adminSetHeroMode('video')" style="flex:1;justify-content:center"><i class="fa-solid fa-play"></i> Vidéo / Trailer</button>
+  </div>
+  <div id="adminHeroVideoUrlWrap" style="display:none;width:100%;gap:8px;display:none">
+    <input id="adminHeroVideoUrl" type="text" placeholder="URL YouTube, Vimeo ou .mp4…" style="flex:1;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;font-size:.82rem;font-family:var(--sans);outline:none;width:100%;box-sizing:border-box" onfocus="this.style.borderColor='rgba(168,85,247,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+    <button class="btn btn-p btn-xs" onclick="window._adminSaveHeroVideo()" style="margin-top:6px;width:100%;justify-content:center"><i class="fa-solid fa-floppy-disk"></i> Enregistrer l'URL vidéo</button>
+  </div>
+  <div id="adminHeroModeLabel" style="font-size:.72rem;color:rgba(168,85,247,.6);font-weight:600"></div>
+</div>
+
+<!-- PANNEAU PUB / BANDE-ANNONCE TMDB -->
+<div class="set-row" style="flex-direction:column;align-items:flex-start;gap:10px;margin-top:6px">
+  <div class="set-info"><h5><i class="fa-solid fa-clapperboard" style="color:#a855f7;margin-right:5px"></i>Panneau pub — Images &amp; Bandes-annonces</h5><p>Choisissez la source du panneau d'annonce (images Firebase ou TMDB avec trailer)</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%">
+    <button class="btn btn-g btn-xs" id="adminPubModeFirebase" onclick="window._adminSetPubMode('firebase')" style="flex:1;justify-content:center"><i class="fa-solid fa-database"></i> Firebase</button>
+    <button class="btn btn-g btn-xs" id="adminPubModeTmdbImg" onclick="window._adminSetPubMode('tmdb_img')" style="flex:1;justify-content:center"><i class="fa-solid fa-images"></i> TMDB Images</button>
+    <button class="btn btn-g btn-xs" id="adminPubModeTmdbTrailer" onclick="window._adminSetPubMode('tmdb_trailer')" style="flex:1;justify-content:center"><i class="fa-solid fa-circle-play"></i> TMDB Trailer</button>
+  </div>
+  <!-- Options TMDB (genre + recherche film) -->
+  <div id="adminPubTmdbOpts" style="display:none;width:100%;gap:8px;flex-direction:column">
+    <select id="adminPubGenre" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(20,15,35,.95);color:#fff;font-size:.82rem;font-family:var(--sans);outline:none;cursor:pointer" onchange="window._adminPubGenreChange()">
+      <option value="">— Toutes catégories —</option>
+      <option value="28">Action</option><option value="12">Aventure</option>
+      <option value="16">Animation</option><option value="35">Comédie</option>
+      <option value="80">Crime</option><option value="99">Documentaire</option>
+      <option value="18">Drame</option><option value="10751">Famille</option>
+      <option value="14">Fantastique</option><option value="36">Histoire</option>
+      <option value="27">Horreur</option><option value="10402">Musique</option>
+      <option value="9648">Mystère</option><option value="10749">Romance</option>
+      <option value="878">Science-Fiction</option><option value="53">Thriller</option>
+      <option value="10752">Guerre</option><option value="37">Western</option>
+    </select>
+    <div style="position:relative;width:100%">
+      <input id="adminPubSearch" type="text" placeholder="Rechercher un film ou série…" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;font-size:.82rem;font-family:var(--sans);outline:none;box-sizing:border-box" onfocus="this.style.borderColor='rgba(168,85,247,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'" oninput="window._adminPubSearchInput(this.value)">
+      <div id="adminPubSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0f0a1a;border:1px solid rgba(255,255,255,.1);border-radius:10px;z-index:999;max-height:180px;overflow-y:auto;margin-top:4px"></div>
+    </div>
+    <div id="adminPubSelectedMovie" style="display:none;padding:8px 12px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:10px;font-size:.78rem;color:#c4b5fd;display:flex;align-items:center;gap:8px;justify-content:space-between"></div>
+    <button class="btn btn-p btn-xs" onclick="window._adminSavePubConfig()" style="width:100%;justify-content:center"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+  </div>
+  <div id="adminPubModeLabel" style="font-size:.72rem;color:rgba(168,85,247,.6);font-weight:600"></div>
 </div>
 </div>
 
@@ -2482,8 +2529,10 @@ PC FULL-PAGE AUTH — affiché uniquement sur desktop (≥900px)
       <div style="font-size:.8rem;color:rgba(255,255,255,.35);margin-top:5px">Un compte. Une clé. Tout l'univers.</div>
     </div>
 
-    <!-- Bouton Google -->
-    <button class="google-signin-btn" id="pcGSignInBtn" onclick="window.googleSignIn()" style="margin-bottom:10px">
+    <!-- Bouton Google officiel (GIS) + fallback manuel -->
+    <div id="pcGoogleGsiBtn" style="width:100%;margin-bottom:10px;border-radius:12px;overflow:hidden;min-height:44px;display:flex;align-items:center;justify-content:center"></div>
+    <!-- Fallback : affiché si GIS ne se charge pas -->
+    <button class="google-signin-btn" id="pcGSignInBtn" onclick="window.googleSignIn()" style="margin-bottom:10px;display:none">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       <span id="pcGBtnTxt">Continuer avec Google</span>
     </button>
@@ -3254,7 +3303,7 @@ FIREBASE & APP LOGIC
 ═══════════════════════════════════════ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, FacebookAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithCredential, GoogleAuthProvider, FacebookAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, collection, query, where, onSnapshot, addDoc, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js";
 
@@ -3288,6 +3337,81 @@ try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) 
 
 // Récupère le résultat d'un signInWithRedirect au retour sur la page (iPhone PWA)
 getRedirectResult(auth).catch(() => {});
+
+// ══════════════════════════════════════════════════════════════
+//  GOOGLE IDENTITY SERVICES — One Tap + bouton officiel
+// ══════════════════════════════════════════════════════════════
+const _GSI_CLIENT_ID = '229420004282-vi8puip5ps3c5olo18d7pjmvuvfdhu5v.apps.googleusercontent.com';
+
+// Callback GIS → échange le token Google contre une session Firebase
+window._handleGsiCredential = async function(response) {
+  try {
+    const firebaseCredential = GoogleAuthProvider.credential(response.credential);
+    await signInWithCredential(auth, firebaseCredential);
+    // onAuthStateChanged prend le relai → showDash / closeAuth
+  } catch(e) {
+    console.error('GIS credential error:', e);
+    toast_('Erreur connexion Google — réessayez', 'err');
+  }
+};
+
+// Initialiser GIS dès que le script est disponible
+function _initGsi() {
+  if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+    setTimeout(_initGsi, 250);
+    return;
+  }
+  window.google.accounts.id.initialize({
+    client_id: _GSI_CLIENT_ID,
+    callback: window._handleGsiCredential,
+    auto_select: true,
+    cancel_on_tap_outside: false,
+    itp_support: true
+  });
+  window._gsiReady = true;
+  // Proposer One Tap dès le chargement si non connecté
+  setTimeout(function() {
+    if (!window._user) {
+      try { window.google.accounts.id.prompt(function(n) {
+        if (n.isNotDisplayed() || n.isSkippedMoment()) {
+          // One Tap supprimé/bloqué → pas de fallback nécessaire, bouton reste visible
+        }
+      }); } catch(_) {}
+    }
+  }, 1800);
+}
+_initGsi();
+
+// Rendre le bouton Google officiel dans un conteneur donné
+window._renderGsiButton = function(containerId) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  if (!window.google || !window.google.accounts || !window._gsiReady) {
+    // GIS pas encore prêt → afficher le bouton de secours
+    var fb = document.getElementById('pcGSignInBtn');
+    if (fb) fb.style.display = 'flex';
+    return;
+  }
+  el.innerHTML = '';
+  try {
+    var w = el.offsetWidth || 372;
+    window.google.accounts.id.renderButton(el, {
+      theme: 'outline',
+      size: 'large',
+      width: w,
+      type: 'standard',
+      text: 'continue_with',
+      locale: 'fr',
+      shape: 'rectangular',
+      logo_alignment: 'left'
+    });
+    var fb = document.getElementById('pcGSignInBtn');
+    if (fb) fb.style.display = 'none';
+  } catch(e) {
+    var fb = document.getElementById('pcGSignInBtn');
+    if (fb) fb.style.display = 'flex';
+  }
+};
 
 window.googleSignIn = async function() {
 const btn = document.getElementById('gSignInBtn');
@@ -4559,8 +4683,6 @@ signInAnonymously(auth).catch(e => console.error("Init anonyme impossible:", e))
 });
 
 function showDash(u) {
-// URL décorative
-try { if(location.pathname !== '/dashboard') history.pushState({page:'dashboard'}, '', '/dashboard'); } catch(_) {}
 // Masquer le slider PWA mobile si l'utilisateur se connecte
 if (window._pwaSlider) window._pwaSlider.hide();
 // Fermer le sheet de login mobile
@@ -5554,6 +5676,26 @@ window.saveNameChange = async function() {
     } catch(e) { toast_('Erreur : ' + e.message, 'err'); }
 };
 
+// ══ POPUP "VOIR PLUS" POUR LES SERVICES ══
+window._showSvcDesc = function(name, fullDesc, url) {
+    let modal = document.getElementById('svcDescModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'svcDescModal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:24px';
+        modal.onclick = function(e){ if(e.target===modal) modal.style.display='none'; };
+        document.body.appendChild(modal);
+    }
+    modal.innerHTML = `<div style="background:linear-gradient(145deg,#160a28,#0e061a);border:1px solid rgba(168,85,247,.3);border-radius:20px;max-width:440px;width:100%;padding:24px;position:relative;max-height:80vh;overflow-y:auto">
+        <button onclick="document.getElementById('svcDescModal').style.display='none'" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;font-family:var(--sans)">✕</button>
+        <div style="font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#a855f7;margin-bottom:10px">Service</div>
+        <div style="font-size:1.05rem;font-weight:800;color:#fff;margin-bottom:14px;padding-right:36px;letter-spacing:-.02em">${name}</div>
+        <div style="font-size:.84rem;color:rgba(255,255,255,.7);line-height:1.75;margin-bottom:20px">${fullDesc}</div>
+        ${url ? `<button onclick="if(window.closeServicesHub)window.closeServicesHub();window.openToolWindow('${url.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}');document.getElementById('svcDescModal').style.display='none'" style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;font-family:var(--sans)"><i class="fa-solid fa-arrow-up-right-from-square" style="margin-right:6px"></i>Ouvrir le service</button>` : ''}
+    </div>`;
+    modal.style.display = 'flex';
+};
+
 // ══ POPUP "VOIR PLUS" POUR LES OUTILS ══
 window._showToolDesc = function(name, fullDesc, url) {
     let modal = document.getElementById('toolDescModal');
@@ -5702,7 +5844,6 @@ if (title && desc) {
   }
 }
 document.getElementById('authOverlay').classList.remove('hidden');
-history.pushState({page:'login'}, '', '/login');
 };
 
 function closeAuth(){
@@ -5715,7 +5856,6 @@ const btnKey = document.getElementById('showKeyInputBtn');
 const wrapKey = document.getElementById('keyInputWrap');
 if(btnKey) btnKey.classList.remove('hidden');
 if(wrapKey) wrapKey.classList.add('hidden');
-if(location.pathname==='/login') history.pushState({},'','/');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -5731,11 +5871,20 @@ window._openPcAuth = function(mode) {
   var el = document.getElementById('lvlPcAuth');
   if (!el) return;
   el.classList.add('show');
-  try { history.pushState({page:'login'}, '', '/login'); } catch(_) {}
-  // Turnstile dans le panel gauche
+  // Bouton Google officiel GIS
+  setTimeout(function(){
+    if(window._renderGsiButton) window._renderGsiButton('pcGoogleGsiBtn');
+    else {
+      var fb = document.getElementById('pcGSignInBtn');
+      if(fb) fb.style.display = 'flex';
+    }
+  }, 200);
+  // Turnstile dans le panel gauche — uniquement si pas encore vérifié dans cette session
   var pc = document.getElementById('pcTurnstile');
-  if (pc && !pc._tsRendered) {
+  if (pc && !pc._tsRendered && !sessionStorage.getItem('lvl_ts_session')) {
     setTimeout(function(){ if(window._renderTurnstile) window._renderTurnstile('pcTurnstile'); }, 500);
+  } else if (pc && sessionStorage.getItem('lvl_ts_session')) {
+    pc.style.display = 'none';
   }
   // Charger les images TMDB une seule fois
   if (!_lpaLoaded) { _lpaLoaded = true; _loadLpaTmdb(); }
@@ -5745,7 +5894,6 @@ window._closePcAuth = function() {
   var el = document.getElementById('lvlPcAuth');
   if (!el || !el.classList.contains('show')) return;
   el.classList.remove('show');
-  try { if(location.pathname==='/login') history.pushState({},'','/'); } catch(_) {}
   clearInterval(_lpaTimer);
 };
 
@@ -5825,12 +5973,244 @@ document.addEventListener('lvlUserReady', function() {
   window._closePcAuth();
 });
 
+// ══════════════════════════════════════════════════════════════
+//  ADMIN — HERO MODE (Mes images / TMDB / Vidéo)
+// ══════════════════════════════════════════════════════════════
+(function() {
+  var _HERO_MODE_KEY = '027cc951d888c64e5f15dcb853c7347a'; // TMDB API key
+  var _heroModeLabels = {custom:'Images personnalisées', tmdb:'TMDB Tendances de la semaine', video:'Vidéo / Trailer personnalisé'};
+
+  function _refreshHeroModeUI(mode) {
+    var lbl = document.getElementById('adminHeroModeLabel');
+    if (lbl) lbl.textContent = 'Mode actuel : ' + (_heroModeLabels[mode] || mode);
+    ['custom','tmdb','video'].forEach(function(m) {
+      var btn = document.getElementById('adminHeroMode' + m.charAt(0).toUpperCase() + m.slice(1));
+      if (btn) btn.style.borderColor = m === mode ? 'rgba(168,85,247,.6)' : '';
+    });
+    var wrap = document.getElementById('adminHeroVideoUrlWrap');
+    if (wrap) wrap.style.display = mode === 'video' ? 'flex' : 'none';
+  }
+
+  window._adminSetHeroMode = async function(mode) {
+    if (!window._user || window._user.isAnonymous) return;
+    try {
+      var { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      var ref = doc(window._db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'apps');
+      if (mode === 'tmdb') {
+        // Charger les backdrops TMDB et les enregistrer en tant qu'images
+        var resp = await fetch('https://api.themoviedb.org/3/trending/all/week?api_key=' + _HERO_MODE_KEY + '&language=fr-FR');
+        var data = await resp.json();
+        var imgs = (data.results || []).filter(function(m) { return m.backdrop_path; })
+                                        .slice(0, 8)
+                                        .map(function(m) { return 'https://image.tmdb.org/t/p/original' + m.backdrop_path; });
+        await setDoc(ref, { image_ou_video_fond: imgs, hero_mode: 'tmdb' }, { merge: true });
+        if (typeof window.loadAppStatus === 'function') window.loadAppStatus();
+        toast_('TMDB activé — ' + imgs.length + ' images chargées', 'ok');
+      } else if (mode === 'video') {
+        await setDoc(ref, { hero_mode: 'video' }, { merge: true });
+        _refreshHeroModeUI('video');
+        toast_('Entrez votre URL vidéo ci-dessous', 'ok');
+        return;
+      } else {
+        await setDoc(ref, { hero_mode: 'custom' }, { merge: true });
+        if (typeof window.loadAppStatus === 'function') window.loadAppStatus();
+        toast_('Mode images personnalisées activé', 'ok');
+      }
+      _refreshHeroModeUI(mode);
+    } catch(e) { toast_('Erreur : ' + (e.message || e), 'err'); }
+  };
+
+  window._adminSaveHeroVideo = async function() {
+    var url = (document.getElementById('adminHeroVideoUrl') || {}).value || '';
+    if (!url.trim()) { toast_('Entrez une URL valide', 'warn'); return; }
+    try {
+      var { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      var ref = doc(window._db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'apps');
+      await setDoc(ref, { image_ou_video_fond: [url.trim()], hero_mode: 'video' }, { merge: true });
+      if (typeof window.loadAppStatus === 'function') window.loadAppStatus();
+      _refreshHeroModeUI('video');
+      toast_('URL vidéo enregistrée ✓', 'ok');
+    } catch(e) { toast_('Erreur : ' + (e.message || e), 'err'); }
+  };
+
+  // Afficher le mode actif quand la section admin devient visible
+  var _adminObs = new MutationObserver(function() {
+    var sec = document.getElementById('adminCmsSection');
+    if (!sec || sec.style.display === 'none') return;
+    var mode = (window._appsStatus || {}).hero_mode || 'custom';
+    _refreshHeroModeUI(mode);
+    // Raffraîchir aussi le mode pub
+    if (window._refreshPubModeUI) window._refreshPubModeUI();
+  });
+  _adminObs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['style'] });
+})();
+
+// ══════════════════════════════════════════════════════════════
+//  ADMIN — PANNEAU PUB / BANDE-ANNONCE (Firebase | TMDB)
+// ══════════════════════════════════════════════════════════════
+(function() {
+  var _TMDB_KEY = '027cc951d888c64e5f15dcb853c7347a';
+  var _pubModeLabels = {firebase:'Images Firebase', tmdb_img:'TMDB Images tendances', tmdb_trailer:'TMDB Bande-annonce sélectionnée'};
+  var _selectedMovie = null; // {id, title, poster_path, genre_ids}
+
+  window._refreshPubModeUI = function() {
+    var cfg = (window._appsStatus || {}).pub_config || {};
+    var mode = cfg.mode || 'firebase';
+    ['firebase','tmdb_img','tmdb_trailer'].forEach(function(m) {
+      var id = 'adminPubMode' + {firebase:'Firebase',tmdb_img:'TmdbImg',tmdb_trailer:'TmdbTrailer'}[m];
+      var btn = document.getElementById(id);
+      if (btn) btn.style.borderColor = m === mode ? 'rgba(168,85,247,.6)' : '';
+    });
+    var lbl = document.getElementById('adminPubModeLabel');
+    if (lbl) lbl.textContent = 'Mode actuel : ' + (_pubModeLabels[mode] || mode);
+    var opts = document.getElementById('adminPubTmdbOpts');
+    if (opts) opts.style.display = (mode === 'tmdb_img' || mode === 'tmdb_trailer') ? 'flex' : 'none';
+    // Pré-remplir si film déjà configuré
+    if (cfg.movie_id && cfg.movie_title) {
+      _selectedMovie = {id: cfg.movie_id, title: cfg.movie_title};
+      _showSelectedMovie();
+    }
+  };
+
+  function _showSelectedMovie() {
+    var el = document.getElementById('adminPubSelectedMovie');
+    if (!el || !_selectedMovie) return;
+    el.style.display = 'flex';
+    el.innerHTML = '<span><i class="fa-solid fa-film" style="margin-right:5px;opacity:.6"></i>' + _selectedMovie.title + '</span>'
+      + '<button onclick="window._adminPubClearMovie()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:.8rem;padding:0"><i class="fa-solid fa-xmark"></i></button>';
+  }
+
+  window._adminPubClearMovie = function() {
+    _selectedMovie = null;
+    var el = document.getElementById('adminPubSelectedMovie');
+    if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+    var inp = document.getElementById('adminPubSearch');
+    if (inp) inp.value = '';
+  };
+
+  window._adminSetPubMode = function(mode) {
+    var opts = document.getElementById('adminPubTmdbOpts');
+    if (opts) opts.style.display = (mode === 'tmdb_img' || mode === 'tmdb_trailer') ? 'flex' : 'none';
+    ['firebase','tmdb_img','tmdb_trailer'].forEach(function(m) {
+      var id = 'adminPubMode' + {firebase:'Firebase',tmdb_img:'TmdbImg',tmdb_trailer:'TmdbTrailer'}[m];
+      var btn = document.getElementById(id);
+      if (btn) btn.style.borderColor = m === mode ? 'rgba(168,85,247,.6)' : '';
+    });
+    var lbl = document.getElementById('adminPubModeLabel');
+    if (lbl) lbl.textContent = 'Mode sélectionné : ' + (_pubModeLabels[mode] || mode);
+    window._currentPubMode = mode;
+    if (mode === 'firebase') window._adminSavePubConfig();
+  };
+
+  // Recherche TMDB avec debounce
+  var _searchTimer = null;
+  window._adminPubSearchInput = function(val) {
+    clearTimeout(_searchTimer);
+    if (!val || val.length < 2) {
+      var r = document.getElementById('adminPubSearchResults');
+      if (r) r.style.display = 'none';
+      return;
+    }
+    _searchTimer = setTimeout(function() { _doTmdbSearch(val); }, 450);
+  };
+
+  function _doTmdbSearch(q) {
+    fetch('https://api.themoviedb.org/3/search/multi?api_key=' + _TMDB_KEY + '&query=' + encodeURIComponent(q) + '&language=fr-FR&page=1')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var res = document.getElementById('adminPubSearchResults');
+        if (!res) return;
+        var items = (data.results || []).filter(function(m) { return m.media_type !== 'person'; }).slice(0, 7);
+        if (!items.length) { res.style.display = 'none'; return; }
+        res.innerHTML = items.map(function(m) {
+          var t = m.title || m.name || '?';
+          var yr = (m.release_date || m.first_air_date || '').slice(0,4);
+          var esc = t.replace(/'/g,"\\'");
+          return '<div onclick="window._adminPubSelectMovie(' + m.id + ',\'' + esc + '\',\'' + (m.media_type||'movie') + '\')" style="padding:9px 12px;cursor:pointer;font-size:.8rem;color:#fff;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s" onmouseover="this.style.background=\'rgba(168,85,247,.1)\'" onmouseout="this.style.background=\'\'"><i class="fa-solid ' + (m.media_type==='tv'?'fa-tv':'fa-film') + '" style="color:#a855f7;opacity:.7;font-size:.75rem;flex-shrink:0"></i><span style="flex:1">' + t + '</span>' + (yr ? '<span style="opacity:.35;font-size:.72rem">' + yr + '</span>' : '') + '</div>';
+        }).join('');
+        res.style.display = 'block';
+      }).catch(function() {});
+  }
+
+  window._adminPubSelectMovie = function(id, title, type) {
+    _selectedMovie = {id: id, title: title, type: type};
+    var res = document.getElementById('adminPubSearchResults');
+    if (res) res.style.display = 'none';
+    var inp = document.getElementById('adminPubSearch');
+    if (inp) inp.value = '';
+    _showSelectedMovie();
+  };
+
+  window._adminPubGenreChange = function() {
+    _selectedMovie = null;
+    window._adminPubClearMovie();
+  };
+
+  window._adminSavePubConfig = async function() {
+    if (!window._user || window._user.isAnonymous) { toast_('Admin uniquement', 'err'); return; }
+    var mode = window._currentPubMode || (window._appsStatus || {}).pub_config?.mode || 'firebase';
+    var genre = (document.getElementById('adminPubGenre') || {}).value || '';
+    var cfg = { mode: mode };
+    if (mode === 'tmdb_img' || mode === 'tmdb_trailer') {
+      cfg.genre_id = genre;
+      if (_selectedMovie) { cfg.movie_id = _selectedMovie.id; cfg.movie_title = _selectedMovie.title; cfg.movie_type = _selectedMovie.type || 'movie'; }
+      // Si tmdb_img sans film sélectionné → charger tendances par genre
+      if (mode === 'tmdb_img' && !_selectedMovie) {
+        var url = genre
+          ? 'https://api.themoviedb.org/3/discover/movie?api_key=' + _TMDB_KEY + '&with_genres=' + genre + '&language=fr-FR&sort_by=popularity.desc&page=1'
+          : 'https://api.themoviedb.org/3/trending/all/week?api_key=' + _TMDB_KEY + '&language=fr-FR';
+        try {
+          var resp = await fetch(url);
+          var data = await resp.json();
+          var imgs = (data.results||[]).filter(function(m){return m.backdrop_path;}).slice(0,8).map(function(m){return 'https://image.tmdb.org/t/p/original'+m.backdrop_path;});
+          cfg.images = imgs;
+        } catch(_) {}
+      }
+      // Si tmdb_trailer → récupérer la clé YouTube du trailer
+      if (mode === 'tmdb_trailer' && _selectedMovie) {
+        try {
+          var vresp = await fetch('https://api.themoviedb.org/3/' + (_selectedMovie.type||'movie') + '/' + _selectedMovie.id + '/videos?api_key=' + _TMDB_KEY + '&language=fr-FR');
+          var vdata = await vresp.json();
+          var trailer = (vdata.results||[]).find(function(v){return v.type==='Trailer'&&v.site==='YouTube';})
+            || (vdata.results||[])[0];
+          if (trailer) cfg.trailer_key = trailer.key;
+          // Fallback EN si pas de trailer FR
+          if (!trailer) {
+            var vresp2 = await fetch('https://api.themoviedb.org/3/' + (_selectedMovie.type||'movie') + '/' + _selectedMovie.id + '/videos?api_key=' + _TMDB_KEY);
+            var vdata2 = await vresp2.json();
+            var t2 = (vdata2.results||[]).find(function(v){return v.type==='Trailer'&&v.site==='YouTube';}) || (vdata2.results||[])[0];
+            if (t2) cfg.trailer_key = t2.key;
+          }
+        } catch(_) {}
+      }
+    }
+    try {
+      var {doc: fiDoc, setDoc: fiSet} = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      var ref = fiDoc(window._db, 'artifacts', 'level-ia-premium', 'public', 'data', 'config', 'apps');
+      await fiSet(ref, { pub_config: cfg }, { merge: true });
+      if (window._appsStatus) window._appsStatus.pub_config = cfg;
+      window._refreshPubModeUI();
+      if (typeof window.loadAppStatus === 'function') window.loadAppStatus();
+      toast_('Panneau pub mis à jour ✓', 'ok');
+    } catch(e) { toast_('Erreur : ' + (e.message || e), 'err'); }
+  };
+})();
+
 // TERMS
 function openTerms(){
-    // Sur PWA mobile → ouvrir dans le vrai navigateur
-    var _isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    var _isMob = /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
-    if (_isPWA && _isMob) { window.open('https://levelup-ecosystem.com/terms', '_blank'); return; }
+    var _isMob = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || window.innerWidth < 700;
+    if (_isMob) {
+      // Sur tout mobile → iframe plein écran
+      var ov = document.getElementById('mobileTermsOverlay');
+      if (!ov) {
+        ov = document.createElement('div');
+        ov.id = 'mobileTermsOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#0d0b1a;display:flex;flex-direction:column';
+        ov.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0"><button onclick="document.getElementById(\'mobileTermsOverlay\').remove()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.7);padding:7px 12px;cursor:pointer;font-size:.82rem;font-family:inherit;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Retour</button><span style="font-size:.84rem;color:rgba(255,255,255,.5);font-weight:600">Conditions d\'utilisation</span><a href="https://levelup-ecosystem.com/terms" target="_blank" style="margin-left:auto;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);border-radius:8px;color:#a855f7;padding:7px 12px;cursor:pointer;font-size:.78rem;font-family:inherit;text-decoration:none;display:flex;align-items:center;gap:5px"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir</a></div><iframe src="https://levelup-ecosystem.com/terms" style="flex:1;border:none;width:100%;background:#0d0b1a" loading="lazy"></iframe>';
+        document.body.appendChild(ov);
+      } else { ov.style.display = 'flex'; }
+      return;
+    }
     document.getElementById('termsOverlay').classList.remove('hidden'); 
     document.body.style.overflow = 'hidden';
 }
@@ -5848,12 +6228,6 @@ if(panel) panel.classList.add('on');
 const nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
 const mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
 window.scrollTo({top:0,behavior:'smooth'});
-// URL décorative par panneau
-try {
-  const _urlMap = {home:'dashboard',keys:'dashboard/keys',tools:'tools',services:'services',notif:'notifications',settings:'settings',help:'help'};
-  const _seg = _urlMap[id] || 'dashboard';
-  history.replaceState({page:id}, '', '/'+_seg);
-} catch(_) {}
 
 // ── EFFACER BADGE OUTILS À L'OUVERTURE ──
 if (id === 'tools') {
@@ -6696,7 +7070,7 @@ window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
                 </div>
                 <div class="svc-card-body">
                     <div class="svc-card-title">${title}</div>
-                    ${desc ? `<div class="svc-card-desc">${desc}</div>` : ''}
+                    ${desc ? (desc.length > 80 ? `<div class="svc-card-desc">${desc.slice(0,80).trim()}… <button class="tool-card-see-more" onclick="event.stopPropagation();window._showSvcDesc('${title.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${desc.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${urlEsc}')" style="font-size:.69rem;color:#a855f7;cursor:pointer;font-weight:700;background:none;border:none;padding:0;outline:none;font-family:var(--sans)">Voir plus</button></div>` : `<div class="svc-card-desc">${desc}</div>`) : ''}
                     ${price ? `<div class="svc-card-price"><i class="fa-solid fa-tag" style="font-size:.6rem"></i>${price}</div>` : ''}
                     <button class="svc-card-open" onclick="event.stopPropagation(); window.closeServicesHub(); window.openToolWindow('${urlEsc}', '${titleEsc}')">
                         <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.72rem"></i> Ouvrir
@@ -7348,15 +7722,8 @@ MODALE ALERTE SÉCURITÉ
             }
         } catch(_) {}
     }
-    // Déclencher uniquement quand l'auth est prête (après login)
-    document.addEventListener('lvl_auth_ready', function() {
-        setTimeout(_triggerPushPopupOnce, 3000);
-    });
-    // Fallback si l'événement n'est pas déclenché : attendre 5s
-    setTimeout(function() {
-        if (!window._user) return; // Pas connecté, ne pas spammer
-        _triggerPushPopupOnce();
-    }, 5000);
+    // Déclencher pour TOUS les visiteurs — pas besoin d'être connecté
+    setTimeout(function() { _triggerPushPopupOnce(); }, 3500);
 })();
 </script>
 
@@ -8994,18 +9361,45 @@ window.scrollTo(0, 0);
     window._turnstileToken = '__bypass__';
     var container = document.getElementById('cfTurnstile');
     if (container) { container._tsRendered = false; container.innerHTML = ''; }
-    // Verrouiller le scroll sans casser la position (pas de position:fixed qui reset le scrollY)
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
     ov.style.display = 'flex';
+    // Forcer le panel au bas — anti-clavier
+    panel.style.bottom = '0';
+    panel.style.position = 'relative';
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         panel.style.transform = 'translateY(0)';
         setTimeout(function(){ if(window._renderTurnstile) window._renderTurnstile('cfTurnstile'); }, 300);
       });
     });
+    // ── VisualViewport : repositionner le panel si le clavier monte ──
+    if (window.visualViewport) {
+      function _vvResize() {
+        var vv = window.visualViewport;
+        var keyH = window.innerHeight - vv.height - vv.offsetTop;
+        if (keyH > 50) {
+          // Clavier ouvert — déplacer le panel pour qu'il reste visible
+          ov.style.height = vv.height + 'px';
+          ov.style.top = vv.offsetTop + 'px';
+        } else {
+          ov.style.height = '';
+          ov.style.top = '';
+        }
+      }
+      window.visualViewport.addEventListener('resize', _vvResize);
+      window.visualViewport.addEventListener('scroll', _vvResize);
+      ov._vvClean = function() {
+        window.visualViewport.removeEventListener('resize', _vvResize);
+        window.visualViewport.removeEventListener('scroll', _vvResize);
+        ov.style.height = '';
+        ov.style.top = '';
+      };
+    }
   };
   window.closeMobileLoginSheet = function() {
+    var ov2 = document.getElementById('mobileLoginSheet');
+    if (ov2 && ov2._vvClean) { ov2._vvClean(); delete ov2._vvClean; }
     var panel = document.getElementById('mobileLoginPanel');
     var ov = document.getElementById('mobileLoginSheet');
     if (!panel || !ov) return;
@@ -9081,26 +9475,36 @@ window.scrollTo(0, 0);
   window._showPWAInstall = showPWAInstall;
 
   // ── Intercept openAuth sur mobile ──
-  // Non-PWA + non-connecté → popup install
+  // Non-PWA → popup install (TOUJOURS, même si connecté)
   // PWA + non-connecté → bottom-sheet login
   if (isMobile) {
     setTimeout(function() {
       var origOpenAuth = window.openAuth;
       window.openAuth = function(mode) {
+        if (!isPWA) {
+          // Navigateur mobile → install popup (bloque tout)
+          showPWAInstall();
+          return;
+        }
         if (window._user) {
-          // Déjà connecté → comportement normal
           if (origOpenAuth) origOpenAuth(mode);
           return;
         }
-        if (!isPWA) {
-          if (showPWAInstall()) return;
-        } else {
-          window.openMobileLoginSheet();
-          return;
-        }
-        if (origOpenAuth) origOpenAuth(mode);
+        window.openMobileLoginSheet();
       };
     }, 600);
+
+    // ── Bloquer toute interaction sur navigateur mobile (non-PWA) ──
+    if (!isPWA) {
+      document.addEventListener('click', function(e) {
+        // Laisser passer les clics à l'intérieur du pwaInstallOverlay
+        var ov = document.getElementById('pwaInstallOverlay');
+        if (ov && ov.contains(e.target)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        showPWAInstall();
+      }, true);
+    }
   }
 
   // ── PWA installé : classe pwa-mobile uniquement, pas d'auto-show du login sheet ──
@@ -9309,15 +9713,13 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
 <div id="lvlTurnstilePopup">
   <div class="ts-card">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;position:relative">
-      <div style="width:44px;height:44px;border-radius:12px;background:rgba(168,85,247,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(168,85,247,.24)">
-        <i class="fa-solid fa-shield-halved" style="color:#a855f7;font-size:1.1rem"></i>
-      </div>
+      <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp" style="width:44px;height:44px;object-fit:contain;border-radius:12px;filter:drop-shadow(0 0 14px rgba(168,85,247,.5));flex-shrink:0">
       <div>
-        <div style="font-size:.93rem;font-weight:800;color:#fff;letter-spacing:-.02em">Security Verification</div>
-        <div style="font-size:.7rem;color:rgba(255,255,255,.35);margin-top:1px">LevelUp protects its members</div>
+        <div style="font-size:.93rem;font-weight:800;color:#fff;letter-spacing:-.02em">Vérification de sécurité</div>
+        <div style="font-size:.7rem;color:rgba(255,255,255,.35);margin-top:1px">LevelUp protège ses membres</div>
       </div>
     </div>
-    <p style="font-size:.76rem;color:rgba(255,255,255,.38);line-height:1.65;margin-bottom:14px;position:relative">A quick verification to confirm you're human — this keeps bots and malicious activity off the platform.</p>
+    <p style="font-size:.76rem;color:rgba(255,255,255,.38);line-height:1.65;margin-bottom:14px;position:relative">Une vérification rapide pour confirmer que vous êtes humain — ça protège la communauté LevelUp des bots et activités malveillantes.</p>
     <div id="lvlTurnstileWidget" style="border-radius:10px;overflow:hidden;min-height:65px;position:relative"></div>
     <button onclick="var p=document.getElementById('lvlTurnstilePopup');if(p){p.style.opacity='0';setTimeout(function(){p.classList.remove('show');p.style.opacity='';},350);}" style="margin-top:10px;width:100%;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.3);font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Passer</button>
   </div>
@@ -9340,6 +9742,7 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
       retry:'never',
       'refresh-expired':'never',
       callback:function(){
+        sessionStorage.setItem('lvl_ts_session','1');
         setTimeout(function(){
           var p=document.getElementById('lvlTurnstilePopup');
           if(p){p.style.opacity='0';p.style.transition='opacity .4s';setTimeout(function(){p.classList.remove('show');p.style.opacity='';container._tsRendered=false;},420);}
