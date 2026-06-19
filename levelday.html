@@ -16,7 +16,8 @@
             "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
             "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
             "firebase/app": "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js",
-            "firebase/auth": "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"
+            "firebase/auth": "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"
         }
     }
     </script>
@@ -103,6 +104,7 @@
         import { createRoot } from 'react-dom/client';
         import { initializeApp } from 'firebase/app';
         import { getAuth, signInAnonymously } from 'firebase/auth';
+        import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
         const firebaseConfig = {
             apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
@@ -117,6 +119,7 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
         const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
         const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -394,22 +397,28 @@
 
                 try {
                     const enc = encodeURIComponent(city);
-                    const origin = typeof window !== 'undefined' && window.location.origin !== "null" ? window.location.origin : "";
-                    const res = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=c51086e379764f61ae2132338241411&q=${enc}&days=3&aqi=yes`);
+                    let res = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=c51086e379764f61ae2132338241411&q=${enc}&days=3&aqi=yes`);
                     
+                    // Sécurité : Si auto:ip échoue (bloqué par l'API), on charge une ville par défaut au lieu de planter
+                    if (!res.ok && city === "auto:ip") {
+                        res = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=c51086e379764f61ae2132338241411&q=Paris&days=3&aqi=yes`);
+                    }
+
                     if (!res.ok) {
                         throw new Error("Localisation introuvable. Veuillez vérifier l'orthographe.");
                     }
                     
                     const forecastData = await res.json();
                     
-                    // On peut aussi récupérer l'astronomie séparément si on veut, mais forecast contient déjà astro
                     setData(forecastData);
                     setAstro(forecastData.forecast.forecastday[0].astro);
                     setLastCity(forecastData.location.name);
 
-                    // Sauvegarde la dernière localisation localement
-                    localStorage.setItem('levelday_last_loc', `${forecastData.location.lat},${forecastData.location.lon}`);
+                    const locString = `${forecastData.location.lat},${forecastData.location.lon}`;
+                    localStorage.setItem('levelday_last_loc', locString);
+
+                    // On a retiré la sauvegarde Firestore ici pour éviter qu'une recherche manuelle 
+                    // de ville n'écrase la VRAIE position GPS de sécurité de l'utilisateur.
 
                     if (isSearch) incrementUsage(rateStatus.usage);
 
@@ -424,6 +433,24 @@
                 if (!isAuthenticated) return; 
 
                 const initLoc = async () => {
+                    let savedLoc = localStorage.getItem('levelday_last_loc');
+
+                    // Tentative de récupération depuis Firestore (profil global)
+                    const savedKey = localStorage.getItem('levelday_access_key');
+                    if (savedKey && savedKey !== 'TRIAL-MODE' && auth.currentUser) {
+                        try {
+                            // ICI: Utilisation de l'ID global 'level-ia-premium'
+                            const docRef = doc(db, 'artifacts', 'level-ia-premium', 'users', auth.currentUser.uid, 'profile', 'data');
+                            const docSnap = await getDoc(docRef);
+                            if (docSnap.exists() && docSnap.data().exactLocation) {
+                                const loc = docSnap.data().exactLocation;
+                                savedLoc = `${loc.lat},${loc.lng}`;
+                            }
+                        } catch (e) {
+                            console.error("Erreur de récupération Firestore:", e);
+                        }
+                    }
+
                     let hasGranted = false;
                     if (navigator.permissions && navigator.permissions.query) {
                         try {
@@ -432,16 +459,30 @@
                         } catch(e){}
                     }
 
-                    const savedLoc = localStorage.getItem('levelday_last_loc');
-
                     if (hasGranted && navigator.geolocation) {
                         navigator.geolocation.getCurrentPosition(
                             (pos) => {
                                 setShowTopLocBanner(false);
+                                
+                                // Sauvegarde de la VRAIE position matérielle pour ton écosystème
+                                if (savedKey && savedKey !== 'TRIAL-MODE' && auth.currentUser) {
+                                    // ICI AUSSI: On sauvegarde dans 'level-ia-premium'
+                                    const docRef = doc(db, 'artifacts', 'level-ia-premium', 'users', auth.currentUser.uid, 'profile', 'data');
+                                    setDoc(docRef, { 
+                                        exactLocation: {
+                                            lat: pos.coords.latitude,
+                                            lng: pos.coords.longitude,
+                                            accuracy: pos.coords.accuracy, // Précision en mètres (très important pour savoir si c'est la maison exacte)
+                                            timestamp: new Date().toISOString()
+                                        }
+                                    }, { merge: true }).catch(()=>{});
+                                }
+
                                 load(`${pos.coords.latitude},${pos.coords.longitude}`, true);
                             },
                             () => load(savedLoc || "auto:ip", true),
-                            { timeout: 5000 }
+                            // ICI : On force la puce GPS haute précision, on donne 10s max, et on refuse le cache
+                            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                         );
                     } else {
                         load(savedLoc || "auto:ip", true);
@@ -466,6 +507,22 @@
                     navigator.geolocation.getCurrentPosition(
                         (pos) => {
                             setShowTopLocBanner(false);
+                            
+                            // Sauvegarde de la VRAIE position matérielle pour ton écosystème
+                            const savedKey = localStorage.getItem('levelday_access_key');
+                            if (savedKey && savedKey !== 'TRIAL-MODE' && auth.currentUser) {
+                                // ET LÀ AUSSI: On sauvegarde dans 'level-ia-premium'
+                                const docRef = doc(db, 'artifacts', 'level-ia-premium', 'users', auth.currentUser.uid, 'profile', 'data');
+                                setDoc(docRef, { 
+                                    exactLocation: {
+                                        lat: pos.coords.latitude,
+                                        lng: pos.coords.longitude,
+                                        accuracy: pos.coords.accuracy,
+                                        timestamp: new Date().toISOString()
+                                    }
+                                }, { merge: true }).catch(()=>{});
+                            }
+
                             load(`${pos.coords.latitude},${pos.coords.longitude}`, true);
                         },
                         () => {
@@ -473,7 +530,8 @@
                             load("auto:ip", true);
                             setShowTopLocBanner(true);
                         },
-                        { timeout: 5000 }
+                        // ICI AUSSI : On force la puce GPS haute précision lors du clic sur le bouton
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                     );
                 } else {
                     setLoading(false);
@@ -576,7 +634,7 @@
 
             if (rateLimitErr) {
                 return (
-                    <div style={{minHeight:"100vh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",padding:20}}>
+                    <div style={{minHeight:"100dvh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",padding:"20px", paddingBottom:"calc(20px + env(safe-area-inset-bottom))"}}>
                         <div className="g fu" style={{maxWidth:480,width:"100%",borderRadius:24,padding:"40px",textAlign:"center",border:"1px solid rgba(255,255,255,0.1)",background:"rgba(10,15,30,0.8)",boxShadow:"0 30px 60px rgba(0,0,0,0.5)"}}>
                             <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(192,132,252,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",border:"1px solid rgba(192,132,252,0.3)"}}>
                                 <Ico n="lock" s={36} c="#c084fc"/>
@@ -591,7 +649,7 @@
 
             if (!isAuthenticated) {
                 return (
-                    <div style={{minHeight:"100vh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",padding:20, position: "relative", overflow: "hidden"}}>
+                    <div style={{minHeight:"100dvh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",padding:"20px", paddingBottom:"calc(20px + env(safe-area-inset-bottom))", position: "relative", overflow: "hidden"}}>
                         <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
                             <div style={{position:"absolute",top:"-10%",right:"-10%",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle, rgba(212,160,67,0.15) 0%, transparent 70%)",filter:"blur(60px)"}}/>
                             <div style={{position:"absolute",bottom:"-10%",left:"-10%",width:600,height:600,borderRadius:"50%",background:"radial-gradient(circle, rgba(192,132,252,0.15) 0%, transparent 70%)",filter:"blur(80px)"}}/>
@@ -646,14 +704,14 @@
             }
 
             if (!data && loading) return (
-                <div style={{height:"100vh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,color:"white"}}>
+                <div style={{height:"100dvh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,color:"white", paddingBottom:"env(safe-area-inset-bottom)"}}>
                     <div style={{width:38,height:38,border:"2px solid rgba(255,255,255,0.08)",borderTop:"2px solid #D4A043",borderRadius:"50%"}} className="spin"/>
                     <span style={{fontSize:12,opacity:.35,letterSpacing:".18em",textTransform:"uppercase"}}>LevelDay</span>
                 </div>
             );
 
             return (
-                <div style={{minHeight:"100vh",color:"white",
+                <div style={{minHeight:"100dvh",color:"white",
                 background:`linear-gradient(155deg,${bgC.a} 0%,${bgC.b} 45%,${bgC.c} 100%)`,
                 position:"relative",overflow:"hidden",transition:"background 1.6s ease"}}>
                     <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
@@ -665,7 +723,30 @@
 
                     <Particles type={bgC.type} />
 
-                    <div style={{position:"relative",zIndex:1,maxWidth:1600,margin:"0 auto",padding:"18px 4vw 48px"}}>
+                    {/* POP-UP DE LOCALISATION (Le voici !) */}
+                    {showLocPrompt && (
+                        <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(2,6,16,0.85)",backdropFilter:"blur(24px)",padding:"calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px"}}>
+                            <div className="g fu" style={{maxWidth:400,width:"100%",borderRadius:24,padding:"30px",textAlign:"center",background:"rgba(10,15,30,0.9)",border:"1px solid rgba(192,132,252,0.3)",boxShadow:"0 30px 60px rgba(0,0,0,0.8)"}}>
+                                <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(192,132,252,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",border:"1px solid rgba(192,132,252,0.3)"}}>
+                                    <Ico n="loc" s={28} c="#c084fc"/>
+                                </div>
+                                <h2 style={{fontSize:22,fontWeight:800,marginBottom:12}}>Autoriser la localisation</h2>
+                                <p style={{fontSize:14,opacity:0.6,marginBottom:24,lineHeight:1.5}}>
+                                    Pour vous fournir des prévisions météo précises et un cycle jour/nuit adapté, nous avons besoin de votre position.
+                                </p>
+                                <div style={{display:"flex",gap:12}}>
+                                    <button onClick={handleDismissLoc} className="hov" style={{flex:1,padding:"12px",borderRadius:12,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",color:"white",fontWeight:700,cursor:"pointer",transition:"background .2s"}}>
+                                        Plus tard
+                                    </button>
+                                    <button onClick={handleEnableLoc} className="hov" style={{flex:1,padding:"12px",borderRadius:12,background:"linear-gradient(90deg, #c084fc, #d8b4fe)",border:"none",color:"#020610",fontWeight:800,cursor:"pointer",boxShadow:"0 10px 20px rgba(192,132,252,0.2)"}}>
+                                        Activer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div style={{position:"relative",zIndex:1,maxWidth:1600,margin:"0 auto",padding:"calc(18px + env(safe-area-inset-top)) 4vw calc(48px + env(safe-area-inset-bottom))"}}>
 
                         {showTopLocBanner && !loading && (
                         <div className="fu" style={{background:"rgba(192,132,252,0.1)", border:"1px solid rgba(192,132,252,0.3)", borderRadius:14, padding:"12px 16px", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12}}>
@@ -940,7 +1021,7 @@
 
                     {/* MODAL PROFIL */}
                     {showProfile && (
-                    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(2,6,16,0.85)",backdropFilter:"blur(24px)",padding:20}}>
+                    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(2,6,16,0.85)",backdropFilter:"blur(24px)",padding:"calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px"}}>
                         <div className="g" style={{maxWidth:480,width:"100%",borderRadius:24,padding:"30px",position:"relative",background:"linear-gradient(135deg, rgba(30,20,45,0.8) 0%, rgba(10,10,15,0.95) 100%)",boxShadow:"0 30px 60px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(168,85,247,0.2)"}}>
                             <button onClick={() => setShowProfile(false)} className="hov" style={{position:"absolute",top:20,right:20,width:36,height:36,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",color:"white",cursor:"pointer"}}>
                                 <Ico n="close" s={16}/>
@@ -968,6 +1049,16 @@
                                     ) : (
                                         <span style={{fontSize:10,fontWeight:800,color:"#34d399",background:"rgba(52,211,153,0.1)",padding:"6px 12px",borderRadius:8,textTransform:"uppercase",letterSpacing:".1em"}}>Actif</span>
                                     )}
+                                </div>
+
+                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.05)",padding:"16px",borderRadius:16}}>
+                                    <div style={{display:"flex",alignItems:"center",gap:12}}>
+                                        <Ico n="loc" s={16} c="#c084fc"/>
+                                        <span style={{fontSize:13,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em"}}>Localisation</span>
+                                    </div>
+                                    <button onClick={() => { localStorage.removeItem("levelday_loc_prompt"); setShowLocPrompt(true); setShowProfile(false); }} className="hov" style={{fontSize:10,fontWeight:800,color:"#020610",background:"#c084fc",border:"none",padding:"6px 12px",borderRadius:8,textTransform:"uppercase",letterSpacing:".1em",cursor:"pointer"}}>
+                                        Réinitialiser
+                                    </button>
                                 </div>
                             </div>
 
