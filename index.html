@@ -94,6 +94,7 @@ button{font-family:var(--sans)}
 .toast.info{border-color:rgba(168,85,247,.3);color:var(--purple)}
 .toast.warn{border-color:rgba(234,179,8,.3);color:var(--yellow)}
 @keyframes tIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes lvlPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
 
 /* ── NAV INVISIBLE ── */
 nav{position:fixed;top:0;width:100%;z-index:800;display:flex;align-items:center;justify-content:space-between;padding:15px 5%;background:transparent;border-bottom:none;transition:all .3s;gap:16px}
@@ -2140,6 +2141,13 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="qa-inf"><h4 id="qaServicesTitle">Services</h4><span id="qaServicesDesc">Sites partenaires</span></div>
 <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
 </div>
+<div class="qa-tile" onclick="window._openOppa()" style="border-color:rgba(234,88,12,.25);background:rgba(234,88,12,.04)">
+<div class="qa-ico" style="background:rgba(234,88,12,.12);border:1px solid rgba(234,88,12,.3)">
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><circle cx="12" cy="12" r="10" stroke="#ea580c" stroke-width="2.2"/><path d="M12 6.5C9 6.5 6.5 9 6.5 12S9 17.5 12 17.5 17.5 15 17.5 12 15 6.5 12 6.5z" stroke="#ea580c" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="#ea580c"/></svg>
+</div>
+<div class="qa-inf"><h4 style="color:#fb923c">Opera</h4><span>Ouvrir dans Opera</span></div>
+<i class="fa-solid fa-arrow-up-right-from-square qa-arr" style="color:#ea580c"></i>
+</div>
 </div>
 </div>
 
@@ -2902,9 +2910,12 @@ SERVICES HUB OVERLAY
     </button>
   </div>
   <div class="iframe-wrap">
-    <div class="iframe-loading" id="toolFsLoading">
-      <div class="iframe-spinner"></div>
-      <span style="font-size:.7rem;color:rgba(255,255,255,.25);font-family:var(--sans)">Chargement en cours…</span>
+    <div class="iframe-loading" id="toolFsLoading" style="background:#07040f">
+      <svg width="46" height="46" viewBox="0 0 576 512" style="filter:drop-shadow(0 0 16px rgba(168,85,247,.55));animation:lvlPulse 1.6s ease-in-out infinite">
+        <defs><linearGradient id="lsG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
+        <path fill="url(#lsG)" d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
+      </svg>
+      <span style="font-size:.74rem;color:rgba(255,255,255,.35);font-family:var(--sans);letter-spacing:.04em;margin-top:4px" id="toolFsLoadingText">Chargement en cours…</span>
     </div>
     <iframe id="toolFsIframe" class="tool-fs-iframe" src="" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; camera; microphone" allowfullscreen></iframe>
   </div>
@@ -3581,6 +3592,96 @@ setTimeout(() => {
 };
 
 // 🌟 LE PONT D'ÉCOSYSTÈME (SSO) 🌟
+// ── Popup recommandation Opera avant d'ouvrir une app streaming ──
+window._openOperaModal = function(appId, finalUrl) {
+  var appName = appId === 'movie' ? 'LevelMovie' : appId === 'music' ? 'LevelMusic' : 'LevelUp';
+  var appIcon = appId === 'movie'
+    ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M5 4V17C5 19.2 6.79 21 9 21H20" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round"/><path d="M10 8.36c0-.93 1.02-1.51 1.82-1.03l5.77 3.49c.77.47.77 1.59 0 2.06l-5.77 3.49C11.02 16.78 10 16.2 10 15.27V8.36Z" fill="#60a5fa"/></svg>'
+    : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M9 18V5l12-2v13" stroke="#a855f7" stroke-width="2" stroke-linecap="round"/><circle cx="6" cy="18" r="3" fill="#a855f7"/><circle cx="18" cy="16" r="3" fill="#a855f7"/></svg>';
+
+  var m = document.getElementById('_operaRecModal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = '_operaRecModal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);backdrop-filter:blur(18px);display:flex;align-items:flex-end;justify-content:center;padding:0';
+    document.body.appendChild(m);
+  }
+
+  m.innerHTML = '<div style="width:100%;max-width:480px;background:#0d0a1e;border:1px solid rgba(255,255,255,.1);border-bottom:none;border-radius:24px 24px 0 0;padding:24px 22px calc(28px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 60px rgba(0,0,0,.8)">'
+    + '<div style="width:38px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 20px"></div>'
+    + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
+    +   '<div style="width:44px;height:44px;border-radius:12px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">' + appIcon + '</div>'
+    +   '<div><div style="font-size:1rem;font-weight:800;color:#fff">' + appName + '</div><div style="font-size:.74rem;color:rgba(255,255,255,.38);margin-top:2px">Recommandation pour une meilleure expérience</div></div>'
+    + '</div>'
+    + '<div style="background:rgba(234,88,12,.06);border:1px solid rgba(234,88,12,.2);border-radius:14px;padding:14px 16px;margin-bottom:18px">'
+    +   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-6h2v6h-2zm0-8V7h2v2h-2z" fill="#fb923c"/></svg><span style="font-size:.8rem;font-weight:700;color:#fb923c">Conseil LevelUp</span></div>'
+    +   '<p style="font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.65;margin:0">Pour regarder des films et séries sur <strong style="color:#fff">' + appName + '</strong>, nous vous recommandons d\'utiliser <strong style="color:#fb923c">Opera</strong>. L\'expérience est plus fluide et le lien se nettoie automatiquement après connexion.</p>'
+    + '</div>'
+    + '<p style="font-size:.73rem;color:rgba(255,255,255,.35);text-align:center;margin-bottom:14px">Copiez votre lien personnel et collez-le dans Opera</p>'
+    + '<button id="_operaCopyBtn" onclick="window._operaCopyLink()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 18px;border-radius:14px;background:#ea580c;border:none;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;box-shadow:0 4px 16px rgba(234,88,12,.35)">'
+    +   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 4v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7.24L16.76 4H10a2 2 0 0 0-2 2z" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M16 4v4h4M6 8H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>'
+    +   'Copier mon lien ' + appName + ' pour Opera'
+    + '</button>'
+    + '<button onclick="window._operaOpenDirect()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:.84rem;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px">'
+    +   '<i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.78rem"></i> Ouvrir quand même'
+    + '</button>'
+    + '<button onclick="document.getElementById(\'_operaRecModal\').style.display=\'none\'" style="width:100%;padding:10px;border-radius:12px;background:transparent;border:none;color:rgba(255,255,255,.25);font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>'
+    + '</div>';
+
+  m._finalUrl = finalUrl;
+  m._appName = appName;
+  m.style.display = 'flex';
+  m.onclick = function(e){ if(e.target===m) m.style.display='none'; };
+};
+
+window._operaCopyLink = function() {
+  var m = document.getElementById('_operaRecModal');
+  if (!m || !m._finalUrl) return;
+  navigator.clipboard.writeText(m._finalUrl).then(function() {
+    toast_('✅ Lien copié ! Collez-le dans Opera pour accéder à ' + (m._appName||''), 'ok');
+    var btn = document.getElementById('_operaCopyBtn');
+    if (btn) { btn.textContent = '✓ Lien copié — Collez dans Opera'; btn.style.background='#16a34a'; }
+    setTimeout(function(){ m.style.display='none'; }, 2400);
+  }).catch(function() {
+    // Fallback
+    var ta = document.createElement('textarea');
+    ta.value = m._finalUrl; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast_('✅ Lien copié ! Collez-le dans Opera', 'ok'); } catch(_) { toast_('Copiez ce lien : ' + m._finalUrl, 'warn'); }
+    document.body.removeChild(ta);
+    setTimeout(function(){ m.style.display='none'; }, 2400);
+  });
+};
+
+window._operaOpenDirect = function() {
+  var m = document.getElementById('_operaRecModal');
+  if (!m || !m._finalUrl) return;
+  m.style.display = 'none';
+  var a = document.createElement('a');
+  a.href = m._finalUrl; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 100);
+};
+
+// Ouvre levelup-ecosystem.com/oppa avec la clé de l'utilisateur
+window._openOppa = function() {
+  var d = window._ud || {};
+  var base = 'https://levelup-ecosystem.com/oppa';
+  if (d.apiKey) {
+    var payload = new URLSearchParams({
+      lvl_key: d.apiKey,
+      lvl_uid: d.uid || '',
+      lvl_name: d.displayName || '',
+      lvl_email: d.email || ''
+    }).toString();
+    base = base + '?' + payload;
+  }
+  var a = document.createElement('a');
+  a.href = base; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 100);
+};
+
 window.openApp = function(appId) {
 // Vérification maintenance GLOBALE
 if (window._globalMaintenance) {
@@ -3657,7 +3758,7 @@ targetUrl = 'https://levelup-ecosystem.com/ia';
 
 if (targetUrl) {
 const finalUrl = targetUrl.includes('?') ? `${targetUrl}&${payload}` : `${targetUrl}?${payload}`;
-// Sauvegarder la session avant toute navigation externe (évite la perte de session iOS PWA)
+// Sauvegarder la session avant toute navigation externe
 try {
   const cu = window._auth && window._auth.currentUser;
   if (cu) {
@@ -3665,8 +3766,12 @@ try {
     localStorage.setItem('_lvl_email_bk', cu.email || '');
   }
 } catch(_) {}
-// Ouvrir dans Safari (hors PWA WebView) via <a target="_blank">
-// Le backup de session permet à Firebase de se re-authentifier au retour
+// Pour movie et music → afficher le popup Opera d'abord
+if (appId === 'movie' || appId === 'music') {
+  window._openOperaModal(appId, finalUrl);
+  return;
+}
+// Pour les autres apps → ouvrir directement
 (function(url){
   var a = document.createElement('a');
   a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
@@ -9829,19 +9934,19 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
 <!-- ═══════════════════════════════════════
 COOKIE CONSENT BANNER (RGPD/GDPR)
 ═══════════════════════════════════════ -->
-<div id="lvlCookieBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99995;padding:0 12px calc(env(safe-area-inset-bottom)+12px);animation:slideUp .35s cubic-bezier(.32,.72,0,1)">
-  <div style="max-width:680px;margin:0 auto;background:linear-gradient(135deg,rgba(18,12,32,.97),rgba(12,8,24,.97));border:1px solid rgba(168,85,247,.2);border-bottom:none;border-radius:18px 18px 0 0;padding:18px 20px;box-shadow:0 -8px 40px rgba(0,0,0,.55);backdrop-filter:blur(16px)">
+<div id="lvlCookieBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99995">
+  <div style="max-width:680px;margin:0 auto;background:#100920;border:1px solid rgba(168,85,247,.3);border-bottom:none;border-radius:18px 18px 0 0;padding:18px 20px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 40px rgba(0,0,0,.7)">
     <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
       <div style="flex:1;min-width:200px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <i class="fa-solid fa-cookie-bite" style="color:#a855f7;font-size:.9rem"></i>
           <span style="font-size:.85rem;font-weight:700;color:#fff">Paramètres des cookies</span>
         </div>
-        <p style="font-size:.75rem;color:rgba(255,255,255,.5);line-height:1.6;margin:0">Nous utilisons des cookies essentiels pour assurer le bon fonctionnement de LevelUp, et des cookies analytiques pour améliorer votre expérience. Aucune donnée n'est revendue.</p>
+        <p style="font-size:.75rem;color:rgba(255,255,255,.5);line-height:1.6;margin:0">Nous utilisons des cookies essentiels pour le bon fonctionnement de LevelUp, et des cookies analytiques pour améliorer votre expérience. Aucune donnée n'est revendue.</p>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
-        <button onclick="window._cookieDecline()" style="padding:9px 16px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap" onmouseover="this.style.background='rgba(255,255,255,.09)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Refuser</button>
-        <button onclick="window._cookieAccept()" style="padding:9px 20px;border-radius:10px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s;white-space:nowrap" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Accepter</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;margin-top:8px">
+        <button onclick="window._cookieDecline()" style="padding:10px 18px;border-radius:10px;background:#1e1035;border:1px solid rgba(255,255,255,.18);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap">Refuser</button>
+        <button onclick="window._cookieAccept()" style="padding:10px 22px;border-radius:10px;background:#a855f7;border:none;color:#fff;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 4px 14px rgba(168,85,247,.4)">Accepter tout</button>
       </div>
     </div>
   </div>
