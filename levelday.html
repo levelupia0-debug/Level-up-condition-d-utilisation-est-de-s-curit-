@@ -396,6 +396,11 @@
                 setLoading(true); setErr(null);
 
                 try {
+                    // Sécurité contre les fausses coordonnées sauvegardées en cache
+                    if (!city || city === "undefined,undefined" || city === "null,null") {
+                        city = "auto:ip";
+                    }
+
                     const enc = encodeURIComponent(city);
                     let res = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=c51086e379764f61ae2132338241411&q=${enc}&days=3&aqi=yes`);
                     
@@ -405,7 +410,21 @@
                     }
 
                     if (!res.ok) {
-                        throw new Error("Localisation introuvable. Veuillez vérifier l'orthographe.");
+                        const errData = await res.json().catch(()=>({}));
+                        const apiMsg = (errData?.error?.message || "").toLowerCase();
+                        
+                        let displayMsg = "Impossible de récupérer les données météo.";
+                        
+                        // Masquer les erreurs techniques (clés API expirées, quotas, etc.)
+                        if (apiMsg.includes("api key") || apiMsg.includes("key is invalid") || res.status === 401 || res.status === 403) {
+                            displayMsg = "Service météo temporairement en maintenance. Notre équipe est sur le coup !";
+                        } else if (apiMsg.includes("matching location") || res.status === 400) {
+                            displayMsg = "Localisation introuvable. Veuillez vérifier l'orthographe de la ville.";
+                        } else {
+                            displayMsg = "Service momentanément indisponible. Veuillez réessayer dans quelques instants.";
+                        }
+                        
+                        throw new Error(displayMsg);
                     }
                     
                     const forecastData = await res.json();
@@ -414,11 +433,10 @@
                     setAstro(forecastData.forecast.forecastday[0].astro);
                     setLastCity(forecastData.location.name);
 
-                    const locString = `${forecastData.location.lat},${forecastData.location.lon}`;
-                    localStorage.setItem('levelday_last_loc', locString);
-
-                    // On a retiré la sauvegarde Firestore ici pour éviter qu'une recherche manuelle 
-                    // de ville n'écrase la VRAIE position GPS de sécurité de l'utilisateur.
+                    if (forecastData.location?.lat) {
+                        const locString = `${forecastData.location.lat},${forecastData.location.lon}`;
+                        localStorage.setItem('levelday_last_loc', locString);
+                    }
 
                     if (isSearch) incrementUsage(rateStatus.usage);
 
@@ -703,18 +721,12 @@
                 );
             }
 
-            if (!data && loading) return (
-                <div style={{height:"100dvh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,color:"white", paddingBottom:"env(safe-area-inset-bottom)"}}>
-                    <div style={{width:38,height:38,border:"2px solid rgba(255,255,255,0.08)",borderTop:"2px solid #D4A043",borderRadius:"50%"}} className="spin"/>
-                    <span style={{fontSize:12,opacity:.35,letterSpacing:".18em",textTransform:"uppercase"}}>LevelDay</span>
-                </div>
-            );
-
             return (
-                <div style={{minHeight:"100dvh",color:"white",
+                <div style={{height:"100dvh",color:"white",
                 background:`linear-gradient(155deg,${bgC.a} 0%,${bgC.b} 45%,${bgC.c} 100%)`,
-                position:"relative",overflow:"hidden",transition:"background 1.6s ease"}}>
-                    <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
+                position:"relative",overflow:"hidden",transition:"background 1.6s ease",
+                display:"flex",flexDirection:"column"}}>
+                    <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
                         <div style={{position:"absolute",top:"-25%",right:"-18%",width:750,height:750,borderRadius:"50%",
                         background:`radial-gradient(circle,${bgC.c}50 0%,transparent 68%)`,filter:"blur(70px)",transition:"background 1.6s"}}/>
                         <div style={{position:"absolute",bottom:"-25%",left:"-18%",width:650,height:650,borderRadius:"50%",
@@ -723,7 +735,7 @@
 
                     <Particles type={bgC.type} />
 
-                    {/* POP-UP DE LOCALISATION (Le voici !) */}
+                    {/* POP-UP DE LOCALISATION */}
                     {showLocPrompt && (
                         <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(2,6,16,0.85)",backdropFilter:"blur(24px)",padding:"calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px"}}>
                             <div className="g fu" style={{maxWidth:400,width:"100%",borderRadius:24,padding:"30px",textAlign:"center",background:"rgba(10,15,30,0.9)",border:"1px solid rgba(192,132,252,0.3)",boxShadow:"0 30px 60px rgba(0,0,0,0.8)"}}>
@@ -746,26 +758,9 @@
                         </div>
                     )}
 
-                    <div style={{position:"relative",zIndex:1,maxWidth:1600,margin:"0 auto",padding:"calc(18px + env(safe-area-inset-top)) 4vw calc(48px + env(safe-area-inset-bottom))"}}>
-
-                        {showTopLocBanner && !loading && (
-                        <div className="fu" style={{background:"rgba(192,132,252,0.1)", border:"1px solid rgba(192,132,252,0.3)", borderRadius:14, padding:"12px 16px", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12}}>
-                            <div style={{display:"flex", alignItems:"center", gap:12}}>
-                            <div style={{width:32, height:32, borderRadius:8, background:"rgba(192,132,252,0.2)", display:"flex", alignItems:"center", justifyContent:"center"}}>
-                                <Ico n="loc" s={16} c="#c084fc"/>
-                            </div>
-                            <div>
-                                <div style={{fontWeight:700, fontSize:13, color:"#e9d5ff"}}>Position Approximative</div>
-                                <div style={{fontSize:11, opacity:0.6, marginTop:2}}>Activez la localisation pour plus de précision</div>
-                            </div>
-                            </div>
-                            <button onClick={handleEnableLoc} className="hov" style={{background:"#c084fc", color:"#020610", border:"none", padding:"8px 16px", borderRadius:8, fontWeight:800, fontSize:11, cursor:"pointer", textTransform:"uppercase", letterSpacing:".05em"}}>
-                            Activer
-                            </button>
-                        </div>
-                        )}
-
-                        <header className="fu header-container">
+                    {/* EN-TÊTE FIXE (Ne défile pas) */}
+                    <div style={{position:"relative",zIndex:10,padding:"calc(18px + env(safe-area-inset-top)) 4vw 0",flexShrink:0}}>
+                        <header className="fu header-container" style={{marginBottom: showSearch ? 18 : 10}}>
                             <div style={{display:"flex",alignItems:"center",gap:10}}>
                                 <div>
                                     <div style={{fontWeight:800,fontSize:22,letterSpacing:".07em",lineHeight:1.1}}>
@@ -849,174 +844,195 @@
                             )}
                         </div>
                         )}
+                    </div>
 
-                        {err && (
-                        <div className="fu" style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.2)",
-                        borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
-                            <Ico n="alert" s={16} c="#f87171"/>
-                            <span style={{fontSize:13,color:"#fca5a5",wordBreak:"break-word"}}>{err}</span>
-                        </div>
-                        )}
+                    {/* CONTENU DÉFILANT (C'est ici que ça scrolle) */}
+                    <div style={{flex:1, overflowY:"auto", overflowX:"hidden", position:"relative", zIndex:1, padding:"10px 4vw calc(48px + env(safe-area-inset-bottom))"}}>
+                        <div style={{maxWidth:1600, margin:"0 auto"}}>
 
-                        {loading && data && (
-                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,opacity:.4,fontSize:12}}>
-                            <div style={{width:12,height:12,border:"1.5px solid rgba(255,255,255,.2)",borderTop:"1.5px solid #D4A043",borderRadius:"50%"}} className="spin"/>
-                            Mise à jour...
-                        </div>
-                        )}
+                            {showTopLocBanner && !loading && (
+                            <div className="fu" style={{background:"rgba(192,132,252,0.1)", border:"1px solid rgba(192,132,252,0.3)", borderRadius:14, padding:"12px 16px", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12}}>
+                                <div style={{display:"flex", alignItems:"center", gap:12}}>
+                                <div style={{width:32, height:32, borderRadius:8, background:"rgba(192,132,252,0.2)", display:"flex", alignItems:"center", justifyContent:"center"}}>
+                                    <Ico n="loc" s={16} c="#c084fc"/>
+                                </div>
+                                <div>
+                                    <div style={{fontWeight:700, fontSize:13, color:"#e9d5ff"}}>Position Approximative</div>
+                                    <div style={{fontSize:11, opacity:0.6, marginTop:2}}>Activez la localisation pour plus de précision</div>
+                                </div>
+                                </div>
+                                <button onClick={handleEnableLoc} className="hov" style={{background:"#c084fc", color:"#020610", border:"none", padding:"8px 16px", borderRadius:8, fontWeight:800, fontSize:11, cursor:"pointer", textTransform:"uppercase", letterSpacing:".05em"}}>
+                                Activer
+                                </button>
+                            </div>
+                            )}
 
-                        {data && cur && (<>
-                        <div className="fu1" style={{textAlign:"center",padding:"30px 0 26px"}}>
-                            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:10}}>
+                            {err && (
+                            <div className="fu" style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.2)",
+                            borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
+                                <Ico n="alert" s={16} c="#f87171"/>
+                                <span style={{fontSize:13,color:"#fca5a5",wordBreak:"break-word"}}>{err}</span>
+                            </div>
+                            )}
+
+                            {/* Nouveau design de chargement, sans fond noir */}
+                            {(!data && loading) ? (
+                                <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"40vh",gap:14}}>
+                                    <div style={{width:38,height:38,border:"2px solid rgba(255,255,255,0.08)",borderTop:"2px solid #D4A043",borderRadius:"50%"}} className="spin"/>
+                                    <span style={{fontSize:12,opacity:.35,letterSpacing:".18em",textTransform:"uppercase"}}>Récupération des données...</span>
+                                </div>
+                            ) : data && cur && (<>
+                            <div className="fu1" style={{textAlign:"center",padding:"10px 0 26px"}}>
+                                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:10}}>
                                 <Ico n="loc" s={13} c="rgba(212,160,67,.65)"/>
                                 <span style={{fontSize:12,fontWeight:700,letterSpacing:".16em",
                                 opacity:.65,textTransform:"uppercase"}}>{loc.name}, {loc.country}</span>
-                            </div>
-                            <div style={{display:"flex",justifyContent:"center",marginBottom:6}} className="icon-img">
-                                <img src={`https:${cur.condition.icon.replace("64x64","128x128")}`}
-                                alt={cur.condition.text} style={{width:100,height:100,filter:"drop-shadow(0 0 24px rgba(255,255,255,.18))"}}
-                                onError={e=>e.target.style.display="none"}/>
-                            </div>
-                            <div style={{fontWeight:800,lineHeight:.85,
-                            fontSize:"clamp(90px,15vw,128px)",letterSpacing:"-.04em",marginBottom:8}}>
-                                {T(cur.temp_c)}<span style={{fontSize:".35em",opacity:.45,verticalAlign:"super",fontWeight:700}}>{TU}</span>
-                            </div>
-                            <p style={{fontSize:17,fontWeight:300,fontStyle:"italic",opacity:.6,marginBottom:8,letterSpacing:".02em"}}>
-                                {cur.condition.text}
-                            </p>
-                            <p style={{fontSize:11,opacity:.28,letterSpacing:".12em",textTransform:"uppercase",marginBottom:18}}>
-                                {dateStr} &nbsp;·&nbsp; {loc.localtime?.split(" ")[1]}
-                            </p>
-                            <div className="hero-temps">
-                                <span style={{opacity:.5}}>
-                                    <span style={{fontSize:9,fontWeight:700,letterSpacing:".08em",opacity:.6,marginRight:4}}>MAX</span>
-                                    {T(fcast[0]?.day.maxtemp_c)}{TS}
-                                </span>
-                                <span className="hide-mobile" style={{opacity:.18}}>|</span>
-                                <span style={{opacity:.5}}>
-                                    <span style={{fontSize:9,fontWeight:700,letterSpacing:".08em",opacity:.6,marginRight:4}}>MIN</span>
-                                    {T(fcast[0]?.day.mintemp_c)}{TS}
-                                </span>
-                                <span className="hide-mobile" style={{opacity:.18}}>|</span>
-                                <span style={{opacity:.5,display:"flex",alignItems:"center",gap:5}}>
-                                    <Ico n="thermo" s={12} c="rgba(255,255,255,.5)"/>
-                                    Ressenti {T(cur.feelslike_c)}{TS}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="fu2 stats-grid" style={{marginBottom:10}}>
-                            {[
-                            {l:"Humidité", v:`${cur.humidity}%`, sub:null, i:"drop"},
-                            {l:"Vent", v:`${Math.round(cur.wind_kph)} km/h`, sub:cur.wind_dir, i:"wind"},
-                            {l:"Visibilité",v:`${cur.vis_km} km`, sub:null, i:"eye"},
-                            {l:"Index UV", v:cur.uv, sub:cur.uv<=2?"Faible":cur.uv<=5?"Modéré":cur.uv<=7?"Élevé":"Très Élevé", i:"uv"},
-                            ].map((s,i)=>(
-                            <div key={i} className="g hov" style={{borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
-                                <div style={{display:"flex",justifyContent:"center",marginBottom:8,opacity:.3}}><Ico n={s.i} s={14}/></div>
-                                <div style={{fontWeight:700,fontSize:"clamp(17px,3.2vw,22px)",letterSpacing:"-.02em",marginBottom:3}}>{s.v}</div>
-                                {s.sub && <div style={{fontSize:10,opacity:.35,letterSpacing:".07em",textTransform:"uppercase",marginBottom:2}}>{s.sub}</div>}
-                                <div style={{fontSize:10,opacity:.28,letterSpacing:".08em",textTransform:"uppercase"}}>{s.l}</div>
-                            </div>
-                            ))}
-                        </div>
-
-                        <div className="fu3 g" style={{borderRadius:18,padding:"18px 20px",marginBottom:18}}>
-                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                                <span style={{fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase"}}>Prévision 24h</span>
-                                <span style={{fontSize:10,opacity:.2}}>Défiler →</span>
-                            </div>
-                            <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4}}>
-                                {hourly24.map((h,i)=>{
-                                const hr = new Date(h.time).getHours();
-                                const isNow = i===0;
-                                const rain = h.chance_of_rain > 0;
-                                const snow = h.chance_of_snow > 0;
-                                return (
-                                <div key={i} style={{flexShrink:0,borderRadius:12,padding:"11px 11px",textAlign:"center",minWidth:64,
-                                background:isNow?"rgba(212,160,67,.12)":"rgba(255,255,255,0.04)",
-                                border:`1px solid ${isNow?"rgba(212,160,67,.28)":"rgba(255,255,255,0.06)"}`,
-                                transition:"transform .2s"}}
-                                onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"}
-                                onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-                                    <div style={{fontSize:11,fontWeight:600,
-                                    color:isNow?"#D4A043":"rgba(255,255,255,.4)",marginBottom:6}}>
-                                    {isNow?"Maint.":`${hr}h`}
-                                    </div>
-                                    <img src={`https:${h.condition.icon}`} alt="" style={{width:34,height:34,marginBottom:5}}
+                                </div>
+                                <div style={{display:"flex",justifyContent:"center",marginBottom:6}} className="icon-img">
+                                    <img src={`https:${cur.condition.icon.replace("64x64","128x128")}`}
+                                    alt={cur.condition.text} style={{width:100,height:100,filter:"drop-shadow(0 0 24px rgba(255,255,255,.18))"}}
                                     onError={e=>e.target.style.display="none"}/>
-                                    <div style={{fontWeight:700,fontSize:14,marginBottom:3}}>{T(h.temp_c)}{TS}</div>
-                                    {(rain||snow) && (
-                                    <div style={{fontSize:10,color:snow?"#a5d8ff":"#93c5fd",opacity:.8,display:"flex",alignItems:"center",justifyContent:"center",gap:2}}>
-                                        <Ico n={snow?"snow":"drop"} s={9} c={snow?"#a5d8ff":"#93c5fd"}/>
-                                        {rain?h.chance_of_rain:h.chance_of_snow}%
-                                    </div>
-                                    )}
                                 </div>
-                                );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="fu4 g" style={{borderRadius:18,padding:"18px 20px",marginBottom:18}}>
-                            <span style={{fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase",display:"block",marginBottom:14}}>
-                                Prévision 3 Jours
-                            </span>
-                            <div style={{display:"flex",gap:10,marginBottom:14}}>
-                                {fcast.map((day,i)=>{
-                                const d = new Date(day.date);
-                                const lbl = i===0?"Auj.":i===1?"Demain":DAYS[d.getDay()];
-                                const active = activeDay===i;
-                                const rain = day.day.daily_chance_of_rain;
-                                const snow = day.day.daily_chance_of_snow;
-                                return (
-                                <div key={i} onClick={()=>setActiveDay(i)} className="hov"
-                                style={{flex:1,borderRadius:14,padding:"16px 10px",textAlign:"center",
-                                background:active?"rgba(212,160,67,.12)":"rgba(255,255,255,0.04)",
-                                border:`1px solid ${active?"rgba(212,160,67,.28)":"rgba(255,255,255,0.06)"}`}}>
-                                    <div style={{fontSize:11,fontWeight:700,letterSpacing:".07em",textTransform:"uppercase",
-                                    color:active?"#D4A043":"rgba(255,255,255,.45)",marginBottom:8}}>{lbl}</div>
-                                    <img src={`https:${day.day.condition.icon}`} alt="" style={{width:42,height:42,marginBottom:5}}
-                                    onError={e=>e.target.style.display="none"}/>
-                                    <div style={{fontWeight:700,fontSize:17,marginBottom:2}}>{T(day.day.maxtemp_c)}{TS}</div>
-                                    <div style={{fontSize:12,opacity:.3}}>{T(day.day.mintemp_c)}{TS}</div>
+                                <div style={{fontWeight:800,lineHeight:.85,
+                                fontSize:"clamp(90px,15vw,128px)",letterSpacing:"-.04em",marginBottom:8}}>
+                                    {T(cur.temp_c)}<span style={{fontSize:".35em",opacity:.45,verticalAlign:"super",fontWeight:700}}>{TU}</span>
                                 </div>
-                                );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="fu5 g" style={{borderRadius:18,padding:"24px",marginBottom:18,position:"relative",overflow:"hidden"}}>
-                            <span style={{fontSize:11,fontWeight:800,letterSpacing:".15em",opacity:.4,textTransform:"uppercase",display:"block",marginBottom:20}}>
-                                {isNight ? "Arc Nocturne" : "Arc Solaire"}
-                            </span>
-                            <div className="sun-arc-row">
-                                <div style={{display:"flex",alignItems:"center",gap:10}}>
-                                    <div style={{width:32,height:32,borderRadius:10,background:isNight?"rgba(129,140,248,0.1)":"rgba(253,184,19,0.1)",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${arcColorSec}30`}}>
-                                    <Ico n={arcIconStart} s={16} c={arcColorSec}/>
-                                    </div>
-                                    <div>
-                                    <div style={{fontWeight:800,fontSize:16,color:arcColorSec}}>{arcStart||"--"}</div>
-                                    <div style={{fontSize:10,opacity:.4,textTransform:"uppercase",letterSpacing:".08em",marginTop:2}}>{arcStartLbl}</div>
-                                    </div>
-                                </div>
-                                <div style={{textAlign:"center",padding:"8px 20px",background:"rgba(255,255,255,0.03)",borderRadius:12,border:"1px solid rgba(255,255,255,0.08)"}}>
-                                    <div style={{fontWeight:800,fontSize:18,marginBottom:2}}>{phaseH}<span style={{fontSize:12,opacity:.5}}>h</span> {phaseM}<span style={{fontSize:12,opacity:.5}}>m</span></div>
-                                    <div style={{fontSize:10,opacity:.3,textTransform:"uppercase",letterSpacing:".1em"}}>{isNight ? "Nuit" : "Jour"}</div>
-                                </div>
-                                <div style={{display:"flex",alignItems:"center",gap:10}}>
-                                    <div className="text-right" style={{textAlign:"right"}}>
-                                    <div style={{fontWeight:800,fontSize:16,color:arcColorMain}}>{arcEnd||"--"}</div>
-                                    <div style={{fontSize:10,opacity:.4,textTransform:"uppercase",letterSpacing:".08em",marginTop:2}}>{arcEndLbl}</div>
-                                    </div>
-                                    <div style={{width:32,height:32,borderRadius:10,background:isNight?"rgba(56,189,248,0.1)":"rgba(255,124,92,0.1)",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${arcColorMain}30`}}>
-                                    <Ico n={arcIconEnd} s={16} c={arcColorMain}/>
-                                    </div>
+                                <p style={{fontSize:17,fontWeight:300,fontStyle:"italic",opacity:.6,marginBottom:8,letterSpacing:".02em"}}>
+                                    {cur.condition.text}
+                                </p>
+                                <p style={{fontSize:11,opacity:.28,letterSpacing:".12em",textTransform:"uppercase",marginBottom:18}}>
+                                    {dateStr} &nbsp;·&nbsp; {loc.localtime?.split(" ")[1]}
+                                </p>
+                                <div className="hero-temps">
+                                    <span style={{opacity:.5}}>
+                                        <span style={{fontSize:9,fontWeight:700,letterSpacing:".08em",opacity:.6,marginRight:4}}>MAX</span>
+                                        {T(fcast[0]?.day.maxtemp_c)}{TS}
+                                    </span>
+                                    <span className="hide-mobile" style={{opacity:.18}}>|</span>
+                                    <span style={{opacity:.5}}>
+                                        <span style={{fontSize:9,fontWeight:700,letterSpacing:".08em",opacity:.6,marginRight:4}}>MIN</span>
+                                        {T(fcast[0]?.day.mintemp_c)}{TS}
+                                    </span>
+                                    <span className="hide-mobile" style={{opacity:.18}}>|</span>
+                                    <span style={{opacity:.5,display:"flex",alignItems:"center",gap:5}}>
+                                        <Ico n="thermo" s={12} c="rgba(255,255,255,.5)"/>
+                                        Ressenti {T(cur.feelslike_c)}{TS}
+                                    </span>
                                 </div>
                             </div>
-                        </div>
 
-                        </>)}
+                            <div className="fu2 stats-grid" style={{marginBottom:10}}>
+                                {[
+                                {l:"Humidité", v:`${cur.humidity}%`, sub:null, i:"drop"},
+                                {l:"Vent", v:`${Math.round(cur.wind_kph)} km/h`, sub:cur.wind_dir, i:"wind"},
+                                {l:"Visibilité",v:`${cur.vis_km} km`, sub:null, i:"eye"},
+                                {l:"Index UV", v:cur.uv, sub:cur.uv<=2?"Faible":cur.uv<=5?"Modéré":cur.uv<=7?"Élevé":"Très Élevé", i:"uv"},
+                                ].map((s,i)=>(
+                                <div key={i} className="g hov" style={{borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
+                                    <div style={{display:"flex",justifyContent:"center",marginBottom:8,opacity:.3}}><Ico n={s.i} s={14}/></div>
+                                    <div style={{fontWeight:700,fontSize:"clamp(17px,3.2vw,22px)",letterSpacing:"-.02em",marginBottom:3}}>{s.v}</div>
+                                    {s.sub && <div style={{fontSize:10,opacity:.35,letterSpacing:".07em",textTransform:"uppercase",marginBottom:2}}>{s.sub}</div>}
+                                    <div style={{fontSize:10,opacity:.28,letterSpacing:".08em",textTransform:"uppercase"}}>{s.l}</div>
+                                </div>
+                                ))}
+                            </div>
+
+                            <div className="fu3 g" style={{borderRadius:18,padding:"18px 20px",marginBottom:18}}>
+                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                                    <span style={{fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase"}}>Prévision 24h</span>
+                                    <span style={{fontSize:10,opacity:.2}}>Défiler →</span>
+                                </div>
+                                <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4}}>
+                                    {hourly24.map((h,i)=>{
+                                    const hr = new Date(h.time).getHours();
+                                    const isNow = i===0;
+                                    const rain = h.chance_of_rain > 0;
+                                    const snow = h.chance_of_snow > 0;
+                                    return (
+                                    <div key={i} style={{flexShrink:0,borderRadius:12,padding:"11px 11px",textAlign:"center",minWidth:64,
+                                    background:isNow?"rgba(212,160,67,.12)":"rgba(255,255,255,0.04)",
+                                    border:`1px solid ${isNow?"rgba(212,160,67,.28)":"rgba(255,255,255,0.06)"}`,
+                                    transition:"transform .2s"}}
+                                    onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"}
+                                    onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+                                        <div style={{fontSize:11,fontWeight:600,
+                                        color:isNow?"#D4A043":"rgba(255,255,255,.4)",marginBottom:6}}>
+                                        {isNow?"Maint.":`${hr}h`}
+                                        </div>
+                                        <img src={`https:${h.condition.icon}`} alt="" style={{width:34,height:34,marginBottom:5}}
+                                        onError={e=>e.target.style.display="none"}/>
+                                        <div style={{fontWeight:700,fontSize:14,marginBottom:3}}>{T(h.temp_c)}{TS}</div>
+                                        {(rain||snow) && (
+                                        <div style={{fontSize:10,color:snow?"#a5d8ff":"#93c5fd",opacity:.8,display:"flex",alignItems:"center",justifyContent:"center",gap:2}}>
+                                            <Ico n={snow?"snow":"drop"} s={9} c={snow?"#a5d8ff":"#93c5fd"}/>
+                                            {rain?h.chance_of_rain:h.chance_of_snow}%
+                                        </div>
+                                        )}
+                                    </div>
+                                    );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="fu4 g" style={{borderRadius:18,padding:"18px 20px",marginBottom:18}}>
+                                <span style={{fontSize:10,fontWeight:700,letterSpacing:".14em",opacity:.3,textTransform:"uppercase",display:"block",marginBottom:14}}>
+                                    Prévision 3 Jours
+                                </span>
+                                <div style={{display:"flex",gap:10,marginBottom:14}}>
+                                    {fcast.map((day,i)=>{
+                                    const d = new Date(day.date);
+                                    const lbl = i===0?"Auj.":i===1?"Demain":DAYS[d.getDay()];
+                                    const active = activeDay===i;
+                                    const rain = day.day.daily_chance_of_rain;
+                                    const snow = day.day.daily_chance_of_snow;
+                                    return (
+                                    <div key={i} onClick={()=>setActiveDay(i)} className="hov"
+                                    style={{flex:1,borderRadius:14,padding:"16px 10px",textAlign:"center",
+                                    background:active?"rgba(212,160,67,.12)":"rgba(255,255,255,0.04)",
+                                    border:`1px solid ${active?"rgba(212,160,67,.28)":"rgba(255,255,255,0.06)"}`}}>
+                                        <div style={{fontSize:11,fontWeight:700,letterSpacing:".07em",textTransform:"uppercase",
+                                        color:active?"#D4A043":"rgba(255,255,255,.45)",marginBottom:8}}>{lbl}</div>
+                                        <img src={`https:${day.day.condition.icon}`} alt="" style={{width:42,height:42,marginBottom:5}}
+                                        onError={e=>e.target.style.display="none"}/>
+                                        <div style={{fontWeight:700,fontSize:17,marginBottom:2}}>{T(day.day.maxtemp_c)}{TS}</div>
+                                        <div style={{fontSize:12,opacity:.3}}>{T(day.day.mintemp_c)}{TS}</div>
+                                    </div>
+                                    );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="fu5 g" style={{borderRadius:18,padding:"24px",marginBottom:18,position:"relative",overflow:"hidden"}}>
+                                <span style={{fontSize:11,fontWeight:800,letterSpacing:".15em",opacity:.4,textTransform:"uppercase",display:"block",marginBottom:20}}>
+                                    {isNight ? "Arc Nocturne" : "Arc Solaire"}
+                                </span>
+                                <div className="sun-arc-row">
+                                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                        <div style={{width:32,height:32,borderRadius:10,background:isNight?"rgba(129,140,248,0.1)":"rgba(253,184,19,0.1)",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${arcColorSec}30`}}>
+                                        <Ico n={arcIconStart} s={16} c={arcColorSec}/>
+                                        </div>
+                                        <div>
+                                        <div style={{fontWeight:800,fontSize:16,color:arcColorSec}}>{arcStart||"--"}</div>
+                                        <div style={{fontSize:10,opacity:.4,textTransform:"uppercase",letterSpacing:".08em",marginTop:2}}>{arcStartLbl}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{textAlign:"center",padding:"8px 20px",background:"rgba(255,255,255,0.03)",borderRadius:12,border:"1px solid rgba(255,255,255,0.08)"}}>
+                                        <div style={{fontWeight:800,fontSize:18,marginBottom:2}}>{phaseH}<span style={{fontSize:12,opacity:.5}}>h</span> {phaseM}<span style={{fontSize:12,opacity:.5}}>m</span></div>
+                                        <div style={{fontSize:10,opacity:.3,textTransform:"uppercase",letterSpacing:".1em"}}>{isNight ? "Nuit" : "Jour"}</div>
+                                    </div>
+                                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                        <div className="text-right" style={{textAlign:"right"}}>
+                                        <div style={{fontWeight:800,fontSize:16,color:arcColorMain}}>{arcEnd||"--"}</div>
+                                        <div style={{fontSize:10,opacity:.4,textTransform:"uppercase",letterSpacing:".08em",marginTop:2}}>{arcEndLbl}</div>
+                                        </div>
+                                        <div style={{width:32,height:32,borderRadius:10,background:isNight?"rgba(56,189,248,0.1)":"rgba(255,124,92,0.1)",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${arcColorMain}30`}}>
+                                        <Ico n={arcIconEnd} s={16} c={arcColorMain}/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </>)}
+                        </div>
                     </div>
 
                     {/* MODAL PROFIL */}
