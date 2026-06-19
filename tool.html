@@ -4,58 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LevelUp - Diffusion Globale</title>
-    <!-- Utilisation de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #0f1014;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        body { background-color: #0f1014; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1a1c23; }
         ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #718096; }
-        
-        /* Style pour l'aperçu du mail */
-        #previewContainer {
-            background-color: #f3f4f6; /* Fond gris clair pour bien détacher l'email */
-            color: #000000;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            padding: 1.5rem;
-        }
+        #previewContainer { background-color: #f3f4f6; color: #000000; border-radius: 0.5rem; overflow: hidden; padding: 1.5rem; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <!-- FENÊTRE MODALE PERSONNALISÉE (Remplace les alert() bloqués) -->
+    <!-- MODALE PERSONNALISÉE -->
     <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/80 backdrop-blur-sm transition-opacity">
         <div id="customModalContent" class="bg-[#1a1c23] border border-gray-700 p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4 transform scale-95 opacity-0 transition-all duration-200">
             <div class="mb-5 text-center">
                 <i id="modalIcon" class="fa-solid fa-circle-info text-4xl mb-4"></i>
                 <p id="customModalMessage" class="text-gray-200 text-sm font-medium leading-relaxed"></p>
             </div>
-            <div class="flex gap-3 justify-center w-full" id="customModalButtons">
-                <!-- Les boutons sont injectés en JS -->
-            </div>
+            <div class="flex gap-3 justify-center w-full" id="customModalButtons"></div>
         </div>
     </div>
 
     <div class="w-full max-w-3xl bg-[#1a1c23] rounded-2xl shadow-2xl overflow-hidden border border-gray-800 relative z-10">
+
         <!-- En-tête -->
-        <div class="bg-red-600 px-6 py-4 flex items-center gap-3">
-            <i class="fa-solid fa-bullhorn text-2xl"></i>
-            <h1 class="text-xl font-bold">Diffusion Globale - LevelUp</h1>
+        <div class="bg-red-600 px-6 py-4 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-bullhorn text-2xl"></i>
+                <h1 class="text-xl font-bold">Diffusion Globale - LevelUp</h1>
+            </div>
+            <!-- Bloc auth dans le header : login ou user connecté -->
+            <div id="authBlock">
+                <!-- Rempli dynamiquement par JS -->
+            </div>
         </div>
 
         <div class="p-8">
+
+            <!-- BANNER SI PAS CONNECTÉ -->
+            <div id="loginBanner" class="hidden mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div>
+                    <p class="text-yellow-400 font-semibold text-sm mb-1"><i class="fa-solid fa-lock mr-2"></i>Connexion requise</p>
+                    <p class="text-gray-400 text-xs">Tu dois être connecté avec ton compte admin Google pour accéder aux utilisateurs Firebase.</p>
+                </div>
+                <button id="loginBannerBtn" class="flex-shrink-0 flex items-center gap-2 bg-white text-gray-800 font-semibold text-sm py-2 px-4 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">
+                    <svg width="16" height="16" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    Se connecter avec Google
+                </button>
+            </div>
+
             <p class="text-gray-400 mb-6 text-sm">
-                <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-2"></i> 
+                <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-2"></i>
                 Attention : Ce message sera envoyé instantanément à <strong>tous les utilisateurs</strong> enregistrés dans ta base de données VRAIE.
             </p>
 
+            <!-- BASE UTILISATEURS -->
             <div class="mb-6 bg-[#0f1014] p-4 rounded-lg border border-gray-700">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-gray-300 font-semibold text-sm">
@@ -65,19 +76,16 @@
                         <i class="fa-solid fa-cloud-arrow-down"></i> Récupérer les vrais utilisateurs
                     </button>
                 </div>
-                
                 <div id="usersListContainer" class="hidden">
                     <p class="text-sm text-green-400 mb-2 font-bold flex items-center gap-2" id="usersCount"></p>
                     <div class="bg-[#1a1c23] border border-gray-800 rounded p-3">
-                        <ul id="usersList" class="max-h-32 overflow-y-auto text-xs text-gray-400 space-y-1 font-mono list-disc list-inside">
-                            <!-- Injection des VRAIS noms et emails ici -->
-                        </ul>
+                        <ul id="usersList" class="max-h-32 overflow-y-auto text-xs text-gray-400 space-y-1 font-mono list-disc list-inside"></ul>
                     </div>
                 </div>
             </div>
 
             <form id="broadcastForm" class="space-y-6">
-                <!-- Cible de l'envoi -->
+                <!-- CIBLE -->
                 <div class="bg-[#0f1014] p-4 rounded-lg border border-gray-700">
                     <h3 class="block text-sm font-medium text-gray-300 mb-3">Cible de l'envoi</h3>
                     <div class="flex gap-6 mb-3">
@@ -90,52 +98,43 @@
                             <span class="text-sm text-yellow-500 font-bold">Emails spécifiques (Test)</span>
                         </label>
                     </div>
-                    
-                    <!-- Champ pour entrer les mails manuellement (Caché par défaut) -->
                     <div id="specificEmailsContainer" class="hidden mt-4">
-                        <label for="specificEmails" class="block text-xs font-medium text-gray-400 mb-1">Adresses emails (séparées par des virgules)</label>
-                        <input type="text" id="specificEmails" 
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Adresses emails (séparées par des virgules)</label>
+                        <input type="text" id="specificEmails"
                                class="w-full bg-[#1a1c23] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500 transition-colors text-sm font-mono"
                                placeholder="ex: tonmail@gmail.com, test@yahoo.fr">
                     </div>
                 </div>
 
-                <!-- Sujet -->
+                <!-- SUJET -->
                 <div>
-                    <label for="broadcastSubject" class="block text-sm font-medium text-gray-300 mb-2">Sujet de l'email</label>
-                    <input type="text" id="broadcastSubject" 
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Sujet de l'email</label>
+                    <input type="text" id="broadcastSubject"
                            class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                            value="🚀 Mise à jour majeure : Nouvelles apps, correctifs et expérience mobile !">
                 </div>
 
+                <!-- MESSAGE -->
                 <div>
                     <div class="flex justify-between items-end mb-2">
                         <label class="block text-sm font-medium text-gray-300">Message <span class="ml-2 text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Utilisez {nom} pour personnaliser</span></label>
-                        <!-- Boutons d'onglets -->
                         <div class="flex bg-[#0f1014] p-1 rounded-lg border border-gray-700">
                             <button type="button" id="tabPreview" class="px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors">Aperçu visuel</button>
-                            <button type="button" id="tabCode" class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors">Code HTML</button>
+                            <button type="button" id="tabCode"    class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors">Code HTML</button>
                         </div>
                     </div>
 
-                    <!-- Éditeur Code (Caché par défaut) - ÉLARGI ! -->
                     <div id="editorContainer" class="hidden">
                         <textarea id="broadcastMessage" rows="18" style="min-height: 400px;"
                                   class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors font-mono text-sm"><div style="background-color: #f4f4f5; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-    
-    <!-- En-tête avec Logo -->
     <div style="text-align: center; padding: 40px 20px 20px; border-bottom: 1px solid #f0f0f0;">
       <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp Logo" width="130" style="display: block; margin: 0 auto; height: auto;">
     </div>
-    
-    <!-- Corps du message -->
     <div style="padding: 40px 30px;">
       <h1 style="margin: 0 0 20px; font-size: 24px; color: #111111; text-align: center; letter-spacing: -0.5px;">Une nouvelle ère pour LevelUp 🚀</h1>
       <p style="margin: 0 0 24px; font-size: 16px; color: #555555; line-height: 1.6;">Bonjour {nom},</p>
       <p style="margin: 0 0 30px; font-size: 16px; color: #555555; line-height: 1.6;">Suite à vos nombreux retours, nous avons entièrement repensé l'expérience LevelUp. Plus rapide, plus fluide, et surtout... plus riche en contenu.</p>
-      
-      <!-- Section Nouvelles Apps -->
       <div style="background-color: #fcfcfc; border: 1px solid #eaeaea; border-radius: 8px; padding: 24px; margin-bottom: 30px;">
         <h2 style="margin: 0 0 16px; font-size: 18px; color: #e50914;">✨ L'écosystème s'agrandit</h2>
         <p style="margin: 0 0 16px; font-size: 15px; color: #555555; line-height: 1.5;">De nouvelles applications rejoignent officiellement la plateforme :</p>
@@ -150,42 +149,32 @@
           </li>
         </ul>
       </div>
-
-      <!-- Section Améliorations -->
       <h2 style="margin: 0 0 16px; font-size: 18px; color: #111111;">🛠️ Correctifs & Améliorations</h2>
       <ul style="margin: 0 0 30px; padding: 0 0 0 20px; color: #555555; font-size: 15px; line-height: 1.6;">
         <li style="margin-bottom: 10px;"><strong>Expérience Mobile :</strong> L'interface a été grandement optimisée pour une navigation parfaite sur smartphone.</li>
         <li style="margin-bottom: 0;"><strong>Stabilité renforcée :</strong> Les bugs signalés par la communauté ont été corrigés pour garantir des performances optimales.</li>
       </ul>
-
-      <!-- Bouton d'action -->
       <div style="text-align: center; margin-top: 40px;">
         <a href="https://levelup-ecosystem.com" style="display: inline-block; background-color: #e50914; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 32px; border-radius: 8px;">Accéder à LevelUp</a>
       </div>
     </div>
-    
-    <!-- Pied de page -->
     <div style="background-color: #fafafa; padding: 24px 30px; text-align: center; border-top: 1px solid #f0f0f0;">
       <p style="margin: 0 0 8px; font-size: 13px; color: #888888;">Merci de faire partie de la communauté LevelUp.</p>
       <p style="margin: 0 0 16px; font-size: 13px; color: #111111; font-weight: bold;">L'équipe LevelUp Ecosystem</p>
-      
-      <!-- Liens légaux RGPD -->
       <div style="font-size: 11px; color: #a0a0a0; padding-top: 16px; border-top: 1px solid #eaeaea;">
-        <a href="https://levelup-ecosystem.com/terms" style="color: #a0a0a0; text-decoration: underline;">Conditions d'utilisation</a> 
-        &nbsp;&nbsp;|&nbsp;&nbsp; 
+        <a href="https://levelup-ecosystem.com/terms" style="color: #a0a0a0; text-decoration: underline;">Conditions d'utilisation</a>
+        &nbsp;&nbsp;|&nbsp;&nbsp;
         <a href="https://levelup-ecosystem.com/privacy" style="color: #a0a0a0; text-decoration: underline;">Règles de confidentialité</a>
       </div>
     </div>
-    
   </div>
 </div></textarea>
                     </div>
 
-                    <!-- Zone Aperçu (Visible par défaut) -->
                     <div id="previewContainer" class="w-full min-h-[400px]"></div>
                 </div>
 
-                <button type="submit" id="submitBtn" 
+                <button type="submit" id="submitBtn"
                         class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg transition-all duration-200 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     <i class="fa-solid fa-paper-plane"></i>
                     <span>Déclencher l'envoi réel</span>
@@ -196,247 +185,321 @@
         </div>
     </div>
 
-    <script>
-        // --- SYSTÈME DE MODALE PERSONNALISÉE ---
-        function showModal(message, type = 'alert') {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('customModal');
-                const modalContent = document.getElementById('customModalContent');
-                const messageEl = document.getElementById('customModalMessage');
-                const buttonsEl = document.getElementById('customModalButtons');
-                const iconEl = document.getElementById('modalIcon');
+<script type="module">
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut }
+                          from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getFirestore, collectionGroup, collection, getDocs, query, limit }
+                          from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-                messageEl.innerHTML = message;
-                buttonsEl.innerHTML = '';
+// ── CONFIG FIREBASE ──
+const _cfg = {
+    apiKey:            "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+    authDomain:        "levelup-ia.firebaseapp.com",
+    projectId:         "levelup-ia",
+    storageBucket:     "levelup-ia.firebasestorage.app",
+    messagingSenderId: "229420004282",
+    appId:             "1:229420004282:web:6735f059a947f0936ae383"
+};
+const _app  = initializeApp(_cfg);
+const _auth = getAuth(_app);
+const _db   = getFirestore(_app);
+const _gp   = new GoogleAuthProvider();
+_gp.setCustomParameters({ prompt: 'select_account' });
 
-                if (type === 'confirm') {
-                    iconEl.className = "fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-3";
-                    buttonsEl.innerHTML = `
-                        <button id="modalBtnCancel" class="w-full px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-white font-medium transition">Annuler</button>
-                        <button id="modalBtnConfirm" class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm text-white font-medium transition">Confirmer</button>
-                    `;
-                    document.getElementById('modalBtnCancel').onclick = () => { closeModal(); resolve(false); };
-                    document.getElementById('modalBtnConfirm').onclick = () => { closeModal(); resolve(true); };
-                } else {
-                    iconEl.className = "fa-solid fa-circle-info text-4xl text-blue-500 mb-3";
-                    if (message.includes("Erreur") || message.includes("DANGER") || message.includes("⚠️") || message.includes("Échec")) {
-                        iconEl.className = "fa-solid fa-circle-xmark text-4xl text-red-500 mb-3";
-                    }
-                    buttonsEl.innerHTML = `
-                        <button id="modalBtnOk" class="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm text-white font-bold transition">OK</button>
-                    `;
-                    document.getElementById('modalBtnOk').onclick = () => { closeModal(); resolve(true); };
+const APP_MAIN = 'level-ia-premium';
+
+// ── URL HELPER ──
+const getApiUrl = (path) => {
+    try {
+        const h  = window.location.hostname || '';
+        const ok = h.includes('levelup-ecosystem.com') || h.includes('localhost') || h.includes('127.0.0.1');
+        if (!ok || window.location.protocol === 'blob:' || window.location.origin === 'null')
+            return 'https://levelup-ecosystem.com' + path;
+        return path;
+    } catch { return 'https://levelup-ecosystem.com' + path; }
+};
+
+// ── GESTION AUTH → met à jour le header et le banner ──
+const authBlock   = document.getElementById('authBlock');
+const loginBanner = document.getElementById('loginBanner');
+
+function renderAuthHeader(user) {
+    if (user) {
+        // Connecté : affiche nom + bouton déconnexion
+        authBlock.innerHTML = `
+            <div class="flex items-center gap-3">
+                ${user.photoURL
+                    ? `<img src="${user.photoURL}" class="w-7 h-7 rounded-full object-cover border-2 border-white/30">`
+                    : `<div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">${(user.displayName||user.email||'?')[0].toUpperCase()}</div>`
                 }
+                <span class="text-xs font-medium text-white/80 hidden sm:block">${user.displayName || user.email}</span>
+                <button id="logoutBtn" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span class="hidden sm:inline">Déconnexion</span>
+                </button>
+            </div>`;
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(_auth));
+        loginBanner.classList.add('hidden');
+    } else {
+        // Non connecté : bouton Google dans le header
+        authBlock.innerHTML = `
+            <button id="headerLoginBtn" class="flex items-center gap-2 bg-white text-gray-800 font-semibold text-xs py-1.5 px-3 rounded-lg hover:bg-gray-100 transition">
+                <svg width="14" height="14" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                Se connecter
+            </button>`;
+        document.getElementById('headerLoginBtn').addEventListener('click', doLogin);
+        loginBanner.classList.remove('hidden');
+    }
+}
 
-                modal.classList.remove('hidden');
-                requestAnimationFrame(() => {
-                    modalContent.classList.remove('scale-95', 'opacity-0');
-                    modalContent.classList.add('scale-100', 'opacity-100');
-                });
+async function doLogin() {
+    try { await signInWithPopup(_auth, _gp); }
+    catch (e) { if (e.code !== 'auth/popup-closed-by-user') await showModal('Erreur : ' + e.message, 'alert'); }
+}
 
-                function closeModal() {
-                    modalContent.classList.remove('scale-100', 'opacity-100');
-                    modalContent.classList.add('scale-95', 'opacity-0');
-                    setTimeout(() => { modal.classList.add('hidden'); }, 200);
-                }
-            });
+// Liaison bouton du banner
+document.getElementById('loginBannerBtn').addEventListener('click', doLogin);
+
+onAuthStateChanged(_auth, (user) => { renderAuthHeader(user); });
+
+// ── MODALE CUSTOM ──
+function showModal(message, type = 'alert') {
+    return new Promise((resolve) => {
+        const modal        = document.getElementById('customModal');
+        const modalContent = document.getElementById('customModalContent');
+        const messageEl    = document.getElementById('customModalMessage');
+        const buttonsEl    = document.getElementById('customModalButtons');
+        const iconEl       = document.getElementById('modalIcon');
+
+        messageEl.innerHTML = message;
+        buttonsEl.innerHTML = '';
+
+        if (type === 'confirm') {
+            iconEl.className = "fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-3";
+            buttonsEl.innerHTML = `
+                <button id="modalBtnCancel"  class="w-full px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-white font-medium transition">Annuler</button>
+                <button id="modalBtnConfirm" class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm text-white font-medium transition">Confirmer</button>`;
+            document.getElementById('modalBtnCancel').onclick  = () => { closeM(); resolve(false); };
+            document.getElementById('modalBtnConfirm').onclick = () => { closeM(); resolve(true);  };
+        } else {
+            const isErr = message.includes("Erreur") || message.includes("DANGER") || message.includes("⚠️");
+            iconEl.className = isErr
+                ? "fa-solid fa-circle-xmark text-4xl text-red-500 mb-3"
+                : "fa-solid fa-circle-info text-4xl text-blue-500 mb-3";
+            buttonsEl.innerHTML = `<button id="modalBtnOk" class="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm text-white font-bold transition">OK</button>`;
+            document.getElementById('modalBtnOk').onclick = () => { closeM(); resolve(true); };
         }
 
-        // --- CORRECTION URL CANVAS ---
-        const getApiUrl = (path) => {
-            try {
-                const hostname = window.location.hostname || '';
-                const isProductionOrLocal = hostname.includes('levelup-ecosystem.com') || hostname.includes('localhost') || hostname.includes('127.0.0.1');
-                
-                if (!isProductionOrLocal || window.location.protocol === 'blob:' || window.location.origin === 'null') {
-                    return 'https://levelup-ecosystem.com' + path;
-                }
-                return path;
-            } catch (error) {
-                return 'https://levelup-ecosystem.com' + path;
-            }
-        };
+        modal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            modalContent.classList.remove('scale-95','opacity-0');
+            modalContent.classList.add('scale-100','opacity-100');
+        });
 
-        window.loadedFirebaseUsers = [];
-
-        // --- LOGIQUE DES ONGLETS ET DE L'APERÇU ---
-        const tabPreview = document.getElementById('tabPreview');
-        const tabCode = document.getElementById('tabCode');
-        const editorContainer = document.getElementById('editorContainer');
-        const previewContainer = document.getElementById('previewContainer');
-        const broadcastMessage = document.getElementById('broadcastMessage');
-
-        function updatePreview() {
-            if(previewContainer && broadcastMessage) {
-                // Remplacement visuel pour l'aperçu !
-                let html = broadcastMessage.value;
-                html = html.replace(/\{nom\}/gi, 'Utilisateur');
-                previewContainer.innerHTML = html;
-            }
+        function closeM() {
+            modalContent.classList.remove('scale-100','opacity-100');
+            modalContent.classList.add('scale-95','opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
         }
-        updatePreview();
-        broadcastMessage.addEventListener('input', updatePreview);
+    });
+}
 
-        tabPreview.addEventListener('click', () => {
-            tabPreview.className = "px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors";
-            tabCode.className = "px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors";
-            editorContainer.classList.add('hidden');
-            previewContainer.classList.remove('hidden');
-            updatePreview();
+// ── APERÇU HTML ──
+const tabPreview       = document.getElementById('tabPreview');
+const tabCode          = document.getElementById('tabCode');
+const editorContainer  = document.getElementById('editorContainer');
+const previewContainer = document.getElementById('previewContainer');
+const broadcastMessage = document.getElementById('broadcastMessage');
+
+function updatePreview() {
+    previewContainer.innerHTML = broadcastMessage.value.replace(/\{nom\}/gi, 'Utilisateur');
+}
+updatePreview();
+broadcastMessage.addEventListener('input', updatePreview);
+
+tabPreview.addEventListener('click', () => {
+    tabPreview.className = "px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors";
+    tabCode.className    = "px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors";
+    editorContainer.classList.add('hidden');
+    previewContainer.classList.remove('hidden');
+    updatePreview();
+});
+tabCode.addEventListener('click', () => {
+    tabCode.className    = "px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors";
+    tabPreview.className = "px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors";
+    previewContainer.classList.add('hidden');
+    editorContainer.classList.remove('hidden');
+});
+
+// ── RADIOS CIBLE ──
+document.querySelectorAll('input[name="targetAudience"]').forEach(radio => {
+    radio.addEventListener('change', function () {
+        document.getElementById('specificEmailsContainer')
+            .classList.toggle('hidden', this.value !== 'specific');
+    });
+});
+
+// ── RÉCUPÉRATION UTILISATEURS FIREBASE ──
+window.loadedFirebaseUsers = [];
+
+document.getElementById('loadUsersBtn').addEventListener('click', async () => {
+    const currentUser = _auth.currentUser;
+    if (!currentUser) {
+        await showModal("⚠️ Tu dois d'abord te connecter avec Google (bouton en haut à droite).", 'alert');
+        return;
+    }
+
+    const btn       = document.getElementById('loadUsersBtn');
+    const container = document.getElementById('usersListContainer');
+    const countEl   = document.getElementById('usersCount');
+    const listEl    = document.getElementById('usersList');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion Firebase…';
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    try {
+        const usersMap = {};
+
+        // 1. collectionGroup security → tous les users avec une clé LVL
+        const keysSnap = await getDocs(collectionGroup(_db, 'security'));
+        keysSnap.docs.forEach(d => {
+            const data  = d.data();
+            const uid   = data.uid || d.ref.parent?.parent?.id;
+            if (!uid) return;
+            const email = data.email || data.owner || '';
+            const name  = data.displayName || data.name || email.split('@')[0] || 'Utilisateur';
+            usersMap[uid] = { uid, email, name };
         });
 
-        tabCode.addEventListener('click', () => {
-            tabCode.className = "px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors";
-            tabPreview.className = "px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors";
-            previewContainer.classList.add('hidden');
-            editorContainer.classList.remove('hidden');
-        });
-
-        // --- GESTION DES RADIOS BOUTONS CIBLES ---
-        document.querySelectorAll('input[name="targetAudience"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const specContainer = document.getElementById('specificEmailsContainer');
-                if(this.value === 'specific') {
-                    specContainer.classList.remove('hidden');
-                } else {
-                    specContainer.classList.add('hidden');
-                }
-            });
-        });
-
-        // --- RÉCUPÉRATION DES VRAIS UTILISATEURS ---
-        document.getElementById('loadUsersBtn').addEventListener('click', async function() {
-            const btn = this;
-            const container = document.getElementById('usersListContainer');
-            const countDisplay = document.getElementById('usersCount');
-            const listDisplay = document.getElementById('usersList');
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion à la BDD...';
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-            
-            try {
-                const response = await fetch(getApiUrl('/api/get-users'));
-                const data = await response.json();
-                
-                if (!response.ok) throw new Error(data.error || "Erreur de chargement Firebase");
-
-                window.loadedFirebaseUsers = data.users;
-
-                container.classList.remove('hidden');
-                countDisplay.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${data.count} utilisateurs réels trouvés`;
-                
-                listDisplay.innerHTML = '';
-                data.users.forEach(user => {
-                    const li = document.createElement('li');
-                    const displayName = user.name ? user.name : "Utilisateur";
-                    li.innerHTML = `<span class="text-white">${displayName}</span> - <span class="text-gray-500">${user.email}</span>`;
-                    listDisplay.appendChild(li);
-                });
-
-            } catch (error) {
-                console.error(error);
-                await showModal("Erreur réseau: " + error.message + ". As-tu bien déployé le fichier api/get-users.js ?", 'alert');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Rafraîchir la BDD';
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        });
-
-        // --- ENVOI RÉEL VIA TON API SEND ---
-        document.getElementById('broadcastForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const subject = document.getElementById('broadcastSubject').value.trim();
-            const rawMessage = document.getElementById('broadcastMessage').value.trim();
-            const btn = document.getElementById('submitBtn');
-            const alertBox = document.getElementById('statusAlert');
-            
-            // --- VALIDATION AVEC MODALES ---
-            if (!subject) {
-                await showModal("Veuillez entrer un sujet d'email.", 'alert');
-                return;
-            }
-            if (!rawMessage) {
-                await showModal("Veuillez entrer un message.", 'alert');
-                return;
-            }
-
-            const targetType = document.querySelector('input[name="targetAudience"]:checked').value;
-            let targetUsers = [];
-
-            if (targetType === 'specific') {
-                const rawEmails = document.getElementById('specificEmails').value;
-                targetUsers = rawEmails.split(',').map(e => ({ email: e.trim(), name: "Administrateur" })).filter(u => u.email);
-                
-                if (targetUsers.length === 0) {
-                    await showModal("Veuillez entrer au moins une adresse email valide pour le test.", 'alert');
-                    return;
-                }
-                
-                const isConfirmed = await showModal(`🚀 Envoi de TEST : Confirmez-vous l'envoi à ces adresses : <br><br><span class="text-yellow-500 font-bold">${targetUsers.map(u => u.email).join(', ')}</span> ?`, 'confirm');
-                if (!isConfirmed) return;
-
+        // 2. users_status → complète les infos manquantes
+        const statusSnap = await getDocs(
+            query(collection(_db, 'artifacts', APP_MAIN, 'public', 'data', 'users_status'), limit(2000))
+        );
+        statusSnap.docs.forEach(d => {
+            const u = d.data();
+            if (!usersMap[d.id]) {
+                usersMap[d.id] = { uid: d.id, email: u.email || '', name: u.displayName || u.name || '' };
             } else {
-                if (!window.loadedFirebaseUsers || window.loadedFirebaseUsers.length === 0) {
-                    await showModal("⚠️ Veuillez d'abord cliquer sur <b>'Récupérer les vrais utilisateurs'</b> avant de lancer un envoi global.", 'alert');
-                    return;
-                }
-                targetUsers = window.loadedFirebaseUsers;
-
-                const isConfirmed = await showModal(`🚨 <b>DANGER</b> : Ceci va envoyer un VRAI mail à <b>${targetUsers.length} utilisateurs</b>.<br><br>Leur vrai nom sera intégré dans l'email. Es-tu absolument sûr de vouloir lancer cette action ?`, 'confirm');
-                if (!isConfirmed) return;
+                if (!usersMap[d.id].email && u.email)                    usersMap[d.id].email = u.email;
+                if (!usersMap[d.id].name  && (u.displayName || u.name)) usersMap[d.id].name  = u.displayName || u.name;
             }
-
-            btn.disabled = true;
-            alertBox.classList.remove('hidden');
-            alertBox.className = 'mt-6 p-4 rounded-lg font-medium text-center border block bg-gray-900 text-gray-300 border-gray-700';
-
-            let successCount = 0;
-            let failCount = 0;
-
-            for (let i = 0; i < targetUsers.length; i++) {
-                const user = targetUsers[i];
-                const displayName = user.name || "Utilisateur";
-                // MAGIE : ON REMPLACE LE NOM EN DIRECT
-                const personalizedMessage = rawMessage.replace(/\{nom\}/gi, displayName);
-                
-                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Envoi en cours (${i + 1}/${targetUsers.length})...</span>`;
-                alertBox.innerHTML = `<i class="fa-solid fa-paper-plane mr-2"></i> Envoi vers <strong>${user.email}</strong>... <br><span class="text-xs text-gray-500">Succès: ${successCount} | Échecs: ${failCount}</span>`;
-
-                try {
-                    const response = await fetch(getApiUrl('/api/send'), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            email: user.email,
-                            name: displayName,
-                            type: 'CUSTOM_HTML', 
-                            subject: subject,
-                            html: personalizedMessage
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        successCount++;
-                    } else {
-                        failCount++;
-                    }
-                } catch (error) {
-                    console.error("Erreur pour l'email:", user.email, error);
-                    failCount++;
-                }
-
-                await new Promise(resolve => setTimeout(resolve, 250)); // Petite pause pour épargner le serveur
-            }
-
-            alertBox.className = 'mt-6 p-4 rounded-lg font-medium text-center border block bg-green-900/50 text-green-300 border-green-700';
-            alertBox.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i> <strong>Envoi terminé !</strong><br> ${successCount} envoyés, ${failCount} échecs.`;
-            
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Déclencher l'envoi réel</span>`;
         });
-    </script>
+
+        // 3. Garde uniquement ceux avec un vrai email
+        const users = Object.values(usersMap).filter(u => u.email && u.email.includes('@'));
+        if (users.length === 0) throw new Error('Aucun utilisateur avec email trouvé dans Firebase.');
+
+        window.loadedFirebaseUsers = users;
+        container.classList.remove('hidden');
+        countEl.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${users.length} utilisateurs réels trouvés`;
+
+        listEl.innerHTML = '';
+        users.forEach(u => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="text-white">${u.name || 'Utilisateur'}</span> — <span class="text-gray-500">${u.email}</span>`;
+            listEl.appendChild(li);
+        });
+
+    } catch (err) {
+        console.error(err);
+        await showModal('Erreur Firebase : ' + err.message, 'alert');
+    } finally {
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Rafraîchir la BDD';
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+});
+
+// ── ENVOI DES MAILS ──
+document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const subject    = document.getElementById('broadcastSubject').value.trim();
+    const rawMessage = broadcastMessage.value.trim();
+    const btn        = document.getElementById('submitBtn');
+    const alertBox   = document.getElementById('statusAlert');
+
+    if (!subject)    { await showModal("Veuillez entrer un sujet d'email.", 'alert'); return; }
+    if (!rawMessage) { await showModal("Veuillez entrer un message.", 'alert'); return; }
+
+    const targetType = document.querySelector('input[name="targetAudience"]:checked').value;
+    let targetUsers  = [];
+
+    if (targetType === 'specific') {
+        const rawEmails = document.getElementById('specificEmails').value;
+        targetUsers = rawEmails.split(',')
+            .map(e => ({ email: e.trim(), name: 'Administrateur' }))
+            .filter(u => u.email);
+        if (targetUsers.length === 0) {
+            await showModal("Veuillez entrer au moins une adresse email valide.", 'alert');
+            return;
+        }
+        const ok = await showModal(
+            `🚀 Envoi de TEST vers :<br><br><span class="text-yellow-500 font-bold">${targetUsers.map(u => u.email).join(', ')}</span> ?`,
+            'confirm'
+        );
+        if (!ok) return;
+    } else {
+        if (!window.loadedFirebaseUsers?.length) {
+            await showModal("⚠️ Clique d'abord sur <b>'Récupérer les vrais utilisateurs'</b>.", 'alert');
+            return;
+        }
+        targetUsers = window.loadedFirebaseUsers;
+        const ok = await showModal(
+            `🚨 <b>DANGER</b> : Envoi RÉEL à <b>${targetUsers.length} utilisateurs</b>.<br><br>Leur vrai nom sera intégré. Es-tu absolument sûr ?`,
+            'confirm'
+        );
+        if (!ok) return;
+    }
+
+    btn.disabled = true;
+    alertBox.classList.remove('hidden');
+    alertBox.className = 'mt-6 p-4 rounded-lg font-medium text-center border block bg-gray-900 text-gray-300 border-gray-700';
+
+    let successCount = 0, failCount = 0;
+
+    for (let i = 0; i < targetUsers.length; i++) {
+        const user            = targetUsers[i];
+        const displayName     = user.name || 'Utilisateur';
+        const personalizedMsg = rawMessage.replace(/\{nom\}/gi, displayName);
+
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Envoi en cours (${i + 1}/${targetUsers.length})…</span>`;
+        alertBox.innerHTML = `<i class="fa-solid fa-paper-plane mr-2"></i> Envoi vers <strong>${user.email}</strong>…<br>
+            <span class="text-xs text-gray-500">Succès: ${successCount} | Échecs: ${failCount}</span>`;
+
+        try {
+            const res = await fetch(getApiUrl('/api/send'), {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email:   user.email,
+                    name:    displayName,
+                    type:    'CUSTOM_HTML',
+                    subject: subject,
+                    html:    personalizedMsg
+                })
+            });
+            if (res.ok) successCount++; else failCount++;
+        } catch (err) {
+            console.error('Erreur pour', user.email, err);
+            failCount++;
+        }
+
+        await new Promise(r => setTimeout(r, 250));
+    }
+
+    alertBox.className = 'mt-6 p-4 rounded-lg font-medium text-center border block bg-green-900/50 text-green-300 border-green-700';
+    alertBox.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i> <strong>Envoi terminé !</strong><br>${successCount} envoyés, ${failCount} échecs.`;
+    btn.disabled  = false;
+    btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Déclencher l'envoi réel</span>`;
+});
+</script>
 </body>
 </html>
