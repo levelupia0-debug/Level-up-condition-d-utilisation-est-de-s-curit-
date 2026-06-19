@@ -121,6 +121,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // LA CLÉ API A ÉTÉ RETIRÉE D'ICI ! (Sécurité maximum)
+
         const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
         const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         const MAX_REQUESTS = 5; 
@@ -402,23 +404,25 @@
                     }
 
                     const enc = encodeURIComponent(city);
-                    let res = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=c51086e379764f61ae2132338241411&q=${enc}&days=3&aqi=yes`);
                     
-                    // Sécurité : Si auto:ip échoue (bloqué par l'API), on charge une ville par défaut au lieu de planter
+                    // ⚠️ On appelle désormais TON backend sécurisé, et non plus l'API directement !
+                    let res = await fetch(`https://levelup-ecosystem.com/api/weather?q=${enc}`);
+                    
+                    // Sécurité : Si auto:ip échoue, on charge une ville par défaut
                     if (!res.ok && city === "auto:ip") {
-                        res = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=c51086e379764f61ae2132338241411&q=Paris&days=3&aqi=yes`);
+                        res = await fetch(`https://levelup-ecosystem.com/api/weather?q=Paris`);
                     }
 
                     if (!res.ok) {
                         const errData = await res.json().catch(()=>({}));
-                        const apiMsg = (errData?.error?.message || "").toLowerCase();
+                        const apiMsg = (errData?.error || "").toLowerCase();
                         
                         let displayMsg = "Impossible de récupérer les données météo.";
                         
-                        // Masquer les erreurs techniques (clés API expirées, quotas, etc.)
-                        if (apiMsg.includes("api key") || apiMsg.includes("key is invalid") || res.status === 401 || res.status === 403) {
+                        // Messages adaptés aux réponses de ton propre backend (500, 400, etc.)
+                        if (apiMsg.includes("configuration") || res.status === 500) {
                             displayMsg = "Service météo temporairement en maintenance. Notre équipe est sur le coup !";
-                        } else if (apiMsg.includes("matching location") || res.status === 400) {
+                        } else if (apiMsg.includes("not found") || apiMsg.includes("invalid") || res.status === 400 || res.status === 404) {
                             displayMsg = "Localisation introuvable. Veuillez vérifier l'orthographe de la ville.";
                         } else {
                             displayMsg = "Service momentanément indisponible. Veuillez réessayer dans quelques instants.";
@@ -427,10 +431,15 @@
                         throw new Error(displayMsg);
                     }
                     
-                    const forecastData = await res.json();
+                    // On récupère la réponse combinée de ton backend
+                    const backendData = await res.json();
+                    
+                    // On extrait le forecast et l'astronomy depuis ton wrapper backend
+                    const forecastData = backendData.forecast;
+                    const astroData = backendData.astronomy || forecastData.forecast.forecastday[0].astro;
                     
                     setData(forecastData);
-                    setAstro(forecastData.forecast.forecastday[0].astro);
+                    setAstro(astroData);
                     setLastCity(forecastData.location.name);
 
                     if (forecastData.location?.lat) {
@@ -567,7 +576,9 @@
                 if (q.length < 2) { setSugg([]); return; }
                 const t = setTimeout(async () => {
                     try {
-                        const r = await fetch(`https://api.weatherapi.com/v1/search.json?key=c51086e379764f61ae2132338241411&q=${encodeURIComponent(q)}`);
+                        // ⚠️ Tu devras créer une petite route backend pour l'autocomplétion (search.json)
+                        // ou l'ajouter à ta route existante pour qu'on n'envoie jamais la clé !
+                        const r = await fetch(`https://levelup-ecosystem.com/api/weather-search?q=${encodeURIComponent(q)}`);
                         const d = await r.json();
                         setSugg(Array.isArray(d) ? d : []);
                     } catch { setSugg([]); }
