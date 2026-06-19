@@ -1024,7 +1024,7 @@ body.is-super-admin .card-img-upload-btn { display:flex }
 
 
 /* ═══ ÉCRAN DE CHARGEMENT INITIAL ═══ */
-#appLoadingScreen{position:fixed;inset:0;z-index:99999;background:#070712;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;transition:opacity .45s}
+#appLoadingScreen{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;height:100dvh;z-index:99999;background:#070712;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;transition:opacity .45s}
 #appLoadingScreen.als-hiding{opacity:0;pointer-events:none}
 .als-star{color:#a855f7;filter:drop-shadow(0 0 22px rgba(168,85,247,.55))}
 
@@ -2140,13 +2140,6 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="qa-ico" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);color:#f97316"><i class="fa-solid fa-layer-group" style="font-size:.9rem"></i></div>
 <div class="qa-inf"><h4 id="qaServicesTitle">Services</h4><span id="qaServicesDesc">Sites partenaires</span></div>
 <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
-</div>
-<div class="qa-tile" onclick="window._openOppa()" style="border-color:rgba(234,88,12,.25);background:rgba(234,88,12,.04)">
-<div class="qa-ico" style="background:rgba(234,88,12,.12);border:1px solid rgba(234,88,12,.3)">
-  <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><circle cx="12" cy="12" r="10" stroke="#ea580c" stroke-width="2.2"/><path d="M12 6.5C9 6.5 6.5 9 6.5 12S9 17.5 12 17.5 17.5 15 17.5 12 15 6.5 12 6.5z" stroke="#ea580c" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="#ea580c"/></svg>
-</div>
-<div class="qa-inf"><h4 style="color:#fb923c">Opera</h4><span>Ouvrir dans Opera</span></div>
-<i class="fa-solid fa-arrow-up-right-from-square qa-arr" style="color:#ea580c"></i>
 </div>
 </div>
 </div>
@@ -3766,8 +3759,8 @@ try {
     localStorage.setItem('_lvl_email_bk', cu.email || '');
   }
 } catch(_) {}
-// Pour movie et music → afficher le popup Opera d'abord
-if (appId === 'movie' || appId === 'music') {
+// Pour movie → afficher le popup Opera d'abord
+if (appId === 'movie') {
   window._openOperaModal(appId, finalUrl);
   return;
 }
@@ -9465,8 +9458,8 @@ window.scrollTo(0, 0);
 </div>
 
 <!-- Bottom-sheet login (mobile — glisse du bas) -->
-<div id="mobileLoginSheet" style="display:none;position:fixed;inset:0;z-index:99999;background:linear-gradient(to bottom,transparent 0%,transparent 35%,rgba(0,0,0,.72) 65%,#0d0b1e 100%);align-items:flex-end;justify-content:center;touch-action:none;overscroll-behavior:none">
-  <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px env(safe-area-inset-bottom, 12px);box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto;overflow:hidden;touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none">
+<div id="mobileLoginSheet" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:99999;background:linear-gradient(to bottom,transparent 0%,transparent 35%,rgba(0,0,0,.72) 65%,#0d0b1e 100%);align-items:flex-end;justify-content:center;touch-action:none;overscroll-behavior:none;-webkit-overflow-scrolling:touch">
+  <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto;overflow:hidden;touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
       <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp" style="width:48px;height:48px;object-fit:contain;flex-shrink:0;border-radius:10px;filter:drop-shadow(0 0 12px rgba(168,85,247,.55))">
       <div>
@@ -9533,35 +9526,23 @@ window.scrollTo(0, 0);
     // Forcer le panel au bas — anti-clavier
     panel.style.bottom = '0';
     panel.style.position = 'relative';
+    // Verrouiller la hauteur de l'overlay sur la hauteur réelle du viewport iOS
+    // pour éviter que la barre Safari change la position du sheet
+    var lockH = window.innerHeight;
+    ov.style.height = lockH + 'px';
+    ov.style.top = '0px';
+    ov.style.bottom = 'auto';
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         panel.style.transform = 'translateY(0)';
         setTimeout(function(){ if(window._renderTurnstile) window._renderTurnstile('cfTurnstile'); }, 300);
       });
     });
-    // ── VisualViewport : repositionner le panel si le clavier monte ──
-    if (window.visualViewport) {
-      function _vvResize() {
-        var vv = window.visualViewport;
-        var keyH = window.innerHeight - vv.height - vv.offsetTop;
-        if (keyH > 50) {
-          // Clavier ouvert — déplacer le panel pour qu'il reste visible
-          ov.style.height = vv.height + 'px';
-          ov.style.top = vv.offsetTop + 'px';
-        } else {
-          ov.style.height = '';
-          ov.style.top = '';
-        }
-      }
-      window.visualViewport.addEventListener('resize', _vvResize);
-      window.visualViewport.addEventListener('scroll', _vvResize);
-      ov._vvClean = function() {
-        window.visualViewport.removeEventListener('resize', _vvResize);
-        window.visualViewport.removeEventListener('scroll', _vvResize);
-        ov.style.height = '';
-        ov.style.top = '';
-      };
-    }
+    ov._vvClean = function() {
+      ov.style.height = '';
+      ov.style.top = '';
+      ov.style.bottom = '';
+    };
   };
   window.closeMobileLoginSheet = function() {
     var ov2 = document.getElementById('mobileLoginSheet');
@@ -9572,6 +9553,9 @@ window.scrollTo(0, 0);
     panel.style.transform = 'translateY(100%)';
     setTimeout(function() {
       ov.style.display = 'none';
+      ov.style.height = '';
+      ov.style.top = '';
+      ov.style.bottom = '';
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
       // Restaurer la mobile-nav
@@ -9934,8 +9918,8 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
 <!-- ═══════════════════════════════════════
 COOKIE CONSENT BANNER (RGPD/GDPR)
 ═══════════════════════════════════════ -->
-<div id="lvlCookieBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99995">
-  <div style="max-width:680px;margin:0 auto;background:#100920;border:1px solid rgba(168,85,247,.3);border-bottom:none;border-radius:18px 18px 0 0;padding:18px 20px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 40px rgba(0,0,0,.7)">
+<div id="lvlCookieBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2147483647;pointer-events:auto">
+  <div style="max-width:680px;margin:0 auto;background:#100920;border:1px solid rgba(168,85,247,.3);border-bottom:none;border-radius:18px 18px 0 0;padding:18px 20px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 40px rgba(0,0,0,.85)">
     <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
       <div style="flex:1;min-width:200px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -9944,9 +9928,9 @@ COOKIE CONSENT BANNER (RGPD/GDPR)
         </div>
         <p style="font-size:.75rem;color:rgba(255,255,255,.5);line-height:1.6;margin:0">Nous utilisons des cookies essentiels pour le bon fonctionnement de LevelUp, et des cookies analytiques pour améliorer votre expérience. Aucune donnée n'est revendue.</p>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;margin-top:8px">
-        <button onclick="window._cookieDecline()" style="padding:10px 18px;border-radius:10px;background:#1e1035;border:1px solid rgba(255,255,255,.18);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap">Refuser</button>
-        <button onclick="window._cookieAccept()" style="padding:10px 22px;border-radius:10px;background:#a855f7;border:none;color:#fff;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 4px 14px rgba(168,85,247,.4)">Accepter tout</button>
+      <div style="display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;margin-top:10px">
+        <button onclick="window._cookieDecline()" style="padding:11px 20px;border-radius:10px;background:#1e1035;border:2px solid rgba(255,255,255,.25);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Refuser</button>
+        <button onclick="window._cookieAccept()" style="padding:11px 24px;border-radius:10px;background:#a855f7;border:none;color:#fff;font-size:.82rem;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 4px 16px rgba(168,85,247,.5);pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Accepter tout</button>
       </div>
     </div>
   </div>
