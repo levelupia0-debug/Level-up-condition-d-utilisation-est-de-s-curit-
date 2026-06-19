@@ -2,13 +2,15 @@
 <html lang="fr">
 <head> <link rel="manifest" href="./manifest-music.json">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>LevelMusic</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@18.2.0",
+    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+    "react/jsx-dev-runtime": "https://esm.sh/react@18.2.0/jsx-dev-runtime",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "lucide-react": "https://esm.sh/lucide-react@0.292.0",
     "firebase/app": "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js",
@@ -34,6 +36,11 @@
     --mini-h: 68px;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
+  
+  html {
+    background-color: var(--bg); /* Empêche le noir en bas ou en haut lors du rebond */
+  }
+
   * {
     box-sizing: border-box;
     margin: 0; padding: 0;
@@ -44,7 +51,10 @@
     -ms-overflow-style: none;
   }
   *::-webkit-scrollbar { display: none; }
-  html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+  
+  /* Utilisation de 100dvh pour corriger le bug des navigateurs mobiles */
+  html, body, #root { width: 100%; height: 100dvh; overflow: hidden; }
+  
   body {
     font-family: 'Inter', sans-serif;
     background: var(--bg);
@@ -223,14 +233,12 @@ import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, collectionGr
 // --- CAPTURE DU SSO DEPUIS L'ÉCOSYSTÈME ---
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.has('lvl_key')) {
-    // On enregistre les données de l'écosystème
     localStorage.setItem('lm_key', urlParams.get('lvl_key'));
     if (urlParams.has('lvl_uid')) localStorage.setItem('lm_uid', urlParams.get('lvl_uid'));
     if (urlParams.has('lvl_name')) localStorage.setItem('lm_name', urlParams.get('lvl_name'));
     if (urlParams.has('lvl_email')) localStorage.setItem('lm_email', urlParams.get('lvl_email'));
     if (urlParams.has('lvl_photo')) localStorage.setItem('lm_photo', urlParams.get('lvl_photo'));
     
-    // Nettoyage de l'URL pour la sécurité et l'esthétique
     urlParams.delete('lvl_key');
     urlParams.delete('lvl_uid');
     urlParams.delete('lvl_name');
@@ -303,8 +311,7 @@ const i18n = {
     accessKeyPlaceholder: "LVL-XXXXX-XXXXX",
     accessBtn: "Accéder à LevelMusic",
     accessing: "Vérification...",
-    ecoTitle: "Écosystème Level",
-    ecoSub: "Accès aux services",
+    ecoTitle: "Retour",
     homeNav: "Accueil",
     searchNav: "Recherche",
     libNav: "Bibliothèque",
@@ -369,8 +376,7 @@ const i18n = {
     accessKeyPlaceholder: "LVL-XXXXX-XXXXX",
     accessBtn: "Access LevelMusic",
     accessing: "Verifying...",
-    ecoTitle: "Level Ecosystem",
-    ecoSub: "Access to services",
+    ecoTitle: "Back",
     homeNav: "Home",
     searchNav: "Search",
     libNav: "Library",
@@ -393,7 +399,6 @@ const i18n = {
   }
 };
 
-// ─── LOGO ORIGINAL (Sans bulle carrée) ─────────────────────────────
 const CustomLogo = ({ className = "w-8 h-8" }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -408,7 +413,6 @@ const WordMark = ({ size = "text-xl" }) => (
   </span>
 );
 
-// ─── HELPERS ───────────────────────────────────────────────────────
 const fmt = (s) => {
   if (!s || isNaN(s)) return '0:00';
   const m = Math.floor(s / 60), sec = Math.floor(s % 60);
@@ -445,7 +449,6 @@ const fetchMusic = async (term, limit = 20) => {
   } catch { return []; }
 };
 
-// Intégration des traductions pour les catégories
 const CATEGORIES = [
   { id: 1, title: "Nouveautés", titleEn: "New Releases", term: "nouveautes 2024", color: "#1d4ed8" },
   { id: 2, title: "Rap Français", titleEn: "French Rap", term: "rap francais", color: "#7c3aed" },
@@ -552,7 +555,7 @@ const FullPlayer = ({ track, queue, queueIdx, isPlaying, progress, curTime, dura
   return (
     <div className="fixed inset-0 z-[500] flex flex-col overflow-hidden slide-up" style={{ background: '#0a0a0a' }}>
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(30,58,138,0.25) 0%, rgba(10,10,10,0) 50%)' }} />
-      <div className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4">
+      <div className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)' }}>
         <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white"><ChevronDown size={24} /></button>
         <div className="text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--text2)]">{t('nowPlaying')}</p>
@@ -657,7 +660,7 @@ const OptionsSheet = ({ track, isLiked, onClose, onLike, onQueue, onArtist, onSh
           <p className="text-blue-500 text-sm font-medium truncate mt-0.5">{track.artist}</p>
         </div>
       </div>
-      <div className="py-2 pb-8">
+      <div className="py-2 pb-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
         {[
           { icon: <Heart size={20} className={isLiked ? 'text-blue-500 fill-blue-500' : 'text-white'} />, label: isLiked ? t('removeFromFav') : t('addToFav'), action: onLike },
           { icon: <ListPlus size={20} className="text-white" />, label: t('addToPls'), action: onPlaylistAdd },
@@ -812,7 +815,6 @@ function App() {
         if (isAuto) {
           setAppState('main');
         } else {
-          // Transition esthétique avant l'entrée dans l'app
           setAppState('transition');
           setTimeout(() => {
             setAppState('main');
@@ -836,7 +838,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('lm_key');
     setVerifiedUserId(null);
-    setAccessKey(''); // <-- CORRECTION : Vider le champ de la clé de connexion
+    setAccessKey('');
     audioRef.current.pause();
     setTrack(null);
     setIsPlaying(false);
@@ -987,12 +989,12 @@ function App() {
   // ──────────────────────────────────────────────────────────────
   if (appState === 'login') {
     return (
-      <div className="fixed inset-0 flex items-center justify-center px-6 bg-[#0a0a0a] relative overflow-hidden">
+      <div className="fixed inset-0 flex items-center justify-center px-6 bg-[#0a0a0a] relative overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[140%] h-[400px] bg-blue-600/5 blur-[120px] pointer-events-none" />
 
         <div className="w-full max-w-sm fade-in relative z-10 flex flex-col items-center">
           <div className="mb-10 flex flex-col items-center">
-            {/* Logo musical épuré comme demandé */}
             <CustomLogo className="w-16 h-16 text-blue-500 mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]" />
             <WordMark size="text-4xl" />
             <p className="text-[var(--text2)] text-sm mt-3 font-medium opacity-60">{t('loginTitle')}</p>
@@ -1020,16 +1022,14 @@ function App() {
               {authLoading ? t('accessing') : t('accessBtn')}
             </button>
           </div>
-
-          <div className="mt-12 w-full">
-            <a href="https://ecosystem-of-levelup.vercel.app/" target="_blank" rel="noreferrer" className="group flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-300">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform"><Network size={18} className="text-blue-500" /></div>
-                <div className="text-left"><p className="text-white text-sm font-bold">{t('ecoTitle')}</p><p className="text-[var(--text3)] text-[10px] uppercase font-bold tracking-wider">{t('ecoSub')}</p></div>
-              </div>
-              <ChevronRight size={18} className="text-[var(--text3)] group-hover:text-white group-hover:translate-x-1 transition-all" />
+          
+          {/* BOUTON RETOUR EN BAS PRO */}
+          <div className="mt-8 flex justify-center w-full">
+            <a href="https://levelup-ecosystem.com" className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors outline-none active:scale-95 pb-4">
+              <ArrowLeft className="w-4 h-4" /> {t('ecoTitle') || 'Retour'}
             </a>
           </div>
+
         </div>
       </div>
     );
@@ -1054,9 +1054,9 @@ function App() {
   const bottomPad = track ? `calc(var(--nav-h) + var(--safe-bottom) + var(--mini-h) + 20px)` : `calc(var(--nav-h) + var(--safe-bottom) + 12px)`;
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: 'var(--bg)' }}>
+    <div className="fixed inset-0 flex flex-col" style={{ background: 'var(--bg)', paddingTop: 'env(safe-area-inset-top)' }}>
 
-      <div className="fixed top-16 right-4 z-[1000] flex flex-col gap-2 pointer-events-none">
+      <div className="fixed top-16 right-4 z-[1000] flex flex-col gap-2 pointer-events-none" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         {toasts.map(t_toast => (
           <div key={t_toast.id} className="toast-anim glass-dark border border-white/10 text-white px-4 py-3 rounded-2xl shadow-2xl text-sm font-semibold max-w-xs">{t_toast.msg}</div>
         ))}
@@ -1094,7 +1094,7 @@ function App() {
         />
       )}
 
-      <header className="flex-shrink-0 flex items-center justify-between px-5 pt-12 pb-4 z-[100]" style={{ background: 'linear-gradient(180deg, rgba(10,10,10,1) 0%, rgba(10,10,10,0) 100%)' }}>
+      <header className="flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-4 z-[100]" style={{ background: 'linear-gradient(180deg, rgba(10,10,10,1) 0%, rgba(10,10,10,0) 100%)' }}>
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setReloadKey(k => k + 1); setView('home'); window.scrollTo({top: 0, behavior: 'smooth'}); }}>
           <CustomLogo className="w-7 h-7 text-blue-500" />
           <WordMark size="text-lg" />
