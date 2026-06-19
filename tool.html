@@ -13,9 +13,31 @@
         ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #718096; }
         #previewContainer { background-color: #f3f4f6; color: #000000; border-radius: 0.5rem; overflow: hidden; padding: 1.5rem; }
+
+        /* TEXTAREA PLEINE LARGEUR SUR TOUS LES ÉCRANS */
+        #broadcastMessage {
+            width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            min-height: 400px;
+            resize: vertical;
+        }
+
+        /* Conteneur éditeur pleine largeur */
+        #editorContainer {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Fix padding mobile pour éviter overflow */
+        @media (max-width: 640px) {
+            .p-8 { padding: 1rem !important; }
+            #broadcastMessage { min-height: 300px; font-size: 14px !important; }
+            #previewContainer { padding: 0.75rem; }
+        }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex items-center justify-center min-h-screen p-2 sm:p-4">
 
     <!-- MODALE PERSONNALISÉE -->
     <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/80 backdrop-blur-sm transition-opacity">
@@ -31,24 +53,21 @@
     <div class="w-full max-w-3xl bg-[#1a1c23] rounded-2xl shadow-2xl overflow-hidden border border-gray-800 relative z-10">
 
         <!-- En-tête -->
-        <div class="bg-red-600 px-6 py-4 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-bullhorn text-2xl"></i>
-                <h1 class="text-xl font-bold">Diffusion Globale - LevelUp</h1>
+        <div class="bg-red-600 px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <i class="fa-solid fa-bullhorn text-xl sm:text-2xl flex-shrink-0"></i>
+                <h1 class="text-base sm:text-xl font-bold truncate">Diffusion Globale - LevelUp</h1>
             </div>
-            <!-- Bloc auth dans le header : login ou user connecté -->
-            <div id="authBlock">
-                <!-- Rempli dynamiquement par JS -->
-            </div>
+            <div id="authBlock" class="flex-shrink-0"></div>
         </div>
 
-        <div class="p-8">
+        <div class="p-4 sm:p-8">
 
             <!-- BANNER SI PAS CONNECTÉ -->
-            <div id="loginBanner" class="hidden mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
+            <div id="loginBanner" class="hidden mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                     <p class="text-yellow-400 font-semibold text-sm mb-1"><i class="fa-solid fa-lock mr-2"></i>Connexion requise</p>
-                    <p class="text-gray-400 text-xs">Tu dois être connecté avec ton compte admin Google pour accéder aux utilisateurs Firebase.</p>
+                    <p class="text-gray-400 text-xs">Connecte-toi avec ton compte admin Google pour accéder aux utilisateurs Firebase.</p>
                 </div>
                 <button id="loginBannerBtn" class="flex-shrink-0 flex items-center gap-2 bg-white text-gray-800 font-semibold text-sm py-2 px-4 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">
                     <svg width="16" height="16" viewBox="0 0 48 48">
@@ -68,7 +87,7 @@
 
             <!-- BASE UTILISATEURS -->
             <div class="mb-6 bg-[#0f1014] p-4 rounded-lg border border-gray-700">
-                <div class="flex justify-between items-center mb-3">
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
                     <h2 class="text-gray-300 font-semibold text-sm">
                         <i class="fa-solid fa-users mr-2"></i>Base Utilisateurs
                     </h2>
@@ -88,7 +107,7 @@
                 <!-- CIBLE -->
                 <div class="bg-[#0f1014] p-4 rounded-lg border border-gray-700">
                     <h3 class="block text-sm font-medium text-gray-300 mb-3">Cible de l'envoi</h3>
-                    <div class="flex gap-6 mb-3">
+                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-3">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="targetAudience" value="all" checked class="text-red-600 focus:ring-red-500 bg-gray-800 border-gray-700">
                             <span class="text-sm text-white font-medium">Toute la base utilisateurs</span>
@@ -110,23 +129,29 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Sujet de l'email</label>
                     <input type="text" id="broadcastSubject"
-                           class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                           class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors text-sm"
                            value="🚀 Mise à jour majeure : Nouvelles apps, correctifs et expérience mobile !">
                 </div>
 
                 <!-- MESSAGE -->
                 <div>
-                    <div class="flex justify-between items-end mb-2">
-                        <label class="block text-sm font-medium text-gray-300">Message <span class="ml-2 text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Utilisez {nom} pour personnaliser</span></label>
-                        <div class="flex bg-[#0f1014] p-1 rounded-lg border border-gray-700">
+                    <!-- Onglets : empilés sur mobile, côte à côte sur desktop -->
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2 mb-2">
+                        <label class="block text-sm font-medium text-gray-300">
+                            Message
+                            <span class="ml-2 text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Utilisez {nom} pour personnaliser</span>
+                        </label>
+                        <div class="flex bg-[#0f1014] p-1 rounded-lg border border-gray-700 self-start sm:self-auto">
                             <button type="button" id="tabPreview" class="px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors">Aperçu visuel</button>
                             <button type="button" id="tabCode"    class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors">Code HTML</button>
                         </div>
                     </div>
 
-                    <div id="editorContainer" class="hidden">
-                        <textarea id="broadcastMessage" rows="18" style="min-height: 400px;"
-                                  class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors font-mono text-sm"><div style="background-color: #f4f4f5; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                    <!-- Éditeur — pleine largeur garantie -->
+                    <div id="editorContainer" class="hidden w-full">
+                        <textarea id="broadcastMessage"
+                                  class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors font-mono text-sm leading-relaxed"
+                                  style="width:100%;min-height:400px;resize:vertical;box-sizing:border-box;display:block;"><div style="background-color: #f4f4f5; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
     <div style="text-align: center; padding: 40px 20px 20px; border-bottom: 1px solid #f0f0f0;">
       <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp Logo" width="130" style="display: block; margin: 0 auto; height: auto;">
@@ -171,7 +196,8 @@
 </div></textarea>
                     </div>
 
-                    <div id="previewContainer" class="w-full min-h-[400px]"></div>
+                    <!-- Aperçu — pleine largeur garantie -->
+                    <div id="previewContainer" class="w-full min-h-[300px] sm:min-h-[400px]" style="width:100%;box-sizing:border-box;overflow-x:auto;"></div>
                 </div>
 
                 <button type="submit" id="submitBtn"
@@ -192,7 +218,6 @@ import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signO
 import { getFirestore, collectionGroup, collection, getDocs, query, limit }
                           from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// ── CONFIG FIREBASE ──
 const _cfg = {
     apiKey:            "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
     authDomain:        "levelup-ia.firebaseapp.com",
@@ -209,7 +234,6 @@ _gp.setCustomParameters({ prompt: 'select_account' });
 
 const APP_MAIN = 'level-ia-premium';
 
-// ── URL HELPER ──
 const getApiUrl = (path) => {
     try {
         const h  = window.location.hostname || '';
@@ -220,21 +244,20 @@ const getApiUrl = (path) => {
     } catch { return 'https://levelup-ecosystem.com' + path; }
 };
 
-// ── GESTION AUTH → met à jour le header et le banner ──
+// ── AUTH HEADER ──
 const authBlock   = document.getElementById('authBlock');
 const loginBanner = document.getElementById('loginBanner');
 
 function renderAuthHeader(user) {
     if (user) {
-        // Connecté : affiche nom + bouton déconnexion
         authBlock.innerHTML = `
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
                 ${user.photoURL
                     ? `<img src="${user.photoURL}" class="w-7 h-7 rounded-full object-cover border-2 border-white/30">`
                     : `<div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">${(user.displayName||user.email||'?')[0].toUpperCase()}</div>`
                 }
-                <span class="text-xs font-medium text-white/80 hidden sm:block">${user.displayName || user.email}</span>
-                <button id="logoutBtn" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                <span class="text-xs font-medium text-white/80 hidden sm:block max-w-[100px] truncate">${user.displayName || user.email}</span>
+                <button id="logoutBtn" class="text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5">
                     <i class="fa-solid fa-right-from-bracket"></i>
                     <span class="hidden sm:inline">Déconnexion</span>
                 </button>
@@ -242,7 +265,6 @@ function renderAuthHeader(user) {
         document.getElementById('logoutBtn').addEventListener('click', () => signOut(_auth));
         loginBanner.classList.add('hidden');
     } else {
-        // Non connecté : bouton Google dans le header
         authBlock.innerHTML = `
             <button id="headerLoginBtn" class="flex items-center gap-2 bg-white text-gray-800 font-semibold text-xs py-1.5 px-3 rounded-lg hover:bg-gray-100 transition">
                 <svg width="14" height="14" viewBox="0 0 48 48">
@@ -263,10 +285,8 @@ async function doLogin() {
     catch (e) { if (e.code !== 'auth/popup-closed-by-user') await showModal('Erreur : ' + e.message, 'alert'); }
 }
 
-// Liaison bouton du banner
 document.getElementById('loginBannerBtn').addEventListener('click', doLogin);
-
-onAuthStateChanged(_auth, (user) => { renderAuthHeader(user); });
+onAuthStateChanged(_auth, (user) => renderAuthHeader(user));
 
 // ── MODALE CUSTOM ──
 function showModal(message, type = 'alert') {
@@ -349,8 +369,7 @@ document.querySelectorAll('input[name="targetAudience"]').forEach(radio => {
 window.loadedFirebaseUsers = [];
 
 document.getElementById('loadUsersBtn').addEventListener('click', async () => {
-    const currentUser = _auth.currentUser;
-    if (!currentUser) {
+    if (!_auth.currentUser) {
         await showModal("⚠️ Tu dois d'abord te connecter avec Google (bouton en haut à droite).", 'alert');
         return;
     }
@@ -367,7 +386,6 @@ document.getElementById('loadUsersBtn').addEventListener('click', async () => {
     try {
         const usersMap = {};
 
-        // 1. collectionGroup security → tous les users avec une clé LVL
         const keysSnap = await getDocs(collectionGroup(_db, 'security'));
         keysSnap.docs.forEach(d => {
             const data  = d.data();
@@ -378,7 +396,6 @@ document.getElementById('loadUsersBtn').addEventListener('click', async () => {
             usersMap[uid] = { uid, email, name };
         });
 
-        // 2. users_status → complète les infos manquantes
         const statusSnap = await getDocs(
             query(collection(_db, 'artifacts', APP_MAIN, 'public', 'data', 'users_status'), limit(2000))
         );
@@ -392,7 +409,6 @@ document.getElementById('loadUsersBtn').addEventListener('click', async () => {
             }
         });
 
-        // 3. Garde uniquement ceux avec un vrai email
         const users = Object.values(usersMap).filter(u => u.email && u.email.includes('@'));
         if (users.length === 0) throw new Error('Aucun utilisateur avec email trouvé dans Firebase.');
 
@@ -470,7 +486,7 @@ document.getElementById('broadcastForm').addEventListener('submit', async (e) =>
         const displayName     = user.name || 'Utilisateur';
         const personalizedMsg = rawMessage.replace(/\{nom\}/gi, displayName);
 
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Envoi en cours (${i + 1}/${targetUsers.length})…</span>`;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Envoi (${i + 1}/${targetUsers.length})…</span>`;
         alertBox.innerHTML = `<i class="fa-solid fa-paper-plane mr-2"></i> Envoi vers <strong>${user.email}</strong>…<br>
             <span class="text-xs text-gray-500">Succès: ${successCount} | Échecs: ${failCount}</span>`;
 
