@@ -115,7 +115,9 @@
                 reload: <svg {...p}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-8.36"/></svg>,
                 precip: <svg {...p}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg>,
                 bell: <svg {...p}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
-                lock: <svg {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                lock: <svg {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+                user: <svg {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+                logout: <svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             };
             return icons[n] || null;
         };
@@ -311,6 +313,16 @@
 
         // ── MAIN APP ──────────────────────────────────────────────────────────────────
         function LevelDay() {
+            // STATE DE COMPTE ET AUTHENTIFICATION
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [accessKey, setAccessKey] = useState("");
+            const [userName, setUserName] = useState("Utilisateur");
+            const [showProfile, setShowProfile] = useState(false);
+            const [isLoggingIn, setIsLoggingIn] = useState(false);
+            const [authError, setAuthError] = useState("");
+            const [isTrial, setIsTrial] = useState(false);
+
+            // STATE METEO
             const [q, setQ] = useState("");
             const [sugg, setSugg] = useState([]);
             const [showSearch, setShowSearch] = useState(false);
@@ -327,10 +339,112 @@
             const [showTopLocBanner, setShowTopLocBanner] = useState(false);
             const inputRef = useRef(null);
 
+            // VERIFICATION INITIALE DU COMPTE
             useEffect(() => {
                 auth.signInAnonymously().catch(e => console.error("Auth Error", e));
+                
+                // --- CAPTURE DU LIEN D'INVITATION ET SSO (DEPUIS L'URL) ---
+                if (typeof window !== 'undefined') {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const ssoKey = urlParams.get('lvl_key');
+                    
+                    if (ssoKey) {
+                        const ssoName = urlParams.get('lvl_name') || "Utilisateur";
+                        localStorage.setItem('levelday_access_key', ssoKey);
+                        localStorage.setItem('levelday_user_name', ssoName);
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        setAccessKey(ssoKey);
+                        setUserName(ssoName);
+                        setIsAuthenticated(true);
+                    } else {
+                        // Récupération de la session existante
+                        const savedKey = localStorage.getItem('levelday_access_key');
+                        const savedName = localStorage.getItem('levelday_user_name');
+                        if (savedKey) {
+                            setAccessKey(savedKey);
+                            setUserName(savedName || "Utilisateur");
+                            setIsAuthenticated(true);
+                            if (savedKey === "TRIAL-MODE") setIsTrial(true);
+                        }
+                    }
+                }
             }, []);
 
+            // GESTION CONNEXION
+            const handleLogin = async () => {
+                const cleanKey = accessKey.trim();
+                
+                if (!/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/i.test(cleanKey)) {
+                    setAuthError("Format de clé invalide. Attendu: LVL-XXXXX-XXXXX");
+                    return;
+                }
+                
+                setAuthError("");
+                setIsLoggingIn(true);
+                
+                if (cleanKey === "LVL-00000-00000") {
+                    setTimeout(() => {
+                        const name = "Testeur Beta";
+                        localStorage.setItem('levelday_access_key', cleanKey);
+                        localStorage.setItem('levelday_user_name', name);
+                        setUserName(name);
+                        setIsAuthenticated(true);
+                        setIsLoggingIn(false);
+                    }, 1000);
+                    return;
+                }
+                
+                try {
+                    const backendUrl = 'https://levelup-ecosystem.com/api/validate-key'; 
+                    const response = await fetch(backendUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: cleanKey, appId: 'levelday' })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.valid) {
+                        const name = result.name || "Utilisateur";
+                        localStorage.setItem('levelday_access_key', cleanKey);
+                        localStorage.setItem('levelday_user_name', name);
+                        setUserName(name);
+                        setIsAuthenticated(true);
+                    } else {
+                        setAuthError(result.error || "Clé d'accès refusée par le serveur.");
+                    }
+                } catch (error) {
+                    console.error("API Error", error);
+                    setAuthError("Échec de l'authentification. Veuillez vérifier votre clé d'accès.");
+                } finally {
+                    setIsLoggingIn(false);
+                }
+            };
+
+            const handleTrial = () => {
+                setAuthError("");
+                setIsLoggingIn(true);
+                setTimeout(() => {
+                    localStorage.setItem('levelday_access_key', "TRIAL-MODE");
+                    localStorage.setItem('levelday_user_name', "Invité");
+                    setAccessKey("TRIAL-MODE");
+                    setUserName("Invité");
+                    setIsTrial(true);
+                    setIsAuthenticated(true);
+                    setIsLoggingIn(false);
+                }, 1200);
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('levelday_access_key');
+                localStorage.removeItem('levelday_user_name');
+                setIsAuthenticated(false);
+                setAccessKey("");
+                setShowProfile(false);
+                setIsTrial(false);
+            };
+
+            // FONCTIONS METEO
             const T = c => unit==="C" ? Math.round(c) : Math.round(c*9/5+32);
             const TU = unit==="C" ? "°C" : "°F";
             const TS = unit==="C" ? "°" : "°F";
@@ -347,38 +461,82 @@
                 setLoading(true); setErr(null);
 
                 try {
+                    if (!city || city === "undefined,undefined" || city === "null,null") {
+                        city = "auto:ip";
+                    }
+
                     const enc = encodeURIComponent(city);
-                    const origin = typeof window !== 'undefined' && window.location.origin !== "null" ? window.location.origin : "";
-                    const res = await fetch(`${origin}/api/weather?q=${enc}`);
+                    const origin = typeof window !== 'undefined' && window.location.origin !== "null" ? window.location.origin : "https://levelup-ecosystem.com";
                     
+                    let res = await fetch(`${origin}/api/weather?q=${enc}`);
+                    
+                    if (!res.ok && city === "auto:ip") {
+                        res = await fetch(`${origin}/api/weather?q=Paris`);
+                    }
+
                     if (!res.ok) {
-                        if (res.status === 404) {
-                            throw new Error("Service temporarily unavailable. Our servers are synchronizing with the latest weather models. Please try again shortly.");
+                        const errData = await res.json().catch(()=>({}));
+                        const apiMsg = (errData?.error || "").toLowerCase();
+                        
+                        let displayMsg = "Impossible de récupérer les données météo.";
+                        if (apiMsg.includes("configuration") || res.status === 500) {
+                            displayMsg = "Service météo temporairement en maintenance. Notre équipe est sur le coup !";
+                        } else if (apiMsg.includes("not found") || apiMsg.includes("invalid") || res.status === 400 || res.status === 404) {
+                            displayMsg = "Localisation introuvable. Veuillez vérifier l'orthographe de la ville.";
+                        } else {
+                            displayMsg = "Service momentanément indisponible. Veuillez réessayer dans quelques instants.";
                         }
-                        const e = await res.json().catch(()=>({}));
-                        throw new Error(e.error || "We couldn't find weather data for this location. Please verify the spelling or zip code and try again.");
+                        throw new Error(displayMsg);
                     }
                     
-                    const combinedData = await res.json();
-                    setData(combinedData.forecast);
-                    setAstro(combinedData.astronomy);
-                    setLastCity(combinedData.forecast.location.name);
+                    const backendData = await res.json();
+                    const forecastData = backendData.forecast;
+                    const astroData = backendData.astronomy || forecastData.forecast.forecastday[0].astro;
+                    
+                    setData(forecastData);
+                    setAstro(astroData);
+                    setLastCity(forecastData.location.name);
+
+                    if (forecastData.location?.lat) {
+                        const locString = `${forecastData.location.lat},${forecastData.location.lon}`;
+                        localStorage.setItem('levelday_last_loc', locString);
+                    }
 
                     if (isSearch) incrementUsage(rateStatus.usage);
 
                 } catch(e) { 
                     if (e.message.includes("Failed to parse URL") || e.message.includes("fetch")) {
-                        setErr("Security Mode Active 🛡️ : This weather radar is protected. It must be hosted on your Vercel server to function and hide your secret key.");
+                        setErr("Mode Sécurité Actif 🛡️ : L'API locale n'est pas accessible depuis cet aperçu.");
                     } else {
-                        setErr(e.message || "A network connection error occurred. Please check your internet connection."); 
+                        setErr(e.message || "Erreur réseau."); 
                     }
                 } finally { 
                     setLoading(false); 
                 }
             }, []);
 
+            // INIT LOCALISATION AVEC FIRESTORE
             useEffect(() => {
+                if (!isAuthenticated) return; // Seulement si connecté
+
                 const initLoc = async () => {
+                    let savedLoc = localStorage.getItem('levelday_last_loc');
+
+                    // Récupération depuis le profil global Firestore
+                    const savedKey = localStorage.getItem('levelday_access_key');
+                    if (savedKey && savedKey !== 'TRIAL-MODE' && auth.currentUser) {
+                        try {
+                            const docRef = db.doc(`artifacts/level-ia-premium/users/${auth.currentUser.uid}/profile/data`);
+                            const docSnap = await docRef.get();
+                            if (docSnap.exists && docSnap.data().exactLocation) {
+                                const loc = docSnap.data().exactLocation;
+                                savedLoc = `${loc.lat},${loc.lng}`;
+                            }
+                        } catch (e) {
+                            console.error("Erreur de récupération Firestore:", e);
+                        }
+                    }
+
                     let hasGranted = false;
                     if (navigator.permissions && navigator.permissions.query) {
                         try {
@@ -391,27 +549,37 @@
                         navigator.geolocation.getCurrentPosition(
                             (pos) => {
                                 setShowTopLocBanner(false);
+                                
+                                // SAUVEGARDE GPS FIRESTORE
+                                if (savedKey && savedKey !== 'TRIAL-MODE' && auth.currentUser) {
+                                    const docRef = db.doc(`artifacts/level-ia-premium/users/${auth.currentUser.uid}/profile/data`);
+                                    docRef.set({ 
+                                        exactLocation: {
+                                            lat: pos.coords.latitude,
+                                            lng: pos.coords.longitude,
+                                            accuracy: pos.coords.accuracy,
+                                            timestamp: new Date().toISOString()
+                                        }
+                                    }, { merge: true }).catch(()=>{});
+                                }
+
                                 load(`${pos.coords.latitude},${pos.coords.longitude}`, true);
                             },
-                            () => load("auto:ip", true),
-                            { timeout: 5000 }
+                            () => load(savedLoc || "auto:ip", true),
+                            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                         );
                     } else {
-                        // On charge l'aperçu immédiatement
-                        load("auto:ip", true);
-                        
-                        // On affiche le pop-up après 3 secondes s'il ne l'a pas déjà refusé/accepté
+                        load(savedLoc || "auto:ip", true);
                         const seen = localStorage.getItem("levelday_loc_prompt");
                         if (!seen) {
                             setTimeout(() => setShowLocPrompt(true), 3000);
                         } else {
-                            // S'il avait déjà cliqué sur "Plus tard", on affiche le bandeau en haut
                             setShowTopLocBanner(true);
                         }
                     }
                 };
                 initLoc();
-            }, [load]);
+            }, [load, isAuthenticated]);
 
             const handleEnableLoc = () => {
                 setShowLocPrompt(false);
@@ -423,18 +591,33 @@
                     navigator.geolocation.getCurrentPosition(
                         (pos) => {
                             setShowTopLocBanner(false);
+                            
+                            // SAUVEGARDE GPS FIRESTORE MANUELLE
+                            const savedKey = localStorage.getItem('levelday_access_key');
+                            if (savedKey && savedKey !== 'TRIAL-MODE' && auth.currentUser) {
+                                const docRef = db.doc(`artifacts/level-ia-premium/users/${auth.currentUser.uid}/profile/data`);
+                                docRef.set({ 
+                                    exactLocation: {
+                                        lat: pos.coords.latitude,
+                                        lng: pos.coords.longitude,
+                                        accuracy: pos.coords.accuracy,
+                                        timestamp: new Date().toISOString()
+                                    }
+                                }, { merge: true }).catch(()=>{});
+                            }
+
                             load(`${pos.coords.latitude},${pos.coords.longitude}`, true);
                         },
                         () => {
-                            setErr("Location access denied or unavailable. Using approximate location.");
+                            setErr("Accès refusé. Utilisation de la position approximative.");
                             load("auto:ip", true);
                             setShowTopLocBanner(true);
                         },
-                        { timeout: 5000 }
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                     );
                 } else {
                     setLoading(false);
-                    setErr("Geolocation is not supported by your browser.");
+                    setErr("La géolocalisation n'est pas supportée.");
                 }
             };
 
@@ -448,8 +631,8 @@
                 if (q.length < 2) { setSugg([]); return; }
                 const t = setTimeout(async () => {
                     try {
-                        const origin = typeof window !== 'undefined' && window.location.origin !== "null" ? window.location.origin : "";
-                        const r = await fetch(`${origin}/api/search?q=${encodeURIComponent(q)}`);
+                        const origin = typeof window !== 'undefined' && window.location.origin !== "null" ? window.location.origin : "https://levelup-ecosystem.com";
+                        const r = await fetch(`${origin}/api/weather-search?q=${encodeURIComponent(q)}`);
                         const d = await r.json();
                         setSugg(Array.isArray(d) ? d : []);
                     } catch { setSugg([]); }
@@ -553,6 +736,64 @@
                 );
             }
 
+            // ── ECRAN DE CONNEXION ──
+            if (!isAuthenticated) {
+                return (
+                    <div style={{minHeight:"100dvh",background:"#020610",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"white",padding:"20px", paddingBottom:"calc(20px + env(safe-area-inset-bottom))", position: "relative", overflow: "hidden"}}>
+                        <style>{CSS}</style>
+                        <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
+                            <div style={{position:"absolute",top:"-10%",right:"-10%",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle, rgba(212,160,67,0.15) 0%, transparent 70%)",filter:"blur(60px)"}}/>
+                            <div style={{position:"absolute",bottom:"-10%",left:"-10%",width:600,height:600,borderRadius:"50%",background:"radial-gradient(circle, rgba(192,132,252,0.15) 0%, transparent 70%)",filter:"blur(80px)"}}/>
+                        </div>
+                        
+                        {isLoggingIn ? (
+                            <div className="fu" style={{display:"flex",flexDirection:"column",alignItems:"center", zIndex: 1}}>
+                                <div style={{width:50,height:50,border:"3px solid rgba(255,255,255,0.1)",borderTop:"3px solid #c084fc",borderRadius:"50%",marginBottom:20}} className="spin"/>
+                                <div style={{fontFamily:"Syne",fontSize:24,fontWeight:800,letterSpacing:".05em"}}>
+                                    <span style={{color:"#c084fc"}}>LEVEL</span><span style={{color:"white"}}>DAY</span>
+                                </div>
+                                <div style={{fontFamily:"Syne",fontSize:12,opacity:.5,marginTop:10,letterSpacing:".1em",textTransform:"uppercase"}}>Connexion en cours...</div>
+                            </div>
+                        ) : (
+                            <div className="g fu" style={{maxWidth:400,width:"100%",borderRadius:24,padding:"40px",textAlign:"center",border:"1px solid rgba(255,255,255,0.1)",background:"rgba(10,15,30,0.6)",backdropFilter:"blur(20px)",boxShadow:"0 30px 60px rgba(0,0,0,0.5)", zIndex: 1}}>
+                                <div style={{fontFamily:"Syne",fontWeight:800,fontSize:32,letterSpacing:".05em",marginBottom:30}}>
+                                    <span style={{color:"#c084fc"}}>LEVEL</span><span style={{color:"white"}}>DAY</span>
+                                </div>
+                                
+                                <div style={{marginBottom:24, textAlign: "left"}}>
+                                    <label style={{display:"flex", alignItems:"center", gap:8, fontSize:11, fontFamily:"Syne", fontWeight:700, opacity:.6, textTransform:"uppercase", letterSpacing:".1em", marginBottom:10}}>
+                                        <Ico n="lock" s={14}/> Clé d'accès requise
+                                    </label>
+                                    <input 
+                                        type="password"
+                                        value={accessKey}
+                                        onChange={(e) => setAccessKey(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                                        placeholder="LVL-XXXXX-XXXXX"
+                                        style={{width:"100%", background:"rgba(0,0,0,0.4)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"14px 16px", color:"white", fontSize:14, letterSpacing:".1em", textAlign:"center", fontFamily:"monospace", outline:"none", transition:"border .2s"}}
+                                        onFocus={(e) => e.target.style.border = "1px solid #c084fc"}
+                                        onBlur={(e) => e.target.style.border = "1px solid rgba(255,255,255,0.1)"}
+                                    />
+                                </div>
+
+                                {authError && <div style={{color:"#fca5a5", fontSize:12, marginBottom:20, background:"rgba(239,68,68,0.1)", padding:"8px", borderRadius:8, border:"1px solid rgba(239,68,68,0.2)"}}>{authError}</div>}
+                                
+                                <button onClick={handleLogin} disabled={!accessKey.trim()} style={{width:"100%", fontFamily:"Syne", background:"linear-gradient(90deg, #c084fc, #d8b4fe)", color:"#020610", border:"none", padding:"14px", borderRadius:12, fontWeight:800, fontSize:13, textTransform:"uppercase", letterSpacing:".1em", cursor:accessKey.trim()?"pointer":"not-allowed", opacity:accessKey.trim()?1:0.5, transition:"all .2s", boxShadow:"0 10px 20px rgba(192,132,252,0.2)"}}>
+                                    Se Connecter
+                                </button>
+
+                                <div style={{marginTop: 24, textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 20}}>
+                                    <span style={{fontSize: 11, opacity: 0.5}}>Pas encore de clé ? </span>
+                                    <button onClick={handleTrial} className="hov-txt" style={{fontFamily:"Syne", background: "none", border: "none", color: "#c084fc", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", cursor: "pointer", textDecoration: "none"}}>
+                                        Essai Gratuit
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
             return (
                 <div style={{height:"100dvh",fontFamily:"'DM Sans',sans-serif",color:"white",
                 background:`linear-gradient(155deg,${bgC.a} 0%,${bgC.b} 45%,${bgC.c} 100%)`,
@@ -602,12 +843,20 @@
                                 </button>
 
                                 {/* NOTIFICATION BUTTON */}
-                                <button onClick={() => {setShowNotifs(true); setShowSearch(false);}} style={{position:"relative",width:36,height:36,borderRadius:8,border:"1px solid rgba(255,255,255,.08)",
+                                <button onClick={() => {setShowNotifs(true); setShowSearch(false); setShowProfile(false);}} style={{position:"relative",width:36,height:36,borderRadius:8,border:"1px solid rgba(255,255,255,.08)",
                                 background:"rgba(255,255,255,0.04)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .2s"}}
                                 onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.1)"}
                                 onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"}>
                                     <Ico n="bell" s={14} c={alerts?.length > 0 ? "#fca5a5" : "rgba(255,255,255,.55)"}/>
                                     {alerts?.length > 0 && <span className="blink" style={{position:"absolute",top:8,right:8,width:6,height:6,background:"#ef4444",borderRadius:"50%"}}/>}
+                                </button>
+
+                                {/* BOUTON PROFIL */}
+                                <button onClick={()=> {setShowProfile(true); setShowSearch(false); setShowNotifs(false);}} style={{width:36,height:36,borderRadius:8,border:"1px solid rgba(192,132,252,0.3)",
+                                background:"rgba(192,132,252,0.1)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .2s"}}
+                                onMouseEnter={e=>e.currentTarget.style.background="rgba(192,132,252,0.2)"}
+                                onMouseLeave={e=>e.currentTarget.style.background="rgba(192,132,252,0.1)"}>
+                                    <Ico n="user" s={14} c="#c084fc"/>
                                 </button>
 
                                 <button onClick={()=>showSearch?setShowSearch(false):openSearch()} className="search-btn" style={{display:"flex",alignItems:"center",gap:7,
@@ -1129,6 +1378,60 @@
                         )}
                         </div>
                     </div>
+                    </div>
+                    )}
+
+                    {/* ── MODAL PROFIL / COMPTE ── */}
+                    {showProfile && (
+                    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(2,6,16,0.85)",backdropFilter:"blur(24px)",padding:"calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px"}}>
+                        <div className="g" style={{maxWidth:480,width:"100%",borderRadius:24,padding:"30px",position:"relative",background:"linear-gradient(135deg, rgba(30,20,45,0.8) 0%, rgba(10,10,15,0.95) 100%)",boxShadow:"0 30px 60px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(168,85,247,0.2)"}}>
+                            <button onClick={() => setShowProfile(false)} className="hov" style={{position:"absolute",top:20,right:20,width:36,height:36,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",color:"white",cursor:"pointer"}}>
+                                <Ico n="close" s={16}/>
+                            </button>
+
+                            <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:30}}>
+                                <div style={{width:80,height:80,borderRadius:"50%",background:"#151520",border:"2px solid rgba(192,132,252,0.5)",boxShadow:"0 0 20px rgba(192,132,252,0.3)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16}}>
+                                    <span style={{fontFamily:"Syne",fontSize:32,fontWeight:900,color:"#c084fc"}}>{userName.charAt(0).toUpperCase()}</span>
+                                </div>
+                                <h2 style={{fontFamily:"Syne",fontSize:24,fontWeight:800,color:"white",margin:0,textTransform:"uppercase",letterSpacing:".05em"}}>{userName}</h2>
+                                <div style={{fontSize:11,opacity:0.5,fontFamily:"monospace",marginTop:6,background:"rgba(255,255,255,0.05)",padding:"4px 10px",borderRadius:6}}>
+                                    ID: {accessKey.substring(0, 8)}...
+                                </div>
+                            </div>
+
+                            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:30}}>
+                                <div style={{fontFamily:"Syne",fontSize:10,fontWeight:800,color:"#c084fc",textTransform:"uppercase",letterSpacing:".15em",borderLeft:"2px solid #c084fc",paddingLeft:10,marginBottom:4}}>Account Details</div>
+                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.05)",padding:"16px",borderRadius:16}}>
+                                    <div style={{display:"flex",alignItems:"center",gap:12}}>
+                                        <Ico n={isTrial ? "user" : "lock"} s={16} c="#c084fc"/>
+                                        <span style={{fontFamily:"Syne",fontSize:13,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em"}}>{isTrial ? "Trial Mode" : "Premium Member"}</span>
+                                    </div>
+                                    {isTrial ? (
+                                        <button onClick={handleLogout} className="hov" style={{fontFamily:"Syne",fontSize:10,fontWeight:800,color:"#020610",background:"#c084fc",border:"none",padding:"6px 12px",borderRadius:8,textTransform:"uppercase",letterSpacing:".1em",cursor:"pointer"}}>Register</button>
+                                    ) : (
+                                        <span style={{fontFamily:"Syne",fontSize:10,fontWeight:800,color:"#34d399",background:"rgba(52,211,153,0.1)",padding:"6px 12px",borderRadius:8,textTransform:"uppercase",letterSpacing:".1em"}}>Active</span>
+                                    )}
+                                </div>
+
+                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.05)",padding:"16px",borderRadius:16}}>
+                                    <div style={{display:"flex",alignItems:"center",gap:12}}>
+                                        <Ico n="loc" s={16} c="#c084fc"/>
+                                        <span style={{fontFamily:"Syne",fontSize:13,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em"}}>Location Auth</span>
+                                    </div>
+                                    <button onClick={() => { localStorage.removeItem("levelday_loc_prompt"); setShowLocPrompt(true); setShowProfile(false); }} className="hov" style={{fontFamily:"Syne",fontSize:10,fontWeight:800,color:"#020610",background:"#c084fc",border:"none",padding:"6px 12px",borderRadius:8,textTransform:"uppercase",letterSpacing:".1em",cursor:"pointer"}}>
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button onClick={handleLogout} className="hov" style={{fontFamily:"Syne",width:"100%",background:"rgba(239,68,68,0.1)",color:"#f87171",border:"1px solid rgba(239,68,68,0.2)",padding:"16px",borderRadius:16,fontWeight:800,fontSize:12,textTransform:"uppercase",letterSpacing:".1em",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,transition:"all .2s"}}>
+                                <Ico n="logout" s={16}/> {isTrial ? "Exit Trial" : "Sign Out Device"}
+                            </button>
+                            
+                            <div style={{fontFamily:"Syne",textAlign:"center",marginTop:20,fontSize:10,opacity:0.3,textTransform:"uppercase",letterSpacing:".1em"}}>
+                                Level Up Ecosystem • v1.0
+                            </div>
+                        </div>
                     </div>
                     )}
 
