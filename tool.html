@@ -1,657 +1,351 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>LevelUp Tool Hub — Vos Outils d'Écosystème</title>
-  
-  <!-- Tailwind CSS CDN pour un design moderne ultra-rapide -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- FontAwesome pour charger tes icônes de base de données -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Polices Google Fonts Premium -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Syne', 'sans-serif'],
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LevelUp - Diffusion Globale</title>
+    <!-- Utilisation de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f1014;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-      }
-    }
-  </script>
-
-  <style>
-    :root {
-      --bg: #09090b;
-      --accent: #a855f7;
-      --accent-lo: rgba(168, 85, 247, 0.12);
-      --bdr: rgba(255, 255, 255, 0.08);
-    }
-    
-    body {
-      background-color: var(--bg);
-      color: #f4f4f5;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-
-    /* Fond décoratif cinéma */
-    .tech-bg-img {
-      position: fixed;
-      inset: 0;
-      background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80') center center/cover no-repeat;
-      z-index: -2;
-      opacity: 0.15;
-      pointer-events: none;
-    }
-    .tech-bg-fade {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(to bottom, rgba(9, 9, 11, 0.4) 0%, rgba(9, 9, 11, 0.96) 60%, var(--bg) 100%);
-      z-index: -1;
-      pointer-events: none;
-    }
-
-    /* Cartes d'application vitre floutée */
-    .app-card {
-      background: rgba(255, 255, 255, 0.015);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .app-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .app-card:hover {
-      background: rgba(255, 255, 255, 0.035);
-      border-color: rgba(168, 85, 247, 0.35);
-      transform: translateY(-4px);
-      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(168, 85, 247, 0.1);
-    }
-    .app-card:hover::before {
-      opacity: 1;
-    }
-
-    /* Évite la barre de défilement horizontale sur les iframes mobiles */
-    iframe {
-      color-scheme: dark;
-    }
-
-    /* Barre de navigation supérieure adaptative pour le notch */
-    nav {
-      height: calc(60px + env(safe-area-inset-top, 0px));
-      padding-top: env(safe-area-inset-top, 0px);
-    }
-
-    /* Main container adaptatif */
-    main {
-      padding-top: calc(75px + env(safe-area-inset-top, 0px));
-      padding-bottom: 40px; /* Par défaut sur ordinateur */
-    }
-
-    /* Gestion rigoureuse de la barre d'action mobile du bas */
-    .mobile-bottom-bar {
-      display: none; /* Masquée sur PC */
-    }
-
-    @media (max-width: 768px) {
-      main {
-        /* On augmente la marge du bas sur mobile pour ne pas chevaucher la bottom-bar */
-        padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
-      }
-      .mobile-bottom-bar {
-        display: flex; /* Visible uniquement sur mobile */
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: calc(65px + env(safe-area-inset-bottom, 0px));
-        background: rgba(9, 9, 11, 0.95);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid var(--bdr);
-        z-index: 99;
-        align-items: center;
-        justify-content: space-around;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        padding-left: 16px;
-        padding-right: 16px;
-        box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
-      }
-    }
-
-    .bar-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      color: rgba(255, 255, 255, 0.45);
-      font-size: 0.7rem;
-      font-weight: 600;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex: 1;
-      height: 100%;
-    }
-    .bar-btn:hover, .bar-btn:active {
-      color: var(--accent);
-    }
-    .bar-btn i {
-      font-size: 18px;
-    }
-
-    /* Correction de l'iframe de l'outil pour respecter le notch */
-    .iframe-topbar {
-      height: calc(56px + env(safe-area-inset-top, 0px));
-      padding-top: env(safe-area-inset-top, 0px);
-      background: #110c1f;
-      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
-    }
-
-    /* Cible et redimensionne n'importe quel code SVG brut provenant de Firestore de manière parfaite */
-    .svg-icon-container svg {
-      width: 100% !important;
-      height: 100% !important;
-      max-width: 100% !important;
-      max-height: 100% !important;
-      display: block !important;
-      margin: auto !important;
-    }
-  </style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1c23; }
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #718096; }
+        
+        /* Style pour l'aperçu du mail */
+        #previewContainer {
+            background-color: #f3f4f6; /* Fond gris clair pour bien détacher l'email */
+            color: #000000;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            padding: 1.5rem;
+        }
+    </style>
 </head>
-<body class="font-sans min-h-screen selection:bg-purple-500/30 selection:text-white">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-  <!-- Arrière-plans d'ambiance violet cinéma -->
-  <div class="tech-bg-img"></div>
-  <div class="tech-bg-fade"></div>
-
-  <!-- 1. Écran de chargement initial -->
-  <div id="appLoader" class="fixed inset-0 bg-[#09090b] z-[9999] flex flex-col items-center justify-center transition-opacity duration-300">
-    <div class="w-12 h-12 border-4 border-purple-500/10 border-t-purple-500 rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.2)]"></div>
-    <span class="mt-4 text-xs font-bold text-slate-400 tracking-widest uppercase">Chargement de Tool Hub...</span>
-  </div>
-
-  <!-- 2. Barre de Navigation Supérieure (Notch safe) -->
-  <nav class="fixed top-0 left-0 right-0 z-50 bg-black/85 border-b border-white/5 backdrop-blur-xl flex items-center px-6 gap-4">
-    <a href="/" class="flex items-center gap-2.5 text-white font-extrabold font-display text-base tracking-tight decoration-none">
-      <svg class="w-5 h-5 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" viewBox="0 0 576 512" fill="#a855f7">
-        <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
-      </svg>
-      LevelUp
-    </a>
-    <div class="w-[1px] h-4 bg-white/10"></div>
-    <span class="text-xs font-bold text-[#a855f7] uppercase tracking-wider font-display">Tool Hub</span>
-    
-    <div class="ml-auto flex items-center gap-3">
-      <div class="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
-        <div class="w-5 h-5 bg-[#a855f7]/10 text-[#a855f7] border border-[#a855f7]/20 rounded-full flex items-center justify-center">
-          <i class="fa-solid fa-user text-[10px]"></i>
+    <div class="w-full max-w-3xl bg-[#1a1c23] rounded-2xl shadow-2xl overflow-hidden border border-gray-800">
+        <!-- En-tête -->
+        <div class="bg-red-600 px-6 py-4 flex items-center gap-3">
+            <i class="fa-solid fa-bullhorn text-2xl"></i>
+            <h1 class="text-xl font-bold">Diffusion Globale - LevelUp</h1>
         </div>
-        <span id="navUsername" class="text-xs font-semibold text-slate-300">Invité</span>
-      </div>
-    </div>
-  </nav>
 
-  <!-- 3. Conteneur principal et Grille des Outils -->
-  <main class="px-6 md:px-12 max-w-7xl mx-auto min-h-screen flex flex-col">
-    <div class="mb-8">
-      <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-        <span class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>
-        Applications Actives
-      </div>
-      <h1 class="font-display text-2xl md:text-3xl font-extrabold text-white tracking-tight">Vos utilitaires d'écosystème</h1>
-    </div>
+        <div class="p-8">
+            <p class="text-gray-400 mb-6 text-sm">
+                <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-2"></i> 
+                Attention : Ce message sera envoyé instantanément à <strong>tous les utilisateurs</strong> enregistrés dans ta base de données VRAIE.
+            </p>
 
-    <!-- Grille des outils -->
-    <div id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      <!-- Les cartes d'outils s'injecteront ici de manière dynamique -->
-    </div>
-
-    <!-- État vide (Fallback) -->
-    <div id="emptyState" class="hidden flex-col items-center justify-center py-24 text-center">
-      <div class="w-16 h-16 bg-purple-500/10 text-[#a855f7] border border-purple-500/20 rounded-2xl flex items-center justify-center mb-4">
-        <i class="fa-solid fa-sliders text-2xl"></i>
-      </div>
-      <h3 class="text-lg font-bold text-white mb-2">Aucun outil actif</h3>
-      <p class="text-sm text-slate-400 max-w-xs mx-auto">Les utilitaires et solutions de l'écosystème sont en cours d'initialisation. Revenez plus tard !</p>
-    </div>
-  </main>
-
-  <!-- 4. Visionneuse d'Outils Plein Écran (Iframe Viewer - Notch safe) -->
-  <div id="iframeOverlay" class="hidden fixed inset-0 bg-[#09090b] z-[200] flex flex-col animate-fade-in">
-    <!-- Barre supérieure de contrôle -->
-    <div class="iframe-topbar flex items-center justify-between px-6">
-      <div class="flex items-center gap-3">
-        <button id="closeIframeBtn" class="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 hover:text-white transition-all rounded-lg">
-          <i class="fa-solid fa-arrow-left"></i> Retour
-        </button>
-        <div class="h-4 w-[1px] bg-white/10"></div>
-        <span id="activeToolTitle" class="text-xs font-bold text-slate-300 tracking-wider uppercase font-sans">
-          Outil Actif
-        </span>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <!-- Recharger l'iframe -->
-        <button id="reloadIframeBtn" class="p-2 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-purple-400 rounded-lg transition-all" title="Actualiser l'outil">
-          <i id="reloadIcon" class="fa-solid fa-rotate-right text-xs"></i>
-        </button>
-        <!-- Ouvrir nouvel onglet -->
-        <button id="externalLinkBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[#a855f7] hover:bg-[#b566ff] text-white rounded-lg transition-all">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> <span class="hidden sm:inline">Nouvel Onglet</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Zone de rendu Iframe -->
-    <div class="flex-1 w-full bg-[#09090b] relative overflow-hidden">
-      <!-- Indicateur de chargement dédié à l'iframe -->
-      <div id="iframeLoader" class="absolute inset-0 bg-[#09090b] flex flex-col items-center justify-center z-20">
-        <div class="w-10 h-10 border-3 border-purple-500/10 border-t-purple-500 rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.2)]"></div>
-        <span class="mt-3 text-[10px] font-bold text-slate-500 tracking-widest uppercase">Lancement de l'outil...</span>
-      </div>
-      <iframe id="toolIframe" class="w-full h-full border-0 bg-transparent" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-    </div>
-  </div>
-
-  <!-- 5. Modale d'informations de l'outil (Détails) -->
-  <div id="detailModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000] flex items-center justify-center p-6">
-    <div class="bg-[#0e0a16] border border-[#a855f7]/30 rounded-3xl p-6 max-w-md w-full relative shadow-2xl animate-scale-in">
-      <button id="closeDetailBtn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 border border-white/10 text-slate-300 flex items-center justify-center hover:bg-white/10 transition-all">
-        <i class="fa-solid fa-xmark text-xs"></i>
-      </button>
-      
-      <div class="w-full h-32 bg-[#a855f7]/5 border-b border-white/5 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
-        <div id="detailIconContainer" class="flex items-center justify-center w-full h-full"></div>
-      </div>
-
-      <h3 id="detailTitle" class="text-xl font-bold text-white mb-2 font-display">Titre de l'outil</h3>
-      <p id="detailDescription" class="text-sm text-slate-300 mb-8 leading-relaxed max-h-[200px] overflow-y-auto pr-2">Description...</p>
-      
-      <button id="detailLaunchBtn" class="w-full py-3 bg-[#a855f7] hover:bg-[#b566ff] text-white font-bold rounded-xl transition-all shadow-[0_4px_15px_rgba(168,85,247,0.2)]">
-        Ouvrir l'application
-      </button>
-    </div>
-  </div>
-
-  <!-- 6. Barre d'actions mobile du bas (Mobile Bottom Bar - Uniquement visible sur Mobile) -->
-  <div class="mobile-bottom-bar animate-in slide-in-from-bottom duration-300">
-    <button id="mobileHomeBtn" class="bar-btn">
-      <i class="fa-solid fa-house"></i>
-      <span>Accueil</span>
-    </button>
-    <button id="mobileRefreshBtn" class="bar-btn">
-      <i class="fa-solid fa-arrows-rotate"></i>
-      <span>Actualiser</span>
-    </button>
-    <a href="/login" id="mobileLoginBtn" class="bar-btn">
-      <i class="fa-solid fa-user-lock"></i>
-      <span>Connexion</span>
-    </a>
-  </div>
-
-
-  <!-- 7. SCRIPT ENGINE (MODULES DE SERVICES & FIREBASE INTEGRATION) -->
-  <script type="module">
-    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-      getAuth, 
-      onAuthStateChanged, 
-      browserLocalPersistence, 
-      setPersistence, 
-      signInAnonymously,
-      signInWithCustomToken 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-      getFirestore, 
-      doc, 
-      onSnapshot 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // Chargement de l'environnement Firebase global ou fallback
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-      apiKey: 'AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM',
-      authDomain: 'levelup-ecosystem.com',
-      projectId: 'levelup-ia',
-      storageBucket: 'levelup-ia.firebasestorage.app',
-      messagingSenderId: '229420004282',
-      appId: '1:229420004282:web:6735f059a947f0936ae383'
-    };
-
-    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // Identifiant de base de données figé et strict
-    const appId = 'level-ia-premium';
-
-    // État local de l'application
-    const state = {
-      isGuest: true,
-      user: null,
-      tools: [],
-      selectedTool: null
-    };
-
-    // Logger de Débogage sur la console développeur standard
-    function logDebug(message, type = 'info') {
-      if (type === 'error') console.error(`[ToolHub] ${message}`);
-      else if (type === 'warn') console.warn(`[ToolHub] ${message}`);
-      else console.log(`[ToolHub] ${message}`);
-    }
-
-    // Gestion de la clé de connexion unique d'Écosystème (lvl_key)
-    function checkAndHandleSSOKey() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const ssoKey = urlParams.get('lvl_key');
-      
-      if (ssoKey && /^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/i.test(ssoKey)) {
-        logDebug(`Clé SSO détectée : ${ssoKey}`, 'info');
-        localStorage.setItem('lvl_sec_k', btoa(ssoKey));
-        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
-        return true;
-      }
-      return false;
-    }
-
-    function getActiveEcosystemKey() {
-      const encoded = localStorage.getItem('lvl_sec_k');
-      if (encoded) {
-        try { return atob(encoded); } catch(e) { return null; }
-      }
-      return null;
-    }
-
-    // Rendu dynamique de l'icône de l'outil avec gestion prioritaire du SVG de la base de données (non altéré !)
-    function getIconHTML(tool) {
-      // Priorité 1 : Rendu du code SVG brut directement dans un conteneur qui force la taille par CSS
-      if (tool.svg && tool.svg.includes('<svg')) {
-        return `<div class="w-14 h-14 flex items-center justify-center svg-icon-container text-[#a855f7] filter drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]">
-          ${tool.svg}
-        </div>`;
-      }
-
-      // Priorité 2 : Image logo_url personnalisée
-      if (tool.logo_url) {
-        return `<img src="${tool.logo_url}" alt="${tool.title}" class="w-14 h-14 object-contain filter drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">`;
-      }
-
-      // Priorité 3 : Icône FontAwesome classique
-      const iconClass = tool.icon || 'fa-solid fa-screwdriver-wrench';
-      const cleanIcon = iconClass.includes('fa-') ? iconClass : `fa-solid ${iconClass}`;
-      return `<div class="w-14 h-14 flex items-center justify-center text-[#a855f7] filter drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]">
-        <i class="${cleanIcon} text-4xl"></i>
-      </div>`;
-    }
-
-    // Rendu complet de la grille des outils sans restriction d'accès ni outils fallbacks par défaut
-    function renderTools() {
-      const grid = document.getElementById('toolsGrid');
-      const emptyState = document.getElementById('emptyState');
-      
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      const displayedTools = state.tools; // Affichage strict et exclusif des outils de Firestore
-
-      if (displayedTools.length === 0) {
-        emptyState.classList.remove('hidden');
-        return;
-      } else {
-        emptyState.classList.add('hidden');
-      }
-
-      // Rendu des cartes d'applications autorisées pour tout le monde
-      displayedTools.forEach((tool) => {
-        const card = document.createElement('div');
-        card.className = 'app-card relative rounded-2xl overflow-hidden flex flex-col justify-between h-[300px]';
-        card.innerHTML = `
-          <div class="app-cover h-28 bg-[#a855f7]/5 border-b border-white/5 flex items-center justify-center cursor-pointer">
-            ${getIconHTML(tool)}
-          </div>
-          <div class="p-5 flex-1 flex flex-col justify-between">
-            <div>
-              <h3 class="text-white font-bold font-display text-base mb-1.5">${tool.title}</h3>
-              <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                ${tool.description}
-              </p>
+            <div class="mb-6 bg-[#0f1014] p-4 rounded-lg border border-gray-700">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-gray-300 font-semibold text-sm">
+                        <i class="fa-solid fa-users mr-2"></i>Base Utilisateurs
+                    </h2>
+                    <button type="button" id="loadUsersBtn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1.5 rounded transition flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Récupérer les vrais utilisateurs
+                    </button>
+                </div>
+                
+                <div id="usersListContainer" class="hidden">
+                    <p class="text-sm text-green-400 mb-2 font-bold flex items-center gap-2" id="usersCount"></p>
+                    <div class="bg-[#1a1c23] border border-gray-800 rounded p-3">
+                        <ul id="usersList" class="max-h-32 overflow-y-auto text-xs text-gray-400 space-y-1 font-mono list-disc list-inside">
+                            <!-- Injection des VRAIS noms et emails ici -->
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <button class="launch-btn w-full mt-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-gradient-to-r hover:from-purple-600 hover:to-indigo-600 hover:border-transparent text-xs font-bold transition-all shadow-sm">
-              Ouvrir l'outil
-            </button>
-          </div>
-        `;
 
-        // Écouteurs de clics pour le lancement
-        card.querySelector('.launch-btn').addEventListener('click', () => {
-          handleOpenTool(tool);
-        });
-        
-        // Clic sur l'en-tête de la carte pour voir les détails
-        card.querySelector('.app-cover').addEventListener('click', () => {
-          openDetailModal(tool);
-        });
+            <form id="broadcastForm" class="space-y-6">
+                <!-- Cible de l'envoi -->
+                <div class="bg-[#0f1014] p-4 rounded-lg border border-gray-700">
+                    <h3 class="block text-sm font-medium text-gray-300 mb-3">Cible de l'envoi</h3>
+                    <div class="flex gap-6 mb-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="targetAudience" value="all" checked class="text-red-600 focus:ring-red-500 bg-gray-800 border-gray-700">
+                            <span class="text-sm text-white font-medium">Toute la base utilisateurs</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="targetAudience" value="specific" class="text-red-600 focus:ring-red-500 bg-gray-800 border-gray-700">
+                            <span class="text-sm text-yellow-500 font-bold">Emails spécifiques (Test)</span>
+                        </label>
+                    </div>
+                    
+                    <!-- Champ pour entrer les mails manuellement (Caché par défaut) -->
+                    <div id="specificEmailsContainer" class="hidden mt-4">
+                        <label for="specificEmails" class="block text-xs font-medium text-gray-400 mb-1">Adresses emails (séparées par des virgules)</label>
+                        <!-- Plus de 'required' ici, on le gère en JS -->
+                        <input type="text" id="specificEmails" 
+                               class="w-full bg-[#1a1c23] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500 transition-colors text-sm font-mono"
+                               placeholder="ex: tonmail@gmail.com, test@yahoo.fr">
+                    </div>
+                </div>
 
-        grid.appendChild(card);
-      });
-    }
+                <!-- Sujet -->
+                <div>
+                    <label for="broadcastSubject" class="block text-sm font-medium text-gray-300 mb-2">Sujet de l'email</label>
+                    <!-- Plus de 'required' ici -->
+                    <input type="text" id="broadcastSubject" 
+                           class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                           value="🚀 Mise à jour majeure : Nouvelles apps, correctifs et expérience mobile !">
+                </div>
 
-    // Gestion de l'ouverture et du chargement des outils
-    function handleOpenTool(tool) {
-      let finalUrl = tool.url || '#';
-      const ecosystemKey = getActiveEcosystemKey();
+                <div>
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-sm font-medium text-gray-300">Message</label>
+                        <!-- Boutons d'onglets -->
+                        <div class="flex bg-[#0f1014] p-1 rounded-lg border border-gray-700">
+                            <button type="button" id="tabPreview" class="px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors">Aperçu visuel</button>
+                            <button type="button" id="tabCode" class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors">Code HTML</button>
+                        </div>
+                    </div>
+
+                    <!-- Éditeur Code (Caché par défaut) -->
+                    <div id="editorContainer" class="hidden">
+                        <!-- Plus de 'required' ici pour éviter le bug du navigateur -->
+                        <textarea id="broadcastMessage" rows="18" 
+                                  class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors font-mono text-sm"><div style="background-color: #f4f4f5; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    
+    <!-- En-tête avec Logo -->
+    <div style="text-align: center; padding: 40px 20px 20px; border-bottom: 1px solid #f0f0f0;">
+      <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp Logo" width="130" style="display: block; margin: 0 auto; height: auto;">
+    </div>
+    
+    <!-- Corps du message -->
+    <div style="padding: 40px 30px;">
+      <h1 style="margin: 0 0 20px; font-size: 24px; color: #111111; text-align: center; letter-spacing: -0.5px;">Une nouvelle ère pour LevelUp 🚀</h1>
+      <p style="margin: 0 0 24px; font-size: 16px; color: #555555; line-height: 1.6;">Bonjour,</p>
+      <p style="margin: 0 0 30px; font-size: 16px; color: #555555; line-height: 1.6;">Suite à vos nombreux retours, nous avons entièrement repensé l'expérience LevelUp. Plus rapide, plus fluide, et surtout... plus riche en contenu.</p>
       
-      // Injection transparente de la clé SSO si présente
-      if (ecosystemKey && finalUrl !== '#') {
-        try {
-          const parsedUrl = new URL(finalUrl);
-          parsedUrl.searchParams.set('lvl_key', ecosystemKey);
-          finalUrl = parsedUrl.toString();
-        } catch(e) {
-          logDebug("Erreur lors de l'injection de la clé SSO.", "error");
-        }
-      }
+      <!-- Section Nouvelles Apps -->
+      <div style="background-color: #fcfcfc; border: 1px solid #eaeaea; border-radius: 8px; padding: 24px; margin-bottom: 30px;">
+        <h2 style="margin: 0 0 16px; font-size: 18px; color: #e50914;">✨ L'écosystème s'agrandit</h2>
+        <p style="margin: 0 0 16px; font-size: 15px; color: #555555; line-height: 1.5;">De nouvelles applications rejoignent officiellement la plateforme :</p>
+        <ul style="margin: 0; padding: 0; list-style-type: none;">
+          <li style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eaeaea;">
+            <strong style="color: #111; display: block; margin-bottom: 4px; font-size: 16px;">LevelDay</strong>
+            <a href="https://levelup-ecosystem.com/levelday" style="color: #e50914; font-weight: 600; text-decoration: none; font-size: 14px;">Découvrir l'application &rarr;</a>
+          </li>
+          <li style="margin-bottom: 0;">
+            <strong style="color: #111; display: block; margin-bottom: 4px; font-size: 16px;">Oppa</strong>
+            <a href="https://levelup-ecosystem.com/oppa" style="color: #e50914; font-weight: 600; text-decoration: none; font-size: 14px;">Découvrir l'application &rarr;</a>
+          </li>
+        </ul>
+      </div>
 
-      logDebug(`Ouverture de l'outil : "${tool.title}"`, 'info');
+      <!-- Section Améliorations -->
+      <h2 style="margin: 0 0 16px; font-size: 18px; color: #111111;">🛠️ Correctifs & Améliorations</h2>
+      <ul style="margin: 0 0 30px; padding: 0 0 0 20px; color: #555555; font-size: 15px; line-height: 1.6;">
+        <li style="margin-bottom: 10px;"><strong>Expérience Mobile :</strong> L'interface a été grandement optimisée pour une navigation parfaite sur smartphone.</li>
+        <li style="margin-bottom: 0;"><strong>Stabilité renforcée :</strong> Les bugs signalés par la communauté ont été corrigés pour garantir des performances optimales.</li>
+      </ul>
+
+      <!-- Bouton d'action -->
+      <div style="text-align: center; margin-top: 40px;">
+        <a href="https://levelup-ecosystem.com" style="display: inline-block; background-color: #e50914; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 32px; border-radius: 8px;">Accéder à LevelUp</a>
+      </div>
+    </div>
+    
+    <!-- Pied de page -->
+    <div style="background-color: #fafafa; padding: 24px 30px; text-align: center; border-top: 1px solid #f0f0f0;">
+      <p style="margin: 0 0 8px; font-size: 13px; color: #888888;">Merci de faire partie de la communauté LevelUp.</p>
+      <p style="margin: 0 0 16px; font-size: 13px; color: #111111; font-weight: bold;">L'équipe LevelUp Ecosystem</p>
       
-      const iframe = document.getElementById('toolIframe');
-      const loader = document.getElementById('iframeLoader');
-      const overlay = document.getElementById('iframeOverlay');
-      const titleSpan = document.getElementById('activeToolTitle');
+      <!-- Liens légaux RGPD -->
+      <div style="font-size: 11px; color: #a0a0a0; padding-top: 16px; border-top: 1px solid #eaeaea;">
+        <a href="https://levelup-ecosystem.com/terms" style="color: #a0a0a0; text-decoration: underline;">Conditions d'utilisation</a> 
+        &nbsp;&nbsp;|&nbsp;&nbsp; 
+        <a href="https://levelup-ecosystem.com/privacy" style="color: #a0a0a0; text-decoration: underline;">Règles de confidentialité</a>
+      </div>
+    </div>
+    
+  </div>
+</div></textarea>
+                    </div>
 
-      titleSpan.textContent = tool.title;
-      loader.classList.remove('hidden');
-      iframe.src = finalUrl;
-      overlay.classList.remove('hidden');
-    }
+                    <!-- Zone Aperçu (Visible par défaut) -->
+                    <div id="previewContainer" class="w-full min-h-[400px]"></div>
+                </div>
 
-    // Modale de détails
-    function openDetailModal(tool) {
-      state.selectedTool = tool;
-      document.getElementById('detailTitle').textContent = tool.title;
-      document.getElementById('detailDescription').textContent = tool.description;
-      
-      const iconContainer = document.getElementById('detailIconContainer');
-      iconContainer.innerHTML = getIconHTML(tool);
+                <button type="submit" id="submitBtn" 
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg transition-all duration-200 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Déclencher l'envoi réel</span>
+                </button>
+            </form>
 
-      document.getElementById('detailModal').classList.remove('hidden');
-    }
+            <div id="statusAlert" class="mt-6 hidden p-4 rounded-lg font-medium text-center border"></div>
+        </div>
+    </div>
 
-    // Événements d'interface générale
-    document.addEventListener('DOMContentLoaded', () => {
-      // Écouteur de fin de chargement d'iframe
-      const iframe = document.getElementById('toolIframe');
-      if (iframe) {
-        iframe.addEventListener('load', () => {
-          document.getElementById('iframeLoader').classList.add('hidden');
-        });
-      }
+    <script>
+        // --- LOGIQUE DES ONGLETS ET DE L'APERÇU ---
+        const tabPreview = document.getElementById('tabPreview');
+        const tabCode = document.getElementById('tabCode');
+        const editorContainer = document.getElementById('editorContainer');
+        const previewContainer = document.getElementById('previewContainer');
+        const broadcastMessage = document.getElementById('broadcastMessage');
 
-      // Fermer l'iframe
-      document.getElementById('closeIframeBtn').addEventListener('click', () => {
-        document.getElementById('iframeOverlay').classList.add('hidden');
-        document.getElementById('toolIframe').src = '';
-      });
-
-      // Rafraîchir l'iframe
-      document.getElementById('reloadIframeBtn').addEventListener('click', () => {
-        const loader = document.getElementById('iframeLoader');
-        loader.classList.remove('hidden');
-        const icon = document.getElementById('reloadIcon');
-        icon.classList.add('animate-spin');
-        iframe.src = iframe.src;
-        setTimeout(() => icon.classList.remove('animate-spin'), 1000);
-      });
-
-      // Ouvrir lien externe
-      document.getElementById('externalLinkBtn').addEventListener('click', () => {
-        if (iframe.src) window.open(iframe.src, '_blank');
-      });
-
-      // Fermer détails
-      document.getElementById('closeDetailBtn').addEventListener('click', () => {
-        document.getElementById('detailModal').classList.add('hidden');
-      });
-
-      document.getElementById('detailLaunchBtn').addEventListener('click', () => {
-        document.getElementById('detailModal').classList.add('hidden');
-        if (state.selectedTool) handleOpenTool(state.selectedTool);
-      });
-
-      // Actions Mobile Bottom Bar
-      document.getElementById('mobileHomeBtn').addEventListener('click', () => {
-        document.getElementById('iframeOverlay').classList.add('hidden');
-        document.getElementById('toolIframe').src = '';
-      });
-      document.getElementById('mobileRefreshBtn').addEventListener('click', () => {
-        window.location.reload();
-      });
-    });
-
-    // Initialisation globale de la base de données & Authentification
-    const initAppProcess = async () => {
-      logDebug("Initialisation de l'authentification Firebase...", "info");
-      try {
-        await setPersistence(auth, browserLocalPersistence);
-        checkAndHandleSSOKey();
-
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          logDebug("Connexion via Custom Token d'écosystème...", "info");
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          logDebug("Connexion en mode Anonyme...", "info");
-          await signInAnonymously(auth);
-        }
-      } catch (err) {
-        logDebug(`Échec de l'authentification : ${err.message}`, "error");
-      }
-
-      // Écouteur d'état utilisateur
-      onAuthStateChanged(auth, (currentUser) => {
-        const ssoActive = getActiveEcosystemKey();
-
-        if (ssoActive) {
-          state.isGuest = false;
-          state.user = { displayName: 'Partenaire', photoURL: null, role: 'partner' };
-          logDebug("Mode Partenaire validé par clé SSO.", "success");
-        } else if (currentUser && !currentUser.isAnonymous) {
-          state.isGuest = false;
-          state.user = {
-            displayName: currentUser.displayName?.split(' ')[0] || 'Membre',
-            role: 'member'
-          };
-          logDebug(`Utilisateur membre connecté (UID : ${currentUser.uid})`, "success");
-        } else {
-          state.isGuest = true;
-          state.user = null;
-          logDebug("Navigation active en mode Invité.", "warn");
-        }
-
-        // Mise à jour de l'UI Header
-        const nameSpan = document.getElementById('navUsername');
-        if (nameSpan) nameSpan.textContent = state.user ? state.user.displayName : 'Invité';
-
-        // Lancement de l'écouteur des outils Firestore
-        initToolsListener();
-        
-        // Cache le chargeur global de l'application
-        document.getElementById('appLoader').classList.add('opacity-0');
-        setTimeout(() => document.getElementById('appLoader').classList.add('hidden'), 300);
-      });
-    };
-
-    // Connexion en temps réel à ton document de configuration
-    function initToolsListener() {
-      const hubPath = `artifacts/${appId}/public/data/config/tools_hub`;
-      logDebug(`Connexion au document à l'adresse : ${hubPath}`, 'info');
-
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'tools_hub');
-
-      onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          logDebug("Document 'tools_hub' trouvé avec succès ! Lecture de vos outils...", "success");
-          const loadedTools = [];
-
-          Object.keys(data).forEach((key) => {
-            if (key.startsWith('tool_')) {
-              const item = data[key];
-              if (item && item.active === true) {
-                loadedTools.push({
-                  id: key,
-                  title: item.title || item.name || 'Outil sans nom',
-                  description: item.description || 'Aucune description disponible.',
-                  url: item.url || '#',
-                  icon: item.icon || null,
-                  svg: item.svg || null, // Capture du SVG brut sans aucune modification destructive
-                  logo_url: item.logo_url || null,
-                  active: item.active
-                });
-              }
+        function updatePreview() {
+            if(previewContainer && broadcastMessage) {
+                previewContainer.innerHTML = broadcastMessage.value;
             }
-          });
-
-          // Tri séquentiel
-          loadedTools.sort((a, b) => {
-            const numA = parseInt(a.id.replace('tool_', ''), 10) || 0;
-            const numB = parseInt(b.id.replace('tool_', ''), 10) || 0;
-            return numA - numB;
-          });
-
-          logDebug(`${loadedTools.length} de tes outils actifs chargés depuis Firestore.`, "success");
-          state.tools = loadedTools;
-          renderTools();
-        } else {
-          logDebug(`Le document 'tools_hub' n'existe pas encore à l'adresse : ${hubPath}`, "warn");
-          state.tools = [];
-          renderTools();
         }
-      }, (error) => {
-        logDebug(`Sécurité de l'aperçu : ${error.message}`, "warn");
-        state.tools = [];
-        renderTools();
-      });
-    }
+        updatePreview();
+        broadcastMessage.addEventListener('input', updatePreview);
 
-    // Exécution du script principal
-    initAppProcess();
-  </script>
+        tabPreview.addEventListener('click', () => {
+            tabPreview.className = "px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors";
+            tabCode.className = "px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors";
+            editorContainer.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+            updatePreview();
+        });
+
+        tabCode.addEventListener('click', () => {
+            tabCode.className = "px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors";
+            tabPreview.className = "px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors";
+            previewContainer.classList.add('hidden');
+            editorContainer.classList.remove('hidden');
+        });
+
+        // --- GESTION DES RADIOS BOUTONS CIBLES ---
+        document.querySelectorAll('input[name="targetAudience"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const specContainer = document.getElementById('specificEmailsContainer');
+                if(this.value === 'specific') {
+                    specContainer.classList.remove('hidden');
+                } else {
+                    specContainer.classList.add('hidden');
+                }
+            });
+        });
+
+        // --- RÉCUPÉRATION DES VRAIS UTILISATEURS ---
+        document.getElementById('loadUsersBtn').addEventListener('click', async function() {
+            const btn = this;
+            const container = document.getElementById('usersListContainer');
+            const countDisplay = document.getElementById('usersCount');
+            const listDisplay = document.getElementById('usersList');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion à la BDD...';
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            try {
+                const response = await fetch('/api/get-users');
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(data.error || "Erreur de chargement Firebase");
+
+                container.classList.remove('hidden');
+                countDisplay.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${data.count} utilisateurs réels trouvés`;
+                
+                listDisplay.innerHTML = '';
+                data.users.forEach(user => {
+                    const li = document.createElement('li');
+                    const displayName = user.name ? user.name : "Utilisateur";
+                    li.innerHTML = `<span class="text-white">${displayName}</span> - <span class="text-gray-500">${user.email}</span>`;
+                    listDisplay.appendChild(li);
+                });
+
+            } catch (error) {
+                console.error(error);
+                alert("Erreur réseau: " + error.message + ". Assure-toi de tester ça en local (vercel dev) ou sur ton site en ligne !");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Rafraîchir la BDD';
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        // --- ENVOI RÉEL VIA RESEND ---
+        document.getElementById('broadcastForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const subject = document.getElementById('broadcastSubject').value.trim();
+            const htmlMessage = document.getElementById('broadcastMessage').value.trim();
+            const btn = document.getElementById('submitBtn');
+            const alertBox = document.getElementById('statusAlert');
+            
+            // --- VALIDATION MANUELLE EN JS ---
+            if (!subject) {
+                alert("Veuillez entrer un sujet d'email.");
+                return;
+            }
+            if (!htmlMessage) {
+                alert("Veuillez entrer un message.");
+                return;
+            }
+
+            const targetType = document.querySelector('input[name="targetAudience"]:checked').value;
+            let targetEmails = [];
+
+            if (targetType === 'specific') {
+                const rawEmails = document.getElementById('specificEmails').value;
+                targetEmails = rawEmails.split(',').map(e => e.trim()).filter(e => e);
+                
+                if (targetEmails.length === 0) {
+                    alert("Veuillez entrer au moins une adresse email valide pour le test.");
+                    return;
+                }
+                if (!confirm(`🚀 Envoi de TEST : Confirmez-vous l'envoi à ces adresses : ${targetEmails.join(', ')} ?`)) {
+                    return;
+                }
+            } else {
+                if (!confirm("🚨 DANGER : Ceci va envoyer un VRAI mail à TOUTE ta base de données complète via Resend. Es-tu absolument sûr ?")) {
+                    return;
+                }
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Envoi en cours...</span>';
+            alertBox.className = 'mt-6 hidden p-4 rounded-lg font-medium text-center border';
+
+            try {
+                // APPEL API VERS LE BACKEND VERCEL
+                const response = await fetch('/api/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        subject, 
+                        htmlMessage,
+                        targetEmails
+                    })
+                });
+                
+                // Vérifier si la réponse n'est pas du JSON (ex: erreur 404 ou 500 Vercel)
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("L'API n'a pas retourné un format valide. L'API est-elle bien en ligne sur Vercel ?");
+                }
+
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(data.error || "Erreur lors de l'envoi Resend");
+
+                alertBox.classList.remove('hidden');
+                alertBox.classList.add('bg-green-900/50', 'text-green-300', 'border-green-700');
+                alertBox.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i> ${data.message}`;
+
+            } catch (error) {
+                console.error(error);
+                alertBox.classList.remove('hidden');
+                alertBox.classList.add('bg-red-900/50', 'text-red-300', 'border-red-700');
+                alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> Échec de l'envoi : ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Déclencher l'envoi réel</span>`;
+            }
+        });
+    </script>
 </body>
 </html>
