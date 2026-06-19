@@ -55,7 +55,6 @@
 
     .safe-top { padding-top: max(1.5rem, env(safe-area-inset-top)) !important; }
     .safe-bottom { padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 0.5rem)) !important; }
-    .top-safe { top: max(1.5rem, env(safe-area-inset-top)) !important; }
 
     .tab-enter { animation: tabFadeIn 0.3s ease-out forwards; }
     @keyframes tabFadeIn {
@@ -69,7 +68,7 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* Scroll vertical façon TikTok */
+    /* Scroll vertical TikTok */
     .snap-container {
         scroll-snap-type: y mandatory;
         overflow-y: scroll;
@@ -89,55 +88,38 @@
         contain-intrinsic-size: 0 450px;
     }
     img { content-visibility: auto; }
-
-    /* Toggle Switch CSS */
-    .toggle-checkbox {
-        appearance: none; width: 44px; height: 24px; background: rgba(255,255,255,0.1); border-radius: 24px; position: relative; cursor: pointer; outline: none; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);
-    }
-    .toggle-checkbox::after {
-        content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-    .toggle-checkbox:checked { background: var(--brand, #a855f7); border-color: var(--brand, #a855f7); }
-    .toggle-checkbox:checked::after { left: 22px; }
   </style>
 </head>
 
 <body class="h-[100dvh] w-screen flex flex-col relative bg-[#050505]">
 
   <!-- CONTAINER DES NOTIFICATIONS TOAST -->
-  <div id="toastContainer" class="fixed top-safe right-4 left-4 z-[9999] flex flex-col gap-2 pointer-events-none mt-2"></div>
-
-  <!-- TOP IN-APP NOTIFICATION BANNER -->
-  <div id="inAppNotifBanner" class="fixed top-safe left-4 right-4 z-[9990] bg-[#121214] border border-brand/50 rounded-2xl p-4 shadow-[0_10px_40px_rgba(168,85,247,0.4)] transform -translate-y-[150%] transition-transform duration-500 flex items-center gap-4 cursor-pointer" onclick="window.closeInAppNotif()">
-      <div class="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center shrink-0">
-          <i id="notifBannerIcon" class="fa-solid fa-bell text-brand text-xl animate-bounce"></i>
-      </div>
-      <div class="flex-1">
-          <h4 class="text-white font-bold text-sm" id="notifBannerTitle">Notification</h4>
-          <p class="text-slate-300 text-xs mt-0.5 leading-tight" id="notifBannerBody">Message de la notification in-app</p>
-      </div>
-  </div>
+  <div id="toastContainer" class="fixed top-4 right-4 left-4 z-[9999] flex flex-col gap-2 pointer-events-none mt-2"></div>
 
   <!-- INTERFACE PRINCIPALE -->
   <div id="mainInterface" class="flex-1 flex flex-col min-h-0 relative z-10 w-full transition-opacity duration-300">
 
-    <!-- HEADER TOP -->
-    <header id="mainHeader" class="shrink-0 px-4 safe-top py-3 flex justify-between items-center bg-[#050505]/95 backdrop-blur-md border-b border-white/5 shadow-md shadow-black/50 relative z-40 transition-all duration-300">
+    <!-- HEADER -->
+    <header id="mainHeader" class="shrink-0 px-4 safe-top py-3 flex justify-between items-center bg-[#050505]/95 backdrop-blur-md border-b border-white/5 shadow-md shadow-black/50 relative z-40 transition-transform duration-300">
       <div class="flex items-center gap-1.5 z-10">
         <svg class="w-5 h-5 text-brand drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" viewBox="0 0 576 512" fill="currentColor">
           <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
         </svg>
         <h1 class="font-display font-bold text-[16px] tracking-tight text-white">LevelUp</h1>
       </div>
-      <div class="flex items-center gap-2 shrink-0 z-10" id="searchBtnContainer">
-        <button onclick="window.toggleSearchBar()" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors border border-white/5">
+      <div class="flex items-center gap-3 shrink-0 z-10">
+        <button onclick="window.toggleSearchBar()" id="searchBtnContainer" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors border border-white/5">
           <i class="fa-solid fa-magnifying-glass text-[13px]"></i>
+        </button>
+        <button onclick="window.openNotifications()" class="relative w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors border border-white/5">
+          <i class="fa-solid fa-bell text-[13px]"></i>
+          <span id="notifBadge" class="hidden absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-[#050505]"></span>
         </button>
       </div>
     </header>
 
     <!-- BARRE DE RECHERCHE INTELLIGENTE -->
-    <div id="searchBarContainer" class="hidden px-4 py-3 bg-[#050505]/95 backdrop-blur-md border-b border-white/5 relative z-30">
+    <div id="searchBarContainer" class="hidden px-4 py-3 bg-[#050505]/95 backdrop-blur-md border-b border-white/5 relative z-30 shadow-lg">
        <div class="relative flex items-center">
          <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-sm"></i>
          <input type="text" id="searchInput" oninput="window.performSearch(this.value)" placeholder="Rechercher une actu ou un film..." class="w-full bg-[#121214] border border-white/10 rounded-xl py-2.5 pl-9 pr-8 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand/50 transition-colors">
@@ -145,14 +127,13 @@
        </div>
     </div>
 
-    <!-- CONTENU PRINCIPAL (LES ONGLETS) -->
+    <!-- CONTENU PRINCIPAL -->
     <main class="flex-1 flex flex-col overflow-y-auto hide-scrollbar relative z-0 scroll-smooth" id="mainContent">
 
       <!-- ========================================== -->
-      <!-- ONGLET: OPPA (ACTUALITÉS)                  -->
+      <!-- ONGLET: OPPA (ACTUS & STORIES)             -->
       <!-- ========================================== -->
       <section id="tab-actus" class="app-section flex flex-col pb-10 tab-enter safe-bottom">
-        
         <div class="flex items-center justify-between px-4 pt-6 pb-2">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.2)]">
@@ -160,7 +141,7 @@
             </div>
             <div>
               <h2 class="text-xl font-display font-bold text-white leading-tight">Oppa</h2>
-              <p class="text-[11px] text-slate-400">Toute l'actualité</p>
+              <p class="text-[11px] text-slate-400">Le fil d'actualité</p>
             </div>
           </div>
           <button onclick="window.loadDynamicActus()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors border border-white/5">
@@ -175,7 +156,7 @@
           </div>
         </div>
 
-        <!-- Feed Unique Oppa -->
+        <!-- Flux Principal -->
         <div class="flex flex-col w-full max-w-2xl mx-auto" id="actusFeed">
             <div class="py-12 flex flex-col items-center justify-center w-full gap-3 text-slate-500">
                 <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.3)]"></div>
@@ -185,9 +166,9 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- ONGLET: MOMENTS (TIKTOK STYLE)             -->
+      <!-- ONGLET: MOMENTS (TIKTOK STYLE TRAILERS)    -->
       <!-- ========================================== -->
-      <section id="tab-moment" class="app-section hidden absolute inset-0 w-full h-full bg-black z-20 flex-col pb-16">
+      <section id="tab-moment" class="app-section hidden absolute inset-0 w-full h-full bg-black z-20 flex-col pb-[72px]">
           <div id="momentsFeed" class="snap-container hide-scrollbar bg-black relative">
               <div class="flex flex-col items-center justify-center h-full w-full gap-3 text-slate-500">
                   <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.3)]"></div>
@@ -197,7 +178,51 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- ONGLET: ESPACE (PROFIL & CLÉ & NOTIFS)     -->
+      <!-- ONGLET: SHOWS (TIKTOK STYLE IMAGES)        -->
+      <!-- ========================================== -->
+      <section id="tab-shows" class="app-section hidden absolute inset-0 w-full h-full bg-black z-20 flex-col pb-[72px]">
+          <div id="showsFeed" class="snap-container hide-scrollbar bg-black relative">
+              <div class="flex flex-col items-center justify-center h-full w-full gap-3 text-slate-500">
+                  <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.3)]"></div>
+                  <span class="text-sm font-medium">Génération de la galerie...</span>
+              </div>
+          </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- ONGLET: RADAR (NOUVEAUTÉS & INFOS)         -->
+      <!-- ========================================== -->
+      <section id="tab-nouveautes" class="app-section hidden flex-col pb-24 tab-enter safe-bottom overflow-y-auto px-4 pt-6">
+          <div class="flex flex-col gap-4 bg-[#121214] p-5 rounded-2xl border border-white/5 mb-6 shadow-lg relative overflow-hidden">
+             <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full filter blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+             <div class="flex justify-between items-center relative z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+                        <i class="fa-solid fa-satellite-dish text-lg"></i>
+                     </div>
+                     <div>
+                        <h2 class="text-lg font-display font-bold text-white">Radar</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Les sorties à venir</p>
+                     </div>
+                 </div>
+             </div>
+             <div class="w-full h-[1px] bg-white/5 my-1"></div>
+             <div class="flex justify-between items-center relative z-10">
+                 <p class="text-[11px] text-slate-300 max-w-[200px] leading-relaxed">Abonnez-vous pour recevoir les notifications lors des nouvelles sorties de films et d'épisodes.</p>
+                 <button onclick="window.toggleFollow()" id="followBtn" class="bg-brand text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all flex items-center gap-2">
+                     <i class="fa-solid fa-bell"></i> Suivre
+                 </button>
+             </div>
+          </div>
+
+          <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 px-1">Prochainement au cinéma</h3>
+          <div id="nouveautesFeed" class="grid grid-cols-2 gap-4 pb-10">
+              <!-- Chargement... -->
+          </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- ONGLET: ESPACE (PROFIL & CLÉ & ADMIN)      -->
       <!-- ========================================== -->
       <section id="tab-compte" class="app-section hidden flex-col gap-4 px-4 py-6 pb-24 tab-enter safe-bottom">
         <div class="flex flex-col items-center justify-center py-6 text-center" id="profileHeaderArea">
@@ -206,7 +231,7 @@
             <i class="fa-solid fa-user-lock text-3xl text-slate-500" id="profileAvatarIcon"></i>
           </div>
           <h2 id="profileName" class="text-2xl font-display font-bold text-white tracking-tight">Mode Invité</h2>
-          <p id="profileStatus" class="text-sm text-slate-400 mt-1">Saisissez votre clé pour accéder à l'écosystème.</p>
+          <p id="profileStatus" class="text-sm text-slate-400 mt-1">Saisissez votre clé pour vous authentifier.</p>
         </div>
 
         <div id="profileActionContainer" class="w-full max-w-md mx-auto">
@@ -228,56 +253,47 @@
 
             <!-- Zone Connectée -->
             <div id="keyLoggedInArea" class="hidden flex-col gap-6">
-                <div class="w-full rounded-[20px] p-5 glass-effect border border-green-500/20">
-                    <div class="flex items-start justify-between mb-4">
+                <div class="w-full rounded-[20px] p-5 glass-effect border border-green-500/20 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-3 opacity-20"><i class="fa-solid fa-shield-check text-4xl text-green-400"></i></div>
+                    <div class="flex items-start justify-between mb-4 relative z-10">
                         <div>
                         <h4 class="text-sm font-bold text-white mb-1">Clé Connectée</h4>
-                        <p class="text-[10px] text-green-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span> Sécurisée & Chiffrée</p>
+                        <p class="text-[10px] text-green-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Sécurisée & Chiffrée</p>
                         </div>
                     </div>
                     <!-- Clé Chiffrée + Code PIN -->
-                    <div class="bg-black/60 border border-white/10 rounded-xl p-3 flex items-center justify-between shadow-inner mb-4">
+                    <div class="bg-black/60 border border-white/10 rounded-xl p-3 flex items-center justify-between shadow-inner mb-4 relative z-10">
                         <span id="displayActiveKey" class="font-mono text-[13px] text-slate-300 tracking-widest">LVL-•••••-•••••</span>
-                        <button onclick="window.revealKeyPin()" class="text-brand text-xs px-3 py-1 bg-brand/10 rounded-lg hover:bg-brand/20 transition-colors"><i class="fa-solid fa-eye mr-1"></i> Voir</button>
+                        <button onclick="window.revealKeyPin()" class="text-brand text-xs px-3 py-1 bg-brand/10 rounded-lg hover:bg-brand/20 transition-colors border border-brand/20"><i class="fa-solid fa-eye mr-1"></i> Voir</button>
                     </div>
-                    <button onclick="window.logoutKey()" class="w-full py-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 font-bold tracking-widest text-[11px] uppercase transition-all border border-red-500/20 flex items-center justify-center gap-2">
+                    <button onclick="window.logoutKey()" class="w-full py-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 font-bold tracking-widest text-[11px] uppercase transition-all border border-red-500/20 flex items-center justify-center gap-2 relative z-10">
                         <i class="fa-solid fa-sign-out-alt text-sm"></i> Se déconnecter
                     </button>
                 </div>
 
-                <!-- Paramètres et Notifications -->
+                <!-- ADMIN: ENVOYER PUSH À FIRESTORE -->
                 <div class="w-full text-left">
-                    <h3 class="text-[11px] uppercase tracking-wider font-bold text-slate-500 mb-3 px-1">Paramètres de Notifications</h3>
-                    <div class="w-full rounded-[20px] p-5 glass-effect border border-white/10 flex flex-col gap-5">
-                        <label class="flex items-center justify-between cursor-pointer">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold text-white">Alertes Urgentes</span>
-                                <span class="text-[10px] text-slate-400">Météo, Infos de dernière minute</span>
-                            </div>
-                            <input type="checkbox" id="notifUrgent" class="toggle-checkbox" checked onchange="window.saveNotifPrefs()">
-                        </label>
-                        <div class="w-full h-px bg-white/5"></div>
-                        <label class="flex items-center justify-between cursor-pointer">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold text-white">Nouveautés Écosystème</span>
-                                <span class="text-[10px] text-slate-400">Nouveaux films, mises à jour</span>
-                            </div>
-                            <input type="checkbox" id="notifNews" class="toggle-checkbox" checked onchange="window.saveNotifPrefs()">
-                        </label>
+                    <h3 class="text-[11px] uppercase tracking-wider font-bold text-brand mb-3 px-1"><i class="fa-solid fa-paper-plane mr-1"></i> Diffuser un Push</h3>
+                    <div class="w-full rounded-[20px] p-5 glass-effect border border-brand/20 flex flex-col gap-4 bg-brand/5">
+                        <p class="text-xs text-slate-300 leading-relaxed">Envoyez une notification. Elle sera stockée dans la base de données pour que l'écosystème la récupère et l'envoie aux téléphones.</p>
+                        <input type="text" id="adminNotifTitle" placeholder="Titre de l'alerte" class="w-full bg-black/40 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:border-brand outline-none transition-colors">
+                        <textarea id="adminNotifBody" placeholder="Détails du message..." class="w-full bg-black/40 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:border-brand outline-none transition-colors resize-none h-20"></textarea>
+                        <select id="adminNotifType" class="w-full bg-black/40 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:border-brand outline-none transition-colors">
+                            <option value="info">ℹ️ Information</option>
+                            <option value="urgent">⚠️ Urgent</option>
+                            <option value="new">🌟 Nouveauté</option>
+                        </select>
+                        <button onclick="window.sendPushToDB()" id="btnSendPush" class="w-full py-3 bg-brand hover:bg-brand/80 text-white font-bold rounded-xl transition-colors shadow-md text-sm"><i class="fa-solid fa-paper-plane mr-2"></i> Diffuser vers l'Écosystème</button>
                     </div>
                 </div>
 
-                <!-- Favoris / Bibliothèque de la Clé -->
-                <div class="w-full text-left">
+                <!-- Favoris de la Clé -->
+                <div class="w-full text-left mb-8">
                     <h3 class="text-[11px] uppercase tracking-wider font-bold text-slate-500 mb-3 px-1">Bibliothèque de la Clé</h3>
                     <div class="flex gap-3">
-                        <div class="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-center flex flex-col items-center gap-2">
-                            <div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand text-lg"><i class="fa-solid fa-bookmark"></i></div>
+                        <div class="flex-1 bg-[#1a1a1c] border border-white/10 rounded-xl p-4 text-center flex flex-col items-center gap-2 shadow-lg">
+                            <div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand text-lg border border-brand/20"><i class="fa-solid fa-bookmark"></i></div>
                             <span class="text-xs font-bold text-white" id="countSaves">0 Enregistrés</span>
-                        </div>
-                        <div class="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-center flex flex-col items-center gap-2 opacity-50">
-                            <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 text-lg"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                            <span class="text-xs font-bold text-white">Historique</span>
                         </div>
                     </div>
                 </div>
@@ -288,23 +304,31 @@
     </main>
   </div>
 
-  <!-- BARRE DE NAVIGATION EN BAS -->
-  <nav id="mainBottomNav" class="shrink-0 w-full glass-effect rounded-t-[2rem] rounded-b-none !border-x-0 !border-b-0 border-t border-white/10 flex justify-between items-center px-10 pt-4 safe-bottom z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.7)] relative bg-[#050505]/80 transition-transform duration-300">
-    <button onclick="window.switchTab('tab-actus')" id="nav-btn-actus" class="nav-btn flex flex-col items-center gap-1.5 text-white scale-110 transition-all">
+  <!-- BARRE DE NAVIGATION EN BAS (5 BOUTONS) -->
+  <nav id="mainBottomNav" class="shrink-0 w-full glass-effect rounded-t-[2rem] rounded-b-none !border-x-0 !border-b-0 border-t border-white/10 flex justify-between items-center px-6 pt-4 safe-bottom z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.7)] relative bg-[#050505]/80 transition-transform duration-300">
+    <button onclick="window.switchTab('tab-actus')" id="nav-btn-actus" class="nav-btn flex flex-col items-center gap-1.5 text-white scale-110 transition-all w-12">
       <i class="fa-solid fa-fire text-lg drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"></i>
-      <span class="text-[9px] font-bold tracking-wide">Oppa</span>
+      <span class="text-[8px] font-bold tracking-wide">Oppa</span>
     </button>
     
-    <button onclick="window.switchTab('tab-moment')" id="nav-btn-moment" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all relative">
-      <div class="absolute -top-6 w-12 h-12 rounded-full bg-brand flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.6)] border-4 border-[#050505]">
-          <i class="fa-solid fa-play text-white text-lg ml-0.5"></i>
-      </div>
-      <span class="text-[9px] font-semibold tracking-wide mt-7">Moments</span>
+    <button onclick="window.switchTab('tab-moment')" id="nav-btn-moment" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all w-12">
+      <i class="fa-solid fa-play text-lg"></i>
+      <span class="text-[8px] font-semibold tracking-wide">Moments</span>
+    </button>
+
+    <button onclick="window.switchTab('tab-shows')" id="nav-btn-shows" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all w-12">
+      <i class="fa-solid fa-ticket text-lg"></i>
+      <span class="text-[8px] font-semibold tracking-wide">Shows</span>
+    </button>
+
+    <button onclick="window.switchTab('tab-nouveautes')" id="nav-btn-nouveautes" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all w-12">
+      <i class="fa-solid fa-satellite-dish text-lg"></i>
+      <span class="text-[8px] font-semibold tracking-wide">Radar</span>
     </button>
     
-    <button onclick="window.switchTab('tab-compte')" id="nav-btn-compte" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
-      <i class="fa-solid fa-key text-lg"></i>
-      <span class="text-[9px] font-semibold tracking-wide">Espace</span>
+    <button onclick="window.switchTab('tab-compte')" id="nav-btn-compte" class="nav-btn flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all w-12">
+      <i class="fa-solid fa-user-shield text-lg"></i>
+      <span class="text-[8px] font-semibold tracking-wide">Espace</span>
     </button>
   </nav>
 
@@ -314,9 +338,79 @@
 
   <!-- ================= MODALS ================= -->
 
-  <!-- REPORT MODAL (FIXÉ) -->
-  <div id="reportModal" class="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4">
-    <div class="w-full max-w-[320px] bg-[#121214] border border-white/10 rounded-[24px] p-6 text-left shadow-2xl relative animate-slide-up">
+  <!-- NOTIFICATIONS MODAL (Cloche) -->
+  <div id="notifModal" class="fixed inset-0 z-[900] bg-black/80 backdrop-blur-sm hidden flex-col justify-end" onclick="window.closeNotifications()">
+    <div id="notifModalContent" class="w-full h-[85vh] bg-[#121214] rounded-t-3xl border-t border-white/10 flex flex-col relative shadow-[0_-10px_40px_rgba(0,0,0,0.5)] transition-transform duration-300 translate-y-full" onclick="event.stopPropagation()">
+       <!-- Handle Swipe -->
+       <div class="w-full flex justify-center py-3 shrink-0 cursor-grab active:cursor-grabbing">
+           <div class="w-12 h-1.5 bg-white/20 rounded-full pointer-events-none"></div>
+       </div>
+       <div class="px-6 pb-4 border-b border-white/10 flex justify-between items-center shrink-0">
+           <h2 class="text-xl font-display font-bold text-white flex items-center gap-2"><i class="fa-solid fa-bell text-brand"></i> Notifications</h2>
+       </div>
+       <div id="notifList" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 hide-scrollbar">
+           <div class="py-10 flex flex-col items-center justify-center gap-3 text-slate-500">
+              <div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
+              <span class="text-sm">Vérification de la base de données...</span>
+           </div>
+       </div>
+    </div>
+  </div>
+
+  <!-- MOVIE DETAILS MODAL (BOTTOM SHEET APRES RECHERCHE) -->
+  <div id="movieDetailsModal" class="fixed inset-0 z-[400] bg-black/80 backdrop-blur-sm hidden flex-col justify-end" onclick="window.closeMovieDetails()">
+    <div id="movieDetailsContent" class="w-full bg-[#121214] rounded-t-3xl border-t border-white/10 flex flex-col relative shadow-2xl transition-transform duration-300 translate-y-full" onclick="event.stopPropagation()">
+       <div class="w-full flex justify-center py-3 shrink-0 cursor-grab active:cursor-grabbing">
+           <div class="w-12 h-1.5 bg-white/20 rounded-full pointer-events-none"></div>
+       </div>
+       <div class="flex flex-col px-5 pb-8">
+           <div class="flex gap-4 mb-4">
+               <img id="mdPoster" src="" class="w-28 h-40 object-cover rounded-xl shadow-lg border border-white/10">
+               <div class="flex flex-col justify-center">
+                   <span class="px-2.5 py-1 bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase rounded-md border border-blue-500/20 w-max mb-2">LevelMovie</span>
+                   <h2 id="mdTitle" class="text-xl font-display font-bold text-white leading-tight mb-2"></h2>
+                   <div class="flex items-center gap-2 text-xs font-semibold text-yellow-500 bg-yellow-500/10 w-max px-2 py-1 rounded-lg">
+                      <i class="fa-solid fa-star"></i> <span id="mdRating"></span>/10
+                   </div>
+               </div>
+           </div>
+           <p id="mdDesc" class="text-sm text-slate-300 leading-relaxed mb-6 max-h-40 overflow-y-auto hide-scrollbar"></p>
+           <div class="flex gap-3">
+               <button id="mdTrailerBtn" class="flex-1 py-3.5 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 text-red-400 text-sm font-bold rounded-xl transition-colors"><i class="fa-brands fa-youtube mr-1.5"></i> Trailer</button>
+               <button onclick="window.showLevelMoviePromo()" class="flex-1 py-3.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-md transition-colors"><i class="fa-solid fa-play mr-1.5"></i> Voir le Film</button>
+           </div>
+       </div>
+    </div>
+  </div>
+
+  <!-- LEVELMOVIE PROMO MODAL -->
+  <div id="levelMoviePromoModal" class="fixed inset-0 z-[600] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4" onclick="document.getElementById('levelMoviePromoModal').classList.add('hidden')">
+      <div class="w-full max-w-[320px] bg-[#121214] border border-blue-500/30 rounded-[24px] p-6 text-center shadow-[0_0_30px_rgba(59,130,246,0.2)] relative animate-slide-up" onclick="event.stopPropagation()">
+          <button onclick="document.getElementById('levelMoviePromoModal').classList.add('hidden')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 text-slate-400 flex items-center justify-center hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
+          <div class="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4 text-blue-500 text-3xl"><i class="fa-solid fa-clapperboard"></i></div>
+          <h3 class="text-xl font-display font-bold text-white mb-2">LevelMovie</h3>
+          <p class="text-sm text-slate-300 mb-6 leading-relaxed">Connectez-vous via l'écosystème LevelUp avec votre compte pour regarder ce film en intégralité.</p>
+          <a href="https://levelup-ecosystem.com" target="_blank" class="block w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>Aller sur l'Écosystème</a>
+      </div>
+  </div>
+
+  <!-- YOUTUBE TRAILER MODAL -->
+  <div id="trailerModal" class="fixed inset-0 z-[300] hidden flex-col justify-center items-center px-4" onclick="window.closeTrailer()">
+    <div id="trailerBackdrop" class="absolute inset-0 bg-black/90 backdrop-blur-md opacity-0 transition-opacity"></div>
+    <div id="trailerContainer" class="relative w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden scale-95 opacity-0 transition-all shadow-[0_0_50px_rgba(225,29,72,0.3)]">
+       <iframe id="trailerIframe" class="w-full h-full relative z-10" src="" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+       <button onclick="window.closeTrailer()" class="absolute top-4 right-4 w-10 h-10 bg-black/50 text-white rounded-full backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-red-600 z-20"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- IMAGE ZOOM MODAL -->
+  <div id="imageZoomModal" class="fixed inset-0 z-[700] bg-black/95 hidden flex-col items-center justify-center p-2 backdrop-blur-md transition-opacity duration-300 opacity-0 cursor-zoom-out" onclick="window.closeImageZoom()">
+      <img id="zoomImgEl" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl cursor-default" onclick="event.stopPropagation()">
+  </div>
+
+  <!-- REPORT MODAL -->
+  <div id="reportModal" class="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4" onclick="window.closeReportModal()">
+    <div class="w-full max-w-[320px] bg-[#121214] border border-white/10 rounded-[24px] p-6 text-left shadow-2xl relative animate-slide-up" onclick="event.stopPropagation()">
       <button onclick="window.closeReportModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
       <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-flag text-red-500 mr-2"></i> Signaler</h3>
       <div class="flex flex-col gap-2 mb-4 mt-3">
@@ -327,18 +421,9 @@
     </div>
   </div>
 
-  <!-- MODAL: YOUTUBE TRAILER -->
-  <div id="trailerModal" class="fixed inset-0 z-[300] hidden flex-col justify-center items-center px-4" onclick="window.closeTrailer()">
-    <div id="trailerBackdrop" class="absolute inset-0 bg-black/90 backdrop-blur-md opacity-0 transition-opacity"></div>
-    <div id="trailerContainer" class="relative w-full max-w-3xl aspect-video bg-black rounded-2xl overflow-hidden scale-95 opacity-0 transition-all shadow-[0_0_50px_rgba(225,29,72,0.3)]">
-       <iframe id="trailerIframe" class="w-full h-full relative z-10" src="" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
-       <button onclick="window.closeTrailer()" class="absolute top-4 right-4 w-10 h-10 bg-black/50 text-white rounded-full backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-red-600 z-20"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-  </div>
-
-  <!-- EXTERNAL LINK MODAL (ARTICLE) -->
-  <div id="externalLinkModal" class="fixed inset-0 z-[500] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4">
-    <div class="w-full max-w-[320px] bg-[#121214] border border-white/10 rounded-[24px] p-6 text-center shadow-2xl relative animate-slide-up">
+  <!-- EXTERNAL LINK MODAL -->
+  <div id="externalLinkModal" class="fixed inset-0 z-[500] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4" onclick="window.closeExternalLinkModal()">
+    <div class="w-full max-w-[320px] bg-[#121214] border border-white/10 rounded-[24px] p-6 text-center shadow-2xl relative animate-slide-up" onclick="event.stopPropagation()">
       <div class="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center mx-auto mb-4 text-orange-500 text-xl"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
       <h3 class="text-lg font-bold text-white mb-2">Quitter l'application</h3>
       <p class="text-xs text-slate-400 mb-6 leading-relaxed">Tu vas être redirigé vers l'article original sur le web. Veux-tu continuer ?</p>
@@ -347,22 +432,6 @@
         <button onclick="window.proceedExternalLink()" class="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl shadow-[0_0_15px_rgba(249,115,22,0.3)]">Continuer</button>
       </div>
     </div>
-  </div>
-
-  <!-- LEVELMOVIE PROMO MODAL -->
-  <div id="levelMoviePromoModal" class="fixed inset-0 z-[600] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center p-4">
-      <div class="w-full max-w-[320px] bg-[#121214] border border-blue-500/30 rounded-[24px] p-6 text-center shadow-[0_0_30px_rgba(59,130,246,0.2)] relative animate-slide-up">
-          <button onclick="document.getElementById('levelMoviePromoModal').classList.add('hidden')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 text-slate-400 flex items-center justify-center hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
-          <div class="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4 text-blue-500 text-3xl"><i class="fa-solid fa-popcorn"></i></div>
-          <h3 class="text-xl font-display font-bold text-white mb-2">LevelMovie</h3>
-          <p class="text-sm text-slate-300 mb-6 leading-relaxed">Connectez-vous via l'écosystème LevelUp avec votre compte pour regarder ce film en intégralité.</p>
-          <a href="https://levelup-ecosystem.com" target="_blank" class="block w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all">Aller sur l'Écosystème</a>
-      </div>
-  </div>
-
-  <!-- IMAGE ZOOM MODAL -->
-  <div id="imageZoomModal" class="fixed inset-0 z-[700] bg-black/95 hidden flex-col items-center justify-center p-2 backdrop-blur-md transition-opacity duration-300 opacity-0 cursor-zoom-out" onclick="window.closeImageZoom()">
-      <img id="zoomImgEl" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl cursor-default" onclick="event.stopPropagation()">
   </div>
 
   <!-- STORY MODAL (FULLSCREEN) -->
@@ -400,13 +469,30 @@
   </div>
 
   <!-- JAVASCRIPT GLOBAL -->
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    // Firebase config de l'écosystème
+    const firebaseConfig = {
+        apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+        authDomain: "levelup-ia.firebaseapp.com",
+        projectId: "levelup-ia",
+        storageBucket: "levelup-ia.firebasestorage.app",
+        messagingSenderId: "229420004282",
+        appId: "1:229420004282:web:6735f059a947f0936ae383"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     window._hiddenArticles = new Set();
     window._savedArticles = new Set();
     window._loadedArticles = {}; 
     window._currentReportId = null;
     window._loadedKey = null; 
     window._momentsData = []; 
+    window._showsData = [];
 
     window._storySequences = { flash: [], filmJour: [], topFilms: [], animeNouveaux: [], animeTop: [] };
     window._currentSeqType = 'flash';
@@ -416,8 +502,34 @@
     let storyProgressInterval = null;
     window._audioCache = {}; 
     window._isStoryMuted = false;
-    window._isMomentMuted = false;
+    window._isMomentMuted = true; // Auto-play muted pour Moments
     const TMDB_KEY = '027cc951d888c64e5f15dcb853c7347a';
+
+    // --- SWIPE POUR FERMER (Modals Bottom Sheet) ---
+    function setupSwipeToClose(contentId, closeFunc) {
+        let touchStartY = 0;
+        let touchCurrentY = 0;
+        const el = document.getElementById(contentId);
+        if(!el) return;
+        
+        el.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            el.style.transition = 'none';
+        }, {passive: true});
+        
+        el.addEventListener('touchmove', (e) => {
+            touchCurrentY = e.touches[0].clientY;
+            const deltaY = touchCurrentY - touchStartY;
+            if (deltaY > 0) el.style.transform = `translateY(${deltaY}px)`;
+        }, {passive: true});
+        
+        el.addEventListener('touchend', (e) => {
+            const deltaY = touchCurrentY - touchStartY;
+            el.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            if (deltaY > 120) closeFunc();
+            else el.style.transform = 'translateY(0)';
+        });
+    }
 
     // Toast Notification
     window.toast_ = function(msg, type='info') {
@@ -433,7 +545,127 @@
 
     window.sHash = function(s) { let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0; return h.toString(16); };
 
-    // --- RECHERCHE INTELLIGENTE ---
+    // --- ENVOI DE PUSH VERS FIRESTORE (L'écosystème récupère ça pour les vrais push mobiles) ---
+    window.sendPushToDB = async function() {
+        const title = document.getElementById('adminNotifTitle').value.trim();
+        const body = document.getElementById('adminNotifBody').value.trim();
+        const type = document.getElementById('adminNotifType').value;
+        const btn = document.getElementById('btnSendPush');
+        
+        if(!window.checkAuthAction('envoyer un push')) return;
+        if(!title || !body) return window.toast_('Veuillez remplir le titre et le message.', 'warn');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Envoi...';
+
+        try {
+            const notifRef = collection(db, 'artifacts', 'level-ia-premium', 'public', 'data', 'notifications');
+            await addDoc(notifRef, {
+                title: title,
+                body: body,
+                type: type,
+                createdAt: Date.now(),
+                sentVia: 'OppaAdmin'
+            });
+            window.toast_('Push envoyé à la base de données !', 'ok');
+            document.getElementById('adminNotifTitle').value = '';
+            document.getElementById('adminNotifBody').value = '';
+        } catch(e) {
+            window.toast_('Erreur réseau. Vous n\'avez peut-être pas les droits.', 'err');
+            console.warn(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Diffuser vers l\'Écosystème';
+        }
+    };
+
+    // --- RECEPTION DES NOTIFS (La Cloche) ---
+    window.openNotifications = function() {
+        const modal = document.getElementById('notifModal');
+        const content = document.getElementById('notifModalContent');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        const badge = document.getElementById('notifBadge');
+        if (badge) badge.classList.add('hidden');
+        
+        setTimeout(() => {
+            content.classList.remove('translate-y-full');
+            content.style.transform = 'translateY(0)';
+        }, 10);
+    };
+
+    window.closeNotifications = function() {
+        const modal = document.getElementById('notifModal');
+        const content = document.getElementById('notifModalContent');
+        content.classList.add('translate-y-full');
+        content.style.transform = '';
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
+    };
+
+    let firstFirebaseLoad = true;
+    window.initFirebaseNotifications = function() {
+        try {
+            const notifRef = collection(db, 'artifacts', 'level-ia-premium', 'public', 'data', 'notifications');
+            const q = query(notifRef, orderBy('createdAt', 'desc'), limit(20));
+
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('notifList');
+                const badge = document.getElementById('notifBadge');
+
+                if(snapshot.empty) {
+                    list.innerHTML = '<div class="py-12 flex flex-col items-center justify-center text-slate-500"><i class="fa-regular fa-bell-slash text-3xl mb-3 opacity-50"></i><span class="text-sm">Aucune notification.</span></div>';
+                    return;
+                }
+
+                let html = '';
+                let latestDoc = null;
+
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") latestDoc = change.doc.data();
+                });
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    let icon = 'fa-bell text-brand';
+                    let bg = 'bg-brand/10 border-brand/20';
+
+                    if(data.type === 'urgent') { icon = 'fa-triangle-exclamation text-red-500'; bg = 'bg-red-500/10 border-red-500/30'; }
+                    if(data.type === 'new') { icon = 'fa-star text-yellow-500'; bg = 'bg-yellow-500/10 border-yellow-500/30'; }
+
+                    const dateStr = data.createdAt ? new Date(data.createdAt).toLocaleDateString('fr-FR', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) : 'Récemment';
+
+                    html += `
+                    <div class="p-4 rounded-[16px] bg-[#1a1a1c] border border-white/5 flex gap-4 items-start shadow-sm relative overflow-hidden transition-colors hover:bg-white/5 cursor-pointer">
+                        <div class="w-11 h-11 rounded-full ${bg} flex items-center justify-center shrink-0 border">
+                            <i class="fa-solid ${icon} text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-white font-bold text-[14px] leading-tight mb-1">${data.title || 'Notification'}</h4>
+                            <p class="text-slate-300 text-[12px] leading-relaxed line-clamp-2">${data.body || ''}</p>
+                            <span class="text-[10px] text-slate-500 mt-2 block font-medium"><i class="fa-regular fa-clock mr-1"></i> ${dateStr}</span>
+                        </div>
+                    </div>`;
+                });
+
+                list.innerHTML = html;
+                
+                if(!firstFirebaseLoad && latestDoc && document.getElementById('notifModal').classList.contains('hidden')) {
+                    if(badge) badge.classList.remove('hidden');
+                }
+                firstFirebaseLoad = false;
+
+            }, (error) => {
+                document.getElementById('notifList').innerHTML = '<div class="py-10 text-center text-slate-500 text-sm">Système de notifications hors-ligne.</div>';
+            });
+        } catch(e) {
+            document.getElementById('notifList').innerHTML = '<div class="py-10 text-center text-slate-500 text-sm">Système de notifications hors-ligne.</div>';
+        }
+    };
+
+    // --- RECHERCHE INTELLIGENTE (TMDB) ---
     window.toggleSearchBar = function() {
         const bar = document.getElementById('searchBarContainer');
         const input = document.getElementById('searchInput');
@@ -444,61 +676,84 @@
         }
     };
 
-    window.performSearch = async function(query) {
-        query = query.toLowerCase().trim();
+    window.performSearch = async function(queryStr) {
+        let queryVal = queryStr.toLowerCase().trim();
         
-        // 1. Filtrer les actus locales
+        // Filtrer actus locales
         document.querySelectorAll('.actu-card:not(.tmdb-search-result)').forEach(card => {
             const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
-            const desc = card.querySelector('.line-clamp-2')?.textContent.toLowerCase() || '';
-            const matchSearch = query === '' || title.includes(query) || desc.includes(query);
-            card.style.display = matchSearch ? '' : 'none';
+            const desc = card.querySelector('p[id^="desc-"]')?.textContent.toLowerCase() || '';
+            card.style.display = (queryVal === '' || title.includes(queryVal) || desc.includes(queryVal)) ? '' : 'none';
         });
 
-        // 2. Supprimer les anciens résultats TMDB
+        // Nettoyer résultats TMDB
         document.querySelectorAll('.tmdb-search-result').forEach(el => el.remove());
 
-        // 3. API TMDB intelligente si le mot-clé est long
-        if (query.length > 2) {
+        // API TMDB si mot-clé long
+        if (queryVal.length > 2) {
             try {
-                const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&language=fr-FR&query=${encodeURIComponent(query)}`);
+                const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&language=fr-FR&query=${encodeURIComponent(queryVal)}`);
                 const data = await res.json();
                 if(data.results && data.results.length > 0) {
                     const feed = document.getElementById('actusFeed');
-                    data.results.slice(0, 5).forEach((m, idx) => {
+                    data.results.slice(0, 6).forEach((m) => {
                         if(!m.poster_path) return;
-                        const fakeId = 'tmdb_search_' + idx;
-                        const tagHtml = `<span class="bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded ml-2 uppercase font-bold border border-blue-500/20">LevelMovie</span>`;
+                        const safeTitle = encodeURIComponent(m.title).replace(/'/g, "%27");
+                        const safeOverview = encodeURIComponent(m.overview || 'Aucune description disponible.').replace(/'/g, "%27");
+                        const safePoster = encodeURIComponent(`https://image.tmdb.org/t/p/w780${m.poster_path}`).replace(/'/g, "%27");
+                        
                         const html = `
-                        <div class="actu-card tmdb-search-result bg-[#1a0f14] border-b border-blue-500/20 pb-4 mb-3 w-full animate-slide-up">
-                            <div class="flex items-center justify-between px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-black border border-white/10 overflow-hidden shrink-0 text-blue-500">
-                                        <i class="fa-solid fa-clapperboard"></i>
+                        <div class="actu-card tmdb-search-result flex items-start gap-3 p-3 bg-[#1a1a1c] border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors animate-slide-up w-full rounded-xl mt-2 mx-2" style="width: calc(100% - 16px);" onclick="window.openMovieDetails(${m.id}, '${safeTitle}', '${safePoster}', '${safeOverview}', ${m.vote_average})">
+                            <img src="https://image.tmdb.org/t/p/w154${m.poster_path}" class="w-16 h-24 object-cover rounded-lg shadow-md shrink-0 border border-white/10" loading="lazy">
+                            <div class="flex-1 min-w-0 flex flex-col justify-between h-24">
+                                <div>
+                                    <h4 class="text-white font-bold text-sm truncate leading-tight">${m.title}</h4>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="bg-blue-500/20 text-blue-400 text-[9px] px-1.5 py-0.5 rounded uppercase font-bold border border-blue-500/20">LevelMovie</span>
+                                        <span class="text-[10px] text-yellow-500 font-bold"><i class="fa-solid fa-star"></i> ${m.vote_average.toFixed(1)}/10</span>
                                     </div>
-                                    <div>
-                                        <p class="text-[13px] font-bold text-white uppercase tracking-wide flex items-center">Résultat de recherche ${tagHtml}</p>
-                                        <p class="text-[10px] text-slate-400 mt-1">Note: ${m.vote_average}/10</p>
-                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">${m.overview || 'Aucune description disponible.'}</p>
                                 </div>
                             </div>
-                            <div class="px-4 pb-3">
-                                <h3 class="text-[15px] font-bold text-white mb-1.5 leading-tight">${m.title}</h3>
-                                <p class="text-[13px] text-slate-300 leading-relaxed line-clamp-3 mb-4">${m.overview || 'Aucune description disponible.'}</p>
-                                <div class="flex gap-2">
-                                    <button onclick="window.fetchAndPlayTrailer('movie', ${m.id})" class="flex-1 py-2.5 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 text-red-400 text-xs font-bold rounded-lg transition-colors"><i class="fa-brands fa-youtube mr-1"></i> Trailer</button>
-                                    <button onclick="window.showLevelMoviePromo()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow-md transition-colors"><i class="fa-solid fa-play mr-1"></i> Voir sur LevelMovie</button>
-                                </div>
-                            </div>
-                            <div class="block w-full bg-black relative min-h-[200px] flex items-center justify-center border-y border-white/5 cursor-pointer" onclick="window.openImageZoom('https://image.tmdb.org/t/p/w780${m.poster_path}')">
-                                 <img src="https://image.tmdb.org/t/p/w780${m.poster_path}" class="w-full max-h-[400px] object-cover relative z-10">
-                            </div>
+                            <button class="shrink-0 mt-8 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white text-[11px] font-bold rounded-lg transition-colors border border-white/10">Voir plus</button>
                         </div>`;
-                        feed.insertAdjacentHTML('beforeend', html);
+                        feed.insertAdjacentHTML('afterbegin', html);
                     });
                 }
             } catch(e) {}
         }
+    };
+
+    // --- MODAL DÉTAILS FILM (BottomSheet TMDB) ---
+    window.openMovieDetails = function(id, title, img, desc, rating) {
+        document.getElementById('mdTitle').textContent = decodeURIComponent(title);
+        document.getElementById('mdPoster').src = decodeURIComponent(img);
+        document.getElementById('mdDesc').textContent = decodeURIComponent(desc);
+        document.getElementById('mdRating').textContent = parseFloat(rating).toFixed(1);
+        
+        const trailerBtn = document.getElementById('mdTrailerBtn');
+        trailerBtn.onclick = () => window.fetchAndPlayTrailer('movie', id);
+        
+        const modal = document.getElementById('movieDetailsModal');
+        const content = document.getElementById('movieDetailsContent');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+        setTimeout(() => {
+            content.classList.remove('translate-y-full');
+            content.style.transform = 'translateY(0)';
+        }, 10);
+    };
+
+    window.closeMovieDetails = function() {
+        const modal = document.getElementById('movieDetailsModal');
+        const content = document.getElementById('movieDetailsContent');
+        content.classList.add('translate-y-full');
+        content.style.transform = '';
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
     };
 
     window.showLevelMoviePromo = function() {
@@ -506,7 +761,7 @@
         document.getElementById('levelMoviePromoModal').classList.add('flex');
     };
 
-    // --- NAVIGATION ---
+    // --- NAVIGATION PRINCIPALE ---
     window.switchTab = function(tabId) {
         document.querySelectorAll('.app-section').forEach(sec => {
             sec.classList.add('hidden'); sec.classList.remove('flex');
@@ -518,39 +773,39 @@
         const searchBtnContainer = document.getElementById('searchBtnContainer');
         const mainHeader = document.getElementById('mainHeader');
 
-        if(tabId === 'tab-actus') {
-            mainHeader.classList.remove('-translate-y-full', 'opacity-0');
-            if(searchBtnContainer) searchBtnContainer.classList.remove('hidden', 'opacity-0');
-            document.getElementById('momentAudioPlayer').pause();
-        } else if(tabId === 'tab-moment') {
+        // Gérer le Header principal (le cacher sur Moments et Shows pour immersion)
+        if(tabId === 'tab-moment' || tabId === 'tab-shows') {
             mainHeader.classList.add('-translate-y-full', 'opacity-0');
             if(searchBtnContainer) searchBtnContainer.classList.add('hidden');
+            // Auto play first moment logic handled by intersection observer
         } else {
             mainHeader.classList.remove('-translate-y-full', 'opacity-0');
-            if(searchBtnContainer) searchBtnContainer.classList.add('hidden');
-            const searchBarContainer = document.getElementById('searchBarContainer');
-            if(searchBarContainer && !searchBarContainer.classList.contains('hidden')) window.toggleSearchBar();
             document.getElementById('momentAudioPlayer').pause();
+            
+            if(tabId === 'tab-actus') {
+                if(searchBtnContainer) searchBtnContainer.classList.remove('hidden');
+            } else {
+                if(searchBtnContainer) searchBtnContainer.classList.add('hidden');
+                const searchBarContainer = document.getElementById('searchBarContainer');
+                if(searchBarContainer && !searchBarContainer.classList.contains('hidden')) window.toggleSearchBar();
+            }
         }
 
+        // MAJ Visuelle de la barre de nav
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.classList.remove('text-white', 'scale-110'); btn.classList.add('text-slate-500');
             const icon = btn.querySelector('i');
-            if(icon && !btn.id.includes('moment')) icon.classList.remove('drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]');
+            if(icon) icon.classList.remove('drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]');
         });
         const activeBtn = document.getElementById(`nav-btn-${tabId.split('-')[1]}`);
         if (activeBtn) {
-            if (tabId === 'tab-moment') { activeBtn.classList.add('scale-110'); } 
-            else {
-                activeBtn.classList.remove('text-slate-500'); activeBtn.classList.add('text-white', 'scale-110');
-                if(activeBtn.querySelector('i')) activeBtn.querySelector('i').classList.add('drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]');
-            }
+            activeBtn.classList.remove('text-slate-500'); activeBtn.classList.add('text-white', 'scale-110');
+            if(activeBtn.querySelector('i')) activeBtn.querySelector('i').classList.add('drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]');
         }
     };
 
-    // --- SYSTEME DE CLÉ, PIN & SSO ---
+    // --- SSO & CLÉ (Vrai nom Google et Photo) ---
     window.checkLocalKey = function() {
-        // Lecture des variables du tableau de bord global LevelUp Ecosystem
         const ecoKey = localStorage.getItem('lm_key');
         const ecoName = localStorage.getItem('lm_name');
         const ecoPhoto = localStorage.getItem('lm_photo');
@@ -574,7 +829,7 @@
         
         const avatarImg = document.getElementById('profileAvatarImg');
         const avatarIcon = document.getElementById('profileAvatarIcon');
-        if(data.photo && data.photo !== 'null') {
+        if(data.photo && data.photo !== 'null' && data.photo !== '') {
             avatarImg.src = data.photo;
             avatarImg.classList.remove('hidden');
             avatarIcon.classList.add('hidden');
@@ -620,17 +875,20 @@
             const data = await res.json();
 
             if(data.valid) {
-                window._loadedKey = { key: key, name: data.name, photo: null };
+                // Utilise le localStorage de l'écosystème pour avoir le vrai nom et photo
+                const realName = localStorage.getItem('lm_name') || data.name || "Utilisateur VIP";
+                const realPhoto = localStorage.getItem('lm_photo') || data.photoURL || null;
+                
+                window._loadedKey = { key: key, name: realName, photo: realPhoto };
                 localStorage.setItem('lvl_local_key', key);
                 window.applyKeyUI();
-                window.toast_('Bienvenue dans LevelUp !', 'ok');
+                window.toast_('Bienvenue dans l\'Écosystème !', 'ok');
             } else {
                 err.textContent = data.error || 'Clé non reconnue par le système.';
                 err.classList.remove('hidden');
             }
         } catch(e) {
-            // Simulation de réussite pour la démo si l'API échoue
-            window._loadedKey = { key: key, name: "Invité LevelUp", photo: null };
+            window._loadedKey = { key: key, name: localStorage.getItem('lm_name') || "Invité LevelUp", photo: localStorage.getItem('lm_photo') || null };
             localStorage.setItem('lvl_local_key', key);
             window.applyKeyUI();
             window.toast_('Connecté en mode hors-ligne.', 'ok');
@@ -641,8 +899,8 @@
 
     window.revealKeyPin = function() {
         if(!window._loadedKey) return;
-        const pin = prompt("Sécurité: Entrez votre code PIN (Défaut: 1234) pour voir la clé :");
-        if (pin === "1234") {
+        const pin = prompt("Sécurité: Entrez votre code PIN pour voir la clé (Défaut: 1234):");
+        if (pin === "1234") { // A remplacer par vrai check
             const display = document.getElementById('displayActiveKey');
             display.textContent = window._loadedKey.key;
             display.classList.add('text-brand');
@@ -658,12 +916,9 @@
     window.logoutKey = function() {
         window._loadedKey = null;
         localStorage.removeItem('lvl_local_key');
-        localStorage.removeItem('lm_key');
-        localStorage.removeItem('lm_name');
-        localStorage.removeItem('lm_photo');
         
         document.getElementById('profileName').textContent = 'Mode Invité';
-        document.getElementById('profileStatus').textContent = "Saisissez votre clé pour accéder à l'écosystème.";
+        document.getElementById('profileStatus').textContent = "Saisissez votre clé pour vous authentifier.";
         
         document.getElementById('profileAvatarImg').classList.add('hidden');
         document.getElementById('profileAvatarIcon').classList.remove('hidden');
@@ -678,66 +933,10 @@
         window.toast_('Déconnexion réussie', 'info');
     };
 
-    // --- SYSTEME DE NOTIFICATIONS IN-APP ---
-    window.saveNotifPrefs = function() {
-        const prefs = {
-            urgent: document.getElementById('notifUrgent').checked,
-            news: document.getElementById('notifNews').checked
-        };
-        localStorage.setItem('lvl_notif_prefs', JSON.stringify(prefs));
-        window.toast_("Préférences enregistrées", "ok");
-    };
-
-    window.showInAppNotif = function(title, body, type="info") {
-        const prefs = JSON.parse(localStorage.getItem('lvl_notif_prefs') || '{"urgent":true, "news":true}');
-        if(type === 'urgent' && !prefs.urgent) return;
-        if(type === 'news' && !prefs.news) return;
-
-        document.getElementById('notifBannerTitle').textContent = title;
-        document.getElementById('notifBannerBody').textContent = body;
-        const icon = document.getElementById('notifBannerIcon');
-        icon.className = type === 'urgent' ? 'fa-solid fa-triangle-exclamation text-red-500 text-xl animate-bounce' : 'fa-solid fa-bell text-brand text-xl animate-bounce';
-        
-        const banner = document.getElementById('inAppNotifBanner');
-        banner.classList.remove('-translate-y-[150%]');
-        banner.classList.add('translate-y-0');
-        
-        // Auto-close after 6 seconds
-        setTimeout(() => window.closeInAppNotif(), 6000);
-    };
-
-    window.closeInAppNotif = function() {
-        const banner = document.getElementById('inAppNotifBanner');
-        banner.classList.remove('translate-y-0');
-        banner.classList.add('-translate-y-[150%]');
-    };
-
-    // Simulated Push Notifications (Listen to local storage from other ecosystem tabs)
-    window.addEventListener('storage', (e) => {
-        if(e.key === 'lvl_broadcast_notif' && e.newValue) {
-            try {
-                const data = JSON.parse(e.newValue);
-                window.showInAppNotif(data.title, data.body, data.type);
-            } catch(err){}
-        }
-    });
-
-    // Random Mock notifications for demonstration
-    setInterval(() => {
-        if(Math.random() > 0.95) {
-            window.showInAppNotif("Alerte Météo", "Des perturbations sont prévues dans votre zone ce soir. Restez prudents !", "urgent");
-        } else if(Math.random() > 0.95) {
-            window.showInAppNotif("Nouveauté LevelMovie !", "Découvrez les 10 nouveaux films ajoutés aujourd'hui au catalogue.", "news");
-        }
-    }, 60000);
-
-    // --- CORRECTION BUG REPORT MODAL ---
+    // --- MODALS & POST ACTIONS ---
     window.closeReportModal = function() {
         const modal = document.getElementById('reportModal');
-        if(modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
+        if(modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
         window._currentReportId = null;
     };
 
@@ -759,14 +958,21 @@
             sheet.className = 'fixed inset-0 z-[200] hidden flex-col justify-end';
             sheet.innerHTML = `
                 <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
-                <div class="bg-[#121214] rounded-t-[24px] p-6 relative z-10 flex flex-col gap-3 animate-slide-up border-t border-white/10 safe-bottom">
+                <div class="bg-[#121214] rounded-t-[24px] p-6 relative z-10 flex flex-col gap-3 animate-slide-up border-t border-white/10 safe-bottom pb-10">
                     <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4"></div>
-                    <button id="po-open" class="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-3 shadow-[0_0_10px_rgba(255,255,255,0.05)]"><i class="fa-solid fa-arrow-up-right-from-square"></i> Lire l'article original</button>
+                    <button id="po-open" class="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-3 shadow-[0_0_10px_rgba(255,255,255,0.05)]"><i class="fa-solid fa-arrow-up-right-from-square"></i> Lire l'article complet</button>
                     <button id="po-report" class="w-full py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold rounded-xl transition-colors flex items-center justify-center gap-3"><i class="fa-solid fa-flag"></i> Signaler</button>
                     <button onclick="document.getElementById('postOptionsSheet').classList.add('hidden')" class="w-full py-3.5 bg-transparent text-slate-400 hover:text-white font-bold rounded-xl transition-colors mt-2">Annuler</button>
                 </div>
             `;
             document.body.appendChild(sheet);
+            
+            // Swipe down to close postOptions
+            let startY = 0; let currY = 0;
+            const content = sheet.querySelector('.bg-\\[\\#121214\\]');
+            content.addEventListener('touchstart', e => { startY = e.touches[0].clientY; content.style.transition = 'none'; }, {passive:true});
+            content.addEventListener('touchmove', e => { currY = e.touches[0].clientY; const d = currY - startY; if(d>0) content.style.transform = `translateY(${d}px)`; }, {passive:true});
+            content.addEventListener('touchend', e => { const d = currY - startY; content.style.transition = 'transform 0.3s'; if(d>100) sheet.classList.add('hidden'); content.style.transform=''; });
         }
         
         document.getElementById('po-open').onclick = function() {
@@ -822,19 +1028,20 @@
 
             const isSaved = window._savedArticles.has(articleId);
 
-            // Création du Tag/Badge stylé
-            let catColor = "bg-brand/20 text-brand";
+            let catColor = "bg-brand/20 text-brand border-brand/20";
             let catIcon = "fa-newspaper";
-            let shortLabel = item.label || "Info";
-            if(shortLabel === 'LevelGame') { catColor = 'bg-blue-500/20 text-blue-400'; catIcon = 'fa-gamepad'; shortLabel="Game"; }
-            if(shortLabel === 'LevelFoot' || shortLabel.includes('sport')) { catColor = 'bg-green-500/20 text-green-400'; catIcon = 'fa-futbol'; shortLabel="Foot"; }
-            if(shortLabel === 'LevelMovie') { catColor = 'bg-red-500/20 text-red-400'; catIcon = 'fa-film'; shortLabel="Ciné"; }
-            if(shortLabel === 'LevelTech') { catColor = 'bg-orange-500/20 text-orange-400'; catIcon = 'fa-microchip'; shortLabel="Tech"; }
+            let shortLabel = item.label || "LevelTool";
+            
+            if(shortLabel === 'LevelGame') { catColor = 'bg-blue-500/20 text-blue-400 border-blue-500/20'; catIcon = 'fa-gamepad'; shortLabel="Game"; }
+            else if(shortLabel === 'LevelFoot' || shortLabel.toLowerCase().includes('sport')) { catColor = 'bg-green-500/20 text-green-400 border-green-500/20'; catIcon = 'fa-futbol'; shortLabel="Foot"; }
+            else if(shortLabel === 'LevelMovie') { catColor = 'bg-red-500/20 text-red-400 border-red-500/20'; catIcon = 'fa-film'; shortLabel="Ciné"; }
+            else if(shortLabel === 'LevelTech') { catColor = 'bg-orange-500/20 text-orange-400 border-orange-500/20'; catIcon = 'fa-microchip'; shortLabel="Tech"; }
+            else if(shortLabel === 'LevelOtaku') { catColor = 'bg-pink-500/20 text-pink-400 border-pink-500/20'; catIcon = 'fa-dragon'; shortLabel="Anime"; }
 
-            const tagHtml = `<span class="${catColor} text-[10px] px-2 py-0.5 rounded ml-2 uppercase font-bold border border-white/5"><i class="fa-solid ${catIcon} mr-1"></i>${shortLabel}</span>`;
+            const tagHtml = `<span class="${catColor} text-[10px] px-2 py-0.5 rounded ml-2 uppercase font-bold border"><i class="fa-solid ${catIcon} mr-1"></i>${shortLabel}</span>`;
 
             htmlFeed += `
-            <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-4 w-full" id="article-${articleId}">
+            <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-4 w-full animate-slide-up" id="article-${articleId}">
                 <div class="flex items-center justify-between px-4 py-3">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center bg-black border border-white/10 overflow-hidden shadow-lg shrink-0">
@@ -859,7 +1066,7 @@
                 </div>
 
                 ${item.img ? `
-                <div class="block w-full bg-[#0a0a0c] relative cursor-pointer group min-h-[200px] flex items-center justify-center border-y border-white/5" onclick="window.openImageZoom('${item.img}')">
+                <div class="block w-full bg-[#0a0a0c] relative cursor-pointer group min-h-[200px] flex items-center justify-center border-y border-white/5" onclick="window.openImageZoom('${(item.img || '').replace(/'/g, "%27")}')">
                      <i class="fa-solid fa-image text-white/5 absolute text-4xl z-0"></i>
                      <img src="${item.img}" class="w-full max-h-[400px] object-cover relative z-10" loading="lazy" decoding="async">
                      <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1.5 rounded-lg text-white backdrop-blur-md z-20"><i class="fa-solid fa-expand text-xs"></i></div>
@@ -867,7 +1074,8 @@
 
                 <div class="flex items-center justify-between px-4 pt-4 pb-2">
                     <div class="flex items-center gap-6">
-                        <button onclick="window.shareArticle('${encodeURIComponent(item.title)}', '${item.link}')" class="text-white hover:text-blue-400 transition-colors text-[22px] active:scale-90"><i class="fa-regular fa-paper-plane"></i></button>
+                        <!-- Plus de bouton like ou commentaire sur Oppa -->
+                        <button onclick="window.shareArticle('${encodeURIComponent(item.title).replace(/'/g, "%27")}', '${item.link}')" class="text-white hover:text-blue-400 transition-colors text-[22px] active:scale-90"><i class="fa-regular fa-paper-plane"></i></button>
                     </div>
                     <button onclick="window.saveArticle('${articleId}')" class="text-white hover:text-brand transition-colors text-2xl active:scale-90"><i class="${isSaved ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark" id="bookmark-${articleId}"></i></button>
                 </div>
@@ -927,9 +1135,13 @@
         document.getElementById('storyAudioPlayer').pause();
         document.getElementById('momentAudioPlayer').pause();
 
+        let finalUrl = embedUrl;
+        if(finalUrl.includes('autoplay=0')) finalUrl = finalUrl.replace('autoplay=0', 'autoplay=1');
+        else if(!finalUrl.includes('autoplay=1')) finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+
         const modal = document.getElementById('trailerModal');
         const iframe = document.getElementById('trailerIframe');
-        iframe.src = embedUrl;
+        iframe.src = finalUrl;
         modal.classList.remove('hidden'); modal.classList.add('flex');
         setTimeout(() => {
             document.getElementById('trailerBackdrop').classList.remove('opacity-0');
@@ -943,6 +1155,7 @@
         setTimeout(() => { 
             document.getElementById('trailerModal').classList.add('hidden'); 
             document.getElementById('trailerIframe').src = ""; 
+            if(!window._isMomentMuted) document.getElementById('momentAudioPlayer').play().catch(e=>{});
         }, 300);
     };
     
@@ -991,9 +1204,9 @@
                     <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/80"></div>
                 </div>`}
                 
-                <div class="absolute bottom-6 left-4 right-16 z-20">
+                <div class="absolute bottom-8 left-4 right-16 z-20">
                     <div id="moment-music-${i}" class="hidden items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full mb-3 w-max cursor-pointer" onclick="window.toggleMomentMusic(${i})">
-                        <i id="moment-music-icon-${i}" class="fa-solid fa-music text-brand text-[11px] animate-pulse"></i>
+                        <i id="moment-music-icon-${i}" class="fa-solid fa-music text-slate-400 text-[11px]"></i>
                         <span id="moment-music-title-${i}" class="text-[11px] text-white/90 font-medium truncate max-w-[150px]">Recherche audio...</span>
                     </div>
 
@@ -1011,15 +1224,15 @@
                     </button>` : ''}
                 </div>
 
-                <div class="absolute bottom-6 right-4 z-20 flex flex-col items-center gap-6">
-                    <!-- Avis / Étoile (Remplacement du Like) -->
+                <div class="absolute bottom-8 right-4 z-20 flex flex-col items-center gap-6">
+                    <!-- Avis / Étoile (TMDB) -->
                     <button class="flex flex-col items-center gap-1 group transition-transform cursor-default">
                         <div class="w-11 h-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-yellow-500/30 shadow-lg"><i class="fa-solid fa-star text-yellow-400 text-xl"></i></div>
-                        <span class="text-white text-[11px] font-bold drop-shadow-md">${vid.rating} / 10</span>
+                        <span class="text-white text-[11px] font-bold drop-shadow-md">${vid.rating}/10</span>
                         <span class="text-slate-400 text-[8px] -mt-1">${vid.likes.toLocaleString('fr-FR')} avis</span>
                     </button>
                     <!-- Partager -->
-                    <button onclick="window.shareArticle('${encodeURIComponent(vid.title)}', 'https://www.themoviedb.org/movie/${vid.id}')" class="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+                    <button onclick="window.shareArticle('${encodeURIComponent(vid.title).replace(/'/g, "%27")}', 'https://www.themoviedb.org/movie/${vid.id}')" class="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
                         <div class="w-11 h-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 group-hover:bg-black/70 shadow-lg"><i class="fa-solid fa-share text-white text-xl"></i></div>
                         <span class="text-white text-[11px] font-bold drop-shadow-md">Share</span>
                     </button>
@@ -1054,7 +1267,7 @@
             });
         }, { threshold: 0.6 });
 
-        document.querySelectorAll('.snap-page').forEach(page => observer.observe(page));
+        document.querySelectorAll('#momentsFeed .snap-page').forEach(page => observer.observe(page));
     };
 
     window.toggleMomentDesc = function(idx) {
@@ -1088,27 +1301,139 @@
     window.playMomentAudio = function(idx) {
         const vid = window._momentsData[idx];
         const player = document.getElementById('momentAudioPlayer');
+        
         document.querySelectorAll('i[id^="moment-music-icon-"]').forEach(i => {
-            i.classList.replace('fa-volume-xmark', 'fa-music');
-            i.classList.add('animate-pulse');
-            i.classList.replace('text-slate-400', 'text-brand');
+            i.classList.replace('fa-music', 'fa-volume-xmark');
+            i.classList.remove('animate-pulse');
+            i.classList.replace('text-brand', 'text-slate-400');
         });
 
         if(vid && vid.audioUrl) {
             if (player.src !== vid.audioUrl) player.src = vid.audioUrl;
-            if(!window._isMomentMuted) player.play().catch(e => console.log('Autoplay block:', e));
-            else {
+            if(!window._isMomentMuted) {
+                player.play().catch(e => console.log('Autoplay block:', e));
                 const icon = document.getElementById(`moment-music-icon-${idx}`);
                 if(icon) {
-                    icon.classList.replace('fa-music', 'fa-volume-xmark');
-                    icon.classList.remove('animate-pulse');
-                    icon.classList.replace('text-brand', 'text-slate-400');
+                    icon.classList.replace('fa-volume-xmark', 'fa-music');
+                    icon.classList.add('animate-pulse');
+                    icon.classList.replace('text-slate-400', 'text-brand');
                 }
             }
         } else {
             player.pause();
         }
     };
+
+    // --- SHOWS (IMAGES STYLE OPPA) ---
+    window.renderShows = function() {
+        const container = document.getElementById('showsFeed');
+        if(window._showsData.length === 0) {
+            container.innerHTML = '<div class="py-12 flex flex-col items-center justify-center w-full gap-3 text-slate-500"><div class="w-8 h-8 border-2 border-brand/20 border-t-brand rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.3)]"></div><span class="text-xs font-medium">Génération de la galerie...</span></div>';
+            return;
+        }
+
+        let html = '';
+        window._showsData.forEach((show, i) => {
+            const isSaved = window._savedArticles.has('show_' + show.id);
+            html += `
+            <div class="actu-card bg-[#0a0a0c] border-b border-white/10 pb-4 w-full animate-slide-up mb-3" id="show-${i}">
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500/10 border border-blue-500/20 text-blue-400 overflow-hidden shadow-lg shrink-0">
+                            <i class="fa-solid fa-film"></i>
+                        </div>
+                        <div>
+                            <p class="text-[13px] font-bold text-white leading-none uppercase tracking-wide flex items-center gap-1.5">
+                                LevelShow
+                                <i class="fa-solid fa-circle-check text-blue-500 text-[12px] drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]"></i>
+                            </p>
+                            <p class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-star text-yellow-500 mr-1"></i>${show.rating}/10</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-4 pb-3">
+                    <h3 class="text-[15px] font-bold text-white mb-1.5 leading-tight">${show.title}</h3>
+                    <p class="text-[13px] text-slate-300 leading-relaxed line-clamp-3">${show.desc}</p>
+                </div>
+
+                <div class="block w-full bg-[#0a0a0c] relative cursor-pointer min-h-[200px] flex items-center justify-center border-y border-white/5" onclick="window.openImageZoom('${(show.img || '').replace(/'/g, "%27")}')">
+                     <i class="fa-solid fa-image text-white/5 absolute text-4xl z-0"></i>
+                     <img src="${show.img}" class="w-full max-h-[500px] object-cover relative z-10" loading="lazy" decoding="async">
+                     <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1.5 rounded-lg text-white backdrop-blur-md z-20"><i class="fa-solid fa-expand text-xs"></i></div>
+                </div>
+
+                <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                    <div class="flex items-center gap-6">
+                        <button onclick="window.shareArticle('${encodeURIComponent(show.title).replace(/'/g, "%27")}', 'https://www.themoviedb.org/movie/${show.id}')" class="text-white hover:text-blue-400 transition-colors text-[22px] active:scale-90"><i class="fa-regular fa-paper-plane"></i></button>
+                    </div>
+                    <button onclick="window.saveArticle('show_${show.id}')" class="text-white hover:text-brand transition-colors text-2xl active:scale-90"><i class="${isSaved ? 'fa-solid text-brand' : 'fa-regular'} fa-bookmark" id="bookmark-show_${show.id}"></i></button>
+                </div>
+            </div>
+            `;
+        });
+        container.innerHTML = html;
+    };
+
+    // --- RADAR (NOUVEAUTÉS) ---
+    window.renderNouveautes = function(movies) {
+        let html = '';
+        movies.forEach(m => {
+            if(!m.poster_path) return;
+            const imgSmall = `https://image.tmdb.org/t/p/w154${m.poster_path}`;
+            const imgLarge = `https://image.tmdb.org/t/p/w342${m.poster_path}`;
+            const d = new Date(m.release_date);
+            const dateStr = d.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
+            
+            const safeTitle = encodeURIComponent(m.title).replace(/'/g, "%27");
+            const safeImg = encodeURIComponent(imgLarge).replace(/'/g, "%27");
+            const safeDesc = encodeURIComponent(m.overview || 'Aucun synopsis disponible.').replace(/'/g, "%27");
+
+            // Remplacement direct pour éviter de voir des "%20" dans la notification !
+            const escapedTitleForJS = (m.title || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+            html += `
+            <div class="flex items-center gap-3 bg-[#121214] border border-white/5 p-2.5 rounded-2xl animate-slide-up hover:bg-white/5 transition-colors shadow-sm">
+                <img src="${imgSmall}" class="w-20 h-28 object-cover rounded-xl shadow-md shrink-0 border border-white/10" loading="lazy">
+                
+                <div class="flex-1 min-w-0 flex flex-col justify-between h-28 py-0.5">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-bold uppercase rounded border border-blue-500/20">Sortie</span>
+                            <span class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-calendar mr-1"></i>${dateStr}</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-white leading-tight truncate mb-1">${m.title}</h4>
+                        <p class="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">${m.overview || 'Découvrez ce nouveau film prochainement au cinéma.'}</p>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 mt-2">
+                        <button onclick="window.openMovieDetails(${m.id}, '${safeTitle}', '${safeImg}', '${safeDesc}', ${m.vote_average})" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-200 text-[10px] font-bold rounded-lg transition-colors border border-white/10 flex-1 flex justify-center items-center">Voir plus</button>
+                        <button onclick="window.toast_('Alerte configurée pour ${escapedTitleForJS}', 'ok')" class="px-3 py-1.5 bg-brand/10 hover:bg-brand/20 text-brand text-[10px] font-bold rounded-lg transition-colors border border-brand/20 flex items-center justify-center gap-1.5 shrink-0"><i class="fa-solid fa-bell"></i> Suivre</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('nouveautesFeed').innerHTML = html;
+    };
+
+    window.toggleFollow = function() {
+        if(!window.checkAuthAction('activer le radar')) return;
+        const btn = document.getElementById('followBtn');
+        const txt = document.getElementById('followBtnTxt');
+        
+        if(btn.classList.contains('followed')) {
+            btn.classList.remove('followed', 'bg-brand/20', 'border-brand/50', 'text-brand');
+            btn.classList.add('bg-white/5', 'border-white/10', 'text-white');
+            btn.innerHTML = '<i class="fa-regular fa-bell group-hover:scale-110 transition-transform"></i> <span id="followBtnTxt">Activer les Alertes Radar</span>';
+            window.toast_('Alertes Radar désactivées', 'info');
+        } else {
+            btn.classList.add('followed', 'bg-brand/20', 'border-brand/50', 'text-brand');
+            btn.classList.remove('bg-white/5', 'border-white/10', 'text-white');
+            btn.innerHTML = '<i class="fa-solid fa-bell-ring animate-pulse"></i> <span id="followBtnTxt">Radar Activé</span>';
+            window.toast_('Radar activé ! Vous recevrez les alertes.', 'ok');
+        }
+    };
+
 
     // --- FETCH DATA & APIS ---
     window.fetchAppleMusicSong = async function(query) {
@@ -1302,6 +1627,10 @@
     storyModalEl.addEventListener('touchmove', (e) => { storyTouchCurrentY = e.touches[0].clientY; const deltaY = storyTouchCurrentY - storyTouchStartY; if (deltaY > 0) storyModalEl.style.transform = 'translateY(' + deltaY + 'px)'; }, {passive: true});
     storyModalEl.addEventListener('touchend', (e) => { const deltaY = storyTouchCurrentY - storyTouchStartY; storyModalEl.style.transform = ''; if (deltaY > 120) window.closeStory(); });
 
+    // Initialiser les swipes sur les Modals
+    setupSwipeToClose('notifModalContent', window.closeNotifications);
+    setupSwipeToClose('movieDetailsContent', window.closeMovieDetails);
+
     // --- INITIALISATION DONNÉES ---
     window.loadDynamicActus = async function() {
         const storyContainer = document.getElementById('storyBarContainer');
@@ -1362,14 +1691,16 @@
         window.updateBubbleVisuals();
 
         try {
-            const [trendRes, popRes, yearRes] = await Promise.all([
+            const [trendRes, popRes, yearRes, upcomingRes] = await Promise.all([
                 fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}&language=fr-FR`),
                 fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&language=fr-FR&sort_by=popularity.desc`),
-                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&language=fr-FR&primary_release_year=2024&sort_by=vote_average.desc&vote_count.gte=500`)
+                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&language=fr-FR&primary_release_year=2024&sort_by=vote_average.desc&vote_count.gte=500`),
+                fetch(`https://api.themoviedb.org/3/movie/upcoming?api_key=${TMDB_KEY}&language=fr-FR&page=1`)
             ]);
             const trendData = await trendRes.json();
             const popData = await popRes.json();
             const yearData = await yearRes.json();
+            const upcomingData = await upcomingRes.json();
 
             const randomMovie = trendData.results[seed24h % trendData.results.length];
             window._storySequences.filmJour = [{
@@ -1381,7 +1712,7 @@
             let topFilmsStories = [];
             yearData.results.slice(0, 10).forEach((m, i) => topFilmsStories.push({
                 headerTitle: "Top Films", title: m.title, contentText: m.overview, contentImg: `https://image.tmdb.org/t/p/w780${m.poster_path}`,
-                icon: 'fa-clapperboard', color: 'from-red-500 to-rose-700', time: `Note: ${m.vote_average}/10`, tag: `Top Année #${i+1}`, musicQuery: `${m.title} theme`
+                icon: 'fa-clapperboard', color: 'from-red-500 to-rose-700', time: `Note: ${m.vote_average.toFixed(1)}/10`, tag: `Top Année #${i+1}`, musicQuery: `${m.title} theme`
             }));
             trendData.results.slice(0, 5).forEach((m, i) => topFilmsStories.push({
                 headerTitle: "Top Films", title: m.title, contentText: m.overview, contentImg: `https://image.tmdb.org/t/p/w780${m.poster_path}`,
@@ -1389,8 +1720,8 @@
             }));
             window._storySequences.topFilms = topFilmsStories;
 
-            // MOMENTS DATA
-            window._momentsData = popData.results.slice(0, 20).map(m => ({
+            // MOMENTS DATA (Trailers)
+            window._momentsData = popData.results.slice(0, 15).map(m => ({
                 id: m.id, title: m.title, desc: m.overview || 'Description indisponible', img: `https://image.tmdb.org/t/p/w780${m.poster_path}`,
                 likes: m.vote_count, rating: (m.vote_average || 0).toFixed(1), trailerId: null, musicQuery: `${m.title} soundtrack tiktok`
             }));
@@ -1403,6 +1734,16 @@
                 } catch(e){}
             });
             window.renderMoments();
+
+            // SHOWS DATA (Images pleins écrans)
+            window._showsData = yearData.results.slice(0, 20).map(m => ({
+                id: m.id, title: m.title, desc: m.overview || '', img: `https://image.tmdb.org/t/p/w1280${m.poster_path}`,
+                rating: (m.vote_average || 0).toFixed(1)
+            }));
+            window.renderShows();
+
+            // NOUVEAUTÉS DATA (Radar)
+            window.renderNouveautes(upcomingData.results.slice(0, 20));
 
         } catch(e) { console.warn('TMDB Fetch error', e); }
 
@@ -1461,6 +1802,7 @@
         window.switchTab('tab-actus');
         window.checkLocalKey();
         window.loadDynamicActus();
+        window.initFirebaseNotifications();
     });
   </script>
 </body>
