@@ -30,7 +30,20 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-3xl bg-[#1a1c23] rounded-2xl shadow-2xl overflow-hidden border border-gray-800">
+    <!-- FENÊTRE MODALE PERSONNALISÉE (Remplace les alert() bloqués) -->
+    <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/80 backdrop-blur-sm transition-opacity">
+        <div id="customModalContent" class="bg-[#1a1c23] border border-gray-700 p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4 transform scale-95 opacity-0 transition-all duration-200">
+            <div class="mb-5 text-center">
+                <i id="modalIcon" class="fa-solid fa-circle-info text-4xl mb-4"></i>
+                <p id="customModalMessage" class="text-gray-200 text-sm font-medium leading-relaxed"></p>
+            </div>
+            <div class="flex gap-3 justify-center w-full" id="customModalButtons">
+                <!-- Les boutons sont injectés en JS -->
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-3xl bg-[#1a1c23] rounded-2xl shadow-2xl overflow-hidden border border-gray-800 relative z-10">
         <!-- En-tête -->
         <div class="bg-red-600 px-6 py-4 flex items-center gap-3">
             <i class="fa-solid fa-bullhorn text-2xl"></i>
@@ -81,7 +94,6 @@
                     <!-- Champ pour entrer les mails manuellement (Caché par défaut) -->
                     <div id="specificEmailsContainer" class="hidden mt-4">
                         <label for="specificEmails" class="block text-xs font-medium text-gray-400 mb-1">Adresses emails (séparées par des virgules)</label>
-                        <!-- Plus de 'required' ici, on le gère en JS -->
                         <input type="text" id="specificEmails" 
                                class="w-full bg-[#1a1c23] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500 transition-colors text-sm font-mono"
                                placeholder="ex: tonmail@gmail.com, test@yahoo.fr">
@@ -91,7 +103,6 @@
                 <!-- Sujet -->
                 <div>
                     <label for="broadcastSubject" class="block text-sm font-medium text-gray-300 mb-2">Sujet de l'email</label>
-                    <!-- Plus de 'required' ici -->
                     <input type="text" id="broadcastSubject" 
                            class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
                            value="🚀 Mise à jour majeure : Nouvelles apps, correctifs et expérience mobile !">
@@ -99,7 +110,7 @@
 
                 <div>
                     <div class="flex justify-between items-end mb-2">
-                        <label class="block text-sm font-medium text-gray-300">Message</label>
+                        <label class="block text-sm font-medium text-gray-300">Message <span class="ml-2 text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Utilisez {nom} pour personnaliser</span></label>
                         <!-- Boutons d'onglets -->
                         <div class="flex bg-[#0f1014] p-1 rounded-lg border border-gray-700">
                             <button type="button" id="tabPreview" class="px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors">Aperçu visuel</button>
@@ -107,10 +118,9 @@
                         </div>
                     </div>
 
-                    <!-- Éditeur Code (Caché par défaut) -->
+                    <!-- Éditeur Code (Caché par défaut) - ÉLARGI ! -->
                     <div id="editorContainer" class="hidden">
-                        <!-- Plus de 'required' ici pour éviter le bug du navigateur -->
-                        <textarea id="broadcastMessage" rows="18" 
+                        <textarea id="broadcastMessage" rows="18" style="min-height: 400px;"
                                   class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors font-mono text-sm"><div style="background-color: #f4f4f5; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
     
@@ -122,7 +132,7 @@
     <!-- Corps du message -->
     <div style="padding: 40px 30px;">
       <h1 style="margin: 0 0 20px; font-size: 24px; color: #111111; text-align: center; letter-spacing: -0.5px;">Une nouvelle ère pour LevelUp 🚀</h1>
-      <p style="margin: 0 0 24px; font-size: 16px; color: #555555; line-height: 1.6;">Bonjour,</p>
+      <p style="margin: 0 0 24px; font-size: 16px; color: #555555; line-height: 1.6;">Bonjour {nom},</p>
       <p style="margin: 0 0 30px; font-size: 16px; color: #555555; line-height: 1.6;">Suite à vos nombreux retours, nous avons entièrement repensé l'expérience LevelUp. Plus rapide, plus fluide, et surtout... plus riche en contenu.</p>
       
       <!-- Section Nouvelles Apps -->
@@ -187,6 +197,68 @@
     </div>
 
     <script>
+        // --- SYSTÈME DE MODALE PERSONNALISÉE ---
+        function showModal(message, type = 'alert') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('customModal');
+                const modalContent = document.getElementById('customModalContent');
+                const messageEl = document.getElementById('customModalMessage');
+                const buttonsEl = document.getElementById('customModalButtons');
+                const iconEl = document.getElementById('modalIcon');
+
+                messageEl.innerHTML = message;
+                buttonsEl.innerHTML = '';
+
+                if (type === 'confirm') {
+                    iconEl.className = "fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-3";
+                    buttonsEl.innerHTML = `
+                        <button id="modalBtnCancel" class="w-full px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-white font-medium transition">Annuler</button>
+                        <button id="modalBtnConfirm" class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm text-white font-medium transition">Confirmer</button>
+                    `;
+                    document.getElementById('modalBtnCancel').onclick = () => { closeModal(); resolve(false); };
+                    document.getElementById('modalBtnConfirm').onclick = () => { closeModal(); resolve(true); };
+                } else {
+                    iconEl.className = "fa-solid fa-circle-info text-4xl text-blue-500 mb-3";
+                    if (message.includes("Erreur") || message.includes("DANGER") || message.includes("⚠️") || message.includes("Échec")) {
+                        iconEl.className = "fa-solid fa-circle-xmark text-4xl text-red-500 mb-3";
+                    }
+                    buttonsEl.innerHTML = `
+                        <button id="modalBtnOk" class="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm text-white font-bold transition">OK</button>
+                    `;
+                    document.getElementById('modalBtnOk').onclick = () => { closeModal(); resolve(true); };
+                }
+
+                modal.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                });
+
+                function closeModal() {
+                    modalContent.classList.remove('scale-100', 'opacity-100');
+                    modalContent.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => { modal.classList.add('hidden'); }, 200);
+                }
+            });
+        }
+
+        // --- CORRECTION URL CANVAS ---
+        const getApiUrl = (path) => {
+            try {
+                const hostname = window.location.hostname || '';
+                const isProductionOrLocal = hostname.includes('levelup-ecosystem.com') || hostname.includes('localhost') || hostname.includes('127.0.0.1');
+                
+                if (!isProductionOrLocal || window.location.protocol === 'blob:' || window.location.origin === 'null') {
+                    return 'https://levelup-ecosystem.com' + path;
+                }
+                return path;
+            } catch (error) {
+                return 'https://levelup-ecosystem.com' + path;
+            }
+        };
+
+        window.loadedFirebaseUsers = [];
+
         // --- LOGIQUE DES ONGLETS ET DE L'APERÇU ---
         const tabPreview = document.getElementById('tabPreview');
         const tabCode = document.getElementById('tabCode');
@@ -196,7 +268,10 @@
 
         function updatePreview() {
             if(previewContainer && broadcastMessage) {
-                previewContainer.innerHTML = broadcastMessage.value;
+                // Remplacement visuel pour l'aperçu !
+                let html = broadcastMessage.value;
+                html = html.replace(/\{nom\}/gi, 'Utilisateur');
+                previewContainer.innerHTML = html;
             }
         }
         updatePreview();
@@ -241,10 +316,12 @@
             btn.classList.add('opacity-50', 'cursor-not-allowed');
             
             try {
-                const response = await fetch('/api/get-users');
+                const response = await fetch(getApiUrl('/api/get-users'));
                 const data = await response.json();
                 
                 if (!response.ok) throw new Error(data.error || "Erreur de chargement Firebase");
+
+                window.loadedFirebaseUsers = data.users;
 
                 container.classList.remove('hidden');
                 countDisplay.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${data.count} utilisateurs réels trouvés`;
@@ -259,7 +336,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("Erreur réseau: " + error.message + ". Assure-toi de tester ça en local (vercel dev) ou sur ton site en ligne !");
+                await showModal("Erreur réseau: " + error.message + ". As-tu bien déployé le fichier api/get-users.js ?", 'alert');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Rafraîchir la BDD';
@@ -267,84 +344,98 @@
             }
         });
 
-        // --- ENVOI RÉEL VIA RESEND ---
+        // --- ENVOI RÉEL VIA TON API SEND ---
         document.getElementById('broadcastForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const subject = document.getElementById('broadcastSubject').value.trim();
-            const htmlMessage = document.getElementById('broadcastMessage').value.trim();
+            const rawMessage = document.getElementById('broadcastMessage').value.trim();
             const btn = document.getElementById('submitBtn');
             const alertBox = document.getElementById('statusAlert');
             
-            // --- VALIDATION MANUELLE EN JS ---
+            // --- VALIDATION AVEC MODALES ---
             if (!subject) {
-                alert("Veuillez entrer un sujet d'email.");
+                await showModal("Veuillez entrer un sujet d'email.", 'alert');
                 return;
             }
-            if (!htmlMessage) {
-                alert("Veuillez entrer un message.");
+            if (!rawMessage) {
+                await showModal("Veuillez entrer un message.", 'alert');
                 return;
             }
 
             const targetType = document.querySelector('input[name="targetAudience"]:checked').value;
-            let targetEmails = [];
+            let targetUsers = [];
 
             if (targetType === 'specific') {
                 const rawEmails = document.getElementById('specificEmails').value;
-                targetEmails = rawEmails.split(',').map(e => e.trim()).filter(e => e);
+                targetUsers = rawEmails.split(',').map(e => ({ email: e.trim(), name: "Administrateur" })).filter(u => u.email);
                 
-                if (targetEmails.length === 0) {
-                    alert("Veuillez entrer au moins une adresse email valide pour le test.");
+                if (targetUsers.length === 0) {
+                    await showModal("Veuillez entrer au moins une adresse email valide pour le test.", 'alert');
                     return;
                 }
-                if (!confirm(`🚀 Envoi de TEST : Confirmez-vous l'envoi à ces adresses : ${targetEmails.join(', ')} ?`)) {
-                    return;
-                }
+                
+                const isConfirmed = await showModal(`🚀 Envoi de TEST : Confirmez-vous l'envoi à ces adresses : <br><br><span class="text-yellow-500 font-bold">${targetUsers.map(u => u.email).join(', ')}</span> ?`, 'confirm');
+                if (!isConfirmed) return;
+
             } else {
-                if (!confirm("🚨 DANGER : Ceci va envoyer un VRAI mail à TOUTE ta base de données complète via Resend. Es-tu absolument sûr ?")) {
+                if (!window.loadedFirebaseUsers || window.loadedFirebaseUsers.length === 0) {
+                    await showModal("⚠️ Veuillez d'abord cliquer sur <b>'Récupérer les vrais utilisateurs'</b> avant de lancer un envoi global.", 'alert');
                     return;
                 }
+                targetUsers = window.loadedFirebaseUsers;
+
+                const isConfirmed = await showModal(`🚨 <b>DANGER</b> : Ceci va envoyer un VRAI mail à <b>${targetUsers.length} utilisateurs</b>.<br><br>Leur vrai nom sera intégré dans l'email. Es-tu absolument sûr de vouloir lancer cette action ?`, 'confirm');
+                if (!isConfirmed) return;
             }
 
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Envoi en cours...</span>';
-            alertBox.className = 'mt-6 hidden p-4 rounded-lg font-medium text-center border';
+            alertBox.classList.remove('hidden');
+            alertBox.className = 'mt-6 p-4 rounded-lg font-medium text-center border block bg-gray-900 text-gray-300 border-gray-700';
 
-            try {
-                // APPEL API VERS LE BACKEND VERCEL
-                const response = await fetch('/api/broadcast', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        subject, 
-                        htmlMessage,
-                        targetEmails
-                    })
-                });
+            let successCount = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < targetUsers.length; i++) {
+                const user = targetUsers[i];
+                const displayName = user.name || "Utilisateur";
+                // MAGIE : ON REMPLACE LE NOM EN DIRECT
+                const personalizedMessage = rawMessage.replace(/\{nom\}/gi, displayName);
                 
-                // Vérifier si la réponse n'est pas du JSON (ex: erreur 404 ou 500 Vercel)
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("L'API n'a pas retourné un format valide. L'API est-elle bien en ligne sur Vercel ?");
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Envoi en cours (${i + 1}/${targetUsers.length})...</span>`;
+                alertBox.innerHTML = `<i class="fa-solid fa-paper-plane mr-2"></i> Envoi vers <strong>${user.email}</strong>... <br><span class="text-xs text-gray-500">Succès: ${successCount} | Échecs: ${failCount}</span>`;
+
+                try {
+                    const response = await fetch(getApiUrl('/api/send'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            email: user.email,
+                            name: displayName,
+                            type: 'CUSTOM_HTML', 
+                            subject: subject,
+                            html: personalizedMessage
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch (error) {
+                    console.error("Erreur pour l'email:", user.email, error);
+                    failCount++;
                 }
 
-                const data = await response.json();
-                
-                if (!response.ok) throw new Error(data.error || "Erreur lors de l'envoi Resend");
-
-                alertBox.classList.remove('hidden');
-                alertBox.classList.add('bg-green-900/50', 'text-green-300', 'border-green-700');
-                alertBox.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i> ${data.message}`;
-
-            } catch (error) {
-                console.error(error);
-                alertBox.classList.remove('hidden');
-                alertBox.classList.add('bg-red-900/50', 'text-red-300', 'border-red-700');
-                alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> Échec de l'envoi : ${error.message}`;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Déclencher l'envoi réel</span>`;
+                await new Promise(resolve => setTimeout(resolve, 250)); // Petite pause pour épargner le serveur
             }
+
+            alertBox.className = 'mt-6 p-4 rounded-lg font-medium text-center border block bg-green-900/50 text-green-300 border-green-700';
+            alertBox.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i> <strong>Envoi terminé !</strong><br> ${successCount} envoyés, ${failCount} échecs.`;
+            
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Déclencher l'envoi réel</span>`;
         });
     </script>
 </body>
