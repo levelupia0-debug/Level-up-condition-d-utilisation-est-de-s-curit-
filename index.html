@@ -3325,7 +3325,9 @@ storageBucket: "levelup-ia.firebasestorage.app",
 messagingSenderId: "229420004282",
 appId: "1:229420004282:web:6735f059a947f0936ae383"
 };
-const fbApp = initializeApp(cfg);
+// 'lvl-eco' isole l'auth de l'app principale des sub-apps (Movie, Music, etc.)
+// qui utilisent initializeApp(cfg) sans nom → app [DEFAULT] → IndexedDB différent
+const fbApp = initializeApp(cfg, 'lvl-eco');
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 const gProv = new GoogleAuthProvider();
@@ -9321,8 +9323,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window._obFinalSignOut = async function() {
         try {
-            const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js');
-            await signOut(getAuth());
+            const { signOut } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js');
+            await signOut(window._auth);
         } catch(_) {}
         document.getElementById('onboardingPopup')?.classList.remove('open');
     };
