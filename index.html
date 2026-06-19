@@ -3348,6 +3348,49 @@ try { setPersistence(auth, browserLocalPersistence).catch(() => {}); } catch(_) 
 // Récupère le résultat d'un signInWithRedirect au retour sur la page (iPhone PWA)
 getRedirectResult(auth).catch(() => {});
 
+// ══════════════════════════════════════════════════════════
+// FIX SESSION — Retour depuis un sous-app Firebase externe
+// ══════════════════════════════════════════════════════════
+// Problème : les sous-apps (Movie, Music, etc.) partagent le même IndexedDB Firebase
+// (même domaine). Si elles appellent signInAnonymously(), ça modifie l'état auth partagé.
+// Ce listener détecte le retour sur l'onglet principal et restaure la vraie session.
+document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible') return;
+    if (window._user) return; // Déjà connecté côté app — rien à faire
+
+    // Attendre que Firebase se stabilise après changement d'onglet (IndexedDB sync)
+    await new Promise(r => setTimeout(r, 1200));
+
+    const current = auth.currentUser;
+    if (current && !current.isAnonymous) {
+        // Firebase a la vraie session — restaurer immédiatement
+        if (window._user) return; // vérification double (async)
+        window._user = current;
+        if (window._ud && typeof showDash === 'function') {
+            showDash(current);
+        } else if (typeof window.loadAppStatus === 'function') {
+            // _ud pas encore chargé → relancer le flow d'auth complet via onAuthStateChanged
+            // en forçant un refresh du token pour déclencher onAuthStateChanged
+            try { await current.getIdToken(true); } catch(_) {}
+        }
+        return;
+    }
+
+    // Firebase toujours null/anonyme — vérifier si session récente en localStorage
+    try {
+        const saved = JSON.parse(localStorage.getItem('lvl_session') || 'null');
+        if (saved && saved.uid && (Date.now() - saved.ts) < 7 * 24 * 60 * 60 * 1000) {
+            // Session valide → attendre encore 3s (Firebase peut être lent à restaurer)
+            await new Promise(r => setTimeout(r, 3000));
+            const retried = auth.currentUser;
+            if (retried && !retried.isAnonymous && !window._user) {
+                window._user = retried;
+                if (window._ud && typeof showDash === 'function') showDash(retried);
+            }
+        }
+    } catch(_) {}
+});
+
 // ══════════════════════════════════════════════════════════════
 //  GOOGLE IDENTITY SERVICES — One Tap + bouton officiel
 // ══════════════════════════════════════════════════════════════
@@ -4767,20 +4810,24 @@ await window.loadAppStatus();
 showLand();
 }
 } else {
-// Vérifier si une session Google récente existait (fix persistence multi-plateforme)
+// onAuthStateChanged(null) — peut être temporaire si un sous-app Firebase sur le même domaine
+// a modifié l'état auth partagé (IndexedDB). On ne touche JAMAIS à signInAnonymously ici
+// si une session réelle existe — ça écraserait la vraie session Google.
 try {
     const saved = JSON.parse(localStorage.getItem('lvl_session') || 'null');
     if (saved && saved.uid && (Date.now() - saved.ts) < 7 * 24 * 60 * 60 * 1000) {
-        // Session récente — attendre plus longtemps que Firebase restaure (évite l'anonyme forcé)
-        await new Promise(r => setTimeout(r, 5000));
+        // Session récente détectée — attendre 6s que Firebase restaure depuis IndexedDB
+        await new Promise(r => setTimeout(r, 6000));
         if (auth.currentUser && !auth.currentUser.isAnonymous) return; // Firebase a restauré ✅
-        // Firebase n'a pas restauré mais session récente → NE PAS écraser avec anonyme
-        localStorage.removeItem('lvl_session');
+        // Firebase n'a toujours pas restauré → afficher la landing MAIS garder lvl_session
+        // Le listener visibilitychange tentera une restauration au prochain retour sur l'onglet
+        await window.loadAppStatus();
+        showLand();
         return;
     }
     localStorage.removeItem('lvl_session');
 } catch(_) {}
-// Aucune session connue : mode invité anonyme
+// Aucune session connue → mode invité, init Firebase anonyme pour les lectures Firestore
 signInAnonymously(auth).catch(e => console.error("Init anonyme impossible:", e));
 }
 });
