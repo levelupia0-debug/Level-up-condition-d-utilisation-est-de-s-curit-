@@ -6596,7 +6596,10 @@ const panel = document.getElementById('panel-'+id);
 if(panel) panel.classList.add('on');
 const nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
 const mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
-window.scrollTo({top:0,behavior:'smooth'});
+// Remonter en haut du panneau (scroll window ET container interne)
+window.scrollTo({top:0,behavior:'instant'});
+const dbMain = document.querySelector('.db-main');
+if(dbMain){ dbMain.scrollTop = 0; dbMain.scrollLeft = 0; }
 
 // ── EFFACER BADGE OUTILS À L'OUVERTURE ──
 if (id === 'tools') {
@@ -10306,6 +10309,9 @@ PERMISSIONS ONBOARDING FLOW (3 étapes)
 
   window._checkPermissions = async function(u) {
     if (!u) return;
+    // Uniquement en PWA (mode standalone) — pas sur navigateur mobile classique
+    var _isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (!_isPWA) return;
     _permsUser = u;
     if (localStorage.getItem('lvl_perms_v2')) return;
     // Attendre que l'onboarding pseudo/age soit fermé s'il est ouvert
@@ -10323,10 +10329,6 @@ PERMISSIONS ONBOARDING FLOW (3 étapes)
     setTimeout(window._showPermsModal, 800);
   };
 
-  // Auto-ouvrir dès le chargement de l'app si les permissions n'ont pas encore été faites
-  if (!localStorage.getItem('lvl_perms_v2')) {
-    setTimeout(window._showPermsModal, 1400);
-  }
 })();
 </script>
 
