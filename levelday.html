@@ -68,7 +68,6 @@
         // ==========================================
         const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
         const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-        const MAX_REQUESTS = 5; 
 
         const AQI_MAP = {
             1:{l:"Excellent",c:"#34d399",bg:"rgba(52,211,153,0.12)"},
@@ -287,7 +286,7 @@
         `;
 
         // ── RATE LIMIT LOGIC ──────────────────────────────────────────────────────────
-        const checkRateLimit = () => {
+        const checkRateLimit = (isPremium) => {
             const stored = localStorage.getItem('levelday_usage');
             let usage = stored ? JSON.parse(stored) : null;
             const now = Date.now();
@@ -298,9 +297,20 @@
                 usage = { count: 0, resetAt: resetDate.getTime() };
             }
 
-            if (usage.count >= MAX_REQUESTS) {
+            // Limite intelligente : 50 pour les Premium, 5 pour les essais/invités
+            const limit = isPremium ? 50 : 5;
+
+            if (usage.count >= limit) {
                 const resetTime = new Date(usage.resetAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                return { allowed: false, message: `Daily limit reached. We value our quality of service. Please come back tomorrow at ${resetTime} to refresh your daily quota.`, usage };
+                
+                let message = "";
+                if (isPremium) {
+                    message = `Premium Fair Use: You have reached the optimal daily refresh limit (${limit} requests). To guarantee peak performance across the Level Up Ecosystem, your radar will reactivate tomorrow at ${resetTime}.`;
+                } else {
+                    message = `Daily limit reached. We value our quality of service. Please log in with a Premium Key or come back tomorrow at ${resetTime}.`;
+                }
+                
+                return { allowed: false, message, usage };
             }
 
             return { allowed: true, usage };
@@ -333,15 +343,11 @@
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [accessKey, setAccessKey] = useState("");
             const [userName, setUserName] = useState("Utilisateur");
+            const [isAdmin, setIsAdmin] = useState(false);
             const [showProfile, setShowProfile] = useState(false);
             const [isLoggingIn, setIsLoggingIn] = useState(false);
             const [authError, setAuthError] = useState("");
             const [isTrial, setIsTrial] = useState(false);
-
-            // Vérification Admin pour le bouton Test
-            const isAdmin = userName.toLowerCase().includes('admin') || 
-                            auth.currentUser?.email === 'levelup.ia0@gmail.com' || 
-                            auth.currentUser?.email === 'richelieubonte@gmail.com';
 
             // ── SYSTÈME DE NOTIFICATIONS PUSH (POUR L'ÉCOSYSTÈME) ──
             const sendPushNotification = useCallback(async (title, body, typeId) => {
@@ -434,19 +440,27 @@
                     
                     if (ssoKey) {
                         const ssoName = urlParams.get('lvl_name') || "Utilisateur";
+                        const ssoAdmin = ssoName.toLowerCase().includes('admin');
+                        
                         localStorage.setItem('levelday_access_key', ssoKey);
                         localStorage.setItem('levelday_user_name', ssoName);
+                        localStorage.setItem('levelday_is_admin', ssoAdmin ? "true" : "false");
                         window.history.replaceState({}, document.title, window.location.pathname);
+                        
                         setAccessKey(ssoKey);
                         setUserName(ssoName);
+                        setIsAdmin(ssoAdmin);
                         setIsAuthenticated(true);
                     } else {
                         // Récupération de la session existante
                         const savedKey = localStorage.getItem('levelday_access_key');
                         const savedName = localStorage.getItem('levelday_user_name');
+                        const savedAdmin = localStorage.getItem('levelday_is_admin') === "true";
+                        
                         if (savedKey) {
                             setAccessKey(savedKey);
                             setUserName(savedName || "Utilisateur");
+                            setIsAdmin(savedAdmin || (savedName && savedName.toLowerCase().includes('admin')));
                             setIsAuthenticated(true);
                             if (savedKey === "TRIAL-MODE") setIsTrial(true);
                         }
@@ -468,10 +482,12 @@
                 
                 if (cleanKey === "LVL-00000-00000") {
                     setTimeout(() => {
-                        const name = "Testeur Beta";
+                        const name = "Admin Beta";
                         localStorage.setItem('levelday_access_key', cleanKey);
                         localStorage.setItem('levelday_user_name', name);
+                        localStorage.setItem('levelday_is_admin', "true");
                         setUserName(name);
+                        setIsAdmin(true);
                         setIsAuthenticated(true);
                         setIsLoggingIn(false);
                     }, 1000);
@@ -490,9 +506,15 @@
                     
                     if (result.valid) {
                         const name = result.name || "Utilisateur";
+                        // On récupère le statut admin depuis TON backend (result.isAdmin ou result.role)
+                        const adminFlag = result.isAdmin === true || result.role === 'admin' || name.toLowerCase().includes('admin');
+                        
                         localStorage.setItem('levelday_access_key', cleanKey);
                         localStorage.setItem('levelday_user_name', name);
+                        localStorage.setItem('levelday_is_admin', adminFlag ? "true" : "false");
+                        
                         setUserName(name);
+                        setIsAdmin(adminFlag);
                         setIsAuthenticated(true);
                     } else {
                         setAuthError(result.error || "Clé d'accès refusée par le serveur.");
@@ -511,8 +533,10 @@
                 setTimeout(() => {
                     localStorage.setItem('levelday_access_key', "TRIAL-MODE");
                     localStorage.setItem('levelday_user_name', "Invité");
+                    localStorage.setItem('levelday_is_admin', "false");
                     setAccessKey("TRIAL-MODE");
                     setUserName("Invité");
+                    setIsAdmin(false);
                     setIsTrial(true);
                     setIsAuthenticated(true);
                     setIsLoggingIn(false);
@@ -522,10 +546,12 @@
             const handleLogout = () => {
                 localStorage.removeItem('levelday_access_key');
                 localStorage.removeItem('levelday_user_name');
+                localStorage.removeItem('levelday_is_admin');
                 setIsAuthenticated(false);
                 setAccessKey("");
                 setShowProfile(false);
                 setIsTrial(false);
+                setIsAdmin(false);
             };
 
             // FONCTIONS METEO
@@ -534,7 +560,9 @@
             const TS = unit==="C" ? "°" : "°F";
 
             const load = useCallback(async (city, isSearch = false) => {
-                const rateStatus = checkRateLimit();
+                const premiumActive = isAuthenticated && !isTrial;
+                const rateStatus = checkRateLimit(premiumActive);
+                
                 if (!rateStatus.allowed) {
                     setRateLimitErr(rateStatus.message);
                     setLoading(false);
