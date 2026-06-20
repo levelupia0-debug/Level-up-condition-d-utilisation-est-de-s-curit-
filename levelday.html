@@ -286,7 +286,7 @@
         `;
 
         // ── RATE LIMIT LOGIC ──────────────────────────────────────────────────────────
-        const checkRateLimit = (isPremium) => {
+        const checkRateLimit = () => {
             const stored = localStorage.getItem('levelday_usage');
             let usage = stored ? JSON.parse(stored) : null;
             const now = Date.now();
@@ -296,6 +296,10 @@
             if (!usage || now > usage.resetAt) {
                 usage = { count: 0, resetAt: resetDate.getTime() };
             }
+
+            // Vérification directe dans le stockage local pour éviter les décalages d'état React
+            const savedKey = localStorage.getItem('levelday_access_key');
+            const isPremium = savedKey && savedKey !== 'TRIAL-MODE';
 
             // Limite intelligente : 50 pour les Premium, 5 pour les essais/invités
             const limit = isPremium ? 50 : 5;
@@ -560,8 +564,7 @@
             const TS = unit==="C" ? "°" : "°F";
 
             const load = useCallback(async (city, isSearch = false) => {
-                const premiumActive = isAuthenticated && !isTrial;
-                const rateStatus = checkRateLimit(premiumActive);
+                const rateStatus = checkRateLimit();
                 
                 if (!rateStatus.allowed) {
                     setRateLimitErr(rateStatus.message);
