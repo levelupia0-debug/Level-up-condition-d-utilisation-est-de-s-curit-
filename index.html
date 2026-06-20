@@ -6615,13 +6615,11 @@ function closeTerms(){
 }
 // PANELS
 function pnl(id){
-// 1. Reset scroll EN PREMIER (avant de changer l'affichage)
-window.scrollTo(0,0);
-document.documentElement.scrollTop = 0;
-document.body.scrollTop = 0;
-var _dbmPre = document.querySelector('.db-main');
-if(_dbmPre){ _dbmPre.scrollTop = 0; }
-// 2. Changer le panel
+var _dbm = document.querySelector('.db-main');
+// ── DEBUG ──
+console.log('[LVL pnl] → "'+id+'" | window.scrollY='+window.scrollY+' | dbMain.scrollTop='+(_dbm?_dbm.scrollTop:'N/A')+' | dbMain.scrollHeight='+(_dbm?_dbm.scrollHeight:'N/A')+' | dbMain.clientHeight='+(_dbm?_dbm.clientHeight:'N/A'));
+
+// 1. Changer le panel
 document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
 document.querySelectorAll('.sbi').forEach(n=>n.classList.remove('on'));
 document.querySelectorAll('.mn-item').forEach(n=>n.classList.remove('on'));
@@ -6629,18 +6627,18 @@ const panel = document.getElementById('panel-'+id);
 if(panel) panel.classList.add('on');
 const nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
 const mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
-// 3. Double reset après repaint (iOS PWA)
-requestAnimationFrame(function(){
-  window.scrollTo(0,0);
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-  var _dbm = document.querySelector('.db-main');
-  if(_dbm){ _dbm.scrollTop = 0; }
-  requestAnimationFrame(function(){
-    window.scrollTo(0,0);
-    document.documentElement.scrollTop = 0;
-  });
-});
+
+// 2. Scroll reset SIMPLE (après switch, comme le fichier de référence)
+if(_dbm) _dbm.scrollTop = 0;
+window.scrollTo({top:0, behavior:'instant'});
+document.documentElement.scrollTop = 0;
+document.body.scrollTop = 0;
+
+// ── DEBUG après reset ──
+setTimeout(function(){
+  var _d = document.querySelector('.db-main');
+  console.log('[LVL pnl] AFTER "'+id+'" | window.scrollY='+window.scrollY+' | dbMain.scrollTop='+(_d?_d.scrollTop:'N/A')+' | panel.offsetTop='+(panel?panel.offsetTop:'N/A'));
+}, 50);
 
 // ── EFFACER BADGE OUTILS À L'OUVERTURE ──
 if (id === 'tools') {
