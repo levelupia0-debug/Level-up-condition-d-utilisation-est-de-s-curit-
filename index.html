@@ -397,7 +397,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 .foot-bot{border-top:1px solid var(--bdr);padding-top:26px;display:flex;justify-content:space-between;font-size:.79rem;color:var(--dim);flex-wrap:wrap;gap:8px}
 
 /* ═══ DASHBOARD ═══ */
-#dashboard{min-height:100vh;padding-top:65px;display:flex}
+#dashboard{min-height:100vh;padding-top:65px}
 .sidebar{width:250px;min-width:250px;background:var(--surf);border-right:1px solid var(--bdr);height:calc(100vh - 65px);position:sticky;top:65px;overflow-y:auto;display:flex;flex-direction:column;flex-shrink:0}
 .sb-in{padding:18px 12px;flex:1}
 .sb-user{background:transparent;border:none;padding:8px 12px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
@@ -1097,8 +1097,8 @@ nav{padding:12px 5%}
 .mobile-nav{padding-bottom:max(env(safe-area-inset-bottom),12px)}
 }
 /* ── SAFE AREA — notch / barre navigation ── */
-.db-main{padding-bottom:max(140px,calc(110px + env(safe-area-inset-bottom)))!important}
-@media(min-width:821px){.db-main{padding-bottom:28px!important}}
+.db-main{padding-bottom:max(110px,calc(90px + env(safe-area-inset-bottom)))}
+@media(min-width:821px){.db-main{padding-bottom:28px}}
 nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 #dashboard{padding-top:65px!important}
 .sidebar{top:calc(65px + env(safe-area-inset-top,0px))!important;height:calc(100vh - 65px - env(safe-area-inset-top,0px))!important}
@@ -5333,8 +5333,6 @@ window._toggleNotifItem = function(el) {
 // ── Supprimer notification (client-side) ──
 // ── Masquer l'écran de chargement initial ──
 window._hideLoadingScreen = function() {
-    // Fin garantie de l'animation étoile iOS PWA (évite l'écran noir entre l'anim et l'auth)
-    document.body.classList.remove('lvl-iphone-star-anim');
     const s = document.getElementById('appLoadingScreen');
     if (!s || s.dataset.hidden === '1') return;
     s.dataset.hidden = '1';
@@ -9566,10 +9564,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (window.updateFabContext) window.updateFabContext();
 
-    // 3. Fallback 4s pour l'animation étoile iOS (normalement retiré par _hideLoadingScreen à l'auth)
+    // 3. APRÈS 1 SECONDE : fin de l'animation étoile iOS
     setTimeout(function() {
         document.body.classList.remove('lvl-iphone-star-anim');
-    }, 4000);
+    }, 1000);
 })();
 </script>
 <script>
