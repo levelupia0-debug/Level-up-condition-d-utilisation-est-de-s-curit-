@@ -471,9 +471,14 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 .help-card p{font-size:.8rem}
 
 /* ═══ OVERLAYS ═══ */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:900;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+.overlay{position:fixed;inset:0;height:100dvh;background:rgba(0,0,0,.82);z-index:900;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
 .auth-card{background:var(--surf);border:1px solid var(--bdr-hi);border-radius:var(--r24);width:100%;max-width:400px;padding:36px;text-align:center;animation:cIn .32s cubic-bezier(0.34,1.46,0.64,1);position:relative;margin:auto}
 @keyframes cIn{from{opacity:0;transform:scale(.88) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes authSheetUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(max-width:640px){
+  #authOverlay{align-items:flex-end;padding:0}
+  #authOverlay .auth-card{max-width:100%;border-radius:var(--r24) var(--r24) 0 0;padding:28px 22px calc(28px + env(safe-area-inset-bottom,0px));animation:authSheetUp .38s cubic-bezier(.34,1.46,.64,1)}
+}
 .auth-logo{width:56px;height:56px;border-radius:var(--r16);background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.2));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
 .auth-card h2{font-size:1.5rem;margin-bottom:8px}
 .auth-card p{font-size:.86rem;margin-bottom:26px}
@@ -5591,38 +5596,7 @@ function _isDesktopBrowser() {
 // Afficher le bon UI selon la plateforme
 window._pushPopupShown = false;
 function showPushPermPopup() {
-    if (/iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)) return;
-    if (window._pushPopupShown) return;
-    if (_getPushPref() === 'granted' || _getPushPref() === 'denied') return;
-    if (Notification.permission === 'granted') { _setPushPref('granted'); return; }
-    if (Notification.permission === 'denied')  { _setPushPref('denied');  return; }
-    window._pushPopupShown = true;
-
-    if (_isIOS()) {
-        // iPhone/iPad: petite popup propre
-        const m = document.getElementById('pushPermModal');
-        if (m) setTimeout(() => m.classList.add('show'), 400);
-    } else if (_isAndroidOrPWA()) {
-        // Android/PWA: petit banner horizontal en bas
-        const b = document.getElementById('pushNotifBanner');
-        if (b) setTimeout(() => b.classList.add('show'), 600);
-    } else {
-        // Desktop browser: demande native directement après un délai
-        setTimeout(async () => {
-            try {
-                const perm = await Notification.requestPermission();
-                if (perm === 'granted') {
-                    _setPushPref('granted');
-                    await _registerFCMAnonOrUser();
-                    _updatePushToggleUI();
-                    _sendWelcomeNotification();
-                } else {
-                    _setPushPref('denied');
-                    _updatePushToggleUI();
-                }
-            } catch(_) {}
-        }, 1500);
-    }
+    return; // désactivé — géré par le flow permissions 3 étapes (permsModal)
 }
 window.showPushPermPopup = showPushPermPopup;
 
@@ -6839,7 +6813,17 @@ document.getElementById('pinSub').textContent=s;
 document.getElementById('pinOverlay').classList.remove('hidden');
 setTimeout(() => inp.focus(), 100);
 }
-function closePin(){ document.getElementById('pinOverlay').classList.add('hidden'); _pMode=null; }
+function closePin(){ var _pOv=document.getElementById('pinOverlay'); _pOv.classList.add('hidden'); _pOv.style.height=''; _pMode=null; }
+
+// Recentrage de la modale PIN quand le clavier mobile s'ouvre/se ferme
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', function() {
+    var ov = document.getElementById('pinOverlay');
+    if (ov && !ov.classList.contains('hidden')) {
+      ov.style.height = window.visualViewport.height + 'px';
+    }
+  });
+}
 
 window.handlePinNative = async function() {
 const inp = document.getElementById('nativePinInput');
@@ -10170,7 +10154,7 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
 <!-- ═══════════════════════════════════════
 COOKIE CONSENT BANNER (RGPD/GDPR)
 ═══════════════════════════════════════ -->
-<div id="lvlCookieBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2147483647;pointer-events:auto">
+<div id="lvlCookieBanner" style="display:none!important;position:fixed;bottom:0;left:0;right:0;z-index:2147483647;pointer-events:auto">
   <div style="max-width:680px;margin:0 auto;background:#100920;border:1px solid rgba(168,85,247,.3);border-bottom:none;border-radius:18px 18px 0 0;padding:18px 20px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 40px rgba(0,0,0,.85)">
     <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
       <div style="flex:1;min-width:200px">
@@ -10190,73 +10174,10 @@ COOKIE CONSENT BANNER (RGPD/GDPR)
 
 <script>
 (function(){
-  var _COOKIE_KEY = 'lvl_cookie_consent';
-  var _banner = null;
-
-  function _getBanner(){ return _banner || (_banner = document.getElementById('lvlCookieBanner')); }
-
-  // Afficher la bannière
-  function _showCookieBanner() {
-    var _mob = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-    if (_mob) return;
-    var b = _getBanner();
-    if (b) b.style.display = 'block';
-  }
-
-  // Cacher la bannière
-  function _hideCookieBanner() {
-    var b = _getBanner();
-    if (b) { b.style.animation = 'none'; b.style.display = 'none'; }
-  }
-
-  // Sauvegarder le choix (localStorage + Firestore si connecté)
-  async function _saveCookieChoice(val) {
-    localStorage.setItem(_COOKIE_KEY, val);
-    try {
-      if (window._user && !window._user.isAnonymous && window._db) {
-        var { doc: fiDoc, setDoc: fiSet } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-        var ref = fiDoc(window._db,'artifacts','level-ia-premium','users',window._user.uid,'profile','data');
-        await fiSet(ref, { cookie_consent: val, cookie_consent_at: Date.now() }, { merge: true });
-      }
-    } catch(_) {}
-  }
-
-  window._cookieAccept = function() {
-    _hideCookieBanner();
-    _saveCookieChoice('accepted');
-    window._cookieConsentDone = true;
-    toast_('Préférences cookies enregistrées ✓','ok');
-  };
-
-  window._cookieDecline = function() {
-    _hideCookieBanner();
-    _saveCookieChoice('declined');
-    window._cookieConsentDone = true;
-  };
-
-  // Vérifier si le choix a déjà été fait
-  function _checkCookieConsent() {
-    var stored = localStorage.getItem(_COOKIE_KEY);
-    if (stored) { window._cookieConsentDone = true; return; }
-    // Ne pas afficher sur mobile/PWA (le login sheet prend tout l'espace)
-    var _isMobileUA = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone;
-    if (_isMobileUA) return;
-    // Afficher après 5s pour laisser passer le Turnstile et le chargement
-    setTimeout(_showCookieBanner, 5000);
-  }
-
-  // Pour les utilisateurs connectés : cookie obligatoire si pas encore choisi
-  window._enforceCookieForUser = function() {
-    var stored = localStorage.getItem(_COOKIE_KEY);
-    if (!stored) {
-      // Ne pas afficher sur mobile
-      var _isMobileUA = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone;
-      if (_isMobileUA) return;
-      setTimeout(_showCookieBanner, 800);
-    }
-  };
-
-  _checkCookieConsent();
+  // Système cookie banner désactivé — remplacé par le flow permissions 3 étapes (permsModal, étape cookies)
+  window._cookieAccept = function(){};
+  window._cookieDecline = function(){};
+  window._enforceCookieForUser = function(){};
 })();
 </script>
 
@@ -10401,6 +10322,11 @@ PERMISSIONS ONBOARDING FLOW (3 étapes)
     } catch(e) {}
     setTimeout(window._showPermsModal, 800);
   };
+
+  // Auto-ouvrir dès le chargement de l'app si les permissions n'ont pas encore été faites
+  if (!localStorage.getItem('lvl_perms_v2')) {
+    setTimeout(window._showPermsModal, 1400);
+  }
 })();
 </script>
 
