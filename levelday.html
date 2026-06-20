@@ -39,13 +39,13 @@
 </head>
 <body>
     <div id="root"></div>
-
+    <!-- Script de l'Application -->
     <script type="text/babel" data-presets="my-react">
-        // Remplacement des 'import' par l'utilisation de la librairie globale React
+        // Utilisation des variables globales React (Plus besoin des imports qui faisaient planter l'app)
         const { useState, useEffect, useCallback, useRef } = React;
 
         // ==========================================
-        // CONFIGURATION FIREBASE (Sans import)
+        // CONFIGURATION FIREBASE
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
@@ -313,16 +313,6 @@
 
         // ── MAIN APP ──────────────────────────────────────────────────────────────────
         function LevelDay() {
-            // STATE DE COMPTE ET AUTHENTIFICATION
-            const [isAuthenticated, setIsAuthenticated] = useState(false);
-            const [accessKey, setAccessKey] = useState("");
-            const [userName, setUserName] = useState("Utilisateur");
-            const [showProfile, setShowProfile] = useState(false);
-            const [isLoggingIn, setIsLoggingIn] = useState(false);
-            const [authError, setAuthError] = useState("");
-            const [isTrial, setIsTrial] = useState(false);
-
-            // STATE METEO
             const [q, setQ] = useState("");
             const [sugg, setSugg] = useState([]);
             const [showSearch, setShowSearch] = useState(false);
@@ -339,7 +329,101 @@
             const [showTopLocBanner, setShowTopLocBanner] = useState(false);
             const inputRef = useRef(null);
 
-            // VERIFICATION INITIALE DU COMPTE
+            // STATE DE COMPTE ET AUTHENTIFICATION
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [accessKey, setAccessKey] = useState("");
+            const [userName, setUserName] = useState("Utilisateur");
+            const [showProfile, setShowProfile] = useState(false);
+            const [isLoggingIn, setIsLoggingIn] = useState(false);
+            const [authError, setAuthError] = useState("");
+            const [isTrial, setIsTrial] = useState(false);
+
+            // Vérification Admin pour le bouton Test
+            const isAdmin = userName.toLowerCase().includes('admin') || 
+                            auth.currentUser?.email === 'levelup.ia0@gmail.com' || 
+                            auth.currentUser?.email === 'richelieubonte@gmail.com';
+
+            // ── SYSTÈME DE NOTIFICATIONS PUSH (POUR L'ÉCOSYSTÈME) ──
+            const sendPushNotification = useCallback(async (title, body, typeId) => {
+                if (!auth.currentUser) return;
+                try {
+                    const ssoUrl = `https://levelup-ecosystem.com/levelday?lvl_key=${encodeURIComponent(accessKey)}&lvl_name=${encodeURIComponent(userName)}`;
+                    const iconUri = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' width='64' height='64'%3E%3Ccircle cx='42' cy='18' r='12' fill='%23FFC107' /%3E%3Cg fill='%234A8BFF'%3E%3Ccircle cx='19' cy='36' r='10' /%3E%3Ccircle cx='31' cy='30' r='16' /%3E%3Ccircle cx='45' cy='36' r='10' /%3E%3Crect x='19' y='30' width='26' height='16' /%3E%3C/g%3E%3C/svg%3E";
+                    
+                    // Utilisation de Firebase Compat pour envoyer vers Firestore
+                    await db.collection('artifacts').doc('levelup-ecosystem')
+                            .collection('push_inbox').doc(auth.currentUser.uid)
+                            .collection('items').add({
+                        title,
+                        body,
+                        icon: iconUri,
+                        url: ssoUrl,
+                        ts: new Date().toISOString(),
+                        read: false,
+                        fromApp: 'levelday'
+                    });
+                } catch (err) {
+                    console.error("Erreur lors de l'envoi de la notification push à l'écosystème :", err);
+                }
+            }, [accessKey, userName]);
+
+            // Fonction pour le bouton Admin
+            const handleSendTestNotification = async () => {
+                await sendPushNotification("Notification Test 🚀", "Ceci est un test envoyé par l'administrateur depuis LevelDay.", "admin_test");
+                alert("Notification envoyée avec succès à votre boîte de réception Push !");
+            };
+
+            // Analyse automatique des alertes météo
+            useEffect(() => {
+                if (!data || !isAuthenticated || isTrial || !auth.currentUser) return;
+
+                const processWeatherAlerts = async () => {
+                    const today = new Date().toISOString().split('T')[0];
+
+                    const notifyOnce = async (title, body, typeId) => {
+                        const notifKey = `levelday_push_${typeId}_${today}`;
+                        if (!localStorage.getItem(notifKey)) {
+                            await sendPushNotification(title, body, typeId);
+                            localStorage.setItem(notifKey, '1');
+                        }
+                    };
+
+                    // ANALYSE 1 : Alerte météo sévère (Gouvernementale)
+                    const alerts = data.alerts?.alert || [];
+                    if (alerts.length > 0) {
+                        const mainAlert = alerts[0];
+                        await notifyOnce(
+                            "Alerte Météo : " + mainAlert.event,
+                            `Alerte active dans votre zone (${data.location.name}). Cliquez pour voir les détails de sécurité.`,
+                            `alert_${mainAlert.event.replace(/\s+/g, '')}`
+                        );
+                    }
+
+                    // ANALYSE 2 : Pluie prévue le lendemain
+                    const tomorrow = data.forecast?.forecastday?.[1];
+                    if (tomorrow && tomorrow.day.daily_chance_of_rain > 60) {
+                        await notifyOnce(
+                            "Pluie prévue demain 🌧️",
+                            `${tomorrow.day.daily_chance_of_rain}% de chances de précipitations demain à ${data.location.name}. Pensez à votre parapluie !`,
+                            "rain_tomorrow"
+                        );
+                    }
+                    
+                    // ANALYSE 3 : Danger UV Extrême aujourd'hui
+                    const todayUV = data.current?.uv;
+                    if (todayUV >= 8) {
+                        await notifyOnce(
+                            "Danger UV Élevé ☀️",
+                            `L'indice UV est de ${todayUV} aujourd'hui. Protégez-vous si vous sortez !`,
+                            "high_uv"
+                        );
+                    }
+                };
+
+                processWeatherAlerts();
+            }, [data, isAuthenticated, isTrial, sendPushNotification]);
+            // ────────────────────────────────────────────────────────
+
             useEffect(() => {
                 auth.signInAnonymously().catch(e => console.error("Auth Error", e));
                 
@@ -1423,6 +1507,16 @@
                                     </button>
                                 </div>
                             </div>
+
+                            {/* BOUTON TEST ADMINISTRATEUR (Visible uniquement pour les admins) */}
+                            {isAdmin && (
+                                <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:30}}>
+                                    <div style={{fontFamily:"Syne",fontSize:10,fontWeight:800,color:"#f87171",textTransform:"uppercase",letterSpacing:".15em",borderLeft:"2px solid #f87171",paddingLeft:10,marginBottom:4}}>Admin Tools</div>
+                                    <button onClick={handleSendTestNotification} className="hov" style={{fontFamily:"Syne",width:"100%",background:"rgba(239,68,68,0.1)",color:"#f87171",border:"1px solid rgba(239,68,68,0.2)",padding:"16px",borderRadius:16,fontWeight:800,fontSize:12,textTransform:"uppercase",letterSpacing:".1em",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,transition:"all .2s"}}>
+                                        <Ico n="bell" s={16}/> Envoyer Notif. Test
+                                    </button>
+                                </div>
+                            )}
 
                             <button onClick={handleLogout} className="hov" style={{fontFamily:"Syne",width:"100%",background:"rgba(239,68,68,0.1)",color:"#f87171",border:"1px solid rgba(239,68,68,0.2)",padding:"16px",borderRadius:16,fontWeight:800,fontSize:12,textTransform:"uppercase",letterSpacing:".1em",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,transition:"all .2s"}}>
                                 <Ico n="logout" s={16}/> {isTrial ? "Exit Trial" : "Sign Out Device"}
