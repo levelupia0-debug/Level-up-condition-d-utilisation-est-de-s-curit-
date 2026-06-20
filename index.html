@@ -478,6 +478,7 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 @media(max-width:640px){
   #authOverlay{align-items:flex-end;padding:0}
   #authOverlay .auth-card{max-width:100%;border-radius:var(--r24) var(--r24) 0 0;padding:28px 22px calc(28px + env(safe-area-inset-bottom,0px));animation:authSheetUp .38s cubic-bezier(.34,1.46,.64,1)}
+  #pcTurnstile{display:none!important}
 }
 .auth-logo{width:56px;height:56px;border-radius:var(--r16);background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.2));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
 .auth-card h2{font-size:1.5rem;margin-bottom:8px}
@@ -1254,7 +1255,14 @@ window._renderTurnstile = function(containerId) {
       sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
       theme: 'dark',
       size: 'flexible',
-      callback: function(token) { window._turnstileToken = token; },
+      callback: function(token) {
+      window._turnstileToken = token;
+      // Masquer le widget après vérification réussie pour libérer l'espace
+      setTimeout(function() {
+        var c = document.getElementById(id);
+        if (c) { c.style.maxHeight='0'; c.style.overflow='hidden'; c.style.marginTop='0'; c.style.marginBottom='0'; c.style.transition='max-height .3s,margin .3s'; }
+      }, 800);
+    },
       'expired-callback': function() { window._turnstileToken = null; },
       'error-callback': function() { window._turnstileToken = '__bypass__'; }
     });
@@ -5055,6 +5063,9 @@ dashboard.style.display = 'flex';
 if (mobileNav) {
 mobileNav.classList.add('vis');
 }
+// Remettre le scroll à zéro pour éviter le grand vide en haut
+window.scrollTo({top:0,behavior:'instant'});
+(function(){ var _dbm = document.querySelector('.db-main'); if(_dbm){ _dbm.scrollTop=0; } })();
 
 window._hideLoadingScreen();
 renderNavLogged(u);
@@ -6146,7 +6157,8 @@ dashboard.classList.remove('hidden');
 dashboard.style.display = 'flex';
 }
 pnl('home');
-window.scrollTo({top:0, behavior:'smooth'});
+window.scrollTo({top:0, behavior:'instant'});
+(function(){ var _dbm = document.querySelector('.db-main'); if(_dbm) _dbm.scrollTop=0; })();
 if(window.updateFabContext) window.updateFabContext();
 };
 
@@ -8095,30 +8107,7 @@ MODALE ALERTE SÉCURITÉ
   </div>
 </div>
 
-<!-- ── POPUP NOTIF — déclenché selon plateforme (après auth) ── -->
-<script>
-(function() {
-    // Ne déclencher qu'après connexion utilisateur confirmée, pas en aveugle pour tous les visiteurs
-    // Le showPushPermPopup adapte le comportement selon la plateforme (iOS/Android/Desktop)
-    function _triggerPushPopupOnce() {
-        try {
-            if (typeof showPushPermPopup === 'function') {
-                showPushPermPopup();
-            } else {
-                const t = setInterval(function() {
-                    if (typeof showPushPermPopup === 'function') {
-                        clearInterval(t);
-                        showPushPermPopup();
-                    }
-                }, 300);
-                setTimeout(function() { clearInterval(t); }, 15000);
-            }
-        } catch(_) {}
-    }
-    // Déclencher pour TOUS les visiteurs — pas besoin d'être connecté
-    setTimeout(function() { _triggerPushPopupOnce(); }, 3500);
-})();
-</script>
+<!-- ── POPUP NOTIF — désactivé, géré par le flow permsModal 3 étapes ── -->
 
 <!-- ═══ STREAMING PROVIDERS POPUP ═══ -->
 <div id="streamPopup" onclick="if(event.target===this)window._closeStreamPopup()">
@@ -9562,45 +9551,22 @@ document.addEventListener('DOMContentLoaded', function() {
 </script> 
 <script>
 (function() {
-    function _triggerPushPopupOnce() {
-        try {
-            if (typeof showPushPermPopup === 'function') {
-                showPushPermPopup();
-            } else {
-                const t = setInterval(function() {
-                    if (typeof showPushPermPopup === 'function') {
-                        clearInterval(t);
-                        showPushPermPopup();
-                    }
-                }, 300);
-                setTimeout(function() { clearInterval(t); }, 15000);
-            }
-        } catch(_) {}
-    }
-
     // 1. ANALYSE DU SMARTPHONE
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    // 2. DÉMARRAGE :
+    // 2. DÉMARRAGE : animation étoile uniquement sur iPhone PWA
     if (isIOS && isPWA) {
-        // iPhone PWA : activer l'animation étoile pendant le chargement
         document.body.classList.add('lvl-iphone-star-anim');
     } else {
-        // Tous les autres (navigateurs desktop/mobile) : masquer l'écran de chargement immédiatement
         if (window._hideLoadingScreen) window._hideLoadingScreen();
     }
 
-    // Contexte FAB initial (home page = tous les boutons)
     if (window.updateFabContext) window.updateFabContext();
 
-    // 3. APRÈS 1 SECONDE : Notification pour tous les mobiles
+    // 3. APRÈS 1 SECONDE : fin animation étoile — popup notifs géré par permsModal
     setTimeout(function() {
         document.body.classList.remove('lvl-iphone-star-anim');
-        var isMob = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || window.navigator.standalone === true;
-        if (isMob && typeof window.showPushPermPopup === 'function') {
-            window.showPushPermPopup();
-        }
     }, 1000);
 })();
 </script>
