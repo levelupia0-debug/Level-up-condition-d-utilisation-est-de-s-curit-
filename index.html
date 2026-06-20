@@ -1202,36 +1202,6 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
     pointer-events: none !important;
     animation: none !important;
 }
-/* ── APPS FULL MODAL ── */
-#appsFullModal{position:fixed;inset:0;z-index:10002;background:#0d0b1e;display:none;flex-direction:column;overflow:hidden}
-#appsFullModal.open{display:flex}
-#afmGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
-.afm-app{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;padding:14px 6px 12px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);transition:all .2s;-webkit-tap-highlight-color:transparent;user-select:none}
-.afm-app:active{background:rgba(255,255,255,.1);transform:scale(.95)}
-.afm-ico{width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center}
-.afm-lbl{font-size:.62rem;font-weight:700;color:rgba(255,255,255,.7);text-align:center;line-height:1.3}
-/* ── PERMISSIONS ONBOARDING ── */
-#permsModal{position:fixed;inset:0;z-index:999999;background:#07040f;display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;overflow:hidden}
-#permsModal.open{display:flex}
-.perms-card{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;animation:permsIn .4s ease}
-@keyframes permsIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.perms-ico-wrap{width:90px;height:90px;border-radius:28px;display:flex;align-items:center;justify-content:center;margin-bottom:24px}
-.perms-title{font-size:1.45rem;font-weight:900;color:#fff;text-align:center;margin-bottom:10px;letter-spacing:-.03em;font-family:var(--display)}
-.perms-desc{font-size:.85rem;color:rgba(255,255,255,.45);text-align:center;line-height:1.65;margin-bottom:24px}
-.perms-status{padding:11px 16px;border-radius:12px;font-size:.8rem;text-align:center;margin-bottom:14px;display:none;width:100%}
-.perms-status.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#4ade80;display:block}
-.perms-status.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;display:block}
-.perms-btn{width:100%;padding:16px;border-radius:16px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:#fff;font-size:.95rem;font-weight:800;cursor:pointer;margin-bottom:10px;font-family:var(--sans);letter-spacing:-.01em;transition:opacity .2s;-webkit-tap-highlight-color:transparent}
-.perms-btn:disabled{opacity:.45}
-.perms-btn:active:not(:disabled){opacity:.8}
-.perms-btn-skip{width:100%;padding:12px;border-radius:16px;background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);font-size:.82rem;cursor:pointer;font-family:var(--sans);-webkit-tap-highlight-color:transparent;transition:color .2s}
-.perms-btn-skip:active{color:rgba(255,255,255,.6)}
-.perms-steps{display:flex;gap:6px;margin-bottom:32px}
-.perms-step-dot{height:4px;border-radius:99px;background:rgba(255,255,255,.12);transition:all .4s;width:28px}
-.perms-step-dot.active{background:#a855f7;width:44px}
-.perms-step-dot.done{background:rgba(168,85,247,.35)}
-#permsLoader{position:fixed;inset:0;z-index:1000000;background:#07040f;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px}
-#permsLoader.open{display:flex}
 </style>
 <!-- Cloudflare Turnstile -->
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
@@ -2180,15 +2150,10 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
 </div>
 <div class="qa-tile" onclick="window._openLevelDay&&window._openLevelDay()">
-<div class="qa-ico" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="22" height="22"><circle cx="42" cy="18" r="12" fill="#FFC107"/><g fill="#4A8BFF"><circle cx="19" cy="36" r="10"/><circle cx="31" cy="30" r="16"/><circle cx="45" cy="36" r="10"/><rect x="19" y="30" width="26" height="16"/></g></svg></div>
+<div class="qa-ico" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#22c55e"><i class="fa-solid fa-calendar-days" style="font-size:.9rem"></i></div>
 <div class="qa-inf"><h4>LevelDay</h4><span>Planification</span></div>
 <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
 </div>
-<!-- Tuiles dynamiques depuis Firestore -->
-<div id="qaExtraContainer"></div>
-</div>
-<!-- Annonces depuis Firestore -->
-<div id="qaAnnouncementsContainer" style="margin-top:4px"></div>
 </div>
 </div>
 
@@ -2937,78 +2902,6 @@ SERVICES HUB OVERLAY
       <button class="ob-btn-primary" id="obNextBtn" onclick="window._obNext()" disabled>Continuer</button>
     </div>
   </div>
-</div>
-
-<!-- ═══════════════════════════════════════
-APPS FULL MODAL
-═══════════════════════════════════════ -->
-<div id="appsFullModal">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;background:#0d0b1e">
-    <div style="font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:-.02em;font-family:var(--display)"><i class="fa-solid fa-border-all" style="color:#a855f7;margin-right:8px;font-size:.85rem"></i>Applications</div>
-    <button onclick="window.closeAppsFullModal()" style="background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.6);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent"><i class="fa-solid fa-xmark"></i></button>
-  </div>
-  <div id="afmGrid">
-    <div class="afm-app" onclick="window.openApp('movie');window.closeAppsFullModal()">
-      <div class="afm-ico" style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.2);color:var(--blue)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none"><path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill="currentColor"/></svg></div>
-      <div class="afm-lbl">LevelMovie</div>
-    </div>
-    <div class="afm-app" onclick="window.openApp('music');window.closeAppsFullModal()">
-      <div class="afm-ico" style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.2);color:var(--blue)"><svg viewBox="0 0 24 24" width="26" height="26" fill="none"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="18" cy="16" r="3" fill="currentColor"/></svg></div>
-      <div class="afm-lbl">LevelMusic</div>
-    </div>
-    <div class="afm-app" onclick="window.openApp('ia');window.closeAppsFullModal()">
-      <div class="afm-ico" style="background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.2)"><svg width="26" height="26" viewBox="0 0 576 512" fill="#a855f7"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg></div>
-      <div class="afm-lbl">Level IA</div>
-    </div>
-    <div class="afm-app" onclick="window._openOppa&&window._openOppa();window.closeAppsFullModal()">
-      <div class="afm-ico" style="background:rgba(236,72,153,.15);border:1px solid rgba(236,72,153,.2);color:#ec4899"><i class="fa-solid fa-users" style="font-size:1.25rem"></i></div>
-      <div class="afm-lbl">Oppa</div>
-    </div>
-    <div class="afm-app" onclick="window._openLevelDay&&window._openLevelDay();window.closeAppsFullModal()">
-      <div class="afm-ico" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.2)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="30" height="30"><circle cx="42" cy="18" r="12" fill="#FFC107"/><g fill="#4A8BFF"><circle cx="19" cy="36" r="10"/><circle cx="31" cy="30" r="16"/><circle cx="45" cy="36" r="10"/><rect x="19" y="30" width="26" height="16"/></g></svg></div>
-      <div class="afm-lbl">LevelDay</div>
-    </div>
-    <div class="afm-app" onclick="window.openToolsHub&&window.openToolsHub();window.closeAppsFullModal()">
-      <div class="afm-ico" style="background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.2);color:#22c55e"><i class="fa-solid fa-wrench" style="font-size:1.25rem"></i></div>
-      <div class="afm-lbl">Outils</div>
-    </div>
-    <div class="afm-app" onclick="window.openServicesHub&&window.openServicesHub();window.closeAppsFullModal()">
-      <div class="afm-ico" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.2);color:#f97316"><i class="fa-solid fa-layer-group" style="font-size:1.25rem"></i></div>
-      <div class="afm-lbl">Services</div>
-    </div>
-    <!-- Apps dynamiques Firestore -->
-    <div id="afmDynamicContainer" style="display:contents"></div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════
-PERMISSIONS ONBOARDING (3 étapes)
-═══════════════════════════════════════ -->
-<div id="permsModal">
-  <div class="perms-card" id="permsCard">
-    <div class="perms-steps">
-      <div class="perms-step-dot active" id="permsDot0"></div>
-      <div class="perms-step-dot" id="permsDot1"></div>
-      <div class="perms-step-dot" id="permsDot2"></div>
-    </div>
-    <div class="perms-ico-wrap" id="permsIcoWrap" style="background:rgba(168,85,247,.15);border:2px solid rgba(168,85,247,.3)">
-      <i class="fa-solid fa-bell" style="font-size:2.2rem;color:#a855f7"></i>
-    </div>
-    <div class="perms-title" id="permsTitle">Active les notifications</div>
-    <div class="perms-desc" id="permsDesc">Reste informé des nouveautés LevelUp, des messages et des alertes importantes de tout l'écosystème.</div>
-    <div class="perms-status" id="permsStatus"></div>
-    <button class="perms-btn" id="permsBtnMain" onclick="window._permsMainAction()">Activer maintenant</button>
-    <button class="perms-btn-skip" id="permsBtnSkip" style="display:none" onclick="window._permsSkip()">Plus tard</button>
-  </div>
-</div>
-
-<!-- Loader fin d'onboarding permissions -->
-<div id="permsLoader">
-  <svg width="52" height="52" viewBox="0 0 576 512" style="filter:drop-shadow(0 0 16px rgba(168,85,247,.55));animation:lvlPulse 1.6s ease-in-out infinite">
-    <defs><linearGradient id="plG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
-    <path fill="url(#plG)" d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
-  </svg>
-  <div style="font-size:.85rem;color:rgba(255,255,255,.4);font-family:var(--sans);letter-spacing:.04em">Mise à jour en cours…</div>
 </div>
 
 <!-- Input caché pour upload image depuis carte (super admin) -->
@@ -4842,10 +4735,6 @@ closeAuth();
 showDash(u);
 // Vérifier si onboarding complété
 window._checkOnboarding && window._checkOnboarding(u);
-// Vérifier permissions (notifs, localisation, cookies) pour nouveaux utilisateurs
-setTimeout(function() { window._checkPermissions && window._checkPermissions(u); }, 1500);
-// Push inbox depuis autres apps de l'écosystème
-setTimeout(function() { window._initPushInbox && window._initPushInbox(u); }, 2500);
 
 // ── PUSH NOTIFICATIONS FCM ──
 setTimeout(() => initFCM(u), 1500);
@@ -7325,24 +7214,20 @@ window.closeServicesHub = function() {
 };
 
 // APPS MINI MENU (mobile nav Applications button)
-window.openAppsFullModal = function() {
-    var m = document.getElementById('appsFullModal');
-    if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
-    var btn = document.getElementById('mbn-apps');
-    if (btn) btn.classList.add('on');
-};
-window.closeAppsFullModal = function() {
-    var m = document.getElementById('appsFullModal');
-    if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
-    var btn = document.getElementById('mbn-apps');
-    if (btn) btn.classList.remove('on');
-};
 window.toggleAppsMiniMenu = function(e) {
     if (e) e.stopPropagation();
-    window.openAppsFullModal();
+    const m = document.getElementById('appsMiniMenu');
+    if (!m) return;
+    const isVisible = m.style.display !== 'none';
+    m.style.display = isVisible ? 'none' : 'block';
+    const btn = document.getElementById('mbn-apps');
+    if (btn) btn.classList.toggle('on', !isVisible);
 };
 window.closeAppsMiniMenu = function() {
-    window.closeAppsFullModal();
+    const m = document.getElementById('appsMiniMenu');
+    if (m) m.style.display = 'none';
+    const btn = document.getElementById('mbn-apps');
+    if (btn) btn.classList.remove('on');
 };
 document.addEventListener('click', function(e) {
     const m = document.getElementById('appsMiniMenu');
@@ -9453,8 +9338,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('onboardingPopup').classList.remove('open');
             toast_ && toast_('Profil créé — bienvenue sur LevelUp !', 'ok');
             window.refreshUI && window.refreshUI();
-            // Déclencher le flow permissions après l'onboarding pseudo/age
-            setTimeout(function() { window._checkPermissions && window._checkPermissions(_obUser); }, 1200);
         } catch(e) {
             toast_ && toast_('Erreur lors de la sauvegarde', 'err');
         }
@@ -10219,283 +10102,6 @@ COOKIE CONSENT BANNER (RGPD/GDPR)
   };
 
   _checkCookieConsent();
-})();
-</script>
-
-<!-- ═══════════════════════════════════════
-PERMISSIONS ONBOARDING FLOW (3 étapes)
-═══════════════════════════════════════ -->
-<script>
-(function() {
-  var _permsUser = null;
-  var _permsStep = 0;
-  var _permsData = { notifs: null, location: null, cookies: null };
-
-  var _steps = [
-    { icoHTML: '<i class="fa-solid fa-bell" style="font-size:2.2rem;color:#a855f7"></i>', bg: 'rgba(168,85,247,.15)', bdr: 'rgba(168,85,247,.35)', title: 'Active les notifications', desc: 'Reste informé en temps réel des nouveautés LevelUp, des alertes et messages de tout l\'écosystème.', btn: 'Activer maintenant', skip: false },
-    { icoHTML: '<i class="fa-solid fa-location-dot" style="font-size:2.2rem;color:#22c55e"></i>', bg: 'rgba(34,197,94,.15)', bdr: 'rgba(34,197,94,.35)', title: 'Active la localisation', desc: 'Utilisée par LevelDay et nos autres apps pour te proposer du contenu personnalisé. Tu peux la désactiver à tout moment.', btn: 'Activer la localisation', skip: true },
-    { icoHTML: '<i class="fa-solid fa-cookie-bite" style="font-size:2.2rem;color:#f59e0b"></i>', bg: 'rgba(245,158,11,.15)', bdr: 'rgba(245,158,11,.35)', title: 'Cookies & Confidentialité', desc: 'Nous utilisons uniquement des cookies essentiels pour ton expérience. Aucune donnée n\'est revendue à des tiers.', btn: 'Accepter', skip: true }
-  ];
-
-  function _render(step) {
-    var s = _steps[step];
-    var ico = document.getElementById('permsIcoWrap');
-    var ttl = document.getElementById('permsTitle');
-    var dsc = document.getElementById('permsDesc');
-    var btn = document.getElementById('permsBtnMain');
-    var skp = document.getElementById('permsBtnSkip');
-    var sta = document.getElementById('permsStatus');
-    if (ico) { ico.innerHTML = s.icoHTML; ico.style.background = s.bg; ico.style.border = '2px solid ' + s.bdr; }
-    if (ttl) ttl.textContent = s.title;
-    if (dsc) dsc.textContent = s.desc;
-    if (btn) { btn.textContent = s.btn; btn.disabled = false; btn.onclick = window._permsMainAction; }
-    if (skp) skp.style.display = s.skip ? '' : 'none';
-    if (sta) { sta.className = 'perms-status'; sta.textContent = ''; }
-    for (var i = 0; i < 3; i++) {
-      var dot = document.getElementById('permsDot' + i);
-      if (dot) dot.className = 'perms-step-dot' + (i < step ? ' done' : i === step ? ' active' : '');
-    }
-    var card = document.getElementById('permsCard');
-    if (card) { card.style.animation = 'none'; void card.offsetWidth; card.style.animation = 'permsIn .35s ease'; }
-  }
-
-  window._showPermsModal = function() {
-    _permsStep = 0;
-    _render(0);
-    var m = document.getElementById('permsModal');
-    if (m) m.classList.add('open');
-  };
-
-  window._permsMainAction = async function() {
-    var sta = document.getElementById('permsStatus');
-    var btn = document.getElementById('permsBtnMain');
-    if (btn) btn.disabled = true;
-
-    if (_permsStep === 0) {
-      // Step 1 : Notifications
-      try {
-        var perm = await Notification.requestPermission();
-        _permsData.notifs = perm;
-        if (perm === 'granted') {
-          if (sta) { sta.className = 'perms-status ok'; sta.textContent = '✓ Notifications activées ! Tu vas recevoir une notification de bienvenue.'; }
-          if (_permsUser && window.initFCM) setTimeout(function() { try { initFCM(_permsUser); } catch(e) {} }, 600);
-          setTimeout(function() { _permsStep = 1; _render(1); }, 2000);
-        } else {
-          if (sta) { sta.className = 'perms-status err'; sta.textContent = 'Accès refusé — active-les dans les réglages de ton appareil pour ne rien rater.'; }
-          if (btn) { btn.textContent = 'Continuer quand même'; btn.disabled = false; btn.onclick = function() { _permsStep = 1; _render(1); }; }
-        }
-      } catch(e) {
-        if (btn) { btn.disabled = false; btn.onclick = function() { _permsStep = 1; _render(1); }; }
-      }
-    } else if (_permsStep === 1) {
-      // Step 2 : Localisation
-      if (!navigator.geolocation) {
-        _permsData.location = null;
-        _permsStep = 2; _render(2); return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        async function(pos) {
-          _permsData.location = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: Math.round(pos.coords.accuracy), ts: Date.now() };
-          if (sta) { sta.className = 'perms-status ok'; sta.textContent = '✓ Localisation enregistrée avec succès !'; }
-          if (_permsUser && window._db) {
-            try {
-              var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-              var ref = _fi.doc(window._db, 'artifacts', 'level-ia-premium', 'users', _permsUser.uid, 'profile', 'data');
-              await _fi.setDoc(ref, { location: _permsData.location, locationGranted: true, locationUpdatedAt: Date.now() }, { merge: true });
-            } catch(e) {}
-          }
-          setTimeout(function() { _permsStep = 2; _render(2); }, 1200);
-        },
-        function() {
-          _permsData.location = null;
-          if (sta) { sta.className = 'perms-status err'; sta.textContent = 'Accès refusé — tu pourras l\'activer plus tard dans les réglages.'; }
-          setTimeout(function() { _permsStep = 2; _render(2); }, 1400);
-        },
-        { timeout: 12000, maximumAge: 0, enableHighAccuracy: false }
-      );
-    } else if (_permsStep === 2) {
-      // Step 3 : Cookies
-      _permsData.cookies = 'accepted';
-      localStorage.setItem('lvl_cookie_consent', 'accepted');
-      window._cookieConsentDone = true;
-      if (window._saveCookieChoice) window._saveCookieChoice('accepted');
-      _permsFinish();
-    }
-  };
-
-  window._permsSkip = function() {
-    if (_permsStep === 1) { _permsData.location = null; _permsStep = 2; _render(2); }
-    else if (_permsStep === 2) { _permsData.cookies = 'declined'; localStorage.setItem('lvl_cookie_consent', 'declined'); _permsFinish(); }
-  };
-
-  async function _permsFinish() {
-    var m = document.getElementById('permsModal');
-    if (m) m.classList.remove('open');
-    var loader = document.getElementById('permsLoader');
-    if (loader) loader.classList.add('open');
-    if (_permsUser && window._db) {
-      try {
-        var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-        var ref = _fi.doc(window._db, 'artifacts', 'level-ia-premium', 'users', _permsUser.uid, 'profile', 'data');
-        await _fi.setDoc(ref, { permsDone: true, notificationsGranted: _permsData.notifs === 'granted', locationGranted: !!_permsData.location }, { merge: true });
-      } catch(e) {}
-    }
-    localStorage.setItem('lvl_perms_v2', '1');
-    setTimeout(function() { if (loader) loader.classList.remove('open'); }, 2500);
-  }
-
-  window._checkPermissions = async function(u) {
-    if (!u) return;
-    _permsUser = u;
-    if (localStorage.getItem('lvl_perms_v2')) return;
-    // Attendre que l'onboarding pseudo/age soit fermé s'il est ouvert
-    var ob = document.getElementById('onboardingPopup');
-    if (ob && ob.classList.contains('open')) return; // sera appelé depuis _obComplete
-    try {
-      var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-      var ref = _fi.doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
-      var snap = await _fi.getDoc(ref);
-      if (snap.exists() && snap.data().permsDone) {
-        localStorage.setItem('lvl_perms_v2', '1');
-        return;
-      }
-    } catch(e) {}
-    setTimeout(window._showPermsModal, 800);
-  };
-})();
-</script>
-
-<!-- ═══════════════════════════════════════
-APPS DYNAMIQUES FIRESTORE + PUSH BRIDGE
-═══════════════════════════════════════ -->
-<script>
-// ── APPS DYNAMIQUES DEPUIS FIRESTORE ──
-// Structure Firestore : doc(db, 'artifacts','levelup-ecosystem','public','data','config','dashboard')
-// Champs : dynamicApps:[{name,desc,url,icon,iconSvg,color}], announcements:[{title,text,url}]
-(function() {
-  window._loadDynamicApps = async function() {
-    if (!window._db) return;
-    try {
-      var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-      var ref = _fi.doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'config', 'dashboard');
-      _fi.onSnapshot(ref, function(snap) {
-        if (!snap.exists()) return;
-        var d = snap.data();
-        _renderQaExtra(d.dynamicApps || []);
-        _renderAnnouncements(d.announcements || []);
-        _renderAfmDynamic(d.dynamicApps || []);
-      });
-    } catch(e) {}
-  };
-
-  function _mkIco(app) {
-    if (app.iconSvg) return app.iconSvg;
-    return '<i class="' + (app.icon || 'fa-solid fa-grid-2') + '" style="font-size:.9rem"></i>';
-  }
-
-  function _renderQaExtra(apps) {
-    var c = document.getElementById('qaExtraContainer');
-    if (!c) return;
-    c.innerHTML = '';
-    apps.forEach(function(app) {
-      var clr = app.color || '#a855f7';
-      var tile = document.createElement('div');
-      tile.className = 'qa-tile';
-      tile.style.cursor = 'pointer';
-      if (app.url) tile.onclick = function() { var a = document.createElement('a'); a.href = app.url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); setTimeout(function() { document.body.removeChild(a); }, 100); };
-      tile.innerHTML = '<div class="qa-ico" style="background:' + clr + '1a;border:1px solid ' + clr + '33;color:' + clr + '">' + _mkIco(app) + '</div>'
-        + '<div class="qa-inf"><h4>' + (app.name || '') + '</h4><span>' + (app.desc || '') + '</span></div>'
-        + '<i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>';
-      c.appendChild(tile);
-    });
-  }
-
-  function _renderAnnouncements(anns) {
-    var c = document.getElementById('qaAnnouncementsContainer');
-    if (!c) return;
-    c.innerHTML = '';
-    anns.forEach(function(a) {
-      var div = document.createElement('div');
-      div.style.cssText = 'background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.15);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px' + (a.url ? ';cursor:pointer' : '');
-      if (a.url) div.onclick = function() { window.open(a.url, '_blank'); };
-      div.innerHTML = '<i class="fa-solid fa-megaphone" style="color:#a855f7;margin-top:2px;font-size:.8rem;flex-shrink:0"></i>'
-        + '<div><div style="font-size:.8rem;font-weight:700;color:#fff;margin-bottom:2px">' + (a.title || '') + '</div>'
-        + '<div style="font-size:.74rem;color:rgba(255,255,255,.45);line-height:1.5">' + (a.text || '') + '</div></div>';
-      c.appendChild(div);
-    });
-  }
-
-  function _renderAfmDynamic(apps) {
-    var c = document.getElementById('afmDynamicContainer');
-    if (!c) return;
-    c.innerHTML = '';
-    apps.forEach(function(app) {
-      var clr = app.color || '#a855f7';
-      var div = document.createElement('div');
-      div.className = 'afm-app';
-      if (app.url) div.onclick = function() { window.open(app.url, '_blank'); window.closeAppsFullModal(); };
-      div.innerHTML = '<div class="afm-ico" style="background:' + clr + '22;border:1px solid ' + clr + '33;color:' + clr + '">' + _mkIco(app) + '</div>'
-        + '<div class="afm-lbl">' + (app.name || '') + '</div>';
-      c.appendChild(div);
-    });
-  }
-
-  document.addEventListener('lvlUserReady', function() {
-    setTimeout(function() { window._loadDynamicApps && window._loadDynamicApps(); }, 1000);
-  });
-})();
-
-// ── PUSH BRIDGE : RÉCEPTION DES NOTIFICATIONS DES AUTRES APPS ──
-// ════════════════════════════════════════════════════════════════
-// CODE À COPIER DANS VOS AUTRES APPS (Oppa, LevelDay, etc.) :
-// ────────────────────────────────────────────────────────────────
-//  import { getFirestore, collection, addDoc } from "firebase-firestore.js";
-//  const db = getFirestore(fbApp);
-//
-//  async function sendToEcosystem(userId, notif) {
-//    await addDoc(
-//      collection(db, 'artifacts','levelup-ecosystem','push_inbox', userId,'items'),
-//      { title: notif.title, body: notif.body,
-//        icon: notif.icon || 'https://levelup-ecosystem.com/icon-192.png',
-//        url: notif.url || 'https://levelup-ecosystem.com/',
-//        ts: Date.now(), read: false, fromApp: 'votre-app-id' }
-//    );
-//  }
-// ────────────────────────────────────────────────────────────────
-(function() {
-  window._initPushInbox = async function(u) {
-    if (!u || !window._db) return;
-    try {
-      var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-      var q = _fi.query(
-        _fi.collection(window._db, 'artifacts', 'levelup-ecosystem', 'push_inbox', u.uid, 'items'),
-        _fi.where('read', '==', false)
-      );
-      _fi.onSnapshot(q, function(snap) {
-        snap.docChanges().forEach(function(change) {
-          if (change.type !== 'added') return;
-          var d = change.doc.data();
-          if (!d.title) return;
-          // Notification native
-          if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistration().then(function(reg) {
-              if (!reg) return;
-              reg.showNotification(d.title, {
-                body: d.body || '',
-                icon: d.icon || '/icon-192.png',
-                data: { url: d.url || '/' },
-                tag: change.doc.id
-              });
-            });
-          }
-          // Marquer comme lu
-          setTimeout(function() {
-            try { _fi.updateDoc(_fi.doc(window._db, 'artifacts', 'levelup-ecosystem', 'push_inbox', u.uid, 'items', change.doc.id), { read: true }); } catch(e) {}
-          }, 2000);
-        });
-      });
-    } catch(e) {}
-  };
 })();
 </script>
 
