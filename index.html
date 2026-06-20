@@ -478,7 +478,6 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 @media(max-width:640px){
   #authOverlay{align-items:flex-end;padding:0}
   #authOverlay .auth-card{max-width:100%;border-radius:var(--r24) var(--r24) 0 0;padding:28px 22px calc(28px + env(safe-area-inset-bottom,0px));animation:authSheetUp .38s cubic-bezier(.34,1.46,.64,1)}
-  #pcTurnstile{display:none!important}
 }
 .auth-logo{width:56px;height:56px;border-radius:var(--r16);background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.2));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
 .auth-card h2{font-size:1.5rem;margin-bottom:8px}
@@ -1255,14 +1254,7 @@ window._renderTurnstile = function(containerId) {
       sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
       theme: 'dark',
       size: 'flexible',
-      callback: function(token) {
-      window._turnstileToken = token;
-      // Masquer le widget après vérification réussie pour libérer l'espace
-      setTimeout(function() {
-        var c = document.getElementById(id);
-        if (c) { c.style.maxHeight='0'; c.style.overflow='hidden'; c.style.marginTop='0'; c.style.marginBottom='0'; c.style.transition='max-height .3s,margin .3s'; }
-      }, 800);
-    },
+      callback: function(token) { window._turnstileToken = token; },
       'expired-callback': function() { window._turnstileToken = null; },
       'error-callback': function() { window._turnstileToken = '__bypass__'; }
     });
@@ -5063,9 +5055,6 @@ dashboard.style.display = 'flex';
 if (mobileNav) {
 mobileNav.classList.add('vis');
 }
-// Remettre le scroll à zéro pour éviter le grand vide en haut
-window.scrollTo({top:0,behavior:'instant'});
-(function(){ var _dbm = document.querySelector('.db-main'); if(_dbm){ _dbm.scrollTop=0; } })();
 
 window._hideLoadingScreen();
 renderNavLogged(u);
@@ -6157,8 +6146,7 @@ dashboard.classList.remove('hidden');
 dashboard.style.display = 'flex';
 }
 pnl('home');
-window.scrollTo({top:0, behavior:'instant'});
-(function(){ var _dbm = document.querySelector('.db-main'); if(_dbm) _dbm.scrollTop=0; })();
+window.scrollTo({top:0, behavior:'smooth'});
 if(window.updateFabContext) window.updateFabContext();
 };
 
@@ -6168,7 +6156,7 @@ const dashboard = document.getElementById('dashboard');
 if (dashboard) { dashboard.classList.add('hidden'); dashboard.style.display = 'none'; }
 if (landing) { landing.classList.remove('hidden'); landing.style.display = ''; }
 document.body.style.overflow = '';
-window.scrollTo({top:0, behavior:'instant'});
+window.scrollTo({top:0, behavior:'smooth'});
 if(window.updateFabContext) window.updateFabContext();
 };
 
@@ -6608,10 +6596,7 @@ const panel = document.getElementById('panel-'+id);
 if(panel) panel.classList.add('on');
 const nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
 const mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
-// Remonter en haut du panneau (scroll window ET container interne)
-window.scrollTo({top:0,behavior:'instant'});
-const dbMain = document.querySelector('.db-main');
-if(dbMain){ dbMain.scrollTop = 0; dbMain.scrollLeft = 0; }
+window.scrollTo({top:0,behavior:'smooth'});
 
 // ── EFFACER BADGE OUTILS À L'OUVERTURE ──
 if (id === 'tools') {
@@ -8107,7 +8092,30 @@ MODALE ALERTE SÉCURITÉ
   </div>
 </div>
 
-<!-- ── POPUP NOTIF — désactivé, géré par le flow permsModal 3 étapes ── -->
+<!-- ── POPUP NOTIF — déclenché selon plateforme (après auth) ── -->
+<script>
+(function() {
+    // Ne déclencher qu'après connexion utilisateur confirmée, pas en aveugle pour tous les visiteurs
+    // Le showPushPermPopup adapte le comportement selon la plateforme (iOS/Android/Desktop)
+    function _triggerPushPopupOnce() {
+        try {
+            if (typeof showPushPermPopup === 'function') {
+                showPushPermPopup();
+            } else {
+                const t = setInterval(function() {
+                    if (typeof showPushPermPopup === 'function') {
+                        clearInterval(t);
+                        showPushPermPopup();
+                    }
+                }, 300);
+                setTimeout(function() { clearInterval(t); }, 15000);
+            }
+        } catch(_) {}
+    }
+    // Déclencher pour TOUS les visiteurs — pas besoin d'être connecté
+    setTimeout(function() { _triggerPushPopupOnce(); }, 3500);
+})();
+</script>
 
 <!-- ═══ STREAMING PROVIDERS POPUP ═══ -->
 <div id="streamPopup" onclick="if(event.target===this)window._closeStreamPopup()">
@@ -9551,22 +9559,45 @@ document.addEventListener('DOMContentLoaded', function() {
 </script> 
 <script>
 (function() {
+    function _triggerPushPopupOnce() {
+        try {
+            if (typeof showPushPermPopup === 'function') {
+                showPushPermPopup();
+            } else {
+                const t = setInterval(function() {
+                    if (typeof showPushPermPopup === 'function') {
+                        clearInterval(t);
+                        showPushPermPopup();
+                    }
+                }, 300);
+                setTimeout(function() { clearInterval(t); }, 15000);
+            }
+        } catch(_) {}
+    }
+
     // 1. ANALYSE DU SMARTPHONE
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    // 2. DÉMARRAGE : animation étoile uniquement sur iPhone PWA
+    // 2. DÉMARRAGE :
     if (isIOS && isPWA) {
+        // iPhone PWA : activer l'animation étoile pendant le chargement
         document.body.classList.add('lvl-iphone-star-anim');
     } else {
+        // Tous les autres (navigateurs desktop/mobile) : masquer l'écran de chargement immédiatement
         if (window._hideLoadingScreen) window._hideLoadingScreen();
     }
 
+    // Contexte FAB initial (home page = tous les boutons)
     if (window.updateFabContext) window.updateFabContext();
 
-    // 3. APRÈS 1 SECONDE : fin de l'animation étoile iOS
+    // 3. APRÈS 1 SECONDE : Notification pour tous les mobiles
     setTimeout(function() {
         document.body.classList.remove('lvl-iphone-star-anim');
+        var isMob = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || window.navigator.standalone === true;
+        if (isMob && typeof window.showPushPermPopup === 'function') {
+            window.showPushPermPopup();
+        }
     }, 1000);
 })();
 </script>
@@ -9664,7 +9695,7 @@ window.scrollTo(0, 0);
 
 <!-- Bottom-sheet login (mobile — glisse du bas) -->
 <div id="mobileLoginSheet" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:99999;background:linear-gradient(to bottom,transparent 0%,transparent 35%,rgba(0,0,0,.72) 65%,#0d0b1e 100%);align-items:flex-end;justify-content:center;touch-action:none;overscroll-behavior:none;-webkit-overflow-scrolling:touch">
-  <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto;max-height:calc(100dvh - 24px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;user-select:none;-webkit-user-select:none">
+  <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto;overflow:hidden;touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
       <svg width="48" height="48" viewBox="0 0 576 512" fill="url(#pg)" style="filter:drop-shadow(0 0 12px rgba(168,85,247,.6));flex-shrink:0"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
       <div>
@@ -9977,8 +10008,48 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
   // ── Popup notification gate PWA (avant le login sheet) ──
   var _NOTIF_GATE_KEY = '_lvl_notif_gate_done';
   function _showNotifGateThenLogin() {
-    // Désactivé — géré uniquement par le flow permissions 3 étapes après connexion
-    if (window.openMobileLoginSheet) window.openMobileLoginSheet();
+    // Si déjà vu OU permission déjà répondue → aller direct au login
+    var alreadyDone = localStorage.getItem(_NOTIF_GATE_KEY);
+    var permAlready = typeof Notification !== 'undefined' && Notification.permission !== 'default';
+    if (alreadyDone || permAlready) {
+      if (window.openMobileLoginSheet) window.openMobileLoginSheet();
+      return;
+    }
+    // Créer le popup notification
+    var gate = document.getElementById('_pwaNotifGate');
+    if (!gate) {
+      gate = document.createElement('div');
+      gate.id = '_pwaNotifGate';
+      gate.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;justify-content:center;padding:0;pointer-events:all;background:linear-gradient(to bottom,transparent 35%,rgba(10,8,18,.98) 65%,#0a0812 100%)';
+      gate.innerHTML = '\
+<div style="width:100%;max-width:480px;padding:28px 24px calc(20px + env(safe-area-inset-bottom,16px));animation:slideUp .38s cubic-bezier(.32,.72,0,1)">\
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">\
+  <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;box-shadow:0 0 20px rgba(168,85,247,.5)">🔔</div>\
+  <div><div style="font-size:1rem;font-weight:800;color:#fff;letter-spacing:-.02em">Activer les notifications</div><div style="font-size:.75rem;color:rgba(255,255,255,.45);margin-top:2px">LevelUp Ecosystem</div></div>\
+</div>\
+<p style="font-size:.82rem;color:rgba(255,255,255,.62);line-height:1.7;margin-bottom:20px">Recevez les alertes LevelUp — nouvelles clés disponibles, outils ajoutés, et sécurité de votre compte.</p>\
+<button id="_pwaNotifYes" style="width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 20px rgba(168,85,247,.45)">Activer les notifications</button>\
+<button id="_pwaNotifNo" style="width:100%;padding:12px;border:none;border-radius:14px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:.82rem;cursor:pointer">Plus tard</button>\
+</div>';
+      document.body.appendChild(gate);
+    }
+    gate.style.display = 'flex';
+    function _done() {
+      localStorage.setItem(_NOTIF_GATE_KEY, '1');
+      gate.style.display = 'none';
+      setTimeout(function() { if (window.openMobileLoginSheet) window.openMobileLoginSheet(); }, 200);
+    }
+    document.getElementById('_pwaNotifYes').onclick = function() {
+      if (typeof Notification !== 'undefined') {
+        Notification.requestPermission().then(function(p) {
+          if (p === 'granted' && typeof _registerFCMAnonOrUser === 'function') {
+            try { _registerFCMAnonOrUser(); } catch(_) {}
+          }
+          _done();
+        }).catch(_done);
+      } else { _done(); }
+    };
+    document.getElementById('_pwaNotifNo').onclick = _done;
   }
 
   window._pwaSlider={
@@ -10161,12 +10232,6 @@ PERMISSIONS ONBOARDING FLOW (3 étapes)
 
     if (_permsStep === 0) {
       // Step 1 : Notifications
-      // iOS Safari/PWA : l'API Notification peut être absente → on saute à la localisation
-      if (typeof Notification === 'undefined') {
-        _permsStep = 1; _render(1);
-        if (btn) btn.disabled = false;
-        return;
-      }
       try {
         var perm = await Notification.requestPermission();
         _permsData.notifs = perm;
@@ -10241,9 +10306,6 @@ PERMISSIONS ONBOARDING FLOW (3 étapes)
 
   window._checkPermissions = async function(u) {
     if (!u) return;
-    // Uniquement en PWA (mode standalone) — pas sur navigateur mobile classique
-    var _isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    if (!_isPWA) return;
     _permsUser = u;
     if (localStorage.getItem('lvl_perms_v2')) return;
     // Attendre que l'onboarding pseudo/age soit fermé s'il est ouvert
@@ -10261,6 +10323,10 @@ PERMISSIONS ONBOARDING FLOW (3 étapes)
     setTimeout(window._showPermsModal, 800);
   };
 
+  // Auto-ouvrir dès le chargement de l'app si les permissions n'ont pas encore été faites
+  if (!localStorage.getItem('lvl_perms_v2')) {
+    setTimeout(window._showPermsModal, 1400);
+  }
 })();
 </script>
 
