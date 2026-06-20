@@ -480,6 +480,17 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 .auth-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;padding:6px;border-radius:8px;transition:background .2s}
 .auth-close:hover{background:rgba(255,255,255,.06)}
 .auth-note{font-size:.75rem;color:var(--dim);margin-top:16px;line-height:1.65}
+/* ── COOKIE BANNER MASQUÉ ── */
+#lvlCookieBanner{display:none!important}
+/* ── MOBILE AUTH BOTTOM SHEET (≤640px) ── */
+@keyframes authSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@media(max-width:640px){
+  #authOverlay{align-items:flex-end!important;padding:0!important;background:linear-gradient(to bottom,transparent 0%,transparent 30%,rgba(0,0,0,.7) 65%,#0a0812 100%)!important}
+  #authOverlay .auth-card{border-radius:24px 24px 0 0!important;max-width:100%!important;width:100%!important;margin:0!important;padding:28px 22px max(28px,env(safe-area-inset-bottom,28px))!important;animation:authSheetUp .35s cubic-bezier(0.32,0.72,0,1)!important}
+  #pcTurnstile{display:none!important}
+}
+/* ── LOGIN PANEL SCROLLABLE ── */
+#mobileLoginPanel{overflow-y:auto!important;max-height:calc(100dvh - 24px)!important}
 
 /* ═══ PC FULL-PAGE AUTH ═══ */
 #lvlPcAuth{position:fixed;inset:0;z-index:9800;display:none;flex-direction:row;background:#08060f}
@@ -1220,7 +1231,11 @@ window._renderTurnstile = function(containerId) {
       sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
       theme: 'dark',
       size: 'flexible',
-      callback: function(token) { window._turnstileToken = token; },
+      callback: function(token) {
+        window._turnstileToken = token;
+        // Collapse le widget après succès
+        setTimeout(function(){ var c=document.getElementById(id); if(c){ c.style.height='0'; c.style.overflow='hidden'; c.style.marginTop='0'; } }, 400);
+      },
       'expired-callback': function() { window._turnstileToken = null; },
       'error-callback': function() { window._turnstileToken = '__bypass__'; }
     });
@@ -2332,8 +2347,22 @@ DASHBOARD (CENTRE DE CONTRÔLE)
     <span class="notif-slider"></span>
   </label>
 </div>
-<div id="notifPermNote" class="hidden" style="margin-top:8px;padding:10px 12px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.18);border-radius:10px;font-size:.76rem;color:rgba(255,255,255,.55);line-height:1.6">
-  <i class="fa-solid fa-circle-info" style="color:var(--purple);margin-right:5px"></i>Activez les notifications dans les réglages de votre téléphone pour recevoir les alertes LevelUp.
+<div id="notifPermNote" class="hidden" style="margin-top:8px;padding:12px 14px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.18);border-radius:12px;font-size:.76rem;color:rgba(255,255,255,.55);line-height:1.6">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i class="fa-solid fa-circle-info" style="color:var(--purple)"></i><span>Notifications bloquées — activez-les dans les réglages.</span></div>
+  <button onclick="window._openOsNotifSettings()" style="width:100%;padding:9px;background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(124,58,237,.15));border:1px solid rgba(168,85,247,.3);border-radius:9px;color:#c084fc;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px"><i class="fa-solid fa-gear"></i> Ouvrir les Réglages</button>
+</div>
+</div>
+
+<!-- ── LOCALISATION ── -->
+<div class="set-sec" id="locationSettingsSection">
+<div class="set-title"><i class="fa-solid fa-location-dot" style="color:var(--purple);margin-right:6px;font-size:.8rem"></i>Localisation</div>
+<div class="set-row">
+  <div class="set-info"><h5>Service de localisation</h5><p>Permet à LevelUp de personnaliser votre expérience selon votre région</p></div>
+  <button onclick="window._requestLocationPerm()" id="locPermBtn" style="background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(124,58,237,.12));border:1px solid rgba(168,85,247,.25);border-radius:9px;padding:7px 13px;color:#c084fc;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;white-space:nowrap"><i class="fa-solid fa-location-crosshairs"></i> <span id="locPermLabel">Activer</span></button>
+</div>
+<div id="locPermNote" class="hidden" style="margin-top:8px;padding:12px 14px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.18);border-radius:12px;font-size:.76rem;color:rgba(255,255,255,.55);line-height:1.6">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i class="fa-solid fa-circle-exclamation" style="color:#f97316"></i><span>Localisation bloquée — vous devez l'autoriser dans les réglages de l'appareil.</span></div>
+  <button onclick="window._openLocationSettings()" style="width:100%;padding:9px;background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(234,88,12,.12));border:1px solid rgba(249,115,22,.3);border-radius:9px;color:#fb923c;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px"><i class="fa-solid fa-gear"></i> Ouvrir les Réglages</button>
 </div>
 </div>
 
@@ -4904,6 +4933,9 @@ dashboard.style.display = 'flex';
 if (mobileNav) {
 mobileNav.classList.add('vis');
 }
+window.scrollTo({top:0,behavior:'instant'});
+var _sdm=document.getElementById('db-main')||document.querySelector('.db-main');
+if(_sdm)_sdm.scrollTop=0;
 
 window._hideLoadingScreen();
 renderNavLogged(u);
@@ -4948,8 +4980,12 @@ if (_isPWA && _isMob) {
   if (typeof updateGuestUI === 'function') updateGuestUI();
   window.updateAppCards && window.updateAppCards();
   if (window.updateFabContext) window.updateFabContext();
-  // Afficher le slider d'arrière-plan à la place du landing
+  // Afficher d'abord le slider en arrière-plan puis ouvrir le login immédiatement
   if (window._pwaSlider) window._pwaSlider.show();
+  // Aller directement au login sans attendre la notification gate
+  setTimeout(function() {
+    if (!window._user && window.openMobileLoginSheet) window.openMobileLoginSheet();
+  }, 120);
   return;
 }
 const landing = document.getElementById('landing');
@@ -5444,39 +5480,7 @@ function _isDesktopBrowser() {
 
 // Afficher le bon UI selon la plateforme
 window._pushPopupShown = false;
-function showPushPermPopup() {
-    if (window._pushPopupShown) return;
-    if (_getPushPref() === 'granted' || _getPushPref() === 'denied') return;
-    if (Notification.permission === 'granted') { _setPushPref('granted'); return; }
-    if (Notification.permission === 'denied')  { _setPushPref('denied');  return; }
-    window._pushPopupShown = true;
-
-    if (_isIOS()) {
-        // iPhone/iPad: petite popup propre
-        const m = document.getElementById('pushPermModal');
-        if (m) setTimeout(() => m.classList.add('show'), 400);
-    } else if (_isAndroidOrPWA()) {
-        // Android/PWA: petit banner horizontal en bas
-        const b = document.getElementById('pushNotifBanner');
-        if (b) setTimeout(() => b.classList.add('show'), 600);
-    } else {
-        // Desktop browser: demande native directement après un délai
-        setTimeout(async () => {
-            try {
-                const perm = await Notification.requestPermission();
-                if (perm === 'granted') {
-                    _setPushPref('granted');
-                    await _registerFCMAnonOrUser();
-                    _updatePushToggleUI();
-                    _sendWelcomeNotification();
-                } else {
-                    _setPushPref('denied');
-                    _updatePushToggleUI();
-                }
-            } catch(_) {}
-        }, 1500);
-    }
-}
+function showPushPermPopup() { return; }
 window.showPushPermPopup = showPushPermPopup;
 
 // Notification de bienvenue — envoyée UNE SEULE FOIS par appareil
@@ -5513,6 +5517,69 @@ function _sendWelcomeNotification() {
     } catch(_) {}
 }
 window._sendWelcomeNotification = _sendWelcomeNotification;
+
+// ── OUVRIR LES RÉGLAGES OS (Notifications / Localisation) ──
+window._openOsNotifSettings = function() {
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isAndroid = /Android/.test(navigator.userAgent);
+    if (isIOS) {
+        // Sur iOS PWA : tenter d'ouvrir l'app Settings
+        window.location.href = 'app-settings:';
+        setTimeout(function() {
+            toast_('Ouvrez Réglages → Safari (ou LevelUp) → Notifications', 'info');
+        }, 500);
+    } else if (isAndroid) {
+        try {
+            window.location.href = 'intent://settings/notification#Intent;scheme=android-app;end';
+        } catch(_) {}
+        setTimeout(function() { toast_('Ouvrez Paramètres → Applications → Navigateur → Notifications', 'info'); }, 500);
+    } else {
+        toast_('Activez les notifications dans les réglages de votre navigateur (icône 🔒 dans la barre d\'URL)', 'info');
+    }
+};
+
+window._requestLocationPerm = function() {
+    var btn = document.getElementById('locPermBtn');
+    var label = document.getElementById('locPermLabel');
+    var note = document.getElementById('locPermNote');
+    if (label) label.textContent = '…';
+    if (!navigator.geolocation) {
+        toast_('Géolocalisation non supportée sur cet appareil.', 'warn');
+        if (label) label.textContent = 'Non supporté';
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            if (label) label.textContent = '✓ Activée';
+            if (btn) { btn.style.background='linear-gradient(135deg,rgba(34,197,94,.12),rgba(22,163,74,.12))'; btn.style.borderColor='rgba(34,197,94,.3)'; btn.style.color='#4ade80'; }
+            if (note) note.classList.add('hidden');
+            toast_('Localisation activée avec succès !', 'ok');
+        },
+        function(err) {
+            if (label) label.textContent = 'Bloquée';
+            if (btn) { btn.style.background='linear-gradient(135deg,rgba(249,115,22,.1),rgba(234,88,12,.1))'; btn.style.borderColor='rgba(249,115,22,.25)'; btn.style.color='#fb923c'; }
+            if (err.code === 1 && note) note.classList.remove('hidden');
+            else toast_('Erreur de localisation. Vérifiez vos réglages.', 'warn');
+        },
+        { timeout: 8000 }
+    );
+};
+
+window._openLocationSettings = function() {
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isAndroid = /Android/.test(navigator.userAgent);
+    if (isIOS) {
+        window.location.href = 'app-settings:';
+        setTimeout(function() {
+            toast_('Ouvrez Réglages → Confidentialité → Service de localisation → Safari / LevelUp', 'info');
+        }, 500);
+    } else if (isAndroid) {
+        try { window.location.href = 'intent://settings/location#Intent;scheme=android-app;end'; } catch(_) {}
+        setTimeout(function() { toast_('Ouvrez Paramètres → Confidentialité → Localisation', 'info'); }, 500);
+    } else {
+        toast_('Autorisez la localisation dans les réglages de votre navigateur (icône 🔒 dans la barre d\'URL)', 'info');
+    }
+};
 
 // L'utilisateur clique "Activer" (iOS popup ou Android banner)
 window.acceptPushPerm = async function() {
@@ -5647,6 +5714,8 @@ async function _registerFCMAnonOrUser() {
         localStorage.setItem(_FCM_REG_KEY, String(Date.now()));
         _attachFCMListeners();
         _updatePushToggleUI();
+        // ── NOTIFICATION DE BIENVENUE ──
+        setTimeout(function(){ try { _sendWelcomeNotification(); } catch(_){} }, 1500);
     } catch(err) {
         console.error('[FCM] _registerFCMAnonOrUser error:', err);
     } finally {
@@ -6025,7 +6094,9 @@ dashboard.classList.remove('hidden');
 dashboard.style.display = 'flex';
 }
 pnl('home');
-window.scrollTo({top:0, behavior:'smooth'});
+window.scrollTo({top:0,behavior:'instant'});
+var _dm=document.getElementById('db-main')||document.querySelector('.db-main');
+if(_dm)_dm.scrollTop=0;
 if(window.updateFabContext) window.updateFabContext();
 };
 
@@ -6035,7 +6106,7 @@ const dashboard = document.getElementById('dashboard');
 if (dashboard) { dashboard.classList.add('hidden'); dashboard.style.display = 'none'; }
 if (landing) { landing.classList.remove('hidden'); landing.style.display = ''; }
 document.body.style.overflow = '';
-window.scrollTo({top:0, behavior:'smooth'});
+window.scrollTo({top:0,behavior:'instant'});
 if(window.updateFabContext) window.updateFabContext();
 };
 
@@ -6475,7 +6546,9 @@ const panel = document.getElementById('panel-'+id);
 if(panel) panel.classList.add('on');
 const nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
 const mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
-window.scrollTo({top:0,behavior:'smooth'});
+window.scrollTo({top:0,behavior:'instant'});
+var _dbMain=document.getElementById('db-main')||document.querySelector('.db-main');
+if(_dbMain)_dbMain.scrollTop=0;
 
 // ── EFFACER BADGE OUTILS À L'OUVERTURE ──
 if (id === 'tools') {
@@ -7700,6 +7773,10 @@ window._handlePushToggle = async function(checked) {
     }
     try {
         await window._registerFCMAnonOrUser();
+        // Notification de bienvenue si permission vient d'être accordée
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            setTimeout(function(){ try { _sendWelcomeNotification(); } catch(_){} }, 1500);
+        }
     } catch(_) {}
     _syncSettingsNotifToggles();
 };
@@ -7957,30 +8034,7 @@ MODALE ALERTE SÉCURITÉ
   </div>
 </div>
 
-<!-- ── POPUP NOTIF — déclenché selon plateforme (après auth) ── -->
-<script>
-(function() {
-    // Ne déclencher qu'après connexion utilisateur confirmée, pas en aveugle pour tous les visiteurs
-    // Le showPushPermPopup adapte le comportement selon la plateforme (iOS/Android/Desktop)
-    function _triggerPushPopupOnce() {
-        try {
-            if (typeof showPushPermPopup === 'function') {
-                showPushPermPopup();
-            } else {
-                const t = setInterval(function() {
-                    if (typeof showPushPermPopup === 'function') {
-                        clearInterval(t);
-                        showPushPermPopup();
-                    }
-                }, 300);
-                setTimeout(function() { clearInterval(t); }, 15000);
-            }
-        } catch(_) {}
-    }
-    // Déclencher pour TOUS les visiteurs — pas besoin d'être connecté
-    setTimeout(function() { _triggerPushPopupOnce(); }, 3500);
-})();
-</script>
+<!-- push popup désactivé -->
 
 <!-- ═══ STREAMING PROVIDERS POPUP ═══ -->
 <div id="streamPopup" onclick="if(event.target===this)window._closeStreamPopup()">
@@ -9454,13 +9508,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Contexte FAB initial (home page = tous les boutons)
     if (window.updateFabContext) window.updateFabContext();
 
-    // 3. APRÈS 1 SECONDE : Notification pour tous les mobiles
+    // 3. APRÈS 1 SECONDE : fin de l'animation étoile iOS
     setTimeout(function() {
         document.body.classList.remove('lvl-iphone-star-anim');
-        var isMob = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || window.navigator.standalone === true;
-        if (isMob && typeof window.showPushPermPopup === 'function') {
-            window.showPushPermPopup();
-        }
     }, 1000);
 })();
 </script>
@@ -9871,48 +9921,8 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
   // ── Popup notification gate PWA (avant le login sheet) ──
   var _NOTIF_GATE_KEY = '_lvl_notif_gate_done';
   function _showNotifGateThenLogin() {
-    // Si déjà vu OU permission déjà répondue → aller direct au login
-    var alreadyDone = localStorage.getItem(_NOTIF_GATE_KEY);
-    var permAlready = typeof Notification !== 'undefined' && Notification.permission !== 'default';
-    if (alreadyDone || permAlready) {
-      if (window.openMobileLoginSheet) window.openMobileLoginSheet();
-      return;
-    }
-    // Créer le popup notification
-    var gate = document.getElementById('_pwaNotifGate');
-    if (!gate) {
-      gate = document.createElement('div');
-      gate.id = '_pwaNotifGate';
-      gate.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;justify-content:center;padding:0;pointer-events:all;background:linear-gradient(to bottom,transparent 35%,rgba(10,8,18,.98) 65%,#0a0812 100%)';
-      gate.innerHTML = '\
-<div style="width:100%;max-width:480px;padding:28px 24px calc(20px + env(safe-area-inset-bottom,16px));animation:slideUp .38s cubic-bezier(.32,.72,0,1)">\
-<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">\
-  <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;box-shadow:0 0 20px rgba(168,85,247,.5)">🔔</div>\
-  <div><div style="font-size:1rem;font-weight:800;color:#fff;letter-spacing:-.02em">Activer les notifications</div><div style="font-size:.75rem;color:rgba(255,255,255,.45);margin-top:2px">LevelUp Ecosystem</div></div>\
-</div>\
-<p style="font-size:.82rem;color:rgba(255,255,255,.62);line-height:1.7;margin-bottom:20px">Recevez les alertes LevelUp — nouvelles clés disponibles, outils ajoutés, et sécurité de votre compte.</p>\
-<button id="_pwaNotifYes" style="width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 20px rgba(168,85,247,.45)">Activer les notifications</button>\
-<button id="_pwaNotifNo" style="width:100%;padding:12px;border:none;border-radius:14px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:.82rem;cursor:pointer">Plus tard</button>\
-</div>';
-      document.body.appendChild(gate);
-    }
-    gate.style.display = 'flex';
-    function _done() {
-      localStorage.setItem(_NOTIF_GATE_KEY, '1');
-      gate.style.display = 'none';
-      setTimeout(function() { if (window.openMobileLoginSheet) window.openMobileLoginSheet(); }, 200);
-    }
-    document.getElementById('_pwaNotifYes').onclick = function() {
-      if (typeof Notification !== 'undefined') {
-        Notification.requestPermission().then(function(p) {
-          if (p === 'granted' && typeof _registerFCMAnonOrUser === 'function') {
-            try { _registerFCMAnonOrUser(); } catch(_) {}
-          }
-          _done();
-        }).catch(_done);
-      } else { _done(); }
-    };
-    document.getElementById('_pwaNotifNo').onclick = _done;
+    // Aller directement au login sheet sans gate de notification
+    if (window.openMobileLoginSheet) window.openMobileLoginSheet();
   }
 
   window._pwaSlider={
