@@ -416,6 +416,26 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 .sb-foot{padding:12px}
 .db-main{flex:1;padding:28px;overflow-y:auto;min-height:calc(100vh - 65px)}
 
+/* ═══ PANEL FULL-SCREEN MODAL MODE ═══ */
+/* Barre de retour propre à chaque panel (cachée en mode home) */
+.panel-topbar{display:none;align-items:center;gap:12px;padding:16px 0 14px;border-bottom:1px solid var(--bdr);margin-bottom:22px;position:sticky;top:0;z-index:10;background:var(--bg)}
+.panel-tb-back{background:rgba(255,255,255,.07);border:1px solid var(--bdr);border-radius:10px;padding:9px 14px;color:var(--txt);font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .2s;flex-shrink:0;font-family:var(--sans);font-weight:500}
+.panel-tb-back:hover,.panel-tb-back:active{background:rgba(255,255,255,.13)}
+.panel-tb-back i{font-size:.78rem}
+.panel-tb-label{font-size:.88rem;font-weight:600;font-family:var(--sans);color:var(--txt);opacity:.7}
+/* Quand un panel non-home est actif */
+body.lvl-panel-mode #nav{display:none!important}
+body.lvl-panel-mode .sidebar{display:none!important}
+body.lvl-panel-mode #dashboard{padding-top:0!important;display:block!important}
+body.lvl-panel-mode .db-main{position:fixed!important;inset:0!important;z-index:9500!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;background:var(--bg)!important;padding:0!important;min-height:unset!important}
+body.lvl-panel-mode .db-main>.panel.on{max-width:880px;margin:0 auto;padding:0 24px 120px;box-sizing:border-box}
+body.lvl-panel-mode .panel-topbar{display:flex}
+/* Cacher h1.pt et p.ps car le topbar contient déjà le titre */
+body.lvl-panel-mode .panel>.pt,body.lvl-panel-mode .panel>.ps{display:none}
+@media(max-width:820px){
+  body.lvl-panel-mode .db-main>.panel.on{padding:0 14px max(110px,calc(90px + env(safe-area-inset-bottom))) 14px}
+}
+
 /* PANELS */
 .panel{display:none}
 .panel.on{display:block}
@@ -2217,6 +2237,10 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- KEYS PANEL -->
 <div class="panel" id="panel-keys">
+<div class="panel-topbar">
+  <button class="panel-tb-back" onclick="pnl('home')"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+  <span class="panel-tb-label"><i class="fa-solid fa-key" style="color:#a855f7;margin-right:6px;font-size:.76rem"></i>Clés d'accès</span>
+</div>
 <h1 class="pt">Clés d'accès</h1>
 <p class="ps">Gérez votre clé d'accès à l'écosystème LevelUp.</p>
 <div id="sec-existing" class="hidden">
@@ -2264,6 +2288,10 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- SETTINGS PANEL -->
 <div class="panel" id="panel-settings">
+<div class="panel-topbar">
+  <button class="panel-tb-back" onclick="pnl('home')"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+  <span class="panel-tb-label"><i class="fa-solid fa-gear" style="color:#94a3b8;margin-right:6px;font-size:.76rem"></i>Paramètres</span>
+</div>
 <h1 class="pt">Paramètres</h1>
 <p class="ps">Gérez votre compte et vos préférences de sécurité.</p>
 
@@ -2437,6 +2465,10 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- SERVICES PANEL -->
 <div class="panel" id="panel-services">
+<div class="panel-topbar">
+  <button class="panel-tb-back" onclick="pnl('home')"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+  <span class="panel-tb-label"><i class="fa-solid fa-layer-group" style="color:#f97316;margin-right:6px;font-size:.76rem"></i>Services</span>
+</div>
 <h1 class="pt"><i class="fa-solid fa-layer-group" style="color:#f97316;font-size:1.15rem;margin-right:6px"></i><span id="servicesPanelTitle">LevelUp Services</span></h1>
 <p class="ps" id="servicesPanelDesc">Nous concevons, hébergeons et gérons vos projets web — du site vitrine au domaine professionnel.</p>
 <div style="background:rgba(249,115,22,.04);border:1px solid rgba(249,115,22,.14);border-radius:16px;padding:16px 18px;margin-bottom:20px">
@@ -2470,6 +2502,10 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- NOTIFICATIONS PANEL (dashboard) -->
 <div class="panel" id="panel-notif">
+<div class="panel-topbar">
+  <button class="panel-tb-back" onclick="pnl('home')"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+  <span class="panel-tb-label"><i class="fa-solid fa-bell" style="color:#a855f7;margin-right:6px;font-size:.76rem"></i>Notifications</span>
+</div>
 <h1 class="pt"><i class="fa-solid fa-bell" style="color:var(--purple);font-size:1.15rem;margin-right:6px"></i><span id="notifPanelTitle">Notifications</span></h1>
 <p class="ps" id="notifPanelDesc">Vos alertes et messages de l'écosystème LevelUp.</p>
 <!-- Notice Apple iOS -->
@@ -2525,6 +2561,10 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- TOOLS PANEL -->
 <div class="panel" id="panel-tools">
+<div class="panel-topbar">
+  <button class="panel-tb-back" onclick="pnl('home')"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+  <span class="panel-tb-label"><i class="fa-solid fa-wrench" style="color:#22c55e;margin-right:6px;font-size:.76rem"></i>Outils</span>
+</div>
 <h1 class="pt"><i class="fa-solid fa-wrench" style="color:#22c55e;font-size:1.15rem;margin-right:6px"></i>Outils LevelUp</h1>
 <p class="ps">Utilitaires IA, productivité, Dev et création — directement intégrés à l'écosystème.</p>
 <div style="background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.14);border-radius:16px;padding:18px;margin-bottom:22px;display:flex;align-items:flex-start;gap:14px">
@@ -2553,6 +2593,10 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <!-- HELP PANEL -->
 <div class="panel" id="panel-help">
+<div class="panel-topbar">
+  <button class="panel-tb-back" onclick="pnl('home')"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+  <span class="panel-tb-label"><i class="fa-regular fa-circle-question" style="color:#60a5fa;margin-right:6px;font-size:.76rem"></i>Aide &amp; Support</span>
+</div>
 <h1 class="pt" id="helpPanelTitle">Aide &amp; Support</h1>
 <p class="ps" id="helpPanelDesc">Réponses aux questions fréquentes et moyens de nous contacter.</p>
 
@@ -5986,6 +6030,7 @@ function _getGreeting(){var h=new Date().getHours();if(h<5)return'Bonne nuit';if
 const wEl = document.getElementById('dbWelcome'); if(wEl) wEl.textContent = `${_getGreeting()}, ${name.split(' ')[0]} 👋`;
 const snEl2 = document.getElementById('setName'); if(snEl2) snEl2.textContent = name;
 const seEl = document.getElementById('setEmail'); if(seEl) seEl.textContent = d?.email || u?.email || '—';
+const ssec = document.getElementById('settingsSecEmail'); if(ssec) { const _em = d?.email || u?.email || ''; ssec.innerHTML = `<i class="fa-solid fa-check-circle" style="font-size:.7rem"></i> ${_em || 'Vérifié & Actif'}`; }
 const sjEl = document.getElementById('setJoined'); if(sjEl && d?.createdAt) sjEl.textContent = new Date(d.createdAt).toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
 
 // Clés
@@ -6635,61 +6680,51 @@ function closeTerms(){
     document.getElementById('termsOverlay').classList.add('hidden'); 
     document.body.style.overflow = ''; /* Libère le site */
 }
-// PANELS
+// PANELS — chaque panel non-home s'ouvre en full-screen modal indépendant
 function pnl(id){
-var _dbm = document.querySelector('.db-main');
-console.log('[LVL pnl] → "'+id+'" | scrollY='+window.scrollY+' | dbTop='+(_dbm?_dbm.scrollTop:'N/A'));
+  var _dbm = document.querySelector('.db-main');
 
-// 1. Changer le panel
-document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
-document.querySelectorAll('.sbi').forEach(n=>n.classList.remove('on'));
-document.querySelectorAll('.mn-item').forEach(n=>n.classList.remove('on'));
-const panel = document.getElementById('panel-'+id);
-if(panel) panel.classList.add('on');
-const nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
-const mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
+  // 1. Changer le panel actif
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+  document.querySelectorAll('.sbi').forEach(function(n){ n.classList.remove('on'); });
+  document.querySelectorAll('.mn-item').forEach(function(n){ n.classList.remove('on'); });
+  var panel = document.getElementById('panel-'+id);
+  if(panel) panel.classList.add('on');
+  var nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
+  var mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
 
-// 2. Reset scroll interne db-main
-if(_dbm) _dbm.scrollTop = 0;
-
-// ── Toggle classe body pour le panel settings (cache le FAB étoile) ──
-if (id === 'settings') {
-  document.body.classList.add('lvl-in-settings');
-} else {
-  document.body.classList.remove('lvl-in-settings');
-}
-
-// 3. Après repaint : scroller la fenêtre pour positionner le panel
-//    juste sous le header réel, peu importe l'offsetTop du panel
-setTimeout(function(){
-  var _d = document.querySelector('.db-main');
-  if(_d) _d.scrollTop = 0;
-  if(panel){
-    var rect = panel.getBoundingClientRect();
-    var navEl = document.getElementById('nav');
-    var HEADER_H = navEl ? navEl.getBoundingClientRect().height : 65;
-    var curY = window.scrollY;
-    var targetY = Math.max(0, curY + rect.top - HEADER_H);
-    window.scrollTo({top: targetY, behavior:'instant'});
-    console.log('[LVL pnl] DONE "'+id+'" | navH='+Math.round(HEADER_H)+' rect.top='+Math.round(rect.top)+' | scrollY: '+curY+' → '+targetY);
+  // 2. Mode full-screen pour les panels non-home
+  if (id === 'home') {
+    document.body.classList.remove('lvl-panel-mode', 'lvl-in-settings');
+    // Réinitialiser le scroll de la page d'accueil
+    window.scrollTo({top: 0, behavior: 'instant'});
+    if (_dbm) _dbm.scrollTop = 0;
+  } else {
+    document.body.classList.add('lvl-panel-mode');
+    // Cacher FAB étoile dans settings
+    document.body.classList.toggle('lvl-in-settings', id === 'settings');
+    // Remettre le scroll du modal overlay à zéro
+    setTimeout(function() {
+      var _d = document.querySelector('.db-main');
+      if (_d) { _d.scrollTop = 0; _d.scrollLeft = 0; }
+    }, 20);
   }
-}, 16);
 
-// ── EFFACER BADGE OUTILS À L'OUVERTURE ──
-if (id === 'tools') {
-    const b1 = document.getElementById('toolsNavBadge');
-    const b2 = document.getElementById('toolsMobBadge');
+  // 3. Badge outils
+  if (id === 'tools') {
+    var b1 = document.getElementById('toolsNavBadge');
+    var b2 = document.getElementById('toolsMobBadge');
     if (b1) b1.classList.add('hidden');
     if (b2) b2.classList.add('hidden');
     try { localStorage.setItem('lvl_tools_seen_at', String(Date.now())); } catch(_) {}
-}
+  }
 
-// ── CHARGER LES PRÉFÉRENCES NOTIF ──
-if (id === 'settings') {
+  // 4. Préférences notif au chargement settings
+  if (id === 'settings') {
     if (window.loadNotifPrefs) window.loadNotifPrefs();
     try { _updatePushToggleUI(); } catch(_) {}
     try { if (window._syncSettingsNotifToggles) window._syncSettingsNotifToggles(); } catch(_) {}
-}
+  }
 }
 
 // KEY GENERATION (LVL-XXXXX-XXXXX format)
@@ -10239,7 +10274,11 @@ PERMISSIONS ONBOARDING FLOW (3 étapes)
         if (perm === 'granted') {
           if (btn) { btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)'; btn.textContent = '✓ Activé !'; }
           if (sta) { sta.className = 'perms-status ok'; sta.textContent = '✓ Notifications activées — tu seras le premier informé des nouveautés LevelUp.'; }
+          // Effacer le flag welcome pour envoyer la notif de bienvenue même si déjà passé par le flow
+          try { localStorage.removeItem('lvl_welcome_notif_sent'); } catch(_) {}
           if (_permsUser && window.initFCM) setTimeout(function() { try { initFCM(_permsUser); } catch(e) {} }, 600);
+          // Envoyer la notification de bienvenue directement aussi (en cas de no-SW)
+          setTimeout(function() { try { if (window._sendWelcomeNotification) window._sendWelcomeNotification(); } catch(_) {} }, 3000);
           setTimeout(function() { _permsStep = 1; _render(1); }, 2200);
         } else {
           if (sta) { sta.className = 'perms-status err'; sta.textContent = 'Accès refusé — active-les dans les réglages de ton appareil pour ne rien rater.'; }
@@ -10267,10 +10306,23 @@ PERMISSIONS ONBOARDING FLOW (3 étapes)
           }
           setTimeout(function() { _permsStep = 2; _render(2); }, 1200);
         },
-        function() {
+        function(err) {
           _permsData.location = null;
-          if (sta) { sta.className = 'perms-status err'; sta.textContent = 'Accès refusé — tu pourras l\'activer plus tard dans les réglages.'; }
-          setTimeout(function() { _permsStep = 2; _render(2); }, 1400);
+          var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+          var isDenied = err && err.code === 1; // PERMISSION_DENIED
+          if (isDenied && isIOS) {
+            // Sur iOS : guider l'utilisateur vers les réglages système
+            if (sta) {
+              sta.className = 'perms-status err';
+              sta.innerHTML = '📍 Localisation désactivée dans les réglages.<br>'
+                + '<button onclick="try{window.open(\'App-Prefs:Privacy&path=LOCATION\');}catch(_){window.open(\'prefs:root=Privacy&path=LOCATION_SERVICES\');}" '
+                + 'style="margin-top:10px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.35);border-radius:9px;padding:9px 16px;color:#60a5fa;font-size:.8rem;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px">'
+                + '<i class="fa-solid fa-gear"></i> Ouvrir les Réglages iPhone</button>';
+            }
+          } else {
+            if (sta) { sta.className = 'perms-status err'; sta.textContent = 'Accès refusé — active la localisation dans les réglages de ton appareil.'; }
+          }
+          setTimeout(function() { _permsStep = 2; _render(2); }, isDenied && isIOS ? 5000 : 1400);
         },
         { timeout: 12000, maximumAge: 0, enableHighAccuracy: false }
       );
@@ -10307,24 +10359,34 @@ PERMISSIONS ONBOARDING FLOW (3 étapes)
 
   window._checkPermissions = async function(u) {
     if (!u) return;
-    // Uniquement en PWA (mode standalone) — pas sur navigateur mobile classique
-    var _isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    if (!_isPWA) return;
     _permsUser = u;
-    if (localStorage.getItem('lvl_perms_v2')) return;
     // Attendre que l'onboarding pseudo/age soit fermé s'il est ouvert
     var ob = document.getElementById('onboardingPopup');
     if (ob && ob.classList.contains('open')) return; // sera appelé depuis _obComplete
-    try {
-      var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-      var ref = _fi.doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
-      var snap = await _fi.getDoc(ref);
-      if (snap.exists() && snap.data().permsDone) {
-        localStorage.setItem('lvl_perms_v2', '1');
-        return;
-      }
-    } catch(e) {}
-    setTimeout(window._showPermsModal, 800);
+
+    // Si les notifications sont déjà accordées et le flow terminé → on sort
+    var notifOK = (typeof Notification !== 'undefined') && Notification.permission === 'granted';
+    if (notifOK && localStorage.getItem('lvl_perms_v2')) return;
+
+    // Vérifier côté Firestore si le flow a déjà été complété avec notifs granted
+    if (notifOK && window._db) {
+      try {
+        var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+        var ref = _fi.doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
+        var snap = await _fi.getDoc(ref);
+        if (snap.exists() && snap.data().permsDone && snap.data().notificationsGranted) {
+          localStorage.setItem('lvl_perms_v2', '1');
+          return;
+        }
+      } catch(e) {}
+    }
+
+    // Si les notifications ne sont PAS encore accordées (même si déjà passé par le flow),
+    // afficher le popup obligatoire pour que l'utilisateur active les permissions
+    var alreadyDenied = (typeof Notification !== 'undefined') && Notification.permission === 'denied';
+    if (!alreadyDenied) {
+      setTimeout(window._showPermsModal, 900);
+    }
   };
 
 })();
