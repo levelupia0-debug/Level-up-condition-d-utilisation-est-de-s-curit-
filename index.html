@@ -2798,6 +2798,38 @@ LOGOUT LOADING ANIMATION
 </div>
 
 <!-- ═══════════════════════════════════════
+2FA VERIFICATION OVERLAY
+═══════════════════════════════════════ -->
+<div id="twoFaOverlay" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px">
+<div style="background:#0a0a0a;border:1px solid rgba(168,85,247,.25);border-radius:24px;padding:36px 32px;max-width:400px;width:100%;text-align:center;animation:cIn .3s ease;position:relative">
+  <div style="width:64px;height:64px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem">🔐</div>
+  <h2 style="color:#fff;font-size:1.2rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em">Vérification en 2 étapes</h2>
+  <p id="twoFaSubtitle" style="color:rgba(255,255,255,.45);font-size:.82rem;margin:0 0 28px;line-height:1.6">Un code à 6 chiffres a été envoyé à <strong id="twoFaEmail" style="color:rgba(255,255,255,.7)"></strong></p>
+  <div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px" id="twoFaCodeBoxes">
+    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="0" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
+    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="1" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
+    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="2" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
+    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="3" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
+    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="4" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
+    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="5" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
+  </div>
+  <p id="twoFaError" style="color:#f87171;font-size:.78rem;min-height:20px;margin:0 0 16px;display:none">Code incorrect — réessayez</p>
+  <button id="twoFaVerifyBtn" onclick="window._verify2FA()" style="width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:12px;color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;font-family:var(--sans);margin-bottom:12px;transition:opacity .2s">Vérifier le code</button>
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+    <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
+    <span style="color:rgba(255,255,255,.25);font-size:.74rem">ou</span>
+    <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
+  </div>
+  <button onclick="window._verify2FAWithKey()" style="width:100%;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:rgba(255,255,255,.7);font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:10px;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.09)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><i class="fa-solid fa-key" style="font-size:.75rem;margin-right:6px;color:#a855f7"></i>Utiliser ma clé LevelUp</button>
+  <div id="twoFaKeyInputWrap" style="display:none;margin-bottom:10px">
+    <input type="text" id="twoFaKeyInput" placeholder="Votre clé LevelUp" style="width:100%;padding:11px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;font-size:.82rem;outline:none;font-family:'Courier New',monospace;box-sizing:border-box">
+    <button onclick="window._confirmKeyVerify()" style="width:100%;margin-top:8px;padding:10px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.35);border-radius:10px;color:#a855f7;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirmer avec la clé</button>
+  </div>
+  <button id="twoFaResendBtn" onclick="window._resend2FA()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:.76rem;cursor:pointer;font-family:var(--sans);padding:4px 8px;border-radius:6px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.65)'" onmouseout="this.style.color='rgba(255,255,255,.35)'"><i class="fa-solid fa-rotate-right" style="font-size:.7rem;margin-right:5px"></i>Renvoyer le code</button>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
 PHOTO PICKER OVERLAY
 ═══════════════════════════════════════ -->
 <div class="overlay hidden" id="photoPickerOv" onclick="bgClose(event,'photoPickerOv')">
@@ -3786,17 +3818,27 @@ window.handleGoogleLogin = window.googleSignIn;
 window.facebookSignIn = async function() {
   const btn = document.getElementById('fbSignInBtn') || document.getElementById('pcFbSignInBtn');
   const txt = document.getElementById('fbBtnTxt');
-  if (btn) btn.disabled = true;
+  const allFbBtns = document.querySelectorAll('#fbSignInBtn,#pcFbSignInBtn,[id*="fb"][id*="Btn"],[id*="Fb"][id*="Btn"]');
+  allFbBtns.forEach(b => { b.disabled = true; });
   if (txt) txt.textContent = 'Connexion en cours...';
   try {
     const fbProv = new FacebookAuthProvider();
-    // Toujours utiliser popup (redirect cause des problèmes sur iOS PWA et mobile)
+    fbProv.addScope('email');
+    fbProv.addScope('public_profile');
+    // Sur mobile/PWA → redirect (comme Google), popup bloqué par iOS/Android
+    const isMobileUA = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone;
+    if (isMobileUA) {
+      await signInWithRedirect(auth, fbProv);
+      return;
+    }
     await signInWithPopup(auth, fbProv);
   } catch(e) {
-    if (btn) btn.disabled = false;
+    allFbBtns.forEach(b => { b.disabled = false; });
     if (txt) txt.textContent = 'Continue with Facebook';
-    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
-      toast_('Erreur de connexion Facebook — réessayez', 'err');
+    if (e.code === 'auth/account-exists-with-different-credential') {
+      toast_('Un compte existe déjà avec cet email — connectez-vous via Google', 'err');
+    } else if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
+      toast_('Erreur Facebook : ' + (e.message || e.code), 'err');
     }
   }
 };
@@ -4842,6 +4884,201 @@ window.loadNotifPrefs = function() {
 };
 
 
+// ══════════════════════════════════════════════════════════════
+//  SYSTÈME 2FA — CODE EMAIL 6 CHIFFRES
+// ══════════════════════════════════════════════════════════════
+(function() {
+  // État interne 2FA
+  var _2fa = {
+    code: null,
+    expiresAt: 0,
+    uid: null,
+    user: null,
+    callback: null,
+    attempts: 0
+  };
+
+  // Générer code 6 chiffres
+  function _genCode() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  // Afficher l'overlay 2FA
+  window._show2FAOverlay = function(u, onSuccess) {
+    _2fa.code = _genCode();
+    _2fa.expiresAt = Date.now() + 10 * 60 * 1000; // 10 min
+    _2fa.uid = u.uid;
+    _2fa.user = u;
+    _2fa.callback = onSuccess;
+    _2fa.attempts = 0;
+
+    // Afficher email masqué
+    var email = u.email || '';
+    var masked = email.replace(/(.{2})(.*)(@.*)/, function(_, a, b, c) {
+      return a + b.replace(/./g, '*') + c;
+    });
+    var el = document.getElementById('twoFaEmail');
+    if (el) el.textContent = masked;
+
+    // Reset champs
+    var boxes = document.querySelectorAll('.twofa-digit');
+    boxes.forEach(function(b) { b.value = ''; b.style.borderColor = 'rgba(255,255,255,.15)'; });
+    var err = document.getElementById('twoFaError');
+    if (err) err.style.display = 'none';
+    var keyWrap = document.getElementById('twoFaKeyInputWrap');
+    if (keyWrap) keyWrap.style.display = 'none';
+    var keyInput = document.getElementById('twoFaKeyInput');
+    if (keyInput) keyInput.value = '';
+
+    // Afficher overlay
+    var ov = document.getElementById('twoFaOverlay');
+    if (ov) { ov.style.display = 'flex'; }
+
+    // Focus premier champ
+    setTimeout(function() {
+      var first = document.querySelector('.twofa-digit');
+      if (first) first.focus();
+    }, 200);
+
+    // Envoyer email
+    _send2FACode(u, _2fa.code);
+  };
+
+  function _send2FACode(u, code) {
+    var name = (window._ud && window._ud.displayName) || u.displayName || u.email?.split('@')[0] || '';
+    fetch('/api/send-2fa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: u.email, name: name, code: code })
+    }).catch(function() {});
+  }
+
+  // Vérifier le code
+  window._verify2FA = function() {
+    var boxes = document.querySelectorAll('.twofa-digit');
+    var entered = Array.from(boxes).map(function(b) { return b.value; }).join('');
+    if (entered.length < 6) {
+      _show2FAError('Entrez les 6 chiffres');
+      return;
+    }
+    if (Date.now() > _2fa.expiresAt) {
+      _show2FAError('Code expiré — renvoyez-en un nouveau');
+      return;
+    }
+    if (entered === _2fa.code) {
+      _close2FA();
+      if (_2fa.callback) _2fa.callback(_2fa.user);
+    } else {
+      _2fa.attempts++;
+      boxes.forEach(function(b) { b.style.borderColor = '#f87171'; });
+      _show2FAError(_2fa.attempts >= 3
+        ? 'Code incorrect (3 tentatives) — renvoyez un nouveau code'
+        : 'Code incorrect — réessayez');
+      if (_2fa.attempts >= 3) {
+        var boxes2 = document.querySelectorAll('.twofa-digit');
+        boxes2.forEach(function(b) { b.value = ''; });
+      }
+    }
+  };
+
+  // Vérification via clé LevelUp
+  window._verify2FAWithKey = function() {
+    var wrap = document.getElementById('twoFaKeyInputWrap');
+    if (wrap) {
+      var showing = wrap.style.display !== 'none';
+      wrap.style.display = showing ? 'none' : 'block';
+      if (!showing) {
+        var ki = document.getElementById('twoFaKeyInput');
+        if (ki) setTimeout(function() { ki.focus(); }, 100);
+      }
+    }
+  };
+
+  window._confirmKeyVerify = function() {
+    var ki = document.getElementById('twoFaKeyInput');
+    var enteredKey = ki ? ki.value.trim() : '';
+    if (!enteredKey) { _show2FAError('Entrez votre clé LevelUp'); return; }
+    var storedKey = localStorage.getItem('lm_key');
+    var storedUid = localStorage.getItem('lm_uid');
+    if (storedKey && storedKey === enteredKey && storedUid === _2fa.uid) {
+      _close2FA();
+      if (_2fa.callback) _2fa.callback(_2fa.user);
+    } else {
+      _show2FAError('Clé incorrecte ou non reconnue');
+    }
+  };
+
+  // Renvoyer code
+  window._resend2FA = function() {
+    if (!_2fa.user) return;
+    _2fa.code = _genCode();
+    _2fa.expiresAt = Date.now() + 10 * 60 * 1000;
+    _2fa.attempts = 0;
+    var boxes = document.querySelectorAll('.twofa-digit');
+    boxes.forEach(function(b) { b.value = ''; b.style.borderColor = 'rgba(255,255,255,.15)'; });
+    var err = document.getElementById('twoFaError');
+    if (err) err.style.display = 'none';
+    _send2FACode(_2fa.user, _2fa.code);
+    toast_ && toast_('Nouveau code envoyé !', 'ok');
+  };
+
+  function _show2FAError(msg) {
+    var err = document.getElementById('twoFaError');
+    if (err) { err.textContent = msg; err.style.display = 'block'; }
+  }
+
+  function _close2FA() {
+    var ov = document.getElementById('twoFaOverlay');
+    if (ov) ov.style.display = 'none';
+  }
+
+  // Navigation clavier entre cases
+  document.addEventListener('DOMContentLoaded', function() {
+    function _bind2FAInputs() {
+      var boxes = document.querySelectorAll('.twofa-digit');
+      boxes.forEach(function(box, i) {
+        box.addEventListener('input', function(e) {
+          var val = e.target.value.replace(/\D/g, '');
+          e.target.value = val.slice(-1);
+          e.target.style.borderColor = val ? '#a855f7' : 'rgba(255,255,255,.15)';
+          if (val && i < boxes.length - 1) boxes[i + 1].focus();
+          // Auto-vérifier si tous remplis
+          var all = Array.from(boxes).map(function(b) { return b.value; }).join('');
+          if (all.length === 6) setTimeout(window._verify2FA, 150);
+        });
+        box.addEventListener('keydown', function(e) {
+          if (e.key === 'Backspace' && !box.value && i > 0) {
+            boxes[i - 1].focus();
+          }
+          if (e.key === 'Enter') window._verify2FA();
+        });
+        box.addEventListener('paste', function(e) {
+          e.preventDefault();
+          var paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+          paste.split('').forEach(function(ch, idx) {
+            if (boxes[idx]) { boxes[idx].value = ch; boxes[idx].style.borderColor = '#a855f7'; }
+          });
+          if (paste.length === 6) setTimeout(window._verify2FA, 150);
+        });
+      });
+    }
+    _bind2FAInputs();
+  });
+
+  // Exposer pour tests
+  window._2fa_state = _2fa;
+})();
+
+// ── Détermine si une connexion est "nouvelle" (IP inconnue ou jamais connecté) ──
+window._isNewLogin = function(ud, locData) {
+  if (!ud) return false;
+  if (!ud.lastLoginAt) return true; // premier login
+  var knownIps = ud.knownIps || [];
+  var currentIp = locData && locData.ip;
+  if (!currentIp) return false;
+  return !knownIps.includes(currentIp);
+};
+
 onAuthStateChanged(auth, async (u) => {
 const savedKey = localStorage.getItem('lm_key');
 const savedUid = localStorage.getItem('lm_uid');
@@ -5008,13 +5245,37 @@ if (!window._ud.apiKey) {
 }
 await window.loadAppStatus();
 closeAuth();
-showDash(u);
-// Vérifier si onboarding complété
-window._checkOnboarding && window._checkOnboarding(u);
-// Vérifier permissions (notifs, localisation, cookies) pour nouveaux utilisateurs
-setTimeout(function() { window._checkPermissions && window._checkPermissions(u); }, 1500);
-// Push inbox depuis autres apps de l'écosystème
-setTimeout(function() { window._initPushInbox && window._initPushInbox(u); }, 2500);
+
+// ── 2FA : bloquer si nouvelle IP (sauf premier login qui a son propre welcome) ──
+// On utilise locData (IP actuelle) et les knownIps Firestore (avant mise à jour)
+const _currentIp2fa = (typeof locData !== 'undefined' && locData) ? locData.ip : (window._ud?.lastIp || null);
+const _knownIps2fa = window._ud?.knownIps || [];
+const _isNewConn = !!(
+  _currentIp2fa &&
+  window._ud?.lastLoginAt &&
+  !_knownIps2fa.includes(_currentIp2fa)
+);
+const _has2FAKey = localStorage.getItem('lvl_2fa_trusted_' + u.uid);
+
+if (_isNewConn && !_has2FAKey) {
+  // Nouvelle IP détectée — lancer la 2FA avant d'afficher le dashboard
+  window._show2FAOverlay(u, function(_u) {
+    // ✅ Code validé → marquer l'IP comme connue et continuer
+    localStorage.setItem('lvl_2fa_trusted_' + _u.uid, Date.now().toString());
+    showDash(_u);
+    window._checkOnboarding && window._checkOnboarding(_u);
+    setTimeout(function() { window._checkPermissions && window._checkPermissions(_u); }, 1500);
+    setTimeout(function() { window._initPushInbox && window._initPushInbox(_u); }, 2500);
+  });
+} else {
+  showDash(u);
+  // Vérifier si onboarding complété
+  window._checkOnboarding && window._checkOnboarding(u);
+  // Vérifier permissions (notifs, localisation, cookies) pour nouveaux utilisateurs
+  setTimeout(function() { window._checkPermissions && window._checkPermissions(u); }, 1500);
+  // Push inbox depuis autres apps de l'écosystème
+  setTimeout(function() { window._initPushInbox && window._initPushInbox(u); }, 2500);
+}
 
 // ── PUSH NOTIFICATIONS FCM ──
 setTimeout(() => initFCM(u), 1500);
