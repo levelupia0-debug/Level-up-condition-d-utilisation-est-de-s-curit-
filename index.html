@@ -447,7 +447,87 @@ body.lvl-panel-mode .panel>.pt,body.lvl-panel-mode .panel>.ps{display:none}
 @media(max-width:820px){
   body.lvl-panel-mode .db-main>.panel.on{padding:0 14px max(110px,calc(90px + env(safe-area-inset-bottom))) 14px}
 }
+/* ══════════════════════════════════════════════════════
+   FIX ÉCRAN NOIR — PANELS DASHBOARD (Mobile PWA)
+   À injecter dans ton <style> principal ou en <style> tag séparé
+══════════════════════════════════════════════════════ */
 
+/* 1. Le dashboard en mode panel ne doit PAS cacher le fond */
+body.lvl-panel-mode #dashboard {
+  background: var(--bg) !important;
+}
+
+/* 2. Le db-main doit rester visible et scrollable */
+body.lvl-panel-mode .db-main {
+  background: var(--bg) !important;
+  display: block !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* 3. Le panel actif doit être visible */
+body.lvl-panel-mode .panel.on {
+  display: block !important;
+  background: var(--bg) !important;
+  min-height: 100% !important;
+}
+
+/* 4. Fix spécifique PWA mobile — le dashboard fixed ne doit pas être transparent */
+@media (max-width: 820px) {
+  body.lvl-panel-mode #dashboard {
+    background: #030303 !important;
+    overflow: hidden !important;
+  }
+
+  body.lvl-panel-mode .db-main {
+    padding-top: 0 !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    padding-bottom: max(110px, calc(90px + env(safe-area-inset-bottom))) !important;
+    background: #030303 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    position: relative !important;
+  }
+
+  /* Le panel topbar (bouton retour) doit être visible */
+  body.lvl-panel-mode .panel-topbar {
+    display: flex !important;
+    background: #030303 !important;
+    padding-top: max(16px, env(safe-area-inset-top, 16px)) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+  }
+}
+
+/* 5. Fix search overlay — z-index suffisant + background solide */
+#searchOverlay {
+  background: #09090f !important;
+}
+
+/* 6. Fix tools/services/media overlays en PWA */
+.tools-overlay,
+.media-hub-overlay {
+  background: rgba(3, 3, 3, 0.97) !important;
+}
+
+/* 7. Empêcher le fond blanc/transparent sur iOS Safari en PWA */
+@media (display-mode: standalone) {
+  body.lvl-panel-mode #dashboard {
+    background: #030303 !important;
+  }
+  
+  body.lvl-panel-mode .db-main {
+    background: #030303 !important;
+  }
+
+  body.lvl-panel-mode .panel.on {
+    background: #030303 !important;
+  }
+}
 /* PANELS */
 .panel{display:none}
 .panel.on{display:block}
