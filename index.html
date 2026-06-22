@@ -426,12 +426,23 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 /* Quand un panel non-home est actif */
 body.lvl-panel-mode #nav{display:none!important}
 body.lvl-panel-mode .sidebar{display:none!important}
-body.lvl-panel-mode #dashboard{padding-top:0!important;display:block!important}
-body.lvl-panel-mode .db-main{position:fixed!important;inset:0!important;z-index:9500!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;background:var(--bg)!important;padding:0!important;min-height:unset!important}
+/* Dashboard devient le conteneur fixed — plus fiable que fixer .db-main seul */
+body.lvl-panel-mode #dashboard{
+  position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;
+  width:100%!important;height:100%!important;min-height:unset!important;
+  z-index:9500!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;padding-top:0!important;
+  background:var(--bg)!important;
+}
+body.lvl-panel-mode .db-main{
+  flex:1 1 auto!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;
+  position:relative!important;padding:0!important;min-height:0!important;
+  background:var(--bg)!important;width:100%!important;
+}
 body.lvl-panel-mode .overlay,body.lvl-panel-mode .logout-loader{z-index:9999!important}
 body.lvl-panel-mode .db-main>.panel.on{max-width:880px;margin:0 auto;padding:0 24px 120px;box-sizing:border-box}
 body.lvl-panel-mode .panel-topbar{display:flex}
-/* Cacher h1.pt et p.ps car le topbar contient déjà le titre */
 body.lvl-panel-mode .panel>.pt,body.lvl-panel-mode .panel>.ps{display:none}
 @media(max-width:820px){
   body.lvl-panel-mode .db-main>.panel.on{padding:0 14px max(110px,calc(90px + env(safe-area-inset-bottom))) 14px}
@@ -2339,7 +2350,27 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 <div class="set-row"><div class="set-info"><h5>Adresse email</h5><p id="setEmail">—</p></div></div>
 <div class="set-row"><div class="set-info"><h5>Membre depuis</h5><p id="setJoined">—</p></div></div>
-<div class="set-row"><div class="set-info"><h5>Fournisseur d'identité</h5><p>Google OAuth 2.0</p></div><div style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--green);font-weight:600;white-space:nowrap"><i class="fa-solid fa-check-circle"></i> Vérifié</div></div>
+</div>
+
+<!-- ── SECTION COMPTES LIÉS ── -->
+<div class="set-sec" id="linkedProvidersSec">
+<div class="set-title" style="display:flex;align-items:center;gap:8px"><i class="fa-solid fa-link" style="color:#a855f7;font-size:.78rem"></i> Comptes liés</div>
+<div class="set-row" id="linkedGoogleRow" style="align-items:center">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-brands fa-google" style="color:#4285f4;font-size:.9rem"></i></div>
+    <div class="set-info"><h5>Google</h5><p id="linkedGoogleStatus" style="color:var(--muted)">Non lié</p></div>
+  </div>
+  <span id="linkedGoogleBadge" style="display:none;align-items:center;gap:4px;font-size:.73rem;color:#22c55e;font-weight:700;white-space:nowrap"><i class="fa-solid fa-check-circle"></i> Actif</span>
+</div>
+<div class="set-row" id="linkedFbRow" style="align-items:center">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-brands fa-facebook" style="color:#3b82f6;font-size:.9rem"></i></div>
+    <div class="set-info"><h5>Facebook</h5><p id="linkedFbStatus" style="color:var(--muted)">Non lié</p></div>
+  </div>
+  <button id="linkedFbBtn" onclick="window._toggleFbLink()" class="btn btn-g btn-xs" style="white-space:nowrap;display:none">Lier</button>
+  <span id="linkedFbBadge" style="display:none;align-items:center;gap:4px;font-size:.73rem;color:#22c55e;font-weight:700;white-space:nowrap"><i class="fa-solid fa-check-circle"></i> Actif</span>
+</div>
+<div id="linkedOtherRows"></div>
 </div>
 <div class="set-sec">
 <div class="set-title">Sécurité des clés</div>
@@ -2798,34 +2829,65 @@ LOGOUT LOADING ANIMATION
 </div>
 
 <!-- ═══════════════════════════════════════
-2FA VERIFICATION OVERLAY
+OVERLAY DOUBLE AUTHENTIFICATION (2FA)
 ═══════════════════════════════════════ -->
-<div id="twoFaOverlay" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px">
-<div style="background:#0a0a0a;border:1px solid rgba(168,85,247,.25);border-radius:24px;padding:36px 32px;max-width:400px;width:100%;text-align:center;animation:cIn .3s ease;position:relative">
-  <div style="width:64px;height:64px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem">🔐</div>
-  <h2 style="color:#fff;font-size:1.2rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em">Vérification en 2 étapes</h2>
-  <p id="twoFaSubtitle" style="color:rgba(255,255,255,.45);font-size:.82rem;margin:0 0 28px;line-height:1.6">Un code à 6 chiffres a été envoyé à <strong id="twoFaEmail" style="color:rgba(255,255,255,.7)"></strong></p>
-  <div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px" id="twoFaCodeBoxes">
-    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="0" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
-    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="1" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
-    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="2" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
-    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="3" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
-    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="4" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
-    <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="5" style="width:46px;height:54px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:1.5rem;font-weight:700;text-align:center;outline:none;font-family:var(--sans);transition:border-color .2s;caret-color:#a855f7">
+<div id="twoFaOverlay" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(3,3,3,.93);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);align-items:center;justify-content:center;padding:20px;overflow-y:auto">
+<div style="background:linear-gradient(180deg,#0f0f1a 0%,#0a0a12 100%);border:1px solid rgba(168,85,247,.22);border-radius:28px;max-width:420px;width:100%;text-align:center;animation:cIn .3s ease;position:relative;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.03)">
+  <div style="height:2px;background:linear-gradient(90deg,transparent 0%,#7c3aed 30%,#a855f7 50%,#7c3aed 70%,transparent 100%)"></div>
+  <div style="padding:32px 28px 28px;position:relative">
+    <button onclick="window._back2FAToLogin()" style="position:absolute;top:0;left:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:6px 11px;color:rgba(255,255,255,.45);font-size:.73rem;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:4px;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.45)'"><i class="fa-solid fa-arrow-left" style="font-size:.62rem"></i> Retour</button>
+    <div style="width:72px;height:72px;background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(168,85,247,.08));border:1px solid rgba(168,85,247,.28);border-radius:22px;display:flex;align-items:center;justify-content:center;margin:10px auto 18px;font-size:2rem">🔐</div>
+    <h2 style="color:#fff;font-size:1.22rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em">Vérification requise</h2>
+    <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:rgba(168,85,247,.09);border:1px solid rgba(168,85,247,.22);border-radius:100px;margin-bottom:14px">
+      <span style="width:5px;height:5px;border-radius:50%;background:#a855f7;display:inline-block"></span>
+      <span style="font-size:.71rem;color:#c084fc;font-weight:700;letter-spacing:.03em">Nouvel appareil détecté</span>
+    </div>
+    <p id="twoFaSubtitle" style="color:rgba(255,255,255,.38);font-size:.81rem;margin:0 0 26px;line-height:1.65">Code envoyé à <strong id="twoFaEmail" style="color:rgba(255,255,255,.65)"></strong></p>
+    <div style="display:flex;gap:7px;justify-content:center;margin-bottom:8px" id="twoFaCodeBoxes">
+      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="0" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
+      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="1" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
+      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="2" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
+      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="3" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
+      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="4" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
+      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="5" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
+    </div>
+    <div id="twoFaError" style="color:#f87171;font-size:.77rem;min-height:16px;margin:0 0 14px;display:none;padding:8px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.14);border-radius:9px;text-align:center">Code incorrect — réessayez</div>
+    <button id="twoFaVerifyBtn" onclick="window._verify2FA()" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:14px;color:#fff;font-size:.92rem;font-weight:800;cursor:pointer;font-family:var(--sans);margin-bottom:10px;transition:opacity .2s;letter-spacing:.01em">Vérifier le code</button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+      <span style="color:rgba(255,255,255,.2);font-size:.72rem">ou</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+    </div>
+    <button onclick="window._verify2FAWithKey()" style="width:100%;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;color:rgba(255,255,255,.6);font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:10px;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><i class="fa-solid fa-key" style="font-size:.73rem;margin-right:6px;color:#a855f7"></i>Utiliser ma clé LevelUp</button>
+    <div id="twoFaKeyInputWrap" style="display:none;margin-bottom:10px">
+      <input type="text" id="twoFaKeyInput" placeholder="LVL-XXXXX-XXXXX" style="width:100%;padding:11px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(168,85,247,.22);border-radius:12px;color:#fff;font-size:.82rem;outline:none;font-family:'Courier New',monospace;box-sizing:border-box;margin-bottom:7px">
+      <button onclick="window._confirmKeyVerify()" style="width:100%;padding:10px;background:rgba(168,85,247,.14);border:1px solid rgba(168,85,247,.3);border-radius:12px;color:#a855f7;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirmer avec la clé</button>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <button id="twoFaResendBtn" onclick="window._resend2FA()" style="background:none;border:none;color:rgba(255,255,255,.28);font-size:.75rem;cursor:pointer;font-family:var(--sans);padding:4px 8px;border-radius:6px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.28)'"><i class="fa-solid fa-rotate-right" style="font-size:.67rem;margin-right:4px"></i>Renvoyer le code</button>
+      <span id="twoFaQuotaInfo" style="font-size:.69rem;color:rgba(255,255,255,.2)"></span>
+    </div>
   </div>
-  <p id="twoFaError" style="color:#f87171;font-size:.78rem;min-height:20px;margin:0 0 16px;display:none">Code incorrect — réessayez</p>
-  <button id="twoFaVerifyBtn" onclick="window._verify2FA()" style="width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:12px;color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;font-family:var(--sans);margin-bottom:12px;transition:opacity .2s">Vérifier le code</button>
-  <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-    <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
-    <span style="color:rgba(255,255,255,.25);font-size:.74rem">ou</span>
-    <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+POPUP LIAISON COMPTE FACEBOOK + GOOGLE
+═══════════════════════════════════════ -->
+<div class="overlay hidden" id="fbLinkOv" onclick="bgClose(event,'fbLinkOv')">
+<div class="conf-card" style="max-width:380px">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <div style="width:44px;height:44px;border-radius:50%;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-brands fa-facebook" style="color:#3b82f6;font-size:1.1rem"></i></div>
+    <div><h3 style="font-size:1rem;font-weight:800;margin:0 0 2px">Compte déjà existant</h3><p style="font-size:.77rem;color:var(--muted);margin:0">Même email — Google &amp; Facebook</p></div>
   </div>
-  <button onclick="window._verify2FAWithKey()" style="width:100%;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:rgba(255,255,255,.7);font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:10px;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.09)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><i class="fa-solid fa-key" style="font-size:.75rem;margin-right:6px;color:#a855f7"></i>Utiliser ma clé LevelUp</button>
-  <div id="twoFaKeyInputWrap" style="display:none;margin-bottom:10px">
-    <input type="text" id="twoFaKeyInput" placeholder="Votre clé LevelUp" style="width:100%;padding:11px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;font-size:.82rem;outline:none;font-family:'Courier New',monospace;box-sizing:border-box">
-    <button onclick="window._confirmKeyVerify()" style="width:100%;margin-top:8px;padding:10px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.35);border-radius:10px;color:#a855f7;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirmer avec la clé</button>
+  <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px;margin-bottom:18px">
+    <p style="font-size:.83rem;color:rgba(255,255,255,.7);margin:0 0 8px;line-height:1.6">Un compte LevelUp existe déjà avec l'adresse <strong id="fbLinkEmail" style="color:#fff"></strong> (via Google).</p>
+    <p style="font-size:.8rem;color:var(--muted);margin:0;line-height:1.65">Souhaitez-vous lier votre compte Facebook pour vous connecter avec les deux méthodes ?</p>
   </div>
-  <button id="twoFaResendBtn" onclick="window._resend2FA()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:.76rem;cursor:pointer;font-family:var(--sans);padding:4px 8px;border-radius:6px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.65)'" onmouseout="this.style.color='rgba(255,255,255,.35)'"><i class="fa-solid fa-rotate-right" style="font-size:.7rem;margin-right:5px"></i>Renvoyer le code</button>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <button onclick="window._linkFbToGoogle()" id="fbLinkConfirmBtn" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:none;border-radius:13px;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--sans)"><i class="fa-brands fa-facebook" style="margin-right:7px"></i>Lier les deux comptes</button>
+    <button onclick="closeOverlay('fbLinkOv')" style="width:100%;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:13px;color:rgba(255,255,255,.55);font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--sans)">Annuler</button>
+  </div>
 </div>
 </div>
 
@@ -3632,7 +3694,7 @@ FIREBASE & APP LOGIC
 ═══════════════════════════════════════ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithCredential, GoogleAuthProvider, FacebookAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithCredential, linkWithCredential, GoogleAuthProvider, FacebookAuthProvider, signOut, signInAnonymously, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collectionGroup, getDocs, collection, query, where, onSnapshot, addDoc, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js";
 
@@ -3836,10 +3898,35 @@ window.facebookSignIn = async function() {
     allFbBtns.forEach(b => { b.disabled = false; });
     if (txt) txt.textContent = 'Continue with Facebook';
     if (e.code === 'auth/account-exists-with-different-credential') {
-      toast_('Un compte existe déjà avec cet email — connectez-vous via Google', 'err');
+      // Même email déjà utilisé avec Google → proposer de lier les comptes
+      window._pendingFbCred = FacebookAuthProvider.credentialFromError(e);
+      window._pendingFbEmail = e.customData?.email || '';
+      var el = document.getElementById('fbLinkEmail');
+      if (el) el.textContent = window._pendingFbEmail;
+      var ov = document.getElementById('fbLinkOv');
+      if (ov) { ov.classList.remove('hidden'); ov.style.display = 'flex'; }
     } else if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
       toast_('Erreur Facebook : ' + (e.message || e.code), 'err');
     }
+  }
+};
+
+// LIAISON COMPTE FACEBOOK + GOOGLE (même email)
+window._linkFbToGoogle = async function() {
+  var btn = document.getElementById('fbLinkConfirmBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion Google…'; }
+  try {
+    var gProv = new GoogleAuthProvider();
+    var result = await signInWithPopup(auth, gProv);
+    if (window._pendingFbCred) {
+      await linkWithCredential(result.user, window._pendingFbCred);
+      window._pendingFbCred = null;
+    }
+    closeOverlay('fbLinkOv');
+    toast_('✅ Comptes Facebook & Google liés avec succès !', 'ok');
+  } catch(err) {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-brands fa-facebook" style="margin-right:7px"></i>Lier les deux comptes'; }
+    toast_('Erreur de liaison : ' + (err.message || err.code), 'err');
   }
 };
 
@@ -4888,184 +4975,165 @@ window.loadNotifPrefs = function() {
 //  SYSTÈME 2FA — CODE EMAIL 6 CHIFFRES
 // ══════════════════════════════════════════════════════════════
 (function() {
-  // État interne 2FA
-  var _2fa = {
-    code: null,
-    expiresAt: 0,
-    uid: null,
-    user: null,
-    callback: null,
-    attempts: 0
-  };
+  var _2fa = { code: null, expiresAt: 0, uid: null, user: null, callback: null, attempts: 0 };
 
-  // Générer code 6 chiffres
-  function _genCode() {
-    return String(Math.floor(100000 + Math.random() * 900000));
+  function _genCode() { return String(Math.floor(100000 + Math.random() * 900000)); }
+
+  // ── Quota renvoi : max 2 codes/jour ──
+  function _getResendQuota(uid) {
+    try {
+      var raw = localStorage.getItem('lvl_2fa_resend_' + uid);
+      var p = raw ? JSON.parse(raw) : null;
+      var today = new Date().toDateString();
+      return (p && p.date === today) ? p : { count: 0, date: today };
+    } catch(_) { return { count: 0, date: new Date().toDateString() }; }
+  }
+  function _saveResendQuota(uid, q) {
+    try { localStorage.setItem('lvl_2fa_resend_' + uid, JSON.stringify(q)); } catch(_) {}
+  }
+  function _updateQuotaUI(uid) {
+    var q = _getResendQuota(uid);
+    var remaining = Math.max(0, 2 - q.count);
+    var btn = document.getElementById('twoFaResendBtn');
+    var info = document.getElementById('twoFaQuotaInfo');
+    if (remaining === 0) {
+      if (btn) { btn.disabled = true; btn.style.opacity = '.3'; btn.style.cursor = 'default'; }
+      if (info) info.textContent = 'Limite atteinte — attendez 24h, utilisez votre clé ou cliquez Retour';
+    } else {
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = 'pointer'; }
+      if (info) info.textContent = remaining === 1 ? '1 renvoi restant aujourd\'hui' : '';
+    }
   }
 
-  // Afficher l'overlay 2FA
+  // ── Afficher l'overlay 2FA ──
   window._show2FAOverlay = function(u, onSuccess) {
     _2fa.code = _genCode();
-    _2fa.expiresAt = Date.now() + 10 * 60 * 1000; // 10 min
-    _2fa.uid = u.uid;
-    _2fa.user = u;
-    _2fa.callback = onSuccess;
-    _2fa.attempts = 0;
-
-    // Afficher email masqué
+    _2fa.expiresAt = Date.now() + 10 * 60 * 1000;
+    _2fa.uid = u.uid; _2fa.user = u; _2fa.callback = onSuccess; _2fa.attempts = 0;
     var email = u.email || '';
-    var masked = email.replace(/(.{2})(.*)(@.*)/, function(_, a, b, c) {
-      return a + b.replace(/./g, '*') + c;
-    });
-    var el = document.getElementById('twoFaEmail');
-    if (el) el.textContent = masked;
-
-    // Reset champs
-    var boxes = document.querySelectorAll('.twofa-digit');
-    boxes.forEach(function(b) { b.value = ''; b.style.borderColor = 'rgba(255,255,255,.15)'; });
-    var err = document.getElementById('twoFaError');
-    if (err) err.style.display = 'none';
-    var keyWrap = document.getElementById('twoFaKeyInputWrap');
-    if (keyWrap) keyWrap.style.display = 'none';
-    var keyInput = document.getElementById('twoFaKeyInput');
-    if (keyInput) keyInput.value = '';
-
-    // Afficher overlay
-    var ov = document.getElementById('twoFaOverlay');
-    if (ov) { ov.style.display = 'flex'; }
-
-    // Focus premier champ
-    setTimeout(function() {
-      var first = document.querySelector('.twofa-digit');
-      if (first) first.focus();
-    }, 200);
-
-    // Envoyer email
+    var masked = email.replace(/(.{2})(.*)(@.*)/, function(_, a, b, c) { return a + b.replace(/./g, '*') + c; });
+    var el = document.getElementById('twoFaEmail'); if (el) el.textContent = masked;
+    document.querySelectorAll('.twofa-digit').forEach(function(b) { b.value = ''; b.style.borderColor = 'rgba(255,255,255,.1)'; });
+    var err = document.getElementById('twoFaError'); if (err) err.style.display = 'none';
+    var keyWrap = document.getElementById('twoFaKeyInputWrap'); if (keyWrap) keyWrap.style.display = 'none';
+    var ki = document.getElementById('twoFaKeyInput'); if (ki) ki.value = '';
+    var ov = document.getElementById('twoFaOverlay'); if (ov) ov.style.display = 'flex';
+    try { sessionStorage.setItem('lvl_2fa_pending_' + u.uid, '1'); } catch(_) {}
+    _updateQuotaUI(u.uid);
     _send2FACode(u, _2fa.code);
+    setTimeout(function() { var f = document.querySelector('.twofa-digit'); if (f) f.focus(); }, 220);
   };
 
   function _send2FACode(u, code) {
     var name = (window._ud && window._ud.displayName) || u.displayName || u.email?.split('@')[0] || '';
-    fetch('/api/send-2fa', {
+    fetch('/api/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: u.email, name: name, code: code })
+      body: JSON.stringify({ email: u.email, name: name, type: 'TWO_FA', code: code })
     }).catch(function() {});
   }
 
-  // Vérifier le code
+  // ── Vérifier le code ──
   window._verify2FA = function() {
     var boxes = document.querySelectorAll('.twofa-digit');
     var entered = Array.from(boxes).map(function(b) { return b.value; }).join('');
-    if (entered.length < 6) {
-      _show2FAError('Entrez les 6 chiffres');
-      return;
-    }
-    if (Date.now() > _2fa.expiresAt) {
-      _show2FAError('Code expiré — renvoyez-en un nouveau');
-      return;
-    }
+    if (entered.length < 6) { _show2FAError('Entrez les 6 chiffres'); return; }
+    if (Date.now() > _2fa.expiresAt) { _show2FAError('Code expiré — renvoyez un nouveau code'); return; }
     if (entered === _2fa.code) {
+      try { sessionStorage.removeItem('lvl_2fa_pending_' + _2fa.uid); } catch(_) {}
+      try { sessionStorage.setItem('lvl_2fa_ok_' + _2fa.uid, '1'); } catch(_) {}
       _close2FA();
       if (_2fa.callback) _2fa.callback(_2fa.user);
     } else {
       _2fa.attempts++;
-      boxes.forEach(function(b) { b.style.borderColor = '#f87171'; });
+      boxes.forEach(function(b) { b.style.borderColor = 'rgba(248,113,113,.5)'; });
+      var left = Math.max(0, 3 - _2fa.attempts);
       _show2FAError(_2fa.attempts >= 3
         ? 'Code incorrect (3 tentatives) — renvoyez un nouveau code'
-        : 'Code incorrect — réessayez');
-      if (_2fa.attempts >= 3) {
-        var boxes2 = document.querySelectorAll('.twofa-digit');
-        boxes2.forEach(function(b) { b.value = ''; });
-      }
+        : 'Code incorrect — ' + left + ' essai' + (left > 1 ? 's' : '') + ' restant');
+      if (_2fa.attempts >= 3) document.querySelectorAll('.twofa-digit').forEach(function(b) { b.value = ''; });
     }
   };
 
-  // Vérification via clé LevelUp
+  // ── Clé LevelUp ──
   window._verify2FAWithKey = function() {
-    var wrap = document.getElementById('twoFaKeyInputWrap');
-    if (wrap) {
-      var showing = wrap.style.display !== 'none';
-      wrap.style.display = showing ? 'none' : 'block';
-      if (!showing) {
-        var ki = document.getElementById('twoFaKeyInput');
-        if (ki) setTimeout(function() { ki.focus(); }, 100);
-      }
-    }
+    var wrap = document.getElementById('twoFaKeyInputWrap'); if (!wrap) return;
+    var showing = wrap.style.display !== 'none';
+    wrap.style.display = showing ? 'none' : 'block';
+    if (!showing) { var ki = document.getElementById('twoFaKeyInput'); if (ki) setTimeout(function() { ki.focus(); }, 100); }
   };
-
   window._confirmKeyVerify = function() {
     var ki = document.getElementById('twoFaKeyInput');
     var enteredKey = ki ? ki.value.trim() : '';
     if (!enteredKey) { _show2FAError('Entrez votre clé LevelUp'); return; }
-    var storedKey = localStorage.getItem('lm_key');
-    var storedUid = localStorage.getItem('lm_uid');
+    var storedKey = localStorage.getItem('lm_key'), storedUid = localStorage.getItem('lm_uid');
     if (storedKey && storedKey === enteredKey && storedUid === _2fa.uid) {
-      _close2FA();
-      if (_2fa.callback) _2fa.callback(_2fa.user);
-    } else {
-      _show2FAError('Clé incorrecte ou non reconnue');
-    }
+      try { sessionStorage.removeItem('lvl_2fa_pending_' + _2fa.uid); } catch(_) {}
+      try { sessionStorage.setItem('lvl_2fa_ok_' + _2fa.uid, '1'); } catch(_) {}
+      _close2FA(); if (_2fa.callback) _2fa.callback(_2fa.user);
+    } else { _show2FAError('Clé incorrecte ou non reconnue'); }
   };
 
-  // Renvoyer code
+  // ── Renvoyer le code (quota 2/jour) ──
   window._resend2FA = function() {
     if (!_2fa.user) return;
-    _2fa.code = _genCode();
-    _2fa.expiresAt = Date.now() + 10 * 60 * 1000;
-    _2fa.attempts = 0;
-    var boxes = document.querySelectorAll('.twofa-digit');
-    boxes.forEach(function(b) { b.value = ''; b.style.borderColor = 'rgba(255,255,255,.15)'; });
-    var err = document.getElementById('twoFaError');
-    if (err) err.style.display = 'none';
+    var q = _getResendQuota(_2fa.uid);
+    if (q.count >= 2) { _show2FAError('Limite atteinte — attendez 24h ou utilisez votre clé'); _updateQuotaUI(_2fa.uid); return; }
+    q.count++; _saveResendQuota(_2fa.uid, q);
+    _2fa.code = _genCode(); _2fa.expiresAt = Date.now() + 10 * 60 * 1000; _2fa.attempts = 0;
+    document.querySelectorAll('.twofa-digit').forEach(function(b) { b.value = ''; b.style.borderColor = 'rgba(255,255,255,.1)'; });
+    var err = document.getElementById('twoFaError'); if (err) err.style.display = 'none';
     _send2FACode(_2fa.user, _2fa.code);
-    toast_ && toast_('Nouveau code envoyé !', 'ok');
+    _updateQuotaUI(_2fa.uid);
+    toast_ && toast_('Nouveau code envoyé à ' + (_2fa.user.email || '') + ' !', 'ok');
+  };
+
+  // ── Retour à la page de connexion ──
+  window._back2FAToLogin = async function() {
+    _close2FA();
+    try { sessionStorage.removeItem('lvl_2fa_pending_' + (_2fa.uid || '')); } catch(_) {}
+    _2fa.uid = null; _2fa.user = null; _2fa.callback = null;
+    try { await signOut(auth); } catch(_e) {}
+    // Retourner à l'écran de connexion
+    var dash = document.getElementById('dashboard'); if (dash) dash.style.display = 'none';
+    var authEl = document.getElementById('authOverlay') || document.querySelector('.auth-screen');
+    if (authEl) { authEl.classList.remove('hidden'); authEl.style.display = ''; }
+    document.body.classList.remove('lvl-panel-mode', 'lvl-in-settings');
   };
 
   function _show2FAError(msg) {
     var err = document.getElementById('twoFaError');
     if (err) { err.textContent = msg; err.style.display = 'block'; }
   }
+  function _close2FA() { var ov = document.getElementById('twoFaOverlay'); if (ov) ov.style.display = 'none'; }
 
-  function _close2FA() {
-    var ov = document.getElementById('twoFaOverlay');
-    if (ov) ov.style.display = 'none';
-  }
-
-  // Navigation clavier entre cases
+  // ── Navigation clavier entre cases ──
   document.addEventListener('DOMContentLoaded', function() {
-    function _bind2FAInputs() {
-      var boxes = document.querySelectorAll('.twofa-digit');
-      boxes.forEach(function(box, i) {
-        box.addEventListener('input', function(e) {
-          var val = e.target.value.replace(/\D/g, '');
-          e.target.value = val.slice(-1);
-          e.target.style.borderColor = val ? '#a855f7' : 'rgba(255,255,255,.15)';
-          if (val && i < boxes.length - 1) boxes[i + 1].focus();
-          // Auto-vérifier si tous remplis
-          var all = Array.from(boxes).map(function(b) { return b.value; }).join('');
-          if (all.length === 6) setTimeout(window._verify2FA, 150);
-        });
-        box.addEventListener('keydown', function(e) {
-          if (e.key === 'Backspace' && !box.value && i > 0) {
-            boxes[i - 1].focus();
-          }
-          if (e.key === 'Enter') window._verify2FA();
-        });
-        box.addEventListener('paste', function(e) {
-          e.preventDefault();
-          var paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
-          paste.split('').forEach(function(ch, idx) {
-            if (boxes[idx]) { boxes[idx].value = ch; boxes[idx].style.borderColor = '#a855f7'; }
-          });
-          if (paste.length === 6) setTimeout(window._verify2FA, 150);
-        });
+    var boxes = document.querySelectorAll('.twofa-digit');
+    boxes.forEach(function(box, i) {
+      box.addEventListener('input', function(e) {
+        var val = e.target.value.replace(/\D/g, '');
+        e.target.value = val.slice(-1);
+        e.target.style.borderColor = val ? 'rgba(168,85,247,.7)' : 'rgba(255,255,255,.1)';
+        if (val && i < boxes.length - 1) boxes[i + 1].focus();
+        var all = Array.from(boxes).map(function(b) { return b.value; }).join('');
+        if (all.length === 6) setTimeout(window._verify2FA, 150);
       });
-    }
-    _bind2FAInputs();
+      box.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+        if (e.key === 'Enter') window._verify2FA();
+      });
+      box.addEventListener('paste', function(e) {
+        e.preventDefault();
+        var paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        paste.split('').forEach(function(ch, idx) {
+          if (boxes[idx]) { boxes[idx].value = ch; boxes[idx].style.borderColor = 'rgba(168,85,247,.7)'; }
+        });
+        if (paste.length === 6) setTimeout(window._verify2FA, 150);
+      });
+    });
   });
 
-  // Exposer pour tests
   window._2fa_state = _2fa;
 })();
 
@@ -5246,8 +5314,7 @@ if (!window._ud.apiKey) {
 await window.loadAppStatus();
 closeAuth();
 
-// ── 2FA : bloquer si nouvelle IP (sauf premier login qui a son propre welcome) ──
-// On utilise locData (IP actuelle) et les knownIps Firestore (avant mise à jour)
+// ── 2FA : bloquer si nouvelle IP ET session pas encore validée ──
 const _currentIp2fa = (typeof locData !== 'undefined' && locData) ? locData.ip : (window._ud?.lastIp || null);
 const _knownIps2fa = window._ud?.knownIps || [];
 const _isNewConn = !!(
@@ -5256,11 +5323,13 @@ const _isNewConn = !!(
   !_knownIps2fa.includes(_currentIp2fa)
 );
 const _has2FAKey = localStorage.getItem('lvl_2fa_trusted_' + u.uid);
+const _sessionOk = (() => { try { return sessionStorage.getItem('lvl_2fa_ok_' + u.uid); } catch(_) { return null; } })();
+const _sessionPending = (() => { try { return sessionStorage.getItem('lvl_2fa_pending_' + u.uid); } catch(_) { return null; } })();
 
-if (_isNewConn && !_has2FAKey) {
-  // Nouvelle IP détectée — lancer la 2FA avant d'afficher le dashboard
+// Déclencher 2FA si : (nouvelle IP OU refresh pendant 2FA) ET pas d'appareil de confiance ET session pas déjà validée ce chargement
+if ((_isNewConn || _sessionPending) && !_has2FAKey && !_sessionOk) {
+  try { sessionStorage.setItem('lvl_2fa_pending_' + u.uid, '1'); } catch(_) {}
   window._show2FAOverlay(u, function(_u) {
-    // ✅ Code validé → marquer l'IP comme connue et continuer
     localStorage.setItem('lvl_2fa_trusted_' + _u.uid, Date.now().toString());
     showDash(_u);
     window._checkOnboarding && window._checkOnboarding(_u);
@@ -5269,11 +5338,8 @@ if (_isNewConn && !_has2FAKey) {
   });
 } else {
   showDash(u);
-  // Vérifier si onboarding complété
   window._checkOnboarding && window._checkOnboarding(u);
-  // Vérifier permissions (notifs, localisation, cookies) pour nouveaux utilisateurs
   setTimeout(function() { window._checkPermissions && window._checkPermissions(u); }, 1500);
-  // Push inbox depuis autres apps de l'écosystème
   setTimeout(function() { window._initPushInbox && window._initPushInbox(u); }, 2500);
 }
 
@@ -6352,6 +6418,51 @@ const snEl2 = document.getElementById('setName'); if(snEl2) snEl2.textContent = 
 const seEl = document.getElementById('setEmail'); if(seEl) seEl.textContent = d?.email || u?.email || '—';
 const ssec = document.getElementById('settingsSecEmail'); if(ssec) { const _em = d?.email || u?.email || ''; ssec.innerHTML = `<i class="fa-solid fa-check-circle" style="font-size:.7rem"></i> ${_em || 'Vérifié & Actif'}`; }
 const sjEl = document.getElementById('setJoined'); if(sjEl && d?.createdAt) sjEl.textContent = new Date(d.createdAt).toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
+
+// ── Comptes liés (providers) ──
+try {
+  var _providers = u.providerData || [];
+  var _hasGoogle = _providers.some(function(p){ return p.providerId === 'google.com'; });
+  var _hasFb = _providers.some(function(p){ return p.providerId === 'facebook.com'; });
+
+  var gsEl = document.getElementById('linkedGoogleStatus');
+  var gbEl = document.getElementById('linkedGoogleBadge');
+  if(gsEl) gsEl.textContent = _hasGoogle ? u.email || '' : 'Non lié';
+  if(gbEl) { gbEl.style.display = _hasGoogle ? 'flex' : 'none'; }
+
+  var fbSt = document.getElementById('linkedFbStatus');
+  var fbBadge = document.getElementById('linkedFbBadge');
+  var fbBtn = document.getElementById('linkedFbBtn');
+  if(fbSt) fbSt.textContent = _hasFb ? (_providers.find(function(p){ return p.providerId === 'facebook.com'; })?.email || 'Lié') : 'Non lié';
+  if(fbBadge) fbBadge.style.display = _hasFb ? 'flex' : 'none';
+  if(fbBtn) { fbBtn.style.display = _hasFb ? 'none' : 'inline-flex'; fbBtn.textContent = 'Lier'; }
+
+  // Autres providers éventuels
+  var _other = _providers.filter(function(p){ return p.providerId !== 'google.com' && p.providerId !== 'facebook.com'; });
+  var _otherDiv = document.getElementById('linkedOtherRows');
+  if(_otherDiv && _other.length) {
+    _otherDiv.innerHTML = _other.map(function(p){ return '<div class="set-row" style="align-items:center"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-link" style="color:#a855f7;font-size:.8rem"></i></div><div class="set-info"><h5>' + p.providerId.replace('.com','') + '</h5><p>' + (p.email || 'Lié') + '</p></div></div><span style="display:flex;align-items:center;gap:4px;font-size:.73rem;color:#22c55e;font-weight:700"><i class="fa-solid fa-check-circle"></i> Actif</span></div>'; }).join('');
+  } else if(_otherDiv) { _otherDiv.innerHTML = ''; }
+} catch(_e) {}
+
+// Lier Facebook depuis Settings
+window._toggleFbLink = async function() {
+  var btn = document.getElementById('linkedFbBtn');
+  if(btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    var fbP = new FacebookAuthProvider();
+    var res = await signInWithPopup(auth, fbP);
+    if(window._user) await linkWithCredential(window._user, FacebookAuthProvider.credentialFromResult(res));
+    toast_('Facebook lié avec succès !', 'ok');
+    // Refresh UI
+    var fbSt2 = document.getElementById('linkedFbStatus'); if(fbSt2) fbSt2.textContent = 'Lié';
+    var fbBd = document.getElementById('linkedFbBadge'); if(fbBd) fbBd.style.display = 'flex';
+    if(btn) { btn.style.display = 'none'; }
+  } catch(err) {
+    if(btn) { btn.disabled = false; btn.textContent = 'Lier'; }
+    if(err.code !== 'auth/popup-closed-by-user') toast_('Erreur : ' + (err.message || err.code), 'err');
+  }
+};
 
 // Clés
 const hkv = document.getElementById('hKV'), hks = document.getElementById('hKS');
