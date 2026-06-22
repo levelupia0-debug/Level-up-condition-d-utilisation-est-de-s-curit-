@@ -428,6 +428,7 @@ body.lvl-panel-mode #nav{display:none!important}
 body.lvl-panel-mode .sidebar{display:none!important}
 body.lvl-panel-mode #dashboard{padding-top:0!important;display:block!important}
 body.lvl-panel-mode .db-main{position:fixed!important;inset:0!important;z-index:9500!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;background:var(--bg)!important;padding:0!important;min-height:unset!important}
+body.lvl-panel-mode .overlay,body.lvl-panel-mode .logout-loader{z-index:9999!important}
 body.lvl-panel-mode .db-main>.panel.on{max-width:880px;margin:0 auto;padding:0 24px 120px;box-sizing:border-box}
 body.lvl-panel-mode .panel-topbar{display:flex}
 /* Cacher h1.pt et p.ps car le topbar contient déjà le titre */
@@ -2316,6 +2317,16 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 
 <div class="set-sec">
 <div class="set-title">Informations Compte</div>
+<div class="set-row" id="photoDisplayRow" style="align-items:center">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div id="settingsAvaWrap" style="position:relative;flex-shrink:0">
+      <div id="settingsAva" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--purple-d),var(--purple));display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;overflow:hidden;flex-shrink:0"></div>
+      <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;background:var(--purple);border-radius:50%;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-camera" style="font-size:.5rem;color:#fff"></i></div>
+    </div>
+    <div class="set-info"><h5 id="photoRowLabel">Photo de profil</h5><p id="photoRowDesc">Visible dans toutes les apps LevelUp</p></div>
+  </div>
+  <button class="btn btn-g btn-xs" onclick="openPhotoPicker()" id="photoChangeBtnTxt"><i class="fa-solid fa-pen-to-square"></i> Modifier</button>
+</div>
 <div class="set-row" id="nameDisplayRow"><div class="set-info"><h5>Nom d'affichage</h5><p id="setName">—</p></div><button class="btn btn-g btn-xs" onclick="openNameChange()"><i class="fa-solid fa-pen-to-square"></i> Modifier</button></div>
 <div id="nameChangeBox" class="hidden" style="background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:12px;padding:14px 16px;margin-bottom:4px;display:flex;flex-direction:column;gap:10px">
   <label style="font-size:.78rem;color:var(--muted)">Nouveau nom <span style="color:rgba(255,255,255,.3)">(lettres seulement, max 10 lettres + 4 chiffres)</span></label>
@@ -2784,6 +2795,42 @@ LOGOUT LOADING ANIMATION
 <div class="logout-loader hidden" id="logoutLoadingOv">
 <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--purple); margin-bottom: 16px;"></i>
 <div style="font-family: var(--sans); font-size: .95rem; font-weight: 500; color: var(--muted); letter-spacing: 0.05em;">Déconnexion en cours...</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+PHOTO PICKER OVERLAY
+═══════════════════════════════════════ -->
+<div class="overlay hidden" id="photoPickerOv" onclick="bgClose(event,'photoPickerOv')">
+<div class="conf-card" style="max-width:360px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <h3 id="photoPickerTitle" style="font-size:1rem;font-weight:800;margin:0">Photo de profil</h3>
+    <button onclick="closePhotoPicker()" style="background:rgba(255,255,255,.07);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div style="display:flex;justify-content:center;margin-bottom:20px">
+    <div id="photoPickerPreview" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--purple-d),var(--purple));display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;overflow:hidden;border:3px solid rgba(168,85,247,.35)"></div>
+  </div>
+  <p id="photoPickerSub" style="font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:20px">Choisissez votre photo d'affichage pour toutes les apps LevelUp</p>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <button id="uploadPhotoBtn" onclick="triggerPhotoUpload()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);color:#fff;font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;outline:none;width:100%" onmouseover="this.style.background='rgba(168,85,247,.2)'" onmouseout="this.style.background='rgba(168,85,247,.1)'">
+      <div style="width:34px;height:34px;border-radius:50%;background:rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-upload" style="color:#a855f7;font-size:.8rem"></i></div>
+      <div style="text-align:left"><div id="uploadPhotoBtnLabel">Uploader une photo</div><div style="font-size:.7rem;color:var(--muted);font-weight:400">JPG, PNG, WebP — max 5 Mo</div></div>
+    </button>
+    <button id="googlePhotoBtn" onclick="resetToGooglePhoto()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;outline:none;width:100%" onmouseover="this.style.background='rgba(255,255,255,.09)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">
+      <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-brands fa-google" style="color:#4ade80;font-size:.9rem"></i></div>
+      <div style="text-align:left"><div id="googlePhotoBtnLabel">Utiliser la photo Google</div><div style="font-size:.7rem;color:var(--muted);font-weight:400" id="googlePhotoSubLabel">Photo de votre compte Google</div></div>
+    </button>
+    <div id="removeCustomPhotoRow" class="hidden" style="display:flex;justify-content:center;margin-top:2px">
+      <button onclick="removeCustomPhoto()" style="background:none;border:none;color:rgba(239,68,68,.7);font-size:.75rem;cursor:pointer;font-family:var(--sans);padding:4px 8px;border-radius:6px;transition:color .2s" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='rgba(239,68,68,.7)'" id="removeCustomPhotoBtnTxt"><i class="fa-solid fa-trash-can" style="font-size:.7rem;margin-right:4px"></i>Supprimer la photo personnalisée</button>
+    </div>
+  </div>
+  <input type="file" id="photoFileInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="handlePhotoFileSelected(this)">
+  <div id="photoUploadProgress" class="hidden" style="margin-top:14px">
+    <div style="height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden">
+      <div id="photoProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--purple),#7c3aed);transition:width .3s;border-radius:2px"></div>
+    </div>
+    <p id="photoProgressTxt" style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:6px">Upload en cours…</p>
+  </div>
+</div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -4936,6 +4983,8 @@ if (!window._ud.apiKey) {
 // Mise en cache
 localStorage.setItem('lm_name', window._ud.displayName);
 if (window._ud.photoURL) localStorage.setItem('lm_photo', window._ud.photoURL);
+if (window._ud.customPhotoURL) localStorage.setItem('lm_custom_photo', window._ud.customPhotoURL);
+else localStorage.removeItem('lm_custom_photo');
 localStorage.setItem('lm_login_mode', 'google');
 
 // CORRECTIF 2 — double-vérification clé avant loadAppStatus
@@ -5060,6 +5109,7 @@ window._user = { uid: savedUid, isKeyAuth: true };
 let pData = {
 displayName: localStorage.getItem('lm_name') || 'Utilisateur',
 photoURL: localStorage.getItem('lm_photo') || '',
+customPhotoURL: localStorage.getItem('lm_custom_photo') || '',
 uid: savedUid
 };
 
@@ -5080,7 +5130,7 @@ await window.loadAppStatus();
 closeAuth();
 showDash(window._user);
 } catch(e) {
-window._ud = window._ud || { displayName: localStorage.getItem('lm_name') || 'Utilisateur', photoURL: localStorage.getItem('lm_photo') || '', apiKey: savedKey };
+window._ud = window._ud || { displayName: localStorage.getItem('lm_name') || 'Utilisateur', photoURL: localStorage.getItem('lm_photo') || '', customPhotoURL: localStorage.getItem('lm_custom_photo') || '', apiKey: savedKey };
 await window.loadAppStatus();
 closeAuth();
 showDash(window._user);
@@ -6017,7 +6067,7 @@ const u = window._user; const d = window._ud;
 if(!u) return;
 const name = d?.displayName || u.email?.split('@')[0] || 'Utilisateur';
 const init = name.charAt(0).toUpperCase();
-const photo = d?.photoURL || u.photoURL;
+const photo = d?.customPhotoURL || d?.photoURL || u.photoURL;
 // Sidebar
 const avaEl = document.getElementById('sbAva');
 if (avaEl) {
@@ -6025,6 +6075,15 @@ avaEl.className = '';
 if(photo) avaEl.innerHTML = `<img src="${photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover" referrerpolicy="no-referrer">`;
 else { avaEl.className = 'sb-ava-t'; avaEl.textContent = init; }
 }
+// Settings avatar preview
+const sAva = document.getElementById('settingsAva');
+if(sAva) {
+  if(photo) sAva.innerHTML = `<img src="${photo}" style="width:56px;height:56px;border-radius:50%;object-fit:cover" referrerpolicy="no-referrer">`;
+  else sAva.textContent = init;
+}
+// Show "remove custom" only if custom photo is active
+const rcr = document.getElementById('removeCustomPhotoRow');
+if(rcr) { if(d?.customPhotoURL) rcr.classList.remove('hidden'); else rcr.classList.add('hidden'); }
 const snEl = document.getElementById('sbName'); if(snEl) snEl.textContent = name;
 function _getGreeting(){var h=new Date().getHours();if(h<5)return'Bonne nuit';if(h<12)return'Bonjour';if(h<18)return'Bon après-midi';return'Bonne soirée';}
 const wEl = document.getElementById('dbWelcome'); if(wEl) wEl.textContent = `${_getGreeting()}, ${name.split(' ')[0]} 👋`;
@@ -7678,6 +7737,123 @@ window._handleCardImageUpload = async function(input) {
     _cardImgUploadCtx = null;
 };
 
+/* ── PROFILE PHOTO PICKER ─────────────────────────────── */
+window.openPhotoPicker = function() {
+  const ov = document.getElementById('photoPickerOv');
+  if (!ov) return;
+  // Populate preview with current photo
+  const d = window._ud; const u = window._user;
+  const photo = d?.customPhotoURL || d?.photoURL || u?.photoURL;
+  const name = d?.displayName || u?.email?.split('@')[0] || '?';
+  const init = name.charAt(0).toUpperCase();
+  const prev = document.getElementById('photoPickerPreview');
+  if (prev) {
+    if (photo) prev.innerHTML = `<img src="${photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" referrerpolicy="no-referrer">`;
+    else prev.textContent = init;
+  }
+  // Show/hide remove button
+  const rcr = document.getElementById('removeCustomPhotoRow');
+  if (rcr) { if(d?.customPhotoURL) rcr.classList.remove('hidden'); else rcr.classList.add('hidden'); }
+  // Reset progress
+  document.getElementById('photoUploadProgress')?.classList.add('hidden');
+  const pb = document.getElementById('photoProgressBar'); if(pb) pb.style.width = '0%';
+  ov.classList.remove('hidden');
+};
+
+window.closePhotoPicker = function() {
+  document.getElementById('photoPickerOv')?.classList.add('hidden');
+  document.getElementById('photoFileInput') && (document.getElementById('photoFileInput').value = '');
+};
+
+window.triggerPhotoUpload = function() {
+  document.getElementById('photoFileInput')?.click();
+};
+
+window.handlePhotoFileSelected = async function(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  // Validate size (max 5 MB)
+  if (file.size > 5 * 1024 * 1024) {
+    toast_ && toast_('Fichier trop grand — max 5 Mo', 'err');
+    input.value = '';
+    return;
+  }
+  // Show progress
+  const prog = document.getElementById('photoUploadProgress');
+  const pb = document.getElementById('photoProgressBar');
+  const pt = document.getElementById('photoProgressTxt');
+  if (prog) prog.classList.remove('hidden');
+  if (pb) pb.style.width = '30%';
+  if (pt) pt.textContent = 'Upload en cours…';
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', '/levelup/avatars');
+    formData.append('fileName', `avatar_${window._user?.uid || Date.now()}_${Date.now()}.${file.name.split('.').pop()}`);
+    if (pb) pb.style.width = '60%';
+    const resp = await fetch('/api/imagekit-upload', { method: 'POST', body: formData });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    if (!data.url) throw new Error(data.error || 'Erreur upload');
+    if (pb) pb.style.width = '90%';
+    // Save to Firestore
+    if (window._db && window._user?.uid) {
+      const { doc: fsDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      await updateDoc(fsDoc(window._db, 'artifacts', 'level-ia-premium', 'users', window._user.uid), { customPhotoURL: data.url });
+    }
+    // Update local state
+    if (!window._ud) window._ud = {};
+    window._ud.customPhotoURL = data.url;
+    localStorage.setItem('lm_custom_photo', data.url);
+    if (pb) pb.style.width = '100%';
+    if (pt) pt.textContent = 'Photo mise à jour !';
+    // Refresh avatars
+    window.refreshUI && window.refreshUI();
+    // Update picker preview
+    const prev = document.getElementById('photoPickerPreview');
+    if (prev) prev.innerHTML = `<img src="${data.url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" referrerpolicy="no-referrer">`;
+    const rcr = document.getElementById('removeCustomPhotoRow');
+    if (rcr) rcr.classList.remove('hidden');
+    toast_ && toast_('Photo de profil mise à jour !', 'ok');
+    setTimeout(() => window.closePhotoPicker(), 1200);
+  } catch(err) {
+    if (pt) pt.textContent = 'Erreur : ' + err.message;
+    if (pb) pb.style.background = 'var(--red)';
+    toast_ && toast_('Erreur upload : ' + err.message, 'err');
+  }
+  input.value = '';
+};
+
+window.resetToGooglePhoto = async function() {
+  try {
+    const u = window._user;
+    const googlePhoto = u?.photoURL || '';
+    if (window._db && u?.uid) {
+      const { doc: fsDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      await updateDoc(fsDoc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid), { customPhotoURL: '' });
+    }
+    if (window._ud) window._ud.customPhotoURL = '';
+    localStorage.removeItem('lm_custom_photo');
+    window.refreshUI && window.refreshUI();
+    // Update picker preview
+    const d = window._ud; const init = (d?.displayName || u?.email?.split('@')[0] || '?').charAt(0).toUpperCase();
+    const prev = document.getElementById('photoPickerPreview');
+    if (prev) {
+      if(googlePhoto) prev.innerHTML = `<img src="${googlePhoto}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" referrerpolicy="no-referrer">`;
+      else prev.textContent = init;
+    }
+    const rcr = document.getElementById('removeCustomPhotoRow');
+    if (rcr) rcr.classList.add('hidden');
+    toast_ && toast_('Photo Google restaurée', 'ok');
+    setTimeout(() => window.closePhotoPicker(), 900);
+  } catch(err) {
+    toast_ && toast_('Erreur : ' + err.message, 'err');
+  }
+};
+
+window.removeCustomPhoto = window.resetToGooglePhoto;
+/* ── END PROFILE PHOTO PICKER ────────────────────────── */
+
 window.openToolFullscreen = function(url, title) {
     if (!url) return;
     const fs = document.getElementById('toolFullscreen');
@@ -8916,6 +9092,15 @@ var SEL_MAP = {
     ['#panel-settings .pt','text','Settings'],
     ['#panel-settings .ps','text','Manage your account and security preferences.'],
     ['#panel-settings .set-sec:nth-child(1) .set-title','text','Account Information'],
+    ['#photoRowLabel','text','Profile photo'],
+    ['#photoRowDesc','text','Visible across all LevelUp apps'],
+    ['#photoChangeBtnTxt','html','<i class="fa-solid fa-pen-to-square"></i> Edit'],
+    ['#photoPickerTitle','text','Profile photo'],
+    ['#photoPickerSub','text','Choose your display photo for all LevelUp apps'],
+    ['#uploadPhotoBtnLabel','text','Upload a photo'],
+    ['#googlePhotoBtnLabel','text','Use Google photo'],
+    ['#googlePhotoSubLabel','text','Photo from your Google account'],
+    ['#removeCustomPhotoBtnTxt','html','<i class="fa-solid fa-trash-can" style="font-size:.7rem;margin-right:4px"></i>Remove custom photo'],
     ['#nameDisplayRow .set-info h5','text','Display name'],
     ['#nameDisplayRow .btn','html','<i class="fa-solid fa-pen-to-square"></i> Edit'],
     ['#panel-settings .set-row:has(#setEmail) .set-info h5','text','Email address'],
@@ -9226,6 +9411,15 @@ var SEL_MAP = {
     ['#panel-settings .pt','text','Param\u00e8tres'],
     ['#panel-settings .ps','text','G\u00e9rez votre compte et vos pr\u00e9f\u00e9rences de s\u00e9curit\u00e9.'],
     ['#panel-settings .set-sec:nth-child(1) .set-title','text','Informations Compte'],
+    ['#photoRowLabel','text','Photo de profil'],
+    ['#photoRowDesc','text','Visible dans toutes les apps LevelUp'],
+    ['#photoChangeBtnTxt','html','<i class="fa-solid fa-pen-to-square"></i> Modifier'],
+    ['#photoPickerTitle','text','Photo de profil'],
+    ['#photoPickerSub','text','Choisissez votre photo d\u2019affichage pour toutes les apps LevelUp'],
+    ['#uploadPhotoBtnLabel','text','Uploader une photo'],
+    ['#googlePhotoBtnLabel','text','Utiliser la photo Google'],
+    ['#googlePhotoSubLabel','text','Photo de votre compte Google'],
+    ['#removeCustomPhotoBtnTxt','html','<i class="fa-solid fa-trash-can" style="font-size:.7rem;margin-right:4px"></i>Supprimer la photo personnalis\u00e9e'],
     ['#nameDisplayRow .set-info h5','text','Nom d\u2019affichage'],
     ['#nameDisplayRow .btn','html','<i class="fa-solid fa-pen-to-square"></i> Modifier'],
     ['#panel-settings .set-sec:nth-child(2) .set-title','text','S\u00e9curit\u00e9 des cl\u00e9s'],
