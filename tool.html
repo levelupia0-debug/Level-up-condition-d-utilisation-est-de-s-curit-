@@ -1,521 +1,592 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LevelUp - Diffusion Globale</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #0f1014; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1a1c23; }
-        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #718096; }
-        #previewContainer { background-color: #f3f4f6; color: #000000; border-radius: 0.5rem; overflow: hidden; padding: 1.5rem; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pour Domie 💛</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* TEXTAREA PLEINE LARGEUR SUR TOUS LES ÉCRANS */
-        #broadcastMessage {
-            width: 100% !important;
-            min-width: 0 !important;
-            box-sizing: border-box !important;
-            min-height: 400px;
-            resize: vertical;
-        }
+    :root {
+      --black: #0a0a0a;
+      --deep: #111115;
+      --card: #16161c;
+      --gold: #c9a84c;
+      --gold-light: #e8c96a;
+      --gold-dim: rgba(201,168,76,0.18);
+      --white: #f5f0e8;
+      --muted: #7a7a8a;
+      --red: #b03030;
+    }
 
-        /* Conteneur éditeur pleine largeur */
-        #editorContainer {
-            width: 100%;
-            box-sizing: border-box;
-        }
+    html { scroll-behavior: smooth; }
 
-        /* Fix padding mobile pour éviter overflow */
-        @media (max-width: 640px) {
-            .p-8 { padding: 1rem !important; }
-            #broadcastMessage { min-height: 300px; font-size: 14px !important; }
-            #previewContainer { padding: 0.75rem; }
-        }
-    </style>
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── PARTICLES ── */
+    #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .spark {
+      position: absolute;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: 0;
+      animation: drift linear infinite;
+    }
+    @keyframes drift {
+      0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10%  { opacity: 0.8; }
+      90%  { opacity: 0.4; }
+      100% { transform: translateY(-10vh) translateX(var(--dx)); opacity: 0; }
+    }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      z-index: 1;
+    }
+
+    .crown {
+      font-size: 3.5rem;
+      animation: floatCrown 3s ease-in-out infinite;
+      margin-bottom: 1.2rem;
+      filter: drop-shadow(0 0 18px rgba(201,168,76,0.5));
+    }
+    @keyframes floatCrown {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .hero-sub {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.2rem, 9vw, 7rem);
+      font-weight: 300;
+      font-style: italic;
+      line-height: 1.05;
+      color: var(--white);
+      margin-bottom: 0.4rem;
+    }
+    h1 span { color: var(--gold); }
+
+    .hero-line {
+      width: 60px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 1.8rem auto;
+    }
+
+    .hero-tagline {
+      font-size: 1rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      max-width: 380px;
+      line-height: 1.7;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      color: var(--muted); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
+      animation: fadeBounce 2s ease-in-out infinite;
+    }
+    .scroll-hint::after {
+      content: '';
+      width: 1px; height: 40px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+    }
+    @keyframes fadeBounce {
+      0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
+      50%  { opacity: 1;   transform: translateX(-50%) translateY(6px); }
+    }
+
+    /* ── SECTION BASE ── */
+    section {
+      position: relative; z-index: 1;
+      padding: 6rem 1.5rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .section-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+    }
+
+    /* ── MESSAGE CARD ── */
+    .msg-card {
+      background: var(--card);
+      border: 1px solid var(--gold-dim);
+      border-radius: 4px;
+      padding: 3rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .msg-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .msg-card p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+      font-style: italic;
+      line-height: 1.85;
+      color: #ddd5c4;
+      margin-bottom: 1.4rem;
+    }
+    .msg-card p:last-child { margin-bottom: 0; }
+    .msg-card .highlight { color: var(--gold-light); font-weight: 400; }
+    .msg-card .sig {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2.2rem;
+      padding-top: 1.4rem;
+      border-top: 1px solid var(--gold-dim);
+    }
+
+    /* ── GIFT ── */
+    #gift-section { text-align: center; }
+    #gift-section h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 300;
+      font-style: italic;
+      margin-bottom: 0.6rem;
+    }
+    #gift-section .sub {
+      color: var(--muted); font-size: 0.88rem;
+      margin-bottom: 3rem; line-height: 1.7;
+    }
+
+    /* Gift box */
+    #gift-wrap {
+      perspective: 800px;
+      display: inline-block;
+      cursor: pointer;
+      margin-bottom: 2rem;
+    }
+    #gift-box {
+      width: 130px; height: 130px;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: giftIdle 2.5s ease-in-out infinite;
+      transition: transform 0.2s;
+    }
+    #gift-box:hover { animation: none; transform: rotateY(12deg) rotateX(-6deg) scale(1.06); }
+    @keyframes giftIdle {
+      0%, 100% { transform: rotateY(-6deg) rotateX(3deg); }
+      50%       { transform: rotateY(6deg) rotateX(-3deg); }
+    }
+
+    .gift-face {
+      position: absolute; inset: 0;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.5rem;
+      backface-visibility: hidden;
+    }
+    .gift-front {
+      background: linear-gradient(135deg, #1a1208, #2c1f00);
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 40px rgba(201,168,76,0.25), inset 0 0 20px rgba(201,168,76,0.04);
+    }
+
+    /* Ribbon */
+    .gift-ribbon-h, .gift-ribbon-v {
+      position: absolute;
+      background: linear-gradient(90deg, #8a6020, var(--gold), #8a6020);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    .gift-ribbon-h { top: 50%; left: 0; right: 0; height: 10px; transform: translateY(-50%); }
+    .gift-ribbon-v { left: 50%; top: 0; bottom: 0; width: 10px; transform: translateX(-50%); }
+    .gift-bow {
+      position: absolute;
+      top: -14px; left: 50%; transform: translateX(-50%);
+      font-size: 1.8rem;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(201,168,76,0.6));
+    }
+
+    .open-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.85rem 2.8rem;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--gold);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .open-btn:hover { background: var(--gold); color: var(--black); }
+
+    /* ── GIFT MODAL ── */
+    #gift-modal {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.92);
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 1.5rem;
+      backdrop-filter: blur(6px);
+    }
+    #gift-modal.open { display: flex; }
+    .modal-inner {
+      background: var(--card);
+      border: 1px solid var(--gold-dim);
+      border-radius: 6px;
+      padding: clamp(2rem, 5vw, 3.5rem);
+      max-width: 640px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      position: relative;
+      animation: modalIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes modalIn {
+      from { transform: scale(0.88) translateY(24px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .modal-inner::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .modal-close {
+      position: absolute; top: 1rem; right: 1.2rem;
+      background: none; border: none;
+      color: var(--muted); font-size: 1.4rem;
+      cursor: pointer; line-height: 1;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--white); }
+
+    .modal-crown { font-size: 2.8rem; text-align: center; margin-bottom: 0.8rem; }
+    .modal-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-style: italic;
+      font-weight: 300;
+      text-align: center;
+      color: var(--gold-light);
+      margin-bottom: 0.5rem;
+    }
+    .modal-divider {
+      width: 50px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 1.2rem auto 1.8rem;
+    }
+
+    .modal-msg {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+      font-style: italic;
+      line-height: 1.9;
+      color: #ddd5c4;
+      margin-bottom: 1.2rem;
+    }
+    .modal-msg .hl { color: var(--gold-light); }
+
+    .modal-separator {
+      text-align: center;
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 2rem 0 1.2rem;
+      position: relative;
+    }
+    .modal-separator::before, .modal-separator::after {
+      content: ''; display: inline-block;
+      width: 40px; height: 1px;
+      background: var(--gold-dim); vertical-align: middle;
+      margin: 0 0.8rem;
+    }
+
+    /* Film section inside modal */
+    .film-intro {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.88rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .film-intro span { color: var(--white); }
+
+    .video-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--gold-dim);
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
+    }
+    .video-wrapper iframe {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+
+    .modal-sign {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--gold-dim);
+    }
+
+    /* ── QUOTES STRIP ── */
+    #quotes {
+      overflow: hidden;
+      padding: 3.5rem 0;
+      border-top: 1px solid var(--gold-dim);
+      border-bottom: 1px solid var(--gold-dim);
+      position: relative; z-index: 1;
+    }
+    .quotes-track {
+      display: flex; gap: 4rem;
+      animation: scrollTrack 28s linear infinite;
+      white-space: nowrap;
+      width: max-content;
+    }
+    @keyframes scrollTrack {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    .quote-item {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      font-style: italic;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .quote-item .dot { color: var(--gold); margin: 0 2rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 3.5rem 1.5rem 4rem;
+      border-top: 1px solid var(--gold-dim);
+    }
+    footer .f-crown { font-size: 1.6rem; margin-bottom: 0.6rem; }
+    footer p {
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    footer .heart { color: var(--gold); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 500px) {
+      .msg-card { padding: 2rem 1.4rem; }
+    }
+  </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-2 sm:p-4">
+<body>
 
-    <!-- MODALE PERSONNALISÉE -->
-    <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/80 backdrop-blur-sm transition-opacity">
-        <div id="customModalContent" class="bg-[#1a1c23] border border-gray-700 p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4 transform scale-95 opacity-0 transition-all duration-200">
-            <div class="mb-5 text-center">
-                <i id="modalIcon" class="fa-solid fa-circle-info text-4xl mb-4"></i>
-                <p id="customModalMessage" class="text-gray-200 text-sm font-medium leading-relaxed"></p>
-            </div>
-            <div class="flex gap-3 justify-center w-full" id="customModalButtons"></div>
-        </div>
-    </div>
+<!-- Particles -->
+<div id="particles"></div>
 
-    <div class="w-full max-w-3xl bg-[#1a1c23] rounded-2xl shadow-2xl overflow-hidden border border-gray-800 relative z-10">
+<!-- ══════════ HERO ══════════ -->
+<div id="hero">
+  <div class="crown">👑</div>
+  <p class="hero-sub">Un message pour toi</p>
+  <h1>Ma <span>Reine</span><br>Domie</h1>
+  <div class="hero-line"></div>
+  <p class="hero-tagline">Prcq tu mérites plus qu'un simple message  tu mérites une soirée inoubliable.</p>
+  <div class="scroll-hint">Découvre</div>
+</div>
 
-        <!-- En-tête -->
-        <div class="bg-red-600 px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
-                <i class="fa-solid fa-bullhorn text-xl sm:text-2xl flex-shrink-0"></i>
-                <h1 class="text-base sm:text-xl font-bold truncate">Diffusion Globale - LevelUp</h1>
-            </div>
-            <div id="authBlock" class="flex-shrink-0"></div>
-        </div>
+<!-- ══════════ MESSAGE ══════════ -->
+<section>
+  <p class="section-eyebrow">✦ Pour toi, rien que pour toi</p>
+  <div class="msg-card">
+    <p>
+      Domie,<br>
+      Au début, jte regardais juste <span class="highlight">comme ça</span>  sans vraiment savoir c que tu représenterais pour moi.
+    </p>
+    <p>
+      Mais au fur et à mesure qu'on apprenait à se connaître, quelque chose grandissait en moi. Pas un coup de foudre bruyant. Quelque chose de plus fort — <span class="highlight">une certitude qui s'installe doucement et ne repart plus.</span>
+    </p>
+    <p>
+      Les gens disaient que ça ne durerait pas trois mois. Aujourd'hui, chui là. <span class="highlight">Pas pour leur prouver quelque chose. Pour toi.</span> Parce que ce qu'on a, ça ne se mesure pas en mois — ça se ressent à chaque fois que je pense à toi.
+    </p>
+    <p>
+      T'es <span class="highlight">ma baby, my lady, mon tout.</span> La volonté de Dieu nous a mis sur le même chemin et je n'ai aucune intention de te laisser marcher seule dessus.
+    </p>
+    <div class="sig">Écrit avec tout mon amour ✦ Pour Domie, tjrs</div>
+  </div>
+</section>
 
-        <div class="p-4 sm:p-8">
+<!-- ══════════ GIFT ══════════ -->
+<section id="gift-section">
+  <p class="section-eyebrow">✦ Une surprise t'attend</p>
+  <h2>Passe une excellente soirée,<br>tu le mérites</h2>
+  <p class="sub">Quelque chose t'attend dedans, mon amour.<br>Clique sur le cadeau pour l'ouvrir. 🎁</p>
 
-            <!-- BANNER SI PAS CONNECTÉ -->
-            <div id="loginBanner" class="hidden mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div>
-                    <p class="text-yellow-400 font-semibold text-sm mb-1"><i class="fa-solid fa-lock mr-2"></i>Connexion requise</p>
-                    <p class="text-gray-400 text-xs">Connecte-toi avec ton compte admin Google pour accéder aux utilisateurs Firebase.</p>
-                </div>
-                <button id="loginBannerBtn" class="flex-shrink-0 flex items-center gap-2 bg-white text-gray-800 font-semibold text-sm py-2 px-4 rounded-lg hover:bg-gray-100 transition whitespace-nowrap">
-                    <svg width="16" height="16" viewBox="0 0 48 48">
-                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                    </svg>
-                    Se connecter avec Google
-                </button>
-            </div>
-
-            <p class="text-gray-400 mb-6 text-sm">
-                <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-2"></i>
-                Attention : Ce message sera envoyé instantanément à <strong>tous les utilisateurs</strong> enregistrés dans ta base de données VRAIE.
-            </p>
-
-            <!-- BASE UTILISATEURS -->
-            <div class="mb-6 bg-[#0f1014] p-4 rounded-lg border border-gray-700">
-                <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-                    <h2 class="text-gray-300 font-semibold text-sm">
-                        <i class="fa-solid fa-users mr-2"></i>Base Utilisateurs
-                    </h2>
-                    <button type="button" id="loadUsersBtn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1.5 rounded transition flex items-center gap-2">
-                        <i class="fa-solid fa-cloud-arrow-down"></i> Récupérer les vrais utilisateurs
-                    </button>
-                </div>
-                <div id="usersListContainer" class="hidden">
-                    <p class="text-sm text-green-400 mb-2 font-bold flex items-center gap-2" id="usersCount"></p>
-                    <div class="bg-[#1a1c23] border border-gray-800 rounded p-3">
-                        <ul id="usersList" class="max-h-32 overflow-y-auto text-xs text-gray-400 space-y-1 font-mono list-disc list-inside"></ul>
-                    </div>
-                </div>
-            </div>
-
-            <form id="broadcastForm" class="space-y-6">
-                <!-- CIBLE -->
-                <div class="bg-[#0f1014] p-4 rounded-lg border border-gray-700">
-                    <h3 class="block text-sm font-medium text-gray-300 mb-3">Cible de l'envoi</h3>
-                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-3">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="targetAudience" value="all" checked class="text-red-600 focus:ring-red-500 bg-gray-800 border-gray-700">
-                            <span class="text-sm text-white font-medium">Toute la base utilisateurs</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="targetAudience" value="specific" class="text-red-600 focus:ring-red-500 bg-gray-800 border-gray-700">
-                            <span class="text-sm text-yellow-500 font-bold">Emails spécifiques (Test)</span>
-                        </label>
-                    </div>
-                    <div id="specificEmailsContainer" class="hidden mt-4">
-                        <label class="block text-xs font-medium text-gray-400 mb-1">Adresses emails (séparées par des virgules)</label>
-                        <input type="text" id="specificEmails"
-                               class="w-full bg-[#1a1c23] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500 transition-colors text-sm font-mono"
-                               placeholder="ex: tonmail@gmail.com, test@yahoo.fr">
-                    </div>
-                </div>
-
-                <!-- SUJET -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Sujet de l'email</label>
-                    <input type="text" id="broadcastSubject"
-                           class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors text-sm"
-                           value="🚀 Mise à jour majeure : Nouvelles apps, correctifs et expérience mobile !">
-                </div>
-
-                <!-- MESSAGE -->
-                <div>
-                    <!-- Onglets : empilés sur mobile, côte à côte sur desktop -->
-                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2 mb-2">
-                        <label class="block text-sm font-medium text-gray-300">
-                            Message
-                            <span class="ml-2 text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Utilisez {nom} pour personnaliser</span>
-                        </label>
-                        <div class="flex bg-[#0f1014] p-1 rounded-lg border border-gray-700 self-start sm:self-auto">
-                            <button type="button" id="tabPreview" class="px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors">Aperçu visuel</button>
-                            <button type="button" id="tabCode"    class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors">Code HTML</button>
-                        </div>
-                    </div>
-
-                    <!-- Éditeur — pleine largeur garantie -->
-                    <div id="editorContainer" class="hidden w-full">
-                        <textarea id="broadcastMessage"
-                                  class="w-full bg-[#0f1014] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors font-mono text-sm leading-relaxed"
-                                  style="width:100%;min-height:400px;resize:vertical;box-sizing:border-box;display:block;"><div style="background-color: #f4f4f5; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-    <div style="text-align: center; padding: 40px 20px 20px; border-bottom: 1px solid #f0f0f0;">
-      <img src="https://i.ibb.co/Zpt4grdb/Capture-d-cran-2026-05-27-134259.png" alt="LevelUp Logo" width="130" style="display: block; margin: 0 auto; height: auto;">
-    </div>
-    <div style="padding: 40px 30px;">
-      <h1 style="margin: 0 0 20px; font-size: 24px; color: #111111; text-align: center; letter-spacing: -0.5px;">Une nouvelle ère pour LevelUp 🚀</h1>
-      <p style="margin: 0 0 24px; font-size: 16px; color: #555555; line-height: 1.6;">Bonjour {nom},</p>
-      <p style="margin: 0 0 30px; font-size: 16px; color: #555555; line-height: 1.6;">Suite à vos nombreux retours, nous avons entièrement repensé l'expérience LevelUp. Plus rapide, plus fluide, et surtout... plus riche en contenu.</p>
-      <div style="background-color: #fcfcfc; border: 1px solid #eaeaea; border-radius: 8px; padding: 24px; margin-bottom: 30px;">
-        <h2 style="margin: 0 0 16px; font-size: 18px; color: #e50914;">✨ L'écosystème s'agrandit</h2>
-        <p style="margin: 0 0 16px; font-size: 15px; color: #555555; line-height: 1.5;">De nouvelles applications rejoignent officiellement la plateforme :</p>
-        <ul style="margin: 0; padding: 0; list-style-type: none;">
-          <li style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eaeaea;">
-            <strong style="color: #111; display: block; margin-bottom: 4px; font-size: 16px;">LevelDay</strong>
-            <a href="https://levelup-ecosystem.com/levelday" style="color: #e50914; font-weight: 600; text-decoration: none; font-size: 14px;">Découvrir l'application &rarr;</a>
-          </li>
-          <li style="margin-bottom: 0;">
-            <strong style="color: #111; display: block; margin-bottom: 4px; font-size: 16px;">Oppa</strong>
-            <a href="https://levelup-ecosystem.com/oppa" style="color: #e50914; font-weight: 600; text-decoration: none; font-size: 14px;">Découvrir l'application &rarr;</a>
-          </li>
-        </ul>
-      </div>
-      <h2 style="margin: 0 0 16px; font-size: 18px; color: #111111;">🛠️ Correctifs & Améliorations</h2>
-      <ul style="margin: 0 0 30px; padding: 0 0 0 20px; color: #555555; font-size: 15px; line-height: 1.6;">
-        <li style="margin-bottom: 10px;"><strong>Expérience Mobile :</strong> L'interface a été grandement optimisée pour une navigation parfaite sur smartphone.</li>
-        <li style="margin-bottom: 0;"><strong>Stabilité renforcée :</strong> Les bugs signalés par la communauté ont été corrigés pour garantir des performances optimales.</li>
-      </ul>
-      <div style="text-align: center; margin-top: 40px;">
-        <a href="https://levelup-ecosystem.com" style="display: inline-block; background-color: #e50914; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 32px; border-radius: 8px;">Accéder à LevelUp</a>
-      </div>
-    </div>
-    <div style="background-color: #fafafa; padding: 24px 30px; text-align: center; border-top: 1px solid #f0f0f0;">
-      <p style="margin: 0 0 8px; font-size: 13px; color: #888888;">Merci de faire partie de la communauté LevelUp.</p>
-      <p style="margin: 0 0 16px; font-size: 13px; color: #111111; font-weight: bold;">L'équipe LevelUp Ecosystem</p>
-      <div style="font-size: 11px; color: #a0a0a0; padding-top: 16px; border-top: 1px solid #eaeaea;">
-        <a href="https://levelup-ecosystem.com/terms" style="color: #a0a0a0; text-decoration: underline;">Conditions d'utilisation</a>
-        &nbsp;&nbsp;|&nbsp;&nbsp;
-        <a href="https://levelup-ecosystem.com/privacy" style="color: #a0a0a0; text-decoration: underline;">Règles de confidentialité</a>
+  <div id="gift-wrap" onclick="openGift()">
+    <div id="gift-box">
+      <div class="gift-face gift-front">
+        <div class="gift-ribbon-h"></div>
+        <div class="gift-ribbon-v"></div>
+        <div class="gift-bow">🎀</div>
+        <span style="position:relative;z-index:2;">🎁</span>
       </div>
     </div>
   </div>
-</div></textarea>
-                    </div>
+  <br>
+  <button class="open-btn" onclick="openGift()">Ouvrir mon cadeau</button>
+</section>
 
-                    <!-- Aperçu — pleine largeur garantie -->
-                    <div id="previewContainer" class="w-full min-h-[300px] sm:min-h-[400px]" style="width:100%;box-sizing:border-box;overflow-x:auto;"></div>
-                </div>
+<!-- ══════════ QUOTES STRIP ══════════ -->
+<div id="quotes">
+  <div class="quotes-track">
+    <span class="quote-item">Mon tout <span class="dot">✦</span></span>
+    <span class="quote-item">My Baby <span class="dot">✦</span></span>
+    <span class="quote-item">Ma Reine <span class="dot">✦</span></span>
+    <span class="quote-item">My Lady <span class="dot">✦</span></span>
+    <span class="quote-item">Mon Amour <span class="dot">✦</span></span>
+    <span class="quote-item">Pour toujours <span class="dot">✦</span></span>
+    <span class="quote-item">Mon tout <span class="dot">✦</span></span>
+    <span class="quote-item">My Baby <span class="dot">✦</span></span>
+    <span class="quote-item">Ma Reine <span class="dot">✦</span></span>
+    <span class="quote-item">My Lady <span class="dot">✦</span></span>
+    <span class="quote-item">Mon Amour <span class="dot">✦</span></span>
+    <span class="quote-item">Pour toujours <span class="dot">✦</span></span>
+  </div>
+</div>
 
-                <button type="submit" id="submitBtn"
-                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg transition-all duration-200 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    <span>Déclencher l'envoi réel</span>
-                </button>
-            </form>
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <div class="f-crown">👑</div>
+  <p>Fait avec <span class="heart">♥</span> pour Domie &nbsp;✦&nbsp; Tu es mon tout</p>
+</footer>
 
-            <div id="statusAlert" class="mt-6 hidden p-4 rounded-lg font-medium text-center border"></div>
-        </div>
+<!-- ══════════ GIFT MODAL ══════════ -->
+<div id="gift-modal">
+  <div class="modal-inner">
+    <button class="modal-close" onclick="closeGift()">✕</button>
+
+    <div class="modal-crown">💌</div>
+    <p class="modal-title">À toi, ma Reine</p>
+    <div class="modal-divider"></div>
+
+    <p class="modal-msg">
+      Domie… je savais pas exactement quoi t'offrir ce soir. 
+      Alors j'ai réfléchi à <span class="hl">toi</span> — à ce que t'aimes, à ce qui te fait briller les yeux.
+    </p>
+    <p class="modal-msg">
+      Tu mérites une soirée où tu te poses, où tu souffles, où tu te laisses emporter.
+      Alors ce soir, <span class="hl">laisse-moi t'offrir ça.</span>
+    </p>
+    <p class="modal-msg">
+      Je t'aime, pas juste en mots — mais dans chaque petite attention, 
+      dans chaque moment où je pense à toi même sans raison. 
+      <span class="hl">Tu es ma place préférée.</span>
+    </p>
+
+    <div class="modal-separator">Et maintenant…</div>
+
+    <p class="film-intro">
+      Je savais pas quoi te proposer ce soir, mais comme tu aimes un peu les trucs intenses, les histoires qui accrochent, les ambiances qui te tiennent en haleine —<br>
+      <span>laisse-moi te proposer ça, bbe. Je t'aime. 🎬</span>
+    </p>
+
+    <div class="video-wrapper">
+      <iframe
+        src="https://www.youtube.com/embed/oMqB-eD3x5s?si=WMKEOiLNvJcr6e7O"
+        title="Film pour Domie"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen>
+      </iframe>
     </div>
 
-<script type="module">
-import { initializeApp }  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut }
-                          from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, collectionGroup, collection, getDocs, query, limit }
-                          from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    <div class="modal-sign">
+      Profite bien, ma reine ✦ Je t'aime 💛
+    </div>
+  </div>
+</div>
 
-const _cfg = {
-    apiKey:            "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-    authDomain:        "levelup-ia.firebaseapp.com",
-    projectId:         "levelup-ia",
-    storageBucket:     "levelup-ia.firebasestorage.app",
-    messagingSenderId: "229420004282",
-    appId:             "1:229420004282:web:6735f059a947f0936ae383"
-};
-const _app  = initializeApp(_cfg);
-const _auth = getAuth(_app);
-const _db   = getFirestore(_app);
-const _gp   = new GoogleAuthProvider();
-_gp.setCustomParameters({ prompt: 'select_account' });
+<script>
+  // ── Particles ──
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 38; i++) {
+    const s = document.createElement('div');
+    s.className = 'spark';
+    const size = Math.random() * 2.5 + 1;
+    s.style.cssText = `
+      left: ${Math.random()*100}%;
+      width: ${size}px; height: ${size}px;
+      --dx: ${(Math.random()-0.5)*120}px;
+      animation-duration: ${Math.random()*12+8}s;
+      animation-delay: ${Math.random()*10}s;
+      opacity: 0;
+    `;
+    container.appendChild(s);
+  }
 
-const APP_MAIN = 'level-ia-premium';
+  // ── Gift Modal ──
+  function openGift() {
+    const modal = document.getElementById('gift-modal');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeGift() {
+    const modal = document.getElementById('gift-modal');
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
 
-const getApiUrl = (path) => {
-    try {
-        const h  = window.location.hostname || '';
-        const ok = h.includes('levelup-ecosystem.com') || h.includes('localhost') || h.includes('127.0.0.1');
-        if (!ok || window.location.protocol === 'blob:' || window.location.origin === 'null')
-            return 'https://levelup-ecosystem.com' + path;
-        return path;
-    } catch { return 'https://levelup-ecosystem.com' + path; }
-};
-
-// ── AUTH HEADER ──
-const authBlock   = document.getElementById('authBlock');
-const loginBanner = document.getElementById('loginBanner');
-
-function renderAuthHeader(user) {
-    if (user) {
-        authBlock.innerHTML = `
-            <div class="flex items-center gap-2">
-                ${user.photoURL
-                    ? `<img src="${user.photoURL}" class="w-7 h-7 rounded-full object-cover border-2 border-white/30">`
-                    : `<div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">${(user.displayName||user.email||'?')[0].toUpperCase()}</div>`
-                }
-                <span class="text-xs font-medium text-white/80 hidden sm:block max-w-[100px] truncate">${user.displayName || user.email}</span>
-                <button id="logoutBtn" class="text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                    <span class="hidden sm:inline">Déconnexion</span>
-                </button>
-            </div>`;
-        document.getElementById('logoutBtn').addEventListener('click', () => signOut(_auth));
-        loginBanner.classList.add('hidden');
-    } else {
-        authBlock.innerHTML = `
-            <button id="headerLoginBtn" class="flex items-center gap-2 bg-white text-gray-800 font-semibold text-xs py-1.5 px-3 rounded-lg hover:bg-gray-100 transition">
-                <svg width="14" height="14" viewBox="0 0 48 48">
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                </svg>
-                Se connecter
-            </button>`;
-        document.getElementById('headerLoginBtn').addEventListener('click', doLogin);
-        loginBanner.classList.remove('hidden');
-    }
-}
-
-async function doLogin() {
-    try { await signInWithPopup(_auth, _gp); }
-    catch (e) { if (e.code !== 'auth/popup-closed-by-user') await showModal('Erreur : ' + e.message, 'alert'); }
-}
-
-document.getElementById('loginBannerBtn').addEventListener('click', doLogin);
-onAuthStateChanged(_auth, (user) => renderAuthHeader(user));
-
-// ── MODALE CUSTOM ──
-function showModal(message, type = 'alert') {
-    return new Promise((resolve) => {
-        const modal        = document.getElementById('customModal');
-        const modalContent = document.getElementById('customModalContent');
-        const messageEl    = document.getElementById('customModalMessage');
-        const buttonsEl    = document.getElementById('customModalButtons');
-        const iconEl       = document.getElementById('modalIcon');
-
-        messageEl.innerHTML = message;
-        buttonsEl.innerHTML = '';
-
-        if (type === 'confirm') {
-            iconEl.className = "fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-3";
-            buttonsEl.innerHTML = `
-                <button id="modalBtnCancel"  class="w-full px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-white font-medium transition">Annuler</button>
-                <button id="modalBtnConfirm" class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm text-white font-medium transition">Confirmer</button>`;
-            document.getElementById('modalBtnCancel').onclick  = () => { closeM(); resolve(false); };
-            document.getElementById('modalBtnConfirm').onclick = () => { closeM(); resolve(true);  };
-        } else {
-            const isErr = message.includes("Erreur") || message.includes("DANGER") || message.includes("⚠️");
-            iconEl.className = isErr
-                ? "fa-solid fa-circle-xmark text-4xl text-red-500 mb-3"
-                : "fa-solid fa-circle-info text-4xl text-blue-500 mb-3";
-            buttonsEl.innerHTML = `<button id="modalBtnOk" class="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm text-white font-bold transition">OK</button>`;
-            document.getElementById('modalBtnOk').onclick = () => { closeM(); resolve(true); };
-        }
-
-        modal.classList.remove('hidden');
-        requestAnimationFrame(() => {
-            modalContent.classList.remove('scale-95','opacity-0');
-            modalContent.classList.add('scale-100','opacity-100');
-        });
-
-        function closeM() {
-            modalContent.classList.remove('scale-100','opacity-100');
-            modalContent.classList.add('scale-95','opacity-0');
-            setTimeout(() => modal.classList.add('hidden'), 200);
-        }
-    });
-}
-
-// ── APERÇU HTML ──
-const tabPreview       = document.getElementById('tabPreview');
-const tabCode          = document.getElementById('tabCode');
-const editorContainer  = document.getElementById('editorContainer');
-const previewContainer = document.getElementById('previewContainer');
-const broadcastMessage = document.getElementById('broadcastMessage');
-
-function updatePreview() {
-    previewContainer.innerHTML = broadcastMessage.value.replace(/\{nom\}/gi, 'Utilisateur');
-}
-updatePreview();
-broadcastMessage.addEventListener('input', updatePreview);
-
-tabPreview.addEventListener('click', () => {
-    tabPreview.className = "px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors";
-    tabCode.className    = "px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors";
-    editorContainer.classList.add('hidden');
-    previewContainer.classList.remove('hidden');
-    updatePreview();
-});
-tabCode.addEventListener('click', () => {
-    tabCode.className    = "px-3 py-1 text-xs font-bold rounded-md bg-gray-700 text-white transition-colors";
-    tabPreview.className = "px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition-colors";
-    previewContainer.classList.add('hidden');
-    editorContainer.classList.remove('hidden');
-});
-
-// ── RADIOS CIBLE ──
-document.querySelectorAll('input[name="targetAudience"]').forEach(radio => {
-    radio.addEventListener('change', function () {
-        document.getElementById('specificEmailsContainer')
-            .classList.toggle('hidden', this.value !== 'specific');
-    });
-});
-
-// ── RÉCUPÉRATION UTILISATEURS FIREBASE ──
-window.loadedFirebaseUsers = [];
-
-document.getElementById('loadUsersBtn').addEventListener('click', async () => {
-    if (!_auth.currentUser) {
-        await showModal("⚠️ Tu dois d'abord te connecter avec Google (bouton en haut à droite).", 'alert');
-        return;
-    }
-
-    const btn       = document.getElementById('loadUsersBtn');
-    const container = document.getElementById('usersListContainer');
-    const countEl   = document.getElementById('usersCount');
-    const listEl    = document.getElementById('usersList');
-
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion Firebase…';
-    btn.classList.add('opacity-50', 'cursor-not-allowed');
-
-    try {
-        const usersMap = {};
-
-        const keysSnap = await getDocs(collectionGroup(_db, 'security'));
-        keysSnap.docs.forEach(d => {
-            const data  = d.data();
-            const uid   = data.uid || d.ref.parent?.parent?.id;
-            if (!uid) return;
-            const email = data.email || data.owner || '';
-            const name  = data.displayName || data.name || email.split('@')[0] || 'Utilisateur';
-            usersMap[uid] = { uid, email, name };
-        });
-
-        const statusSnap = await getDocs(
-            query(collection(_db, 'artifacts', APP_MAIN, 'public', 'data', 'users_status'), limit(2000))
-        );
-        statusSnap.docs.forEach(d => {
-            const u = d.data();
-            if (!usersMap[d.id]) {
-                usersMap[d.id] = { uid: d.id, email: u.email || '', name: u.displayName || u.name || '' };
-            } else {
-                if (!usersMap[d.id].email && u.email)                    usersMap[d.id].email = u.email;
-                if (!usersMap[d.id].name  && (u.displayName || u.name)) usersMap[d.id].name  = u.displayName || u.name;
-            }
-        });
-
-        const users = Object.values(usersMap).filter(u => u.email && u.email.includes('@'));
-        if (users.length === 0) throw new Error('Aucun utilisateur avec email trouvé dans Firebase.');
-
-        window.loadedFirebaseUsers = users;
-        container.classList.remove('hidden');
-        countEl.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${users.length} utilisateurs réels trouvés`;
-
-        listEl.innerHTML = '';
-        users.forEach(u => {
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="text-white">${u.name || 'Utilisateur'}</span> — <span class="text-gray-500">${u.email}</span>`;
-            listEl.appendChild(li);
-        });
-
-    } catch (err) {
-        console.error(err);
-        await showModal('Erreur Firebase : ' + err.message, 'alert');
-    } finally {
-        btn.disabled  = false;
-        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Rafraîchir la BDD';
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
-    }
-});
-
-// ── ENVOI DES MAILS ──
-document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const subject    = document.getElementById('broadcastSubject').value.trim();
-    const rawMessage = broadcastMessage.value.trim();
-    const btn        = document.getElementById('submitBtn');
-    const alertBox   = document.getElementById('statusAlert');
-
-    if (!subject)    { await showModal("Veuillez entrer un sujet d'email.", 'alert'); return; }
-    if (!rawMessage) { await showModal("Veuillez entrer un message.", 'alert'); return; }
-
-    const targetType = document.querySelector('input[name="targetAudience"]:checked').value;
-    let targetUsers  = [];
-
-    if (targetType === 'specific') {
-        const rawEmails = document.getElementById('specificEmails').value;
-        targetUsers = rawEmails.split(',')
-            .map(e => ({ email: e.trim(), name: 'Administrateur' }))
-            .filter(u => u.email);
-        if (targetUsers.length === 0) {
-            await showModal("Veuillez entrer au moins une adresse email valide.", 'alert');
-            return;
-        }
-        const ok = await showModal(
-            `🚀 Envoi de TEST vers :<br><br><span class="text-yellow-500 font-bold">${targetUsers.map(u => u.email).join(', ')}</span> ?`,
-            'confirm'
-        );
-        if (!ok) return;
-    } else {
-        if (!window.loadedFirebaseUsers?.length) {
-            await showModal("⚠️ Clique d'abord sur <b>'Récupérer les vrais utilisateurs'</b>.", 'alert');
-            return;
-        }
-        targetUsers = window.loadedFirebaseUsers;
-        const ok = await showModal(
-            `🚨 <b>DANGER</b> : Envoi RÉEL à <b>${targetUsers.length} utilisateurs</b>.<br><br>Leur vrai nom sera intégré. Es-tu absolument sûr ?`,
-            'confirm'
-        );
-        if (!ok) return;
-    }
-
-    btn.disabled = true;
-    alertBox.classList.remove('hidden');
-    alertBox.className = 'mt-6 p-4 rounded-lg font-medium text-center border block bg-gray-900 text-gray-300 border-gray-700';
-
-    let successCount = 0, failCount = 0;
-
-    for (let i = 0; i < targetUsers.length; i++) {
-        const user            = targetUsers[i];
-        const displayName     = user.name || 'Utilisateur';
-        const personalizedMsg = rawMessage.replace(/\{nom\}/gi, displayName);
-
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Envoi (${i + 1}/${targetUsers.length})…</span>`;
-        alertBox.innerHTML = `<i class="fa-solid fa-paper-plane mr-2"></i> Envoi vers <strong>${user.email}</strong>…<br>
-            <span class="text-xs text-gray-500">Succès: ${successCount} | Échecs: ${failCount}</span>`;
-
-        try {
-            const res = await fetch(getApiUrl('/api/send'), {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email:   user.email,
-                    name:    displayName,
-                    type:    'CUSTOM_HTML',
-                    subject: subject,
-                    html:    personalizedMsg
-                })
-            });
-            if (res.ok) successCount++; else failCount++;
-        } catch (err) {
-            console.error('Erreur pour', user.email, err);
-            failCount++;
-        }
-
-        await new Promise(r => setTimeout(r, 250));
-    }
-
-    alertBox.className = 'mt-6 p-4 rounded-lg font-medium text-center border block bg-green-900/50 text-green-300 border-green-700';
-    alertBox.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i> <strong>Envoi terminé !</strong><br>${successCount} envoyés, ${failCount} échecs.`;
-    btn.disabled  = false;
-    btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Déclencher l'envoi réel</span>`;
-});
+  // Close on backdrop click
+  document.getElementById('gift-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeGift();
+  });
 </script>
 </body>
 </html>
