@@ -1233,7 +1233,26 @@ window._renderTurnstile = function(containerId) {
       sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
       theme: 'dark',
       size: 'flexible',
-      callback: function(token) { window._turnstileToken = token; },
+      callback: function(token) {
+        window._turnstileToken = token;
+        sessionStorage.setItem('lvl_ts_session','1');
+        // Masquer le widget Turnstile après vérification réussie (avec animation)
+        setTimeout(function() {
+          container.style.transition = 'all .4s ease';
+          container.style.maxHeight = '0';
+          container.style.opacity = '0';
+          container.style.overflow = 'hidden';
+          container.style.marginTop = '0';
+          container.style.marginBottom = '0';
+          // Masquer aussi le pcTurnstile si visible
+          var pc = document.getElementById('pcTurnstile');
+          if (pc) {
+            pc.style.transition = 'all .4s ease';
+            pc.style.maxHeight = '0'; pc.style.opacity = '0';
+            pc.style.overflow = 'hidden'; pc.style.margin = '0';
+          }
+        }, 600);
+      },
       'expired-callback': function() { window._turnstileToken = null; },
       'error-callback': function() { window._turnstileToken = '__bypass__'; }
     });
@@ -1347,10 +1366,25 @@ NAVIGATION (INVISIBLE BACKGROUND)
     <button class="global-maint-banner-close" onclick="document.getElementById('globalMaintBanner').classList.remove('visible')" title="Masquer"><i class="fa-solid fa-xmark"></i></button>
 </div>
 
+<!-- PWA: cacher immédiatement la landing avant tout rendu -->
+<script>
+(function(){
+  var _isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (_isPWA) {
+    document.documentElement.classList.add('is-pwa');
+    document.body.classList.add('pwa-mobile');
+  }
+})();
+</script>
+<style>
+html.is-pwa #landing { display:none !important; }
+html.is-pwa #landing * { visibility:hidden !important; }
+</style>
+
 <!-- ═══════════════════════════════════════
 LANDING PAGE
 ═══════════════════════════════════════ -->
-<div id="landing">
+<div id="landing" style="">
 
 <!-- ── HERO ── -->
 <section class="hero" id="heroSection">
