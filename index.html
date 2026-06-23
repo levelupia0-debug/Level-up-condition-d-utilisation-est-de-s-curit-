@@ -4522,11 +4522,24 @@ if(s.logo_et_nom) {
         }
     }
 
-    // Utilise les images Firestore si dispo, sinon les 7 images par défaut
-    const firestoreMedias = s.image_ou_video_fond
-        ? (Array.isArray(s.image_ou_video_fond) ? s.image_ou_video_fond : [s.image_ou_video_fond])
-        : [];
-    _buildSlider(firestoreMedias.length > 0 ? firestoreMedias : DEFAULT_HERO_IMGS);
+    // === PANNEAU PUB — sélection selon pub_config.mode (réglé dans les paramètres admin) ===
+    const pubCfg = s.pub_config || {};
+    const pubMode = pubCfg.mode || 'firebase';
+
+    if (pubMode === 'tmdb_img' && Array.isArray(pubCfg.images) && pubCfg.images.length > 0) {
+        // Mode TMDB images tendances — images générées par l'admin via clé TMDB
+        _buildSlider(pubCfg.images);
+    } else if (pubMode === 'tmdb_trailer' && pubCfg.trailer_key) {
+        // Mode Bande-annonce TMDB — embed YouTube du trailer sélectionné
+        const trailerUrl = 'https://www.youtube.com/watch?v=' + pubCfg.trailer_key;
+        _buildSlider([trailerUrl]);
+    } else {
+        // Mode Firebase ou aucun pub_config — images/vidéo personnalisées de l'admin
+        const firestoreMedias = s.image_ou_video_fond
+            ? (Array.isArray(s.image_ou_video_fond) ? s.image_ou_video_fond : [s.image_ou_video_fond])
+            : [];
+        _buildSlider(firestoreMedias.length > 0 ? firestoreMedias : DEFAULT_HERO_IMGS);
+    }
 })();
 // === FIN PANNEAU HERO ===
 
@@ -8148,7 +8161,12 @@ window._loadServicesHub = async function(dbParam, docParam, getDocParam) {
                     ? `<img class="svc-card-img" src="${imageUrl.replace(/"/g,'&quot;')}" alt="${titleEsc}" loading="lazy" onerror="this.parentElement.querySelector('.svc-card-img-placeholder').style.display='flex';this.style.display='none'">`
                     : ''}
                 <div class="svc-card-img-placeholder" style="${imageUrl ? 'display:none' : ''}">
-                    <img src="/image_ebd009.png" style="width:60px; height:60px; object-fit:contain; opacity:0.9;" alt="LevelUp Service">
+                    <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:.55">
+                      <rect width="52" height="52" rx="14" fill="rgba(168,85,247,.12)"/>
+                      <path d="M16 20c0-2.21 1.79-4 4-4h12c2.21 0 4 1.79 4 4v12c0 2.21-1.79 4-4 4H20c-2.21 0-4-1.79-4-4V20z" fill="rgba(168,85,247,.25)"/>
+                      <circle cx="23" cy="24" r="3" fill="rgba(168,85,247,.7)"/>
+                      <path d="M16 31l6-5 4 4 3-3 7 6" stroke="rgba(168,85,247,.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
                 </div>
                 <div class="svc-card-body">
                     <div class="svc-card-title">${title}</div>
