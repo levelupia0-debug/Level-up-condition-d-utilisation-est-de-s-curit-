@@ -417,29 +417,6 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 .sb-foot{padding:12px}
 .db-main{flex:1;padding:28px;overflow-y:auto;min-height:calc(100vh - 65px)}
 
-/* ── LVL PANEL MODE (navigation par panneaux, sans nav ni sidebar) ── */
-body.lvl-panel-mode #nav{display:none!important}
-body.lvl-panel-mode .sidebar{display:none!important}
-body.lvl-panel-mode #dashboard{
-  position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;
-  width:100%!important;height:100%!important;min-height:unset!important;
-  z-index:9500!important;
-  display:flex!important;flex-direction:column!important;
-  overflow:hidden!important;padding-top:0!important;
-  background:var(--bg)!important;
-}
-body.lvl-panel-mode .db-main{
-  flex:1 1 auto!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;
-  position:relative!important;padding:0!important;min-height:0!important;
-  background:var(--bg)!important;width:100%!important;
-}
-body.lvl-panel-mode .overlay,body.lvl-panel-mode .logout-loader{z-index:9999!important}
-body.lvl-panel-mode .db-main>.panel.on{max-width:880px;margin:0 auto;padding:0 24px 120px;box-sizing:border-box}
-body.lvl-panel-mode .panel-topbar{display:flex}
-body.lvl-panel-mode .panel>.pt,body.lvl-panel-mode .panel>.ps{display:none}
-@media(max-width:820px){
-  body.lvl-panel-mode .db-main>.panel.on{padding:0 14px max(110px,calc(90px + env(safe-area-inset-bottom))) 14px}
-}
 
 /* ── SETUP WIZARD ── */
 #setupWizard { font-family:'Inter',sans-serif; color:#fff; }
@@ -1303,7 +1280,10 @@ NAVIGATION (INVISIBLE BACKGROUND)
       <defs><linearGradient id="lvlStarG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
       <path fill="url(#lvlStarG)" d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
     </svg>
-    <span style="font-family:var(--display,sans-serif);font-size:.9rem;font-weight:800;letter-spacing:-.025em;color:#fff;line-height:1">LevelUp <span style="color:#a855f7">Ecosystem</span></span>
+    <div style="display:flex;flex-direction:column;line-height:1.1;gap:1px">
+  <span style="font-family:var(--display,sans-serif);font-size:.9rem;font-weight:800;letter-spacing:-.03em;color:#fff">LevelUp</span>
+  <span style="font-family:var(--display,sans-serif);font-size:.58rem;font-weight:700;letter-spacing:.01em;color:#a855f7;text-transform:uppercase">Ecosystem</span>
+</div>
   </div>
   <div class="nav-links">
     <a onclick="sTo('apps-sec')" data-i18n="nav.applications">Applications</a>
@@ -6789,13 +6769,7 @@ const panel = document.getElementById('panel-'+id);
 if(panel) panel.classList.add('on');
 const nb = document.getElementById('sbn-'+id); if(nb) nb.classList.add('on');
 const mb = document.getElementById('mbn-'+id); if(mb) mb.classList.add('on');
-// Toggle panel mode body classes
-document.body.classList.add('lvl-panel-mode');
-document.body.classList.toggle('lvl-in-settings', id === 'settings');
-// Instant scroll reset
-window.scrollTo({top:0,behavior:'instant'});
-const _dbMain = document.querySelector('.db-main');
-if (_dbMain) _dbMain.scrollTop = 0;
+window.scrollTo({top:0,behavior:'smooth'});
 
 // ── EFFACER BADGE OUTILS À L'OUVERTURE ──
 if (id === 'tools') {
@@ -6811,8 +6785,6 @@ if (id === 'settings') {
     if (window.loadNotifPrefs) window.loadNotifPrefs();
     try { _updatePushToggleUI(); } catch(_) {}
     try { if (window._syncSettingsNotifToggles) window._syncSettingsNotifToggles(); } catch(_) {}
-    try { if (window._updateLocationSettingUI) window._updateLocationSettingUI(); } catch(_) {}
-    try { if (window._updateAppNotifsUI) window._updateAppNotifsUI(); } catch(_) {}
 }
 }
 
@@ -10401,13 +10373,26 @@ COOKIE CONSENT BANNER (RGPD/GDPR)
     window._cookieConsentDone = true;
   };
 
+  // Détection iOS/Safari robuste (inclut iPad en mode desktop)
+  function _isIOSorSafari() {
+    var ua = navigator.userAgent;
+    var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isSafari = /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(ua);
+    var isAndroid = /Android/i.test(ua);
+    var isStandalone = !!window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    return isIOS || isAndroid || isStandalone || (isSafari && window.innerWidth < 900);
+  }
+
   // Vérifier si le choix a déjà été fait
   function _checkCookieConsent() {
     var stored = localStorage.getItem(_COOKIE_KEY);
     if (stored) { window._cookieConsentDone = true; return; }
-    // Ne pas afficher sur mobile/PWA (le login sheet prend tout l'espace)
-    var _isMobileUA = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone;
-    if (_isMobileUA) return;
+    // Ne jamais afficher sur mobile, iOS, Safari ou PWA
+    if (_isIOSorSafari()) {
+      localStorage.setItem(_COOKIE_KEY, 'accepted');
+      window._cookieConsentDone = true;
+      return;
+    }
     // Afficher après 5s pour laisser passer le Turnstile et le chargement
     setTimeout(_showCookieBanner, 5000);
   }
@@ -10416,9 +10401,11 @@ COOKIE CONSENT BANNER (RGPD/GDPR)
   window._enforceCookieForUser = function() {
     var stored = localStorage.getItem(_COOKIE_KEY);
     if (!stored) {
-      // Ne pas afficher sur mobile
-      var _isMobileUA = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone;
-      if (_isMobileUA) return;
+      if (_isIOSorSafari()) {
+        localStorage.setItem(_COOKIE_KEY, 'accepted');
+        window._cookieConsentDone = true;
+        return;
+      }
       setTimeout(_showCookieBanner, 800);
     }
   };
