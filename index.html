@@ -419,122 +419,35 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 /* ═══ PANEL FULL-SCREEN MODAL MODE ═══ */
 /* Barre de retour propre à chaque panel (cachée en mode home) */
 .panel-topbar{display:none;align-items:center;gap:12px;padding:16px 0 14px;border-bottom:1px solid var(--bdr);margin-bottom:22px;position:sticky;top:0;z-index:10;background:var(--bg)}
-.panel-tb-back{background:rgba(255,255,255,.07);border:1px solid var(--bdr);border-radius:10px;padding:9px 14px;color:var(--txt);font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s}
+.panel-tb-back{background:rgba(255,255,255,.07);border:1px solid var(--bdr);border-radius:10px;padding:9px 14px;color:var(--txt);font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .2s;flex-shrink:0;font-family:var(--sans);font-weight:500}
 .panel-tb-back:hover,.panel-tb-back:active{background:rgba(255,255,255,.13)}
 .panel-tb-back i{font-size:.78rem}
 .panel-tb-label{font-size:.88rem;font-weight:600;font-family:var(--sans);color:var(--txt);opacity:.7}
-
-/* ══════════════════════════════════════════════════════
-   FIX ÉCRAN NOIR — PANELS DASHBOARD (FORCE #030303)
-══════════════════════════════════════════════════════ */
-
-body.lvl-panel-mode #nav { display: none !important; }
-body.lvl-panel-mode .sidebar { display: none !important; }
-
-body.lvl-panel-mode #dashboard {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 9500 !important;
-  background: #030303 !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  padding-top: 0 !important;
+/* Quand un panel non-home est actif */
+body.lvl-panel-mode #nav{display:none!important}
+body.lvl-panel-mode .sidebar{display:none!important}
+/* Dashboard devient le conteneur fixed — plus fiable que fixer .db-main seul */
+body.lvl-panel-mode #dashboard{
+  position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;
+  width:100%!important;height:100%!important;min-height:unset!important;
+  z-index:9500!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;padding-top:0!important;
+  background:var(--bg)!important;
+}
+body.lvl-panel-mode .db-main{
+  flex:1 1 auto!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;
+  position:relative!important;padding:0!important;min-height:0!important;
+  background:var(--bg)!important;width:100%!important;
+}
+body.lvl-panel-mode .overlay,body.lvl-panel-mode .logout-loader{z-index:9999!important}
+body.lvl-panel-mode .db-main>.panel.on{max-width:880px;margin:0 auto;padding:0 24px 120px;box-sizing:border-box}
+body.lvl-panel-mode .panel-topbar{display:flex}
+body.lvl-panel-mode .panel>.pt,body.lvl-panel-mode .panel>.ps{display:none}
+@media(max-width:820px){
+  body.lvl-panel-mode .db-main>.panel.on{padding:0 14px max(110px,calc(90px + env(safe-area-inset-bottom))) 14px}
 }
 
-body.lvl-panel-mode .db-main {
-  flex: 1 !important;
-  background: #030303 !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  position: relative !important;
-}
-
-body.lvl-panel-mode .panel.on {
-  display: block !important;
-  background: #030303 !important;
-  width: 100% !important;
-  min-height: 100% !important;
-}
-
-body.lvl-panel-mode .overlay,
-body.lvl-panel-mode .logout-loader {
-  z-index: 9999 !important;
-}
-
-body.lvl-panel-mode .db-main > .panel.on {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 0 24px 120px;
-  box-sizing: border-box;
-}
-
-body.lvl-panel-mode .panel-topbar {
-  display: flex !important;
-  background: #030303 !important;
-  padding-top: max(16px, env(safe-area-inset-top, 16px)) !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 10 !important;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
-
-body.lvl-panel-mode .panel > .pt,
-body.lvl-panel-mode .panel > .ps {
-  display: none !important;
-}
-
-@media (max-width: 820px) {
-  body.lvl-panel-mode #dashboard {
-    background: #030303 !important;
-    overflow: hidden !important;
-  }
-
-  body.lvl-panel-mode .db-main {
-    background: #030303 !important;
-    padding: 0 14px max(110px, calc(90px + env(safe-area-inset-bottom))) 14px !important;
-    width: 100% !important;
-    height: 100% !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    position: relative !important;
-  }
-
-  body.lvl-panel-mode .db-main > .panel.on {
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 14px max(110px, calc(90px + env(safe-area-inset-bottom))) 14px !important;
-  }
-
-  body.lvl-panel-mode .panel-topbar {
-    display: flex !important;
-    background: #030303 !important;
-    padding-top: max(16px, env(safe-area-inset-top, 16px)) !important;
-  }
-}
-
-@media (display-mode: standalone) {
-  body.lvl-panel-mode #dashboard {
-    background: #030303 !important;
-  }
-  
-  body.lvl-panel-mode .db-main {
-    background: #030303 !important;
-  }
-
-  body.lvl-panel-mode .panel.on {
-    background: #030303 !important;
-  }
-}
 /* PANELS */
 .panel{display:none}
 .panel.on{display:block}
@@ -1039,38 +952,7 @@ body.lvl-in-settings .fab-wrap { display: none !important; }
 .notif-toggle input:checked + .notif-slider { background:rgba(168,85,247,.5); border-color:rgba(168,85,247,.4); }
 .notif-toggle input:checked + .notif-slider:before { transform:translateX(16px); }
 
-/* ── PUSH PERMISSION POPUP ── */
-/* iOS push permission popup — petit & propre */
-#pushPermModal { position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;padding:0 0 32px;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .3s }
-#pushPermModal.show { opacity:1;pointer-events:all }
-.push-perm-card { background:linear-gradient(160deg,#12101c,#0e0c18);border:1px solid rgba(168,85,247,.28);border-radius:20px;padding:20px 20px 18px;max-width:360px;width:calc(100% - 32px);box-shadow:0 24px 60px rgba(0,0,0,.85),0 0 0 1px rgba(168,85,247,.06);position:relative;overflow:hidden;transform:translateY(30px) scale(.97);transition:transform .38s cubic-bezier(.34,1.56,.64,1) }
-#pushPermModal.show .push-perm-card { transform:translateY(0) scale(1) }
-.push-perm-card::before { content:'';position:absolute;top:-60px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(168,85,247,.14),transparent 70%);pointer-events:none;border-radius:50% }
-.push-perm-inner { display:flex;align-items:flex-start;gap:14px;margin-bottom:16px }
-.push-perm-logo { width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(124,58,237,.35));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0 }
-.push-perm-logo i { font-size:1.2rem;color:#c084fc }
-.push-perm-texts { flex:1;min-width:0 }
-.push-perm-badge { display:inline-flex;align-items:center;gap:5px;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a855f7;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);padding:2px 8px;border-radius:100px;margin-bottom:6px }
-.push-perm-badge span { width:5px;height:5px;border-radius:50%;background:#a855f7;display:block;animation:bdot 1.4s ease infinite }
-.push-perm-title { font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:4px;line-height:1.2 }
-.push-perm-desc { font-size:.78rem;color:rgba(255,255,255,.5);line-height:1.5;margin:0 }
-.push-perm-btns { display:flex;gap:8px }
-.push-perm-yes { background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:11px;padding:10px 18px;font-size:.84rem;font-weight:700;cursor:pointer;flex:1;font-family:var(--sans);display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;box-shadow:0 4px 16px rgba(168,85,247,.35) }
-.push-perm-yes:hover { transform:translateY(-1px);box-shadow:0 8px 24px rgba(168,85,247,.5) }
-.push-perm-no { background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-size:.8rem;font-weight:500;cursor:pointer;padding:10px 14px;border-radius:11px;font-family:var(--sans);transition:all .2s;white-space:nowrap }
-.push-perm-no:hover { color:rgba(255,255,255,.7);background:rgba(255,255,255,.07) }
-
-/* Android/mobile horizontal notification banner */
-#pushNotifBanner { position:fixed;bottom:0;left:0;right:0;z-index:99998;transform:translateY(100%);transition:transform .35s cubic-bezier(.34,1.56,.64,1);padding:0 12px calc(env(safe-area-inset-bottom) + 12px) }
-#pushNotifBanner.show { transform:translateY(0) }
-.push-banner-inner { background:linear-gradient(135deg,#12101c,#0e0c18);border:1px solid rgba(168,85,247,.22);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 40px rgba(0,0,0,.6) }
-.push-banner-ico { width:36px;height:36px;border-radius:10px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0 }
-.push-banner-ico i { color:#c084fc;font-size:.95rem }
-.push-banner-txt { flex:1;min-width:0 }
-.push-banner-txt strong { display:block;font-size:.84rem;font-weight:700;color:#fff;margin-bottom:1px }
-.push-banner-txt span { font-size:.74rem;color:rgba(255,255,255,.45);line-height:1.4 }
-.push-banner-btn { background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:var(--sans);white-space:nowrap;flex-shrink:0 }
-.push-banner-close { width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.05);border:none;color:rgba(255,255,255,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0 }
+/* push modal removed — replaced by setup wizard */
 
 /* Admin card image upload button (super admins only) */
 .card-img-upload-btn { position:absolute;top:7px;right:7px;z-index:20;width:28px;height:28px;border-radius:8px;background:rgba(168,85,247,.85);border:none;color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:.72rem;backdrop-filter:blur(4px);transition:all .2s;outline:none }
@@ -1095,34 +977,7 @@ body.is-super-admin .card-img-upload-btn { display:flex }
 @keyframes splashPulse { 0%,100%{box-shadow:0 0 40px rgba(168,85,247,.35)} 50%{box-shadow:0 0 60px rgba(168,85,247,.55)} }
 @keyframes splashDotPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-/* ── Onboarding popup ── */
-#onboardingPopup { position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px }
-#onboardingPopup.open { display:flex }
-.ob-card { background:linear-gradient(160deg,#0f0a1a,#130d20);border:1px solid rgba(168,85,247,.2);border-radius:22px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.8);animation:cIn .32s cubic-bezier(.34,1.46,.64,1) }
-.ob-header { background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(124,58,237,.06));border-bottom:1px solid rgba(168,85,247,.12);padding:20px 22px 18px;text-align:center }
-.ob-step-dots { display:flex;justify-content:center;gap:6px;margin-bottom:14px }
-.ob-dot { width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12);transition:all .3s }
-.ob-dot.active { background:#a855f7;width:20px;border-radius:10px }
-.ob-dot.done { background:#22c55e }
-.ob-title { font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:4px }
-.ob-desc { font-size:.78rem;color:rgba(255,255,255,.45);line-height:1.5 }
-.ob-body { padding:22px }
-.ob-label { font-size:.7rem;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px }
-.ob-input { width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(168,85,247,.2);border-radius:11px;padding:11px 14px;color:#fff;font-size:.9rem;font-family:var(--sans);outline:none;box-sizing:border-box;transition:border-color .2s }
-.ob-input:focus { border-color:rgba(168,85,247,.5) }
-.ob-input.error { border-color:rgba(239,68,68,.5) }
-.ob-input.success { border-color:rgba(34,197,94,.5) }
-.ob-hint { font-size:.7rem;margin-top:6px;min-height:16px;transition:color .2s }
-.ob-hint.err { color:#f87171 }
-.ob-hint.ok { color:#4ade80 }
-.ob-hint.info { color:rgba(255,255,255,.35) }
-.ob-footer { padding:0 22px 22px;display:flex;flex-direction:column;gap:8px }
-.ob-btn-primary { width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;outline:none }
-.ob-btn-primary:hover { transform:translateY(-1px);box-shadow:0 8px 24px rgba(168,85,247,.4) }
-.ob-btn-primary:disabled { opacity:.5;cursor:not-allowed;transform:none }
-.ob-age-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px }
-.ob-age-btn { padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:rgba(255,255,255,.5);font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;text-align:center }
-.ob-age-btn.selected { border-color:rgba(168,85,247,.5);background:rgba(168,85,247,.1);color:#c084fc }
+/* onboarding popup removed — replaced by setup wizard */
 /* Apps overlay */
 #appsOverlay { position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:flex;flex-direction:column;overflow:hidden }
 #appsOverlay.hidden { display:none }
@@ -1337,28 +1192,16 @@ nav{padding-top:max(15px,env(safe-area-inset-top))!important}
 .afm-app:active{background:rgba(255,255,255,.1);transform:scale(.95)}
 .afm-ico{width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center}
 .afm-lbl{font-size:.62rem;font-weight:700;color:rgba(255,255,255,.7);text-align:center;line-height:1.3}
-/* ── PERMISSIONS ONBOARDING ── */
-#permsModal{position:fixed;inset:0;z-index:999999;background:#07040f;display:none;flex-direction:column;overflow:hidden}
-#permsModal.open{display:flex}
-.perms-card{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;animation:permsIn .4s ease}
-@keyframes permsIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.perms-ico-wrap{width:90px;height:90px;border-radius:28px;display:flex;align-items:center;justify-content:center;margin-bottom:24px}
-.perms-title{font-size:1.45rem;font-weight:900;color:#fff;text-align:center;margin-bottom:10px;letter-spacing:-.03em;font-family:var(--display)}
-.perms-desc{font-size:.85rem;color:rgba(255,255,255,.45);text-align:center;line-height:1.65;margin-bottom:24px}
-.perms-status{padding:11px 16px;border-radius:12px;font-size:.8rem;text-align:center;margin-bottom:14px;display:none;width:100%}
-.perms-status.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#4ade80;display:block}
-.perms-status.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;display:block}
-.perms-btn{width:100%;padding:16px;border-radius:16px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:#fff;font-size:.95rem;font-weight:800;cursor:pointer;margin-bottom:10px;font-family:var(--sans);letter-spacing:-.01em;transition:opacity .2s;-webkit-tap-highlight-color:transparent}
-.perms-btn:disabled{opacity:.45}
-.perms-btn:active:not(:disabled){opacity:.8}
-.perms-btn-skip{width:100%;padding:12px;border-radius:16px;background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);font-size:.82rem;cursor:pointer;font-family:var(--sans);-webkit-tap-highlight-color:transparent;transition:color .2s}
-.perms-btn-skip:active{color:rgba(255,255,255,.6)}
-.perms-steps{display:flex;gap:6px;margin-bottom:32px}
-.perms-step-dot{height:4px;border-radius:99px;background:rgba(255,255,255,.12);transition:all .4s;width:28px}
-.perms-step-dot.active{background:#a855f7;width:44px}
-.perms-step-dot.done{background:rgba(168,85,247,.35)}
-#permsLoader{position:fixed;inset:0;z-index:1000000;background:#07040f;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px}
-#permsLoader.open{display:flex}
+/* ── Setup Wizard (scoped) ── */
+#setupWizard { font-family:'Inter',sans-serif; color:#fff; }
+#setupWizard .step-enter { animation: swSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+#setupWizard .step-exit { animation: swFadeOut 0.3s cubic-bezier(0.16,1,0.3,1) forwards; }
+@keyframes swSlideUp { 0%{opacity:0;transform:translateY(20px)} 100%{opacity:1;transform:translateY(0)} }
+@keyframes swFadeOut { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.98)} }
+#setupWizard .animate-spin-slow { animation: swSpin 4s linear infinite; }
+@keyframes swSpin { 100% { transform:rotate(360deg); } }
+#setupWizard .glass-panel { background:rgba(10,10,10,0.8); backdrop-filter:blur(12px); border-right:1px solid rgba(255,255,255,0.05); }
+#setupWizard .text-gradient { background:linear-gradient(135deg,#fff 0%,#a8a8a8 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
 </style>
 <!-- Cloudflare Turnstile -->
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
@@ -1391,6 +1234,10 @@ window._renderTurnstile = function(containerId) {
   } catch(e) { console.warn('Turnstile Error', e); }
 };
 </script>
+<!-- Setup Wizard — Tailwind + Phosphor Icons -->
+<script>if(!window._twConfig){window._twConfig=true;tailwind&&(tailwind.config={corePlugins:{preflight:false}});}</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
 <!-- Google Identity Services (One Tap + bouton officiel) -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -2394,6 +2241,20 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <h1 class="pt">Paramètres</h1>
 <p class="ps">Gérez votre compte et vos préférences de sécurité.</p>
 
+<!-- ── BANNIÈRE ERREUR FIRESTORE (affichée si permission-denied) ── -->
+<div id="settingsErrorBanner" style="display:none;margin-bottom:18px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:14px 16px">
+  <div style="display:flex;align-items:flex-start;gap:10px">
+    <div style="width:32px;height:32px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+      <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;font-size:.8rem"></i>
+    </div>
+    <div style="flex:1;min-width:0">
+      <h5 id="settingsErrorTitle" style="font-size:.84rem;font-weight:700;color:#fca5a5;margin:0 0 4px">Problème de connexion</h5>
+      <p id="settingsErrorText" style="font-size:.76rem;color:rgba(255,255,255,.45);margin:0;line-height:1.55"></p>
+      <button onclick="document.getElementById('settingsErrorBanner').style.display='none'" style="margin-top:8px;background:none;border:none;color:rgba(239,68,68,.6);font-size:.72rem;font-weight:600;cursor:pointer;font-family:var(--sans);padding:0;transition:color .2s" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='rgba(239,68,68,.6)'">Fermer <i class="fa-solid fa-xmark" style="font-size:.65rem;margin-left:3px"></i></button>
+    </div>
+  </div>
+</div>
+
 <!-- ── SECTION SÉCURITÉ DU COMPTE (en haut) ── -->
 <div class="set-sec" id="settingsSecurityTop">
 <div class="set-title" style="display:flex;align-items:center;gap:8px"><i class="fa-solid fa-shield-halved" style="color:#22c55e;font-size:.8rem"></i> Sécurité du compte</div>
@@ -2918,62 +2779,123 @@ LOGOUT LOADING ANIMATION
 <!-- ═══════════════════════════════════════
 OVERLAY DOUBLE AUTHENTIFICATION (2FA)
 ═══════════════════════════════════════ -->
-<div id="twoFaOverlay" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(3,3,3,.93);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);align-items:center;justify-content:center;padding:20px;overflow-y:auto">
-<div style="background:linear-gradient(180deg,#0f0f1a 0%,#0a0a12 100%);border:1px solid rgba(168,85,247,.22);border-radius:28px;max-width:420px;width:100%;text-align:center;animation:cIn .3s ease;position:relative;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.03)">
-  <div style="height:2px;background:linear-gradient(90deg,transparent 0%,#7c3aed 30%,#a855f7 50%,#7c3aed 70%,transparent 100%)"></div>
-  <div style="padding:32px 28px 28px;position:relative">
-    <button onclick="window._back2FAToLogin()" style="position:absolute;top:0;left:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:6px 11px;color:rgba(255,255,255,.45);font-size:.73rem;font-weight:600;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:4px;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.45)'"><i class="fa-solid fa-arrow-left" style="font-size:.62rem"></i> Retour</button>
-    <div style="width:72px;height:72px;background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(168,85,247,.08));border:1px solid rgba(168,85,247,.28);border-radius:22px;display:flex;align-items:center;justify-content:center;margin:10px auto 18px;font-size:2rem">🔐</div>
-    <h2 style="color:#fff;font-size:1.22rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em">Vérification requise</h2>
-    <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:rgba(168,85,247,.09);border:1px solid rgba(168,85,247,.22);border-radius:100px;margin-bottom:14px">
-      <span style="width:5px;height:5px;border-radius:50%;background:#a855f7;display:inline-block"></span>
-      <span style="font-size:.71rem;color:#c084fc;font-weight:700;letter-spacing:.03em">Nouvel appareil détecté</span>
+<div id="twoFaOverlay" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);align-items:center;justify-content:center;padding:20px;overflow-y:auto">
+  <div style="background:#09090b;border:1px solid #27272a;border-radius:20px;max-width:400px;width:100%;position:relative;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.9)">
+    <!-- Top accent bar -->
+    <div style="height:2px;background:linear-gradient(90deg,transparent,#7c3aed 30%,#a855f7 50%,#7c3aed 70%,transparent)"></div>
+
+    <!-- VIEW CODE -->
+    <div id="twofaViewCode" style="padding:32px 28px 28px">
+      <!-- Back button -->
+      <button onclick="window._back2FAToLogin()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:5px 10px;color:rgba(255,255,255,.4);font-size:.72rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;margin-bottom:28px" onmouseover="this.style.color='rgba(255,255,255,.8)';this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.color='rgba(255,255,255,.4)';this.style.background='rgba(255,255,255,.05)'"><i class="fa-solid fa-arrow-left" style="font-size:.6rem"></i> Retour</button>
+      <!-- Logo + heading -->
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:16px">Level<span style="color:#a855f7">Up</span></div>
+        <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:100px;margin-bottom:14px">
+          <span style="width:5px;height:5px;border-radius:50%;background:#a855f7;display:inline-block"></span>
+          <span style="font-size:.7rem;color:#c084fc;font-weight:700;letter-spacing:.04em" id="twoFaBadgeText">Nouvel appareil détecté</span>
+        </div>
+        <h2 style="color:#fff;font-size:1.1rem;font-weight:700;margin:0 0 6px;letter-spacing:-.01em">Vérification</h2>
+        <p id="twoFaSubtitle" style="color:rgba(255,255,255,.38);font-size:.8rem;margin:0;line-height:1.6">Code à 6 chiffres envoyé à<br><strong id="twoFaEmail" style="color:rgba(255,255,255,.65)"></strong></p>
+      </div>
+      <!-- Single code input -->
+      <div style="margin-bottom:16px">
+        <input type="number" id="twoFaSingleInput" maxlength="6" inputmode="numeric" placeholder="000000" autocomplete="one-time-code"
+          style="width:100%;box-sizing:border-box;background:#18181b;border:1px solid #3f3f46;border-radius:14px;color:#fff;font-size:1.8rem;font-weight:800;text-align:center;padding:16px 12px;outline:none;font-family:'Courier New',monospace;letter-spacing:.4em;transition:border-color .2s"
+          onfocus="this.style.borderColor='rgba(168,85,247,.6)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.12)'"
+          onblur="this.style.borderColor='#3f3f46';this.style.boxShadow='none'">
+      </div>
+      <!-- Error -->
+      <div id="twoFaError" style="display:none;color:#f87171;font-size:.78rem;padding:9px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;text-align:center;margin-bottom:14px"></div>
+      <!-- Verify button -->
+      <button id="twoFaVerifyBtn" onclick="window._verify2FA()" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:var(--sans);margin-bottom:10px;transition:opacity .2s">Vérifier le code</button>
+      <!-- Divider -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+        <span style="color:rgba(255,255,255,.2);font-size:.7rem">ou</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+      </div>
+      <!-- Switch to key view -->
+      <button onclick="window._switch2FAToKey()" style="width:100%;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:13px;color:rgba(255,255,255,.55);font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.55)'">
+        <i class="fa-solid fa-key" style="font-size:.72rem;color:#a855f7"></i>Utiliser ma clé LevelUp
+      </button>
+      <!-- Resend -->
+      <div style="text-align:center">
+        <button id="twoFaResendBtn" onclick="window._resend2FA()" style="background:none;border:none;color:rgba(255,255,255,.28);font-size:.74rem;cursor:pointer;font-family:var(--sans);padding:4px 8px;border-radius:6px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.28)'"><i class="fa-solid fa-rotate-right" style="font-size:.65rem;margin-right:4px"></i>Renvoyer le code</button>
+        <div id="twoFaQuotaInfo" style="font-size:.68rem;color:rgba(255,255,255,.2);margin-top:2px"></div>
+      </div>
     </div>
-    <p id="twoFaSubtitle" style="color:rgba(255,255,255,.38);font-size:.81rem;margin:0 0 26px;line-height:1.65">Code envoyé à <strong id="twoFaEmail" style="color:rgba(255,255,255,.65)"></strong></p>
-    <div style="display:flex;gap:7px;justify-content:center;margin-bottom:8px" id="twoFaCodeBoxes">
-      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="0" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
-      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="1" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
-      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="2" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
-      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="3" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
-      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="4" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
-      <input type="text" inputmode="numeric" maxlength="1" class="twofa-digit" data-idx="5" style="width:48px;height:58px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.65rem;font-weight:800;text-align:center;outline:none;font-family:'Courier New',monospace;transition:all .15s;caret-color:#a855f7">
+
+    <!-- VIEW KEY (hidden by default) -->
+    <div id="twofaViewKey" style="display:none;padding:32px 28px 28px">
+      <button onclick="window._switch2FAToCode()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:5px 10px;color:rgba(255,255,255,.4);font-size:.72rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;margin-bottom:28px" onmouseover="this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.color='rgba(255,255,255,.4)'"><i class="fa-solid fa-arrow-left" style="font-size:.6rem"></i> Retour au code</button>
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:14px">Level<span style="color:#a855f7">Up</span></div>
+        <h2 style="color:#fff;font-size:1.1rem;font-weight:700;margin:0 0 6px">Clé de sécurité</h2>
+        <p style="color:rgba(255,255,255,.35);font-size:.8rem;margin:0">Format <span style="color:rgba(255,255,255,.55);font-family:'Courier New',monospace">LVL-XXXXX-XXXXX</span></p>
+      </div>
+      <div style="margin-bottom:16px">
+        <input type="text" id="twoFaKeyInput" placeholder="LVL-00000-00000" autocomplete="off"
+          style="width:100%;box-sizing:border-box;background:#18181b;border:1px solid #3f3f46;border-radius:14px;color:#fff;font-size:1rem;font-weight:700;text-align:center;padding:16px 12px;outline:none;font-family:'Courier New',monospace;letter-spacing:.08em;text-transform:uppercase;transition:border-color .2s"
+          onfocus="this.style.borderColor='rgba(168,85,247,.6)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.12)'"
+          onblur="this.style.borderColor='#3f3f46';this.style.boxShadow='none'">
+      </div>
+      <div id="twoFaKeyError" style="display:none;color:#f87171;font-size:.78rem;padding:9px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;text-align:center;margin-bottom:14px"></div>
+      <button onclick="window._confirmKeyVerify()" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:var(--sans)">Valider la clé</button>
     </div>
-    <div id="twoFaError" style="color:#f87171;font-size:.77rem;min-height:16px;margin:0 0 14px;display:none;padding:8px 12px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.14);border-radius:9px;text-align:center">Code incorrect — réessayez</div>
-    <button id="twoFaVerifyBtn" onclick="window._verify2FA()" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:14px;color:#fff;font-size:.92rem;font-weight:800;cursor:pointer;font-family:var(--sans);margin-bottom:10px;transition:opacity .2s;letter-spacing:.01em">Vérifier le code</button>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-      <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
-      <span style="color:rgba(255,255,255,.2);font-size:.72rem">ou</span>
-      <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
-    </div>
-    <button onclick="window._verify2FAWithKey()" style="width:100%;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;color:rgba(255,255,255,.6);font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:10px;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'"><i class="fa-solid fa-key" style="font-size:.73rem;margin-right:6px;color:#a855f7"></i>Utiliser ma clé LevelUp</button>
-    <div id="twoFaKeyInputWrap" style="display:none;margin-bottom:10px">
-      <input type="text" id="twoFaKeyInput" placeholder="LVL-XXXXX-XXXXX" style="width:100%;padding:11px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(168,85,247,.22);border-radius:12px;color:#fff;font-size:.82rem;outline:none;font-family:'Courier New',monospace;box-sizing:border-box;margin-bottom:7px">
-      <button onclick="window._confirmKeyVerify()" style="width:100%;padding:10px;background:rgba(168,85,247,.14);border:1px solid rgba(168,85,247,.3);border-radius:12px;color:#a855f7;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--sans)">Confirmer avec la clé</button>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-      <button id="twoFaResendBtn" onclick="window._resend2FA()" style="background:none;border:none;color:rgba(255,255,255,.28);font-size:.75rem;cursor:pointer;font-family:var(--sans);padding:4px 8px;border-radius:6px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.28)'"><i class="fa-solid fa-rotate-right" style="font-size:.67rem;margin-right:4px"></i>Renvoyer le code</button>
-      <span id="twoFaQuotaInfo" style="font-size:.69rem;color:rgba(255,255,255,.2)"></span>
+
+    <!-- VIEW SUCCESS (hidden by default) -->
+    <div id="twofaViewSuccess" style="display:none;padding:40px 28px;text-align:center">
+      <div style="width:64px;height:64px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <i class="fa-solid fa-check" style="color:#22c55e;font-size:1.5rem"></i>
+      </div>
+      <h2 style="color:#fff;font-size:1.1rem;font-weight:700;margin:0 0 6px">Vérification réussie</h2>
+      <p style="color:rgba(255,255,255,.35);font-size:.82rem;margin:0">Appareil de confiance enregistré</p>
     </div>
   </div>
-</div>
 </div>
 
 <!-- ═══════════════════════════════════════
 POPUP LIAISON COMPTE FACEBOOK + GOOGLE
 ═══════════════════════════════════════ -->
 <div class="overlay hidden" id="fbLinkOv" onclick="bgClose(event,'fbLinkOv')">
-<div class="conf-card" style="max-width:380px">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-    <div style="width:44px;height:44px;border-radius:50%;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-brands fa-facebook" style="color:#3b82f6;font-size:1.1rem"></i></div>
-    <div><h3 style="font-size:1rem;font-weight:800;margin:0 0 2px">Compte déjà existant</h3><p style="font-size:.77rem;color:var(--muted);margin:0">Même email — Google &amp; Facebook</p></div>
-  </div>
-  <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px;margin-bottom:18px">
-    <p style="font-size:.83rem;color:rgba(255,255,255,.7);margin:0 0 8px;line-height:1.6">Un compte LevelUp existe déjà avec l'adresse <strong id="fbLinkEmail" style="color:#fff"></strong> (via Google).</p>
-    <p style="font-size:.8rem;color:var(--muted);margin:0;line-height:1.65">Souhaitez-vous lier votre compte Facebook pour vous connecter avec les deux méthodes ?</p>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:8px">
-    <button onclick="window._linkFbToGoogle()" id="fbLinkConfirmBtn" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:none;border-radius:13px;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--sans)"><i class="fa-brands fa-facebook" style="margin-right:7px"></i>Lier les deux comptes</button>
-    <button onclick="closeOverlay('fbLinkOv')" style="width:100%;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:13px;color:rgba(255,255,255,.55);font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--sans)">Annuler</button>
+<div class="conf-card" style="max-width:400px;padding:0;overflow:hidden;border-radius:20px;border:1px solid rgba(255,255,255,.07)">
+  <!-- Header gradient -->
+  <div style="height:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6,#60a5fa)"></div>
+  <div style="padding:28px 24px 24px">
+    <!-- Provider icons -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:22px">
+      <div style="width:46px;height:46px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.4);z-index:1">
+        <i class="fa-brands fa-google" style="font-size:1.2rem;background:linear-gradient(135deg,#4285f4,#ea4335,#fbbc05,#34a853);-webkit-background-clip:text;-webkit-text-fill-color:transparent"></i>
+      </div>
+      <div style="width:28px;height:28px;border-radius:50%;background:#09090b;border:2px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;margin:0 -6px;z-index:2">
+        <i class="fa-solid fa-link" style="font-size:.55rem;color:rgba(255,255,255,.4)"></i>
+      </div>
+      <div style="width:46px;height:46px;border-radius:50%;background:#1877F2;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(24,119,242,.4);z-index:1">
+        <i class="fa-brands fa-facebook-f" style="color:#fff;font-size:1.2rem"></i>
+      </div>
+    </div>
+    <h3 style="font-size:1rem;font-weight:800;color:#fff;margin:0 0 6px;text-align:center;letter-spacing:-.01em">Lier votre compte Facebook</h3>
+    <p style="font-size:.78rem;color:rgba(255,255,255,.35);text-align:center;margin:0 0 20px;line-height:1.5">Connectez-vous avec Google <strong style="color:rgba(255,255,255,.55)">et</strong> Facebook sur le même compte</p>
+    <!-- Info card -->
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 16px;margin-bottom:18px">
+      <p style="font-size:.8rem;color:rgba(255,255,255,.6);margin:0 0 10px;line-height:1.6">Un compte LevelUp est déjà associé à l'adresse</p>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid rgba(255,255,255,.08)">
+        <i class="fa-solid fa-envelope" style="color:rgba(168,85,247,.7);font-size:.75rem;flex-shrink:0"></i>
+        <strong id="fbLinkEmail" style="color:#fff;font-size:.82rem;font-family:'Courier New',monospace;letter-spacing:.02em"></strong>
+      </div>
+      <p style="font-size:.75rem;color:rgba(255,255,255,.3);margin:10px 0 0;line-height:1.6">En liant les deux comptes, vous pourrez vous connecter avec <strong style="color:rgba(255,255,255,.5)">Google ou Facebook</strong> et accéder aux mêmes données.</p>
+    </div>
+    <!-- Security note -->
+    <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.12);border-radius:10px;margin-bottom:20px">
+      <i class="fa-solid fa-shield-halved" style="color:rgba(34,197,94,.6);font-size:.8rem;margin-top:1px;flex-shrink:0"></i>
+      <p style="font-size:.73rem;color:rgba(255,255,255,.35);margin:0;line-height:1.55">Votre mot de passe et vos données restent sécurisés. Cette action est réversible depuis vos paramètres.</p>
+    </div>
+    <!-- Actions -->
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="window._linkFbToGoogle()" id="fbLinkConfirmBtn" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#1877F2);border:none;border-radius:13px;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'"><i class="fa-brands fa-facebook-f" style="font-size:.85rem"></i>Lier les deux comptes</button>
+      <button onclick="closeOverlay('fbLinkOv')" style="width:100%;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:13px;color:rgba(255,255,255,.45);font-size:.83rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.45)'">Pas maintenant</button>
+    </div>
   </div>
 </div>
 </div>
@@ -3229,39 +3151,154 @@ SERVICES HUB OVERLAY
   </div>
 </div>
 
-<!-- ═══ ONBOARDING POPUP ═══ -->
-<div id="onboardingPopup">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-step-dots">
-        <div class="ob-dot active" id="obDot1"></div>
-        <div class="ob-dot" id="obDot2"></div>
-      </div>
-      <div class="ob-title" id="obTitle">Bienvenue sur LevelUp !</div>
-      <div class="ob-desc" id="obDesc">Choisissez votre nom d'affichage pour personnaliser votre expérience.</div>
+<!-- ═══ SETUP WIZARD ═══ -->
+<div id="setupWizard" style="display:none;position:fixed;inset:0;z-index:9999999;background:#000" class="h-[100dvh] w-screen overflow-hidden flex-col md:flex-row antialiased">
+
+  <!-- DESKTOP SIDEBAR -->
+  <div id="sw-sidebar" class="hidden md:flex w-[320px] glass-panel flex-col py-10 px-10 relative z-20">
+    <div class="flex items-center gap-3 mb-20">
+      <span class="text-[16px] font-bold tracking-wide text-white">LevelUp Ecosystem</span>
     </div>
-    <!-- Étape 1 : Pseudo -->
-    <div class="ob-body" id="obStep1">
-      <div class="ob-label">Votre pseudo</div>
-      <input type="text" class="ob-input" id="obUsername" maxlength="24" placeholder="Ex : StarGazer_92" oninput="window._obCheckUsername(this.value)">
-      <div class="ob-hint info" id="obUsernameHint">Entre 3 et 24 caractères, lettres, chiffres, _ et -</div>
-      <div style="display:flex;gap:8px;margin-top:14px">
-        <button class="ob-age-btn" id="obKeepGoogleName" onclick="window._obUseGoogleName()" style="flex:1;padding:11px">Garder mon nom Google</button>
+    <div class="relative flex-1">
+      <div class="space-y-12 relative z-10">
+        <div class="flex items-center gap-5 group transition-opacity" id="indicator-1">
+          <div id="ind-line-1" class="w-[2px] h-6 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
+          <span id="ind-text-1" class="text-sm font-semibold text-white">Notifications</span>
+        </div>
+        <div class="flex items-center gap-5 group opacity-40 transition-opacity" id="indicator-2">
+          <div id="ind-line-2" class="w-[2px] h-6 bg-white/20 rounded-full"></div>
+          <span id="ind-text-2" class="text-sm font-medium text-gray-400">Localisation</span>
+        </div>
+        <div class="flex items-center gap-5 group opacity-40 transition-opacity" id="indicator-3">
+          <div id="ind-line-3" class="w-[2px] h-6 bg-white/20 rounded-full"></div>
+          <span id="ind-text-3" class="text-sm font-medium text-gray-400">Confidentialité</span>
+        </div>
+        <div class="flex items-center gap-5 group opacity-40 transition-opacity" id="indicator-4">
+          <div id="ind-line-4" class="w-[2px] h-6 bg-white/20 rounded-full"></div>
+          <span id="ind-text-4" class="text-sm font-medium text-gray-400">Profil</span>
+        </div>
       </div>
     </div>
-    <!-- Étape 2 : Âge -->
-    <div class="ob-body" id="obStep2" style="display:none">
-      <div class="ob-label">Votre tranche d'âge</div>
-      <div class="ob-age-grid">
-        <button class="ob-age-btn" onclick="window._obSelectAge(this,'under16')">Moins de 16 ans</button>
-        <button class="ob-age-btn" onclick="window._obSelectAge(this,'16-17')">16 – 17 ans</button>
-        <button class="ob-age-btn" onclick="window._obSelectAge(this,'18-24')">18 – 24 ans</button>
-        <button class="ob-age-btn" onclick="window._obSelectAge(this,'25+')">25 ans et plus</button>
-      </div>
-      <div class="ob-hint info" id="obAgeHint" style="margin-top:10px">Votre âge est requis et ne sera jamais affiché publiquement.</div>
+    <div class="mt-auto">
+      <p class="text-[11px] text-gray-600 tracking-wider uppercase font-medium">Secured Setup</p>
     </div>
-    <div class="ob-footer">
-      <button class="ob-btn-primary" id="obNextBtn" onclick="window._obNext()" disabled>Continuer</button>
+  </div>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="w-full md:flex-1 h-full flex flex-col relative bg-[#000000]">
+    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image:url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+    <div class="md:hidden px-6 pt-6 pb-4 bg-black/80 backdrop-blur-md z-20 border-b border-white/5 sticky top-0 flex flex-col gap-4 transition-opacity" id="sw-mobile-header">
+      <div class="flex items-center gap-2"><span class="font-bold text-[14px] tracking-wide text-white">LevelUp Ecosystem</span></div>
+      <div class="w-full bg-white/10 rounded-full h-[2px] overflow-hidden">
+        <div id="sw-progress-bar" class="bg-purple-500 h-full w-1/4 transition-all duration-500 ease-out"></div>
+      </div>
+    </div>
+    <div id="sw-steps-container" class="flex-1 w-full relative overflow-y-auto scroll-smooth">
+      <div class="min-h-full flex flex-col items-center justify-center px-6 py-12 md:py-20 w-full">
+        <div class="w-full max-w-md mx-auto relative">
+
+          <!-- ÉTAPE 1 : NOTIFICATIONS -->
+          <div id="step-1" class="step-content w-full flex-col hidden">
+            <div class="flex justify-center mb-10"><i class="ph-duotone ph-bell text-5xl text-purple-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"></i></div>
+            <h2 class="text-3xl font-bold text-center mb-4 text-gradient tracking-tight">Restez informé</h2>
+            <p class="text-gray-400 text-center text-[15px] leading-relaxed mb-10">Activez les notifications pour recevoir les alertes critiques et les mises à jour importantes de votre écosystème.</p>
+            <div class="flex flex-col gap-3">
+              <button onclick="swNextStep()" class="w-full bg-white text-black font-semibold py-3.5 px-4 rounded-xl hover:bg-gray-200 transition-all active:scale-[0.98]">Activer les notifications</button>
+              <button onclick="swNextStep(true)" class="w-full text-gray-500 font-medium py-3 px-4 rounded-xl hover:text-white transition-colors">Plus tard</button>
+            </div>
+          </div>
+
+          <!-- ÉTAPE 2 : LOCALISATION -->
+          <div id="step-2" class="step-content w-full flex-col hidden">
+            <div class="flex justify-center mb-10"><i class="ph-duotone ph-crosshair text-5xl text-purple-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"></i></div>
+            <h2 class="text-3xl font-bold text-center mb-4 text-gradient tracking-tight">Expérience locale</h2>
+            <p class="text-gray-400 text-center text-[15px] leading-relaxed mb-10">Autorisez l'accès à votre localisation pour optimiser les serveurs et adapter les paramètres régionaux.</p>
+            <div class="flex flex-col gap-3">
+              <button onclick="swNextStep()" class="w-full bg-white text-black font-semibold py-3.5 px-4 rounded-xl hover:bg-gray-200 transition-all active:scale-[0.98]">Autoriser l'accès</button>
+              <button onclick="swNextStep(true)" class="w-full text-gray-500 font-medium py-3 px-4 rounded-xl hover:text-white transition-colors">Ignorer cette étape</button>
+            </div>
+          </div>
+
+          <!-- ÉTAPE 3 : CONFIDENTIALITÉ -->
+          <div id="step-3" class="step-content w-full flex-col hidden">
+            <div class="flex justify-center mb-10"><i class="ph-duotone ph-shield-check text-5xl text-purple-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"></i></div>
+            <h2 class="text-3xl font-bold text-center mb-4 text-gradient tracking-tight">Confidentialité</h2>
+            <p class="text-gray-400 text-center text-[15px] leading-relaxed mb-10">Nous utilisons des cookies strictement nécessaires pour maintenir votre session active et sécuriser vos accès.</p>
+            <div class="flex flex-col gap-3">
+              <button onclick="swNextStep()" class="w-full bg-white text-black font-semibold py-3.5 px-4 rounded-xl hover:bg-gray-200 transition-all active:scale-[0.98]">Accepter</button>
+            </div>
+          </div>
+
+          <!-- ÉTAPE 4 : PROFIL -->
+          <div id="step-4" class="step-content w-full flex-col hidden">
+            <!-- 4.1 PSEUDO -->
+            <div id="substep-1" class="w-full flex flex-col step-enter">
+              <div class="flex justify-center mb-8"><i class="ph-duotone ph-at text-5xl text-purple-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"></i></div>
+              <h2 class="text-3xl font-bold text-center mb-3 text-gradient tracking-tight">Choisissez un pseudo</h2>
+              <p class="text-gray-400 text-center text-[14px] leading-relaxed mb-8">C'est ainsi que vous apparaîtrez. Minuscules, chiffres et tirets du bas (_) uniquement.</p>
+              <div class="mb-8">
+                <div class="relative w-full">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold z-10">@</span>
+                  <input type="text" id="username-input" placeholder="mon_pseudo123" class="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-10 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-all font-medium tracking-wide" oninput="this.value=this.value.toLowerCase().replace(/\s/g,'')"/>
+                </div>
+                <div id="username-error" class="hidden mt-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[13px] p-3 rounded-lg items-start gap-2">
+                  <i class="ph-fill ph-warning-circle text-lg shrink-0 mt-0.5"></i>
+                  <span id="username-error-text">Format invalide (3 à 20 caractères, pas de spéciaux sauf _).</span>
+                </div>
+              </div>
+              <button onclick="swGoToSubstep(1,2)" class="w-full bg-white text-black font-semibold py-3.5 px-4 rounded-xl hover:bg-gray-200 transition-all active:scale-[0.98]">Continuer</button>
+            </div>
+            <!-- 4.2 ÂGE -->
+            <div id="substep-2" class="w-full flex flex-col hidden">
+              <div class="flex justify-center mb-8"><i class="ph-duotone ph-calendar-blank text-5xl text-purple-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"></i></div>
+              <h2 class="text-3xl font-bold text-center mb-3 text-gradient tracking-tight">Votre âge</h2>
+              <p class="text-gray-400 text-center text-[14px] leading-relaxed mb-8">Sélectionnez votre tranche d'âge pour personnaliser votre expérience.</p>
+              <div class="grid grid-cols-2 gap-3 mb-8">
+                <button class="age-btn border border-white/10 bg-white/5 text-gray-400 rounded-xl py-4 font-medium transition-all hover:border-purple-500/50" onclick="swSelectAge(this,'17-18')">17 - 18 ans</button>
+                <button class="age-btn border border-white/10 bg-white/5 text-gray-400 rounded-xl py-4 font-medium transition-all hover:border-purple-500/50" onclick="swSelectAge(this,'19-24')">19 - 24 ans</button>
+                <button class="age-btn border border-white/10 bg-white/5 text-gray-400 rounded-xl py-4 font-medium transition-all hover:border-purple-500/50" onclick="swSelectAge(this,'25-34')">25 - 34 ans</button>
+                <button class="age-btn border border-white/10 bg-white/5 text-gray-400 rounded-xl py-4 font-medium transition-all hover:border-purple-500/50" onclick="swSelectAge(this,'35+')">35 ans et +</button>
+              </div>
+              <div id="age-error" class="hidden mb-4 bg-red-500/10 border border-red-500/20 text-red-400 text-[13px] p-3 rounded-lg items-center gap-2"><i class="ph-fill ph-warning-circle text-lg shrink-0"></i><span>Veuillez sélectionner une tranche d'âge.</span></div>
+              <div class="flex flex-col gap-3">
+                <button onclick="swGoToSubstep(2,3)" class="w-full bg-white text-black font-semibold py-3.5 px-4 rounded-xl hover:bg-gray-200 transition-all active:scale-[0.98]">Continuer</button>
+                <button onclick="swGoToSubstep(2,1)" class="w-full text-gray-500 text-sm font-medium py-2 hover:text-white transition-colors">Retour</button>
+              </div>
+            </div>
+            <!-- 4.3 PHOTO -->
+            <div id="substep-3" class="w-full flex flex-col hidden">
+              <div class="flex justify-center mb-6"><h2 class="text-3xl font-bold text-center text-gradient tracking-tight">Photo de profil</h2></div>
+              <p class="text-gray-400 text-center text-[14px] leading-relaxed mb-8">Importez une image claire et nette.<br>Format JPG ou PNG (Min. 256x256px).</p>
+              <div class="relative mx-auto w-36 h-36 mb-8 cursor-pointer group" onclick="document.getElementById('sw-file-upload').click()">
+                <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full animate-spin-slow opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                <div class="absolute inset-0 bg-black rounded-full overflow-hidden border-2 border-black flex items-center justify-center">
+                  <div id="sw-placeholder-icon" class="flex flex-col items-center text-gray-500 group-hover:text-purple-400 transition-colors"><i class="ph-duotone ph-camera-plus text-4xl mb-1"></i><span class="text-[10px] font-bold uppercase tracking-wider">Upload</span></div>
+                  <img id="sw-image-preview" src="" alt="Aperçu" class="absolute inset-0 w-full h-full object-cover hidden"/>
+                </div>
+                <input id="sw-file-upload" type="file" accept="image/jpeg,image/png" class="hidden" onchange="swValidateImage(event)"/>
+              </div>
+              <div id="sw-image-error" class="hidden mb-6 bg-red-500/10 border border-red-500/20 text-red-400 text-[13px] p-3 rounded-lg items-start gap-2"><i class="ph-fill ph-warning-circle text-lg shrink-0 mt-0.5"></i><span id="sw-image-error-text">L'image ne respecte pas les critères requis.</span></div>
+              <div class="flex flex-col gap-3 mt-auto">
+                <button id="sw-action-btn" onclick="document.getElementById('sw-file-upload').click()" class="w-full bg-purple-600 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-purple-500 transition-all active:scale-[0.98]">Importer une image</button>
+                <button onclick="swFinishOnboarding()" class="w-full text-gray-500 font-medium py-3 px-4 rounded-xl hover:text-white transition-colors">Passer cette étape</button>
+                <button onclick="swGoToSubstep(3,2)" class="w-full text-gray-600 text-sm font-medium py-2 hover:text-gray-400 transition-colors mt-2">Retour</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ÉTAPE SUCCÈS -->
+          <div id="step-success" class="step-content w-full flex-col items-center justify-center hidden min-h-[70vh] md:min-h-[400px]">
+            <div class="relative w-20 h-20 mb-8">
+              <div id="sw-success-spinner" class="absolute inset-0 rounded-full border-[3px] border-white/10 border-t-purple-500 animate-spin"></div>
+              <div id="sw-success-check" class="absolute inset-0 bg-purple-600 rounded-full flex items-center justify-center scale-0 transition-transform duration-500 shadow-[0_0_30px_rgba(168,85,247,0.3)]"><i class="ph-bold ph-check text-3xl text-white"></i></div>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2 tracking-tight">Bienvenue sur LevelUp Ecosystem</h2>
+            <p id="sw-success-text" class="text-gray-400 text-[15px] animate-pulse text-center">Préparation de vos informations...</p>
+            <div class="w-full max-w-[200px] h-1 bg-white/10 rounded-full mt-8 overflow-hidden"><div id="sw-final-bar" class="h-full bg-white rounded-full w-0 transition-all duration-[2500ms] ease-out"></div></div>
+          </div>
+
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -3317,46 +3354,6 @@ APPS FULL MODAL
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-PERMISSIONS ONBOARDING (3 étapes)
-═══════════════════════════════════════ -->
-<div id="permsModal">
-  <!-- Logo centré en haut -->
-  <div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px 20px;flex-shrink:0">
-    <svg width="48" height="48" viewBox="0 0 576 512" style="filter:drop-shadow(0 0 22px rgba(168,85,247,.85));margin-bottom:14px" aria-hidden="true">
-      <defs><linearGradient id="permsStarG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
-      <path fill="url(#permsStarG)" d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
-    </svg>
-    <span style="font-family:var(--display,sans-serif);font-size:.72rem;font-weight:800;letter-spacing:.16em;color:#a855f7;text-transform:uppercase">LevelUp Ecosystem</span>
-  </div>
-  <!-- Contenu central -->
-  <div id="permsContent" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 32px">
-    <div class="perms-ico-wrap" id="permsIcoWrap" style="background:rgba(168,85,247,.15);border:2px solid rgba(168,85,247,.3)">
-      <i class="fa-solid fa-bell" style="font-size:2.2rem;color:#a855f7"></i>
-    </div>
-    <div class="perms-title" id="permsTitle">Active les notifications</div>
-    <div class="perms-desc" id="permsDesc">Reste informé des nouveautés LevelUp, des messages et des alertes importantes de tout l'écosystème.</div>
-    <div class="perms-status" id="permsStatus"></div>
-  </div>
-  <!-- Bas : étapes + boutons -->
-  <div style="padding:20px 28px 44px;flex-shrink:0">
-    <div class="perms-steps" style="justify-content:center;margin-bottom:24px">
-      <div class="perms-step-dot active" id="permsDot0"></div>
-      <div class="perms-step-dot" id="permsDot1"></div>
-      <div class="perms-step-dot" id="permsDot2"></div>
-    </div>
-    <button class="perms-btn" id="permsBtnMain" onclick="window._permsMainAction()">Activer maintenant</button>
-    <button class="perms-btn-skip" id="permsBtnSkip" style="display:none" onclick="window._permsSkip()">Plus tard</button>
-  </div>
-</div>
-
-<!-- Loader fin d'onboarding permissions -->
-<div id="permsLoader">
-  <svg width="52" height="52" viewBox="0 0 576 512" style="filter:drop-shadow(0 0 16px rgba(168,85,247,.55));animation:lvlPulse 1.6s ease-in-out infinite">
-    <defs><linearGradient id="plG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
-    <path fill="url(#plG)" d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
-  </svg>
-  <div style="font-size:.85rem;color:rgba(255,255,255,.4);font-family:var(--sans);letter-spacing:.04em">Mise à jour en cours…</div>
 </div>
 
 <!-- Input caché pour upload image depuis carte (super admin) -->
@@ -5059,12 +5056,24 @@ window.loadNotifPrefs = function() {
 
 
 // ══════════════════════════════════════════════════════════════
-//  SYSTÈME 2FA — CODE EMAIL 6 CHIFFRES
+//  SYSTÈME 2FA — CODE EMAIL 6 CHIFFRES (redesign v2)
 // ══════════════════════════════════════════════════════════════
 (function() {
   var _2fa = { code: null, expiresAt: 0, uid: null, user: null, callback: null, attempts: 0 };
 
   function _genCode() { return String(Math.floor(100000 + Math.random() * 900000)); }
+
+  // ── Appareil de confiance (30 jours) ──
+  function _isTrustedDevice(uid) {
+    try {
+      var ts = parseInt(localStorage.getItem('lvl_trusted_' + uid) || '0');
+      return Date.now() - ts < 30 * 24 * 60 * 60 * 1000;
+    } catch(_) { return false; }
+  }
+  function _trustDevice(uid) {
+    try { localStorage.setItem('lvl_trusted_' + uid, String(Date.now())); } catch(_) {}
+  }
+  window._isTrustedDevice = _isTrustedDevice;
 
   // ── Quota renvoi : max 2 codes/jour ──
   function _getResendQuota(uid) {
@@ -5092,27 +5101,56 @@ window.loadNotifPrefs = function() {
     }
   }
 
-  // ── Afficher l'overlay 2FA ──
+  // ── Vues du modal ──
+  function _showView(name) {
+    var views = ['twofaViewCode', 'twofaViewKey', 'twofaViewSuccess'];
+    views.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = (id === name) ? 'block' : 'none';
+    });
+  }
+  window._switch2FAToKey  = function() {
+    _showView('twofaViewKey');
+    var ki = document.getElementById('twoFaKeyInput');
+    if (ki) { ki.value = ''; setTimeout(function(){ ki.focus(); }, 100); }
+    var ke = document.getElementById('twoFaKeyError'); if (ke) ke.style.display = 'none';
+  };
+  window._switch2FAToCode = function() {
+    _showView('twofaViewCode');
+    var inp = document.getElementById('twoFaSingleInput');
+    if (inp) { inp.value = ''; inp.style.borderColor = '#3f3f46'; setTimeout(function(){ inp.focus(); }, 100); }
+    var err = document.getElementById('twoFaError'); if (err) err.style.display = 'none';
+  };
+
+  // ── Afficher l'overlay 2FA (intelligent) ──
   window._show2FAOverlay = function(u, onSuccess) {
+    // Skip si appareil de confiance et déjà validé en session
+    if (_isTrustedDevice(u.uid)) {
+      try { sessionStorage.setItem('lvl_2fa_ok_' + u.uid, '1'); } catch(_) {}
+      if (onSuccess) onSuccess(u);
+      return;
+    }
     _2fa.code = _genCode();
     _2fa.expiresAt = Date.now() + 10 * 60 * 1000;
     _2fa.uid = u.uid; _2fa.user = u; _2fa.callback = onSuccess; _2fa.attempts = 0;
     var email = u.email || '';
     var masked = email.replace(/(.{2})(.*)(@.*)/, function(_, a, b, c) { return a + b.replace(/./g, '*') + c; });
     var el = document.getElementById('twoFaEmail'); if (el) el.textContent = masked;
-    document.querySelectorAll('.twofa-digit').forEach(function(b) { b.value = ''; b.style.borderColor = 'rgba(255,255,255,.1)'; });
+    // Reset input
+    var inp = document.getElementById('twoFaSingleInput');
+    if (inp) { inp.value = ''; inp.style.borderColor = '#3f3f46'; inp.style.boxShadow = 'none'; }
     var err = document.getElementById('twoFaError'); if (err) err.style.display = 'none';
-    var keyWrap = document.getElementById('twoFaKeyInputWrap'); if (keyWrap) keyWrap.style.display = 'none';
     var ki = document.getElementById('twoFaKeyInput'); if (ki) ki.value = '';
     var ov = document.getElementById('twoFaOverlay'); if (ov) ov.style.display = 'flex';
+    _showView('twofaViewCode');
     try { sessionStorage.setItem('lvl_2fa_pending_' + u.uid, '1'); } catch(_) {}
     _updateQuotaUI(u.uid);
     _send2FACode(u, _2fa.code);
-    setTimeout(function() { var f = document.querySelector('.twofa-digit'); if (f) f.focus(); }, 220);
+    setTimeout(function() { var f = document.getElementById('twoFaSingleInput'); if (f) f.focus(); }, 220);
   };
 
   function _send2FACode(u, code) {
-    var name = (window._ud && window._ud.displayName) || u.displayName || u.email?.split('@')[0] || '';
+    var name = (window._ud && window._ud.displayName) || u.displayName || (u.email && u.email.split('@')[0]) || '';
     fetch('/api/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -5120,45 +5158,52 @@ window.loadNotifPrefs = function() {
     }).catch(function() {});
   }
 
-  // ── Vérifier le code ──
-  window._verify2FA = function() {
-    var boxes = document.querySelectorAll('.twofa-digit');
-    var entered = Array.from(boxes).map(function(b) { return b.value; }).join('');
-    if (entered.length < 6) { _show2FAError('Entrez les 6 chiffres'); return; }
-    if (Date.now() > _2fa.expiresAt) { _show2FAError('Code expiré — renvoyez un nouveau code'); return; }
-    if (entered === _2fa.code) {
-      try { sessionStorage.removeItem('lvl_2fa_pending_' + _2fa.uid); } catch(_) {}
-      try { sessionStorage.setItem('lvl_2fa_ok_' + _2fa.uid, '1'); } catch(_) {}
+  // ── Succès commun ──
+  function _on2FASuccess() {
+    _trustDevice(_2fa.uid);
+    try { sessionStorage.removeItem('lvl_2fa_pending_' + _2fa.uid); } catch(_) {}
+    try { sessionStorage.setItem('lvl_2fa_ok_' + _2fa.uid, '1'); } catch(_) {}
+    _showView('twofaViewSuccess');
+    setTimeout(function() {
       _close2FA();
       if (_2fa.callback) _2fa.callback(_2fa.user);
+    }, 1200);
+  }
+
+  // ── Vérifier le code ──
+  window._verify2FA = function() {
+    var inp = document.getElementById('twoFaSingleInput');
+    var entered = inp ? inp.value.replace(/\D/g, '').slice(0, 6) : '';
+    if (entered.length < 6) { _show2FAError('Entrez les 6 chiffres'); return; }
+    if (Date.now() > _2fa.expiresAt) { _show2FAError('Code expiré — cliquez "Renvoyer"'); return; }
+    if (entered === _2fa.code) {
+      if (inp) { inp.style.borderColor = 'rgba(34,197,94,.6)'; inp.style.boxShadow = '0 0 0 3px rgba(34,197,94,.12)'; }
+      setTimeout(_on2FASuccess, 300);
     } else {
       _2fa.attempts++;
-      boxes.forEach(function(b) { b.style.borderColor = 'rgba(248,113,113,.5)'; });
+      if (inp) { inp.style.borderColor = 'rgba(248,113,113,.6)'; inp.style.boxShadow = '0 0 0 3px rgba(248,113,113,.1)'; }
       var left = Math.max(0, 3 - _2fa.attempts);
       _show2FAError(_2fa.attempts >= 3
-        ? 'Code incorrect (3 tentatives) — renvoyez un nouveau code'
+        ? 'Trop de tentatives — renvoyez un nouveau code ou utilisez votre clé'
         : 'Code incorrect — ' + left + ' essai' + (left > 1 ? 's' : '') + ' restant');
-      if (_2fa.attempts >= 3) document.querySelectorAll('.twofa-digit').forEach(function(b) { b.value = ''; });
+      if (_2fa.attempts >= 3 && inp) { inp.value = ''; inp.style.borderColor = '#3f3f46'; }
     }
   };
 
-  // ── Clé LevelUp ──
-  window._verify2FAWithKey = function() {
-    var wrap = document.getElementById('twoFaKeyInputWrap'); if (!wrap) return;
-    var showing = wrap.style.display !== 'none';
-    wrap.style.display = showing ? 'none' : 'block';
-    if (!showing) { var ki = document.getElementById('twoFaKeyInput'); if (ki) setTimeout(function() { ki.focus(); }, 100); }
-  };
+  // ── Clé LevelUp (vue key) ──
+  window._verify2FAWithKey = window._switch2FAToKey; // alias pour compatibilité
   window._confirmKeyVerify = function() {
     var ki = document.getElementById('twoFaKeyInput');
-    var enteredKey = ki ? ki.value.trim() : '';
-    if (!enteredKey) { _show2FAError('Entrez votre clé LevelUp'); return; }
+    var ke = document.getElementById('twoFaKeyError');
+    var enteredKey = ki ? ki.value.trim().toUpperCase() : '';
+    function showKeyErr(msg) { if (ke) { ke.textContent = msg; ke.style.display = 'block'; } }
+    if (!enteredKey) { showKeyErr('Entrez votre clé LevelUp'); return; }
+    if (!/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(enteredKey)) { showKeyErr('Format invalide — ex: LVL-AB12C-34DEF'); return; }
     var storedKey = localStorage.getItem('lm_key'), storedUid = localStorage.getItem('lm_uid');
-    if (storedKey && storedKey === enteredKey && storedUid === _2fa.uid) {
-      try { sessionStorage.removeItem('lvl_2fa_pending_' + _2fa.uid); } catch(_) {}
-      try { sessionStorage.setItem('lvl_2fa_ok_' + _2fa.uid, '1'); } catch(_) {}
-      _close2FA(); if (_2fa.callback) _2fa.callback(_2fa.user);
-    } else { _show2FAError('Clé incorrecte ou non reconnue'); }
+    if (storedKey && storedKey.toUpperCase() === enteredKey && storedUid === _2fa.uid) {
+      if (ki) { ki.style.borderColor = 'rgba(34,197,94,.6)'; ki.style.boxShadow = '0 0 0 3px rgba(34,197,94,.12)'; }
+      setTimeout(_on2FASuccess, 300);
+    } else { showKeyErr('Clé incorrecte ou non reconnue sur cet appareil'); }
   };
 
   // ── Renvoyer le code (quota 2/jour) ──
@@ -5168,11 +5213,12 @@ window.loadNotifPrefs = function() {
     if (q.count >= 2) { _show2FAError('Limite atteinte — attendez 24h ou utilisez votre clé'); _updateQuotaUI(_2fa.uid); return; }
     q.count++; _saveResendQuota(_2fa.uid, q);
     _2fa.code = _genCode(); _2fa.expiresAt = Date.now() + 10 * 60 * 1000; _2fa.attempts = 0;
-    document.querySelectorAll('.twofa-digit').forEach(function(b) { b.value = ''; b.style.borderColor = 'rgba(255,255,255,.1)'; });
+    var inp = document.getElementById('twoFaSingleInput');
+    if (inp) { inp.value = ''; inp.style.borderColor = '#3f3f46'; inp.style.boxShadow = 'none'; }
     var err = document.getElementById('twoFaError'); if (err) err.style.display = 'none';
     _send2FACode(_2fa.user, _2fa.code);
     _updateQuotaUI(_2fa.uid);
-    toast_ && toast_('Nouveau code envoyé à ' + (_2fa.user.email || '') + ' !', 'ok');
+    if (window.toast_) toast_('Nouveau code envoyé à ' + (_2fa.user.email || '') + ' !', 'ok');
   };
 
   // ── Retour à la page de connexion ──
@@ -5181,7 +5227,6 @@ window.loadNotifPrefs = function() {
     try { sessionStorage.removeItem('lvl_2fa_pending_' + (_2fa.uid || '')); } catch(_) {}
     _2fa.uid = null; _2fa.user = null; _2fa.callback = null;
     try { await signOut(auth); } catch(_e) {}
-    // Retourner à l'écran de connexion
     var dash = document.getElementById('dashboard'); if (dash) dash.style.display = 'none';
     var authEl = document.getElementById('authOverlay') || document.querySelector('.auth-screen');
     if (authEl) { authEl.classList.remove('hidden'); authEl.style.display = ''; }
@@ -5192,42 +5237,50 @@ window.loadNotifPrefs = function() {
     var err = document.getElementById('twoFaError');
     if (err) { err.textContent = msg; err.style.display = 'block'; }
   }
-  function _close2FA() { var ov = document.getElementById('twoFaOverlay'); if (ov) ov.style.display = 'none'; }
+  function _close2FA() {
+    var ov = document.getElementById('twoFaOverlay'); if (ov) ov.style.display = 'none';
+  }
 
-  // ── Navigation clavier entre cases ──
+  // ── Single input : validation auto au 6e chiffre + clavier ──
   document.addEventListener('DOMContentLoaded', function() {
-    var boxes = document.querySelectorAll('.twofa-digit');
-    boxes.forEach(function(box, i) {
-      box.addEventListener('input', function(e) {
-        var val = e.target.value.replace(/\D/g, '');
-        e.target.value = val.slice(-1);
-        e.target.style.borderColor = val ? 'rgba(168,85,247,.7)' : 'rgba(255,255,255,.1)';
-        if (val && i < boxes.length - 1) boxes[i + 1].focus();
-        var all = Array.from(boxes).map(function(b) { return b.value; }).join('');
-        if (all.length === 6) setTimeout(window._verify2FA, 150);
-      });
-      box.addEventListener('keydown', function(e) {
-        if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
-        if (e.key === 'Enter') window._verify2FA();
-      });
-      box.addEventListener('paste', function(e) {
-        e.preventDefault();
-        var paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
-        paste.split('').forEach(function(ch, idx) {
-          if (boxes[idx]) { boxes[idx].value = ch; boxes[idx].style.borderColor = 'rgba(168,85,247,.7)'; }
-        });
-        if (paste.length === 6) setTimeout(window._verify2FA, 150);
-      });
+    var inp = document.getElementById('twoFaSingleInput');
+    if (!inp) return;
+    inp.addEventListener('input', function(e) {
+      var val = e.target.value.replace(/\D/g, '').slice(0, 6);
+      e.target.value = val;
+      if (val.length === 6) setTimeout(window._verify2FA, 150);
     });
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') window._verify2FA();
+    });
+    inp.addEventListener('paste', function(e) {
+      e.preventDefault();
+      var paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      inp.value = paste;
+      if (paste.length === 6) setTimeout(window._verify2FA, 150);
+    });
+    // LVL key auto-format
+    var ki = document.getElementById('twoFaKeyInput');
+    if (ki) {
+      ki.addEventListener('input', function(e) {
+        var val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (val.length > 3) val = val.slice(0, 3) + '-' + val.slice(3);
+        if (val.length > 9) val = val.slice(0, 9) + '-' + val.slice(9);
+        e.target.value = val.slice(0, 15);
+      });
+      ki.addEventListener('keydown', function(e) { if (e.key === 'Enter') window._confirmKeyVerify(); });
+    }
   });
 
   window._2fa_state = _2fa;
 })();
 
-// ── Détermine si une connexion est "nouvelle" (IP inconnue ou jamais connecté) ──
+// ── Détermine si une connexion est "nouvelle" ──
 window._isNewLogin = function(ud, locData) {
   if (!ud) return false;
-  if (!ud.lastLoginAt) return true; // premier login
+  if (!ud.lastLoginAt) return true;
+  // Si appareil déjà de confiance, pas nouvelle connexion
+  if (window._isTrustedDevice && window._isTrustedDevice(ud.uid)) return false;
   var knownIps = ud.knownIps || [];
   var currentIp = locData && locData.ip;
   if (!currentIp) return false;
@@ -5435,6 +5488,20 @@ setTimeout(() => initFCM(u), 1500);
 
 // ── SURVEILLANCE COMPTE EN TEMPS RÉEL (suspension / suppression) ──
 window._accountUnsubscribe && window._accountUnsubscribe();
+// ── Affichage erreurs Firestore dans les paramètres ──
+window._showSettingsError = function(title, text) {
+  var banner = document.getElementById('settingsErrorBanner');
+  var t = document.getElementById('settingsErrorTitle');
+  var p = document.getElementById('settingsErrorText');
+  if (banner) banner.style.display = 'block';
+  if (t) t.textContent = title || 'Problème de connexion';
+  if (p) p.textContent = text || '';
+};
+window._clearSettingsError = function() {
+  var banner = document.getElementById('settingsErrorBanner');
+  if (banner) banner.style.display = 'none';
+};
+
 window._accountUnsubscribe = onSnapshot(ref, async (snap) => {
     const data = snap.exists() ? snap.data() : null;
     const status = data?.status || '';
@@ -5486,6 +5553,14 @@ window._accountUnsubscribe = onSnapshot(ref, async (snap) => {
                 localStorage.clear();
             } catch(_) {}
         }, 4000);
+    }
+}, function(err) {
+    // Erreur Firestore — afficher dans les paramètres
+    if (err && (err.code === 'permission-denied' || (err.message && err.message.includes('permission')))) {
+        window._showSettingsError && window._showSettingsError(
+            'Accès refusé — Firestore',
+            'Les règles de sécurité Firestore ont bloqué l\'accès à vos données. Si vous venez de vous connecter, attendez quelques secondes puis rechargez. Si le problème persiste, votre session a peut-être expiré — déconnectez-vous et reconnectez-vous.'
+        );
     }
 });
 
@@ -6151,7 +6226,7 @@ function _isDesktopBrowser() {
 // Afficher le bon UI selon la plateforme
 window._pushPopupShown = false;
 function showPushPermPopup() {
-    return; // désactivé — géré par le flow permissions 3 étapes (permsModal)
+    return; // désactivé — géré par le setup wizard
 }
 window.showPushPermPopup = showPushPermPopup;
 
@@ -6190,12 +6265,8 @@ function _sendWelcomeNotification() {
 }
 window._sendWelcomeNotification = _sendWelcomeNotification;
 
-// L'utilisateur clique "Activer" (iOS popup ou Android banner)
+// L'utilisateur clique "Activer" (géré par le setup wizard)
 window.acceptPushPerm = async function() {
-    const m = document.getElementById('pushPermModal');
-    if (m) m.classList.remove('show');
-    const b = document.getElementById('pushNotifBanner');
-    if (b) b.classList.remove('show');
     _setPushPref('granted');
     await _registerFCMAnonOrUser();
     _updatePushToggleUI();
@@ -6209,10 +6280,6 @@ window.acceptPushPerm = async function() {
 
 // L'utilisateur clique "Plus tard"
 window.declinePushPerm = function() {
-    const m = document.getElementById('pushPermModal');
-    if (m) m.classList.remove('show');
-    const b = document.getElementById('pushNotifBanner');
-    if (b) b.classList.remove('show');
     _setPushPref('later');
     _updatePushToggleUI();
     // Après notification → afficher login sheet si non connecté (mobile)
@@ -8741,35 +8808,6 @@ OVERLAY MAINTENANCE PRO (contrôlé via Firebase : global_maintenance)
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
 
-<!-- ═══════════════════════════════════════
-POPUP PERMISSION NOTIFICATIONS PUSH
-═══════════════════════════════════════ -->
-<!-- iOS push permission popup (affiché uniquement sur iPhone/iPad) -->
-<div id="pushPermModal">
-  <div class="push-perm-card">
-    <div class="push-perm-inner">
-      <div class="push-perm-logo"><svg width="42" height="42" viewBox="0 0 576 512" fill="url(#pg)" style="filter:drop-shadow(0 0 10px rgba(168,85,247,.6));flex-shrink:0"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg></div>
-      <div class="push-perm-texts">
-        <div class="push-perm-badge"><span></span>LevelUp Ecosystem</div>
-        <div class="push-perm-title">Activer les notifications</div>
-        <div class="push-perm-desc">Restez informé des nouvelles sorties, mises à jour et annonces exclusives de l'écosystème.</div>
-      </div>
-    </div>
-    <div class="push-perm-btns">
-      <button class="push-perm-yes" onclick="window.acceptPushPerm()">
-        <i class="fa-solid fa-bell"></i> Activer
-      </button>
-      <button class="push-perm-no" onclick="window.declinePushPerm()">Plus tard</button>
-    </div>
-  </div>
-</div>
-
-<!-- Android/mobile banner — design pro -->
-<div id="pushNotifBanner">
-  <div class="push-banner-inner">
-    <div class="push-banner-ico">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
     <div class="push-banner-txt">
       <strong>Restez dans la boucle</strong>
       <span>Activez les notifications pour ne rien manquer</span>
@@ -8839,7 +8877,7 @@ MODALE ALERTE SÉCURITÉ
   </div>
 </div>
 
-<!-- ── POPUP NOTIF — désactivé, géré par le flow permsModal 3 étapes ── -->
+<!-- ── POPUP NOTIF — désactivé, géré par le setup wizard ── -->
 
 <!-- ═══ STREAMING PROVIDERS POPUP ═══ -->
 <div id="streamPopup" onclick="if(event.target===this)window._closeStreamPopup()">
@@ -10084,1046 +10122,249 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 3500);
 })();
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ONBOARDING POST-INSCRIPTION (pseudo unique + âge)
-// ═══════════════════════════════════════════════════════════════════════════
+// ── SETUP WIZARD — Firebase Connected ──
 (function() {
-    let _obStep = 1;
-    let _obChosenName = null;
-    let _obChosenAge = null;
-    let _obUser = null;
-    let _obUsernameValid = false;
+  var _sw = { user:null, age:null, username:null, photoFile:null, activeSteps:[], stepIndex:0 };
 
-    window._checkOnboarding = async function(u) {
-        if (!u || !window._db) return;
-        _obUser = u;
-        try {
-            const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-            const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
-            const snap = await getDoc(ref);
-            if (!snap.exists()) return;
-            const data = snap.data();
-            // Si onboarding déjà complété → skip
-            if (data.onboardingDone) return;
-            // Afficher popup avec le nom Google pré-rempli
-            const inp = document.getElementById('obUsername');
-            const keepBtn = document.getElementById('obKeepGoogleName');
-            if (inp) inp.placeholder = data.displayName || u.displayName || 'Votre pseudo';
-            if (keepBtn) keepBtn.textContent = `Garder "${(data.displayName || u.displayName || '').split(' ')[0]}"`;
-            // Petit délai pour laisser le dashboard s'afficher
-            setTimeout(() => {
-                const popup = document.getElementById('onboardingPopup');
-                if (popup) popup.classList.add('open');
-            }, 800);
-        } catch(_) {}
-    };
+  window._checkOnboarding = async function(u) {
+    if (!u || !window._db) return;
+    _sw.user = u;
+    try {
+      var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      var ref = _fi.doc(window._db,'artifacts','level-ia-premium','users',u.uid,'profile','data');
+      var snap = await _fi.getDoc(ref);
+      var data = snap.exists() ? snap.data() : {};
+      if (data.onboardingDone && data.setupVersion >= 2) return;
+      _swBuild(u, data);
+    } catch(e) { console.warn('_checkOnboarding',e); }
+  };
 
-    window._obUseGoogleName = function() {
-        const inp = document.getElementById('obUsername');
-        const name = (_obUser?.displayName || '').split(' ')[0] || '';
-        if (inp) { inp.value = name; window._obCheckUsername(name); }
-    };
+  function _swBuild(u, data) {
+    _sw.activeSteps=[]; _sw.stepIndex=0; _sw.age=null; _sw.username=null; _sw.photoFile=null;
+    var needsNotif = (typeof Notification==='undefined') || Notification.permission!=='granted';
+    var needsLoc   = !data.locationSaved;
+    var needsCook  = !localStorage.getItem('lvl_cookie_consent');
+    var needsProf  = !data.onboardingDone;
+    if (needsNotif) _sw.activeSteps.push(1);
+    if (needsLoc)   _sw.activeSteps.push(2);
+    if (needsCook)  _sw.activeSteps.push(3);
+    if (needsProf)  _sw.activeSteps.push(4);
+    if (_sw.activeSteps.length === 0) return;
+    var inp = document.getElementById('username-input');
+    if (inp && u.displayName) { var sug=u.displayName.split(' ')[0].toLowerCase().replace(/[^a-z0-9_]/g,''); if(sug.length>=3) inp.value=sug; }
+    for (var i=1;i<=4;i++) { var ind=document.getElementById('indicator-'+i); if(!ind) continue; if(_sw.activeSteps.indexOf(i)===-1) ind.classList.add('hidden'); else ind.classList.remove('hidden'); }
+    var first=document.getElementById('step-'+_sw.activeSteps[0]);
+    if (first) { first.classList.remove('hidden'); first.style.display='flex'; first.classList.add('step-enter'); }
+    _swUpdateProgress();
+    setTimeout(function() { var wiz=document.getElementById('setupWizard'); if(wiz) wiz.style.display='flex'; }, 900);
+  }
 
-    window._obCheckUsername = async function(val) {
-        const hint = document.getElementById('obUsernameHint');
-        const inp = document.getElementById('obUsername');
-        const btn = document.getElementById('obNextBtn');
-        _obUsernameValid = false;
-        _obChosenName = null;
-        if (btn) btn.disabled = true;
-        if (!val || val.length < 3) {
-            if (hint) { hint.textContent = 'Minimum 3 caractères'; hint.className = 'ob-hint err'; }
-            if (inp) inp.className = 'ob-input';
-            return;
-        }
-        if (val.length > 24 || !/^[a-zA-Z0-9_\-]+$/.test(val)) {
-            if (hint) { hint.textContent = 'Lettres, chiffres, _ et - uniquement'; hint.className = 'ob-hint err'; }
-            if (inp) inp.className = 'ob-input error';
-            return;
-        }
-        if (hint) { hint.textContent = 'Vérification de la disponibilité…'; hint.className = 'ob-hint info'; }
-        // Vérifier unicité dans Firestore
-        try {
-            const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-            const q = query(collection(window._db, 'artifacts', 'level-ia-premium', 'users'), where('username', '==', val.toLowerCase()));
-            const qs = await getDocs(q);
-            if (!qs.empty) {
-                if (hint) { hint.textContent = 'Ce pseudo est déjà pris'; hint.className = 'ob-hint err'; }
-                if (inp) inp.className = 'ob-input error';
-                return;
-            }
-        } catch(_) {}
-        if (hint) { hint.textContent = '✓ Pseudo disponible !'; hint.className = 'ob-hint ok'; }
-        if (inp) inp.className = 'ob-input success';
-        _obUsernameValid = true;
-        _obChosenName = val;
-        if (btn) btn.disabled = false;
-    };
-
-    window._obSelectAge = function(btn, age) {
-        document.querySelectorAll('.ob-age-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        _obChosenAge = age;
-        const nextBtn = document.getElementById('obNextBtn');
-        if (nextBtn) nextBtn.disabled = false;
-        if (age === 'under16') {
-            const hint = document.getElementById('obAgeHint');
-            if (hint) { hint.textContent = '⚠️ Vous devez avoir au moins 16 ans pour utiliser LevelUp.'; hint.className = 'ob-hint err'; }
-        } else {
-            const hint = document.getElementById('obAgeHint');
-            if (hint) { hint.textContent = 'Votre âge est requis et ne sera jamais affiché publiquement.'; hint.className = 'ob-hint info'; }
-        }
-    };
-
-    window._obNext = async function() {
-        const btn = document.getElementById('obNextBtn');
-        if (_obStep === 1) {
-            if (!_obUsernameValid || !_obChosenName) return;
-            // Passer à l'étape 2
-            _obStep = 2;
-            document.getElementById('obStep1').style.display = 'none';
-            document.getElementById('obStep2').style.display = '';
-            document.getElementById('obTitle').textContent = 'Votre tranche d\'âge';
-            document.getElementById('obDesc').textContent = 'Information obligatoire pour accéder à la plateforme.';
-            document.getElementById('obDot1').classList.remove('active'); document.getElementById('obDot1').classList.add('done');
-            document.getElementById('obDot2').classList.add('active');
-            if (btn) { btn.textContent = 'Terminer l\'inscription'; btn.disabled = true; }
-        } else if (_obStep === 2) {
-            if (!_obChosenAge) return;
-            if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
-            if (_obChosenAge === 'under16') {
-                // Suspendre le compte
-                await _obSuspendUnder16();
-                return;
-            }
-            // Enregistrer et fermer
-            await _obComplete();
-        }
-    };
-
-    async function _obComplete() {
-        if (!_obUser || !window._db) return;
-        try {
-            const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-            const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'users', _obUser.uid, 'profile', 'data');
-            await setDoc(ref, {
-                username: _obChosenName.toLowerCase(),
-                displayName: _obChosenName,
-                ageRange: _obChosenAge,
-                onboardingDone: true
-            }, { merge: true });
-            if (window._ud) { window._ud.displayName = _obChosenName; window._ud.username = _obChosenName.toLowerCase(); }
-            document.getElementById('onboardingPopup').classList.remove('open');
-            toast_ && toast_('Profil créé — bienvenue sur LevelUp !', 'ok');
-            window.refreshUI && window.refreshUI();
-            // Déclencher le flow permissions après l'onboarding pseudo/age
-            setTimeout(function() { window._checkPermissions && window._checkPermissions(_obUser); }, 1200);
-        } catch(e) {
-            toast_ && toast_('Erreur lors de la sauvegarde', 'err');
-        }
-    }
-
-    async function _obSuspendUnder16() {
-        if (!_obUser || !window._db) return;
-        try {
-            const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-            const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'users', _obUser.uid, 'profile', 'data');
-            await setDoc(ref, { status: 'suspended', suspendReason: 'age_under16', onboardingDone: true, ageRange: 'under16' }, { merge: true });
-        } catch(_) {}
-        // Remplacer le popup par le message de suspension
-        const card = document.querySelector('.ob-card');
-        if (card) card.innerHTML = `
-          <div class="ob-header">
-            <div style="font-size:2.5rem;margin-bottom:12px">🔒</div>
-            <div class="ob-title">Compte suspendu</div>
-            <div class="ob-desc">Vous devez avoir au moins 16 ans pour utiliser LevelUp Ecosystem.</div>
-          </div>
-          <div class="ob-body">
-            <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);border-radius:12px;padding:14px;font-size:.8rem;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:16px">
-              Conformément à notre politique de protection des mineurs, votre compte a été suspendu automatiquement. Cette décision est appliquée pour votre sécurité.
-            </div>
-            <a href="mailto:support@levelup-ecosystem.com?subject=Contestation%20de%20suspension%20%E2%80%94%20Compte%20mineur&body=Bonjour%2C%0A%0AJe%20conteste%20la%20suspension%20de%20mon%20compte%20LevelUp%20Ecosystem.%0A%0AMon%20identifiant%20%3A%20${encodeURIComponent(_obUser?.email || _obUser?.uid || '')}" style="display:block;text-align:center;padding:11px;border-radius:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:.8rem;text-decoration:none;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">
-              <i class="fa-solid fa-envelope" style="margin-right:6px"></i>Contacter le support pour contester
-            </a>
-          </div>
-          <div class="ob-footer">
-            <button class="ob-btn-primary" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171" onclick="window._obFinalSignOut()">Se déconnecter</button>
-          </div>`;
-    }
-
-    window._obFinalSignOut = async function() {
-        try {
-            const { signOut } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js');
-            await signOut(window._auth);
-        } catch(_) {}
-        document.getElementById('onboardingPopup')?.classList.remove('open');
-    };
-})();
-
-// ═══════════════════════════════════════════════════════════════════════════
-// NOTIFICATIONS D'INACTIVITÉ (10 jours + 1 mois)
-// ═══════════════════════════════════════════════════════════════════════════
-(function() {
-    window._checkInactivityNotifs = async function(userData) {
-        if (!userData?.lastLoginAt) return;
-        try {
-            const lastLogin = new Date(userData.lastLoginAt);
-            const now = new Date();
-            const daysDiff = Math.floor((now - lastLogin) / (1000 * 60 * 60 * 24));
-            const inactKey30 = 'lvl_inact_notif_30_' + lastLogin.toISOString().slice(0, 7);
-            const inactKey10 = 'lvl_inact_notif_10_' + lastLogin.toISOString().slice(0, 10);
-
-            if (daysDiff >= 30 && !localStorage.getItem(inactKey30)) {
-                localStorage.setItem(inactKey30, '1');
-                if (navigator.serviceWorker?.controller) {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification('LevelUp vous attend 🌟', {
-                            body: `Ça fait un mois qu'on ne vous a pas vu ! De nouveaux films, musiques et outils IA vous attendent sur LevelUp Ecosystem.`,
-                            icon: '/icon.svg', badge: '/icon.svg',
-                            data: { url: '/' }, vibrate: [200,100,200]
-                        });
-                    });
-                }
-            } else if (daysDiff >= 10 && !localStorage.getItem(inactKey10)) {
-                localStorage.setItem(inactKey10, '1');
-                if (navigator.serviceWorker?.controller) {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification('Tu nous manques 💜', {
-                            body: `Ça fait ${daysDiff} jours ! Des nouveaux contenus et fonctionnalités vous attendent sur LevelUp.`,
-                            icon: '/icon.svg', badge: '/icon.svg',
-                            data: { url: '/' }, vibrate: [100,50,100]
-                        });
-                    });
-                }
-            }
-        } catch(_) {}
-    };
-})();
-</script> 
-<script>
-(function() {
-    // 1. ANALYSE DU SMARTPHONE
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-    // 2. DÉMARRAGE : animation étoile uniquement sur iPhone PWA
-    if (isIOS && isPWA) {
-        document.body.classList.add('lvl-iphone-star-anim');
-    } else {
-        if (window._hideLoadingScreen) window._hideLoadingScreen();
-    }
-
-    if (window.updateFabContext) window.updateFabContext();
-
-    // 3. APRÈS 1 SECONDE : fin de l'animation étoile iOS
-    setTimeout(function() {
-        document.body.classList.remove('lvl-iphone-star-anim');
-    }, 1000);
-})();
-</script>
-<script>
-// EFFACER LA BULLE "ASSISTANT" AU SCROLL
-window.addEventListener('scroll', function() {
-    const hintBubble = document.getElementById('fabHintBubble'); 
-
-    if (hintBubble) {
-        if (window.scrollY > 15) { 
-            // Ajoute la classe pour cacher la bulle en douceur dès qu'on défile
-            hintBubble.classList.add('hidden-on-scroll');
-        } else {
-            // Optionnel : La bulle réapparaît si l'utilisateur remonte tout en haut
-            hintBubble.classList.remove('hidden-on-scroll');
-        }
-    }
-});
-</script>
-<script>
-// FORCER LE RETOUR EN HAUT AU RAFRAÎCHISSEMENT
-if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
-}
-window.scrollTo(0, 0);
-</script>
-
-<!-- ══════════════════════════════════════════
-  PWA MOBILE ENFORCEMENT + BOTTOM-SHEET LOGIN
-══════════════════════════════════════════ -->
-
-<style>
-@keyframes lvl-spin { to { transform: rotate(360deg); } }
-#mobileLoginSpinner { display:none; text-align:center; margin-bottom:14px; }
-#mobileLoginSpinner svg { animation: lvl-spin 1s linear infinite; }
-</style>
-
-<!-- Popup install PWA (mobile navigateur uniquement) -->
-<div id="pwaInstallOverlay" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);align-items:flex-end;justify-content:center">
-  <div id="pwaInstallPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#13111e,#0a0914);border-radius:24px 24px 0 0;padding:28px 24px 52px;box-shadow:0 -8px 40px rgba(0,0,0,.7);border-top:1px solid rgba(255,255,255,.1);position:relative;pointer-events:auto">
-    <div style="width:40px;height:4px;background:rgba(255,255,255,.18);border-radius:4px;margin:0 auto 24px"></div>
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
-      <svg width="54" height="54" viewBox="0 0 576 512" fill="url(#pg)" style="filter:drop-shadow(0 0 13px rgba(168,85,247,.6));flex-shrink:0"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-      <div>
-        <div style="font-size:1.05rem;font-weight:800;color:white;letter-spacing:-.02em">Installer LevelUp</div>
-        <div style="font-size:.78rem;color:rgba(255,255,255,.4)">Pour une expérience optimale</div>
-      </div>
-    </div>
-    <p style="font-size:.82rem;color:rgba(255,255,255,.5);margin:14px 0 20px;line-height:1.7">LevelUp fonctionne comme une app native sur votre écran d'accueil. La connexion Google &amp; Facebook est disponible uniquement depuis l'app installée.</p>
-
-    <div id="pwaInstructIOS" style="display:none">
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:14px">
-        <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px">iPhone / iPad — Safari</div>
-        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
-          <div style="min-width:24px;height:24px;border-radius:50%;background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.35);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#60a5fa;flex-shrink:0">1</div>
-          <span style="font-size:.81rem;color:rgba(255,255,255,.65);line-height:1.55">Ouvrez <strong style="color:white">Safari</strong> sur <strong style="color:white">levelup-ecosystem.com</strong></span>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
-          <div style="min-width:24px;height:24px;border-radius:50%;background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.35);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#60a5fa;flex-shrink:0">2</div>
-          <span style="font-size:.81rem;color:rgba(255,255,255,.65);line-height:1.55">Appuyez sur l'icône <strong style="color:white">Partage ↑</strong> en bas de Safari</span>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="min-width:24px;height:24px;border-radius:50%;background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.35);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#60a5fa;flex-shrink:0">3</div>
-          <span style="font-size:.81rem;color:rgba(255,255,255,.65);line-height:1.55">Choisissez <strong style="color:white">« Sur l'écran d'accueil »</strong> → Ajouter</span>
-        </div>
-      </div>
-    </div>
-
-    <div id="pwaInstructAndroid" style="display:none">
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:14px">
-        <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px">Android — Chrome</div>
-        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
-          <div style="min-width:24px;height:24px;border-radius:50%;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#4ade80;flex-shrink:0">1</div>
-          <span style="font-size:.81rem;color:rgba(255,255,255,.65);line-height:1.55">Dans Chrome, appuyez sur le menu <strong style="color:white">⋮</strong> en haut à droite</span>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
-          <div style="min-width:24px;height:24px;border-radius:50%;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#4ade80;flex-shrink:0">2</div>
-          <span style="font-size:.81rem;color:rgba(255,255,255,.65);line-height:1.55">Appuyez sur <strong style="color:white">« Ajouter à l'écran d'accueil »</strong></span>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="min-width:24px;height:24px;border-radius:50%;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:#4ade80;flex-shrink:0">3</div>
-          <span style="font-size:.81rem;color:rgba(255,255,255,.65);line-height:1.55">Confirmez avec <strong style="color:white">Installer</strong> ou <strong style="color:white">Ajouter</strong></span>
-        </div>
-      </div>
-      <button id="pwaAndroidInstallBtn" style="display:none;width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:white;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px" onclick="window._pwaPrompt&&window._pwaPrompt.prompt()">
-        Installer maintenant
-      </button>
-    </div>
-
-    <button onclick="document.getElementById('pwaInstallOverlay').style.display='none'" style="width:100%;margin-top:4px;padding:13px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);font-size:.84rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">
-      Annuler
-    </button>
-  </div>
-</div>
-
-<!-- Bottom-sheet login (mobile — glisse du bas) -->
-<div id="mobileLoginSheet" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:99999;background:linear-gradient(to bottom,transparent 0%,transparent 35%,rgba(0,0,0,.72) 65%,#0d0b1e 100%);align-items:flex-end;justify-content:center;touch-action:none;overscroll-behavior:none;-webkit-overflow-scrolling:touch">
-  <div id="mobileLoginPanel" style="width:100%;max-width:480px;background:linear-gradient(180deg,#16132a,#0d0b1e);border-radius:24px 24px 0 0;padding:28px 24px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));box-shadow:0 -8px 40px rgba(0,0,0,.75);border-top:1px solid rgba(255,255,255,.1);transform:translateY(100%);transition:transform .35s cubic-bezier(0.32,0.72,0,1);position:relative;pointer-events:auto;max-height:calc(100dvh - 24px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;user-select:none;-webkit-user-select:none">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-      <svg width="48" height="48" viewBox="0 0 576 512" fill="url(#pg)" style="filter:drop-shadow(0 0 12px rgba(168,85,247,.6));flex-shrink:0"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-      <div>
-        <div style="font-size:1rem;font-weight:800;color:white;letter-spacing:-.02em">Rejoindre LevelUp</div>
-        <div style="font-size:.76rem;color:rgba(255,255,255,.38)">Connexion sécurisée</div>
-      </div>
-    </div>
-    <p style="font-size:.8rem;color:rgba(255,255,255,.45);margin:12px 0 22px;line-height:1.65">Connectez-vous pour accéder à tout l'écosystème LevelUp.</p>
-
-    <button onclick="window._mobileGoogleSignIn()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 18px;border-radius:14px;background:#ffffff;border:none;color:#3c4043;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;transition:all .2s" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='#ffffff'">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      Continuer avec Google
-    </button>
-    <button onclick="window._mobileFbSignIn()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 18px;border-radius:14px;background:#1877F2;border:none;color:white;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;margin-bottom:18px" onmouseover="this.style.background='#0d6eef'" onmouseout="this.style.background='#1877F2'">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-      Continuer avec Facebook
-    </button>
-
-    <!-- Spinner de chargement -->
-    <div id="mobileLoginSpinner">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.75)" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-    </div>
-
-    <!-- Cloudflare Turnstile -->
-    <div id="cfTurnstile" style="border-radius:10px;overflow:hidden;transition:all .3s"></div>
-
-    <!-- Conditions d'utilisation -->
-    <div style="text-align:center">
-      <span style="font-size:.71rem;color:rgba(255,255,255,.27);line-height:1.6">En continuant, vous acceptez nos <a href="https://levelup-ecosystem.com/terms" target="_blank" rel="noopener" style="color:rgba(168,85,247,.65);text-decoration:none;font-weight:600">Conditions d'utilisation</a> et notre <a href="https://levelup-ecosystem.com/privacy" target="_blank" rel="noopener" style="color:rgba(168,85,247,.65);text-decoration:none;font-weight:600">Politique de confidentialité</a></span>
-    </div>
-  </div>
-</div>
-
-<script>
-(function(){
-  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  var isAndroid = /Android/.test(navigator.userAgent);
-  var isMobile = isIOS || isAndroid;
-  var isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-  // Capture native install prompt (Android Chrome)
-  window.addEventListener('beforeinstallprompt', function(e) {
-    e.preventDefault();
-    window._pwaPrompt = e;
-    var btn = document.getElementById('pwaAndroidInstallBtn');
-    if (btn) btn.style.display = 'block';
-  });
-
-  // ── Bottom-sheet login ──
-  window.openMobileLoginSheet = function() {
-    if (window._user) return;
-    var ov = document.getElementById('mobileLoginSheet');
-    var panel = document.getElementById('mobileLoginPanel');
-    if (!ov || !panel) return;
-    window._turnstileToken = '__bypass__';
-    var container = document.getElementById('cfTurnstile');
-    if (container) { container._tsRendered = false; container.innerHTML = ''; }
-    // Masquer la mobile-nav pour éviter qu'elle pousse le sheet vers le haut
-    var mobileNav = document.getElementById('mobileNav');
-    if (mobileNav) mobileNav.style.display = 'none';
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    ov.style.display = 'flex';
-    // Forcer le panel au bas — anti-clavier
-    panel.style.bottom = '0';
-    panel.style.position = 'relative';
-    // Verrouiller la hauteur de l'overlay sur la hauteur réelle du viewport iOS
-    // pour éviter que la barre Safari change la position du sheet
-    var lockH = window.innerHeight;
-    ov.style.height = lockH + 'px';
-    ov.style.top = '0px';
-    ov.style.bottom = 'auto';
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        panel.style.transform = 'translateY(0)';
-        setTimeout(function(){ if(window._renderTurnstile) window._renderTurnstile('cfTurnstile'); }, 300);
-      });
+  function _swUpdateProgress() {
+    var pct=((_sw.stepIndex+1)/_sw.activeSteps.length)*100;
+    var bar=document.getElementById('sw-progress-bar'); if(bar) bar.style.width=pct+'%';
+    _sw.activeSteps.forEach(function(stepId,idx) {
+      var cont=document.getElementById('indicator-'+stepId);
+      var line=document.getElementById('ind-line-'+stepId);
+      var txt=document.getElementById('ind-text-'+stepId);
+      if(!cont||!line||!txt) return;
+      if (idx===_sw.stepIndex) { cont.classList.remove('opacity-40'); line.className='w-[2px] h-6 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]'; txt.className='text-sm font-semibold text-white'; }
+      else if (idx<_sw.stepIndex) { cont.classList.remove('opacity-40'); line.className='w-[2px] h-6 bg-white/20 rounded-full'; txt.className='text-sm font-medium text-gray-500'; }
+      else { cont.classList.add('opacity-40'); line.className='w-[2px] h-6 bg-white/20 rounded-full'; txt.className='text-sm font-medium text-gray-500'; }
     });
-    ov._vvClean = function() {
-      ov.style.height = '';
-      ov.style.top = '';
-      ov.style.bottom = '';
-    };
-  };
-  window.closeMobileLoginSheet = function() {
-    var ov2 = document.getElementById('mobileLoginSheet');
-    if (ov2 && ov2._vvClean) { ov2._vvClean(); delete ov2._vvClean; }
-    var panel = document.getElementById('mobileLoginPanel');
-    var ov = document.getElementById('mobileLoginSheet');
-    if (!panel || !ov) return;
-    panel.style.transform = 'translateY(100%)';
-    setTimeout(function() {
-      ov.style.display = 'none';
-      ov.style.height = '';
-      ov.style.top = '';
-      ov.style.bottom = '';
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      // Restaurer la mobile-nav
-      var mobileNav = document.getElementById('mobileNav');
-      if (mobileNav) mobileNav.style.display = '';
-    }, 380);
-  };
-
-  // ── Login sheet 100% fixe — aucun swipe, aucun close backdrop ──
-  var _loginOv = document.getElementById('mobileLoginSheet');
-  var _loginPanel = document.getElementById('mobileLoginPanel');
-
-  // Bloquer TOUS les événements touch/pointer sur le backdrop et le panel
-  ['touchstart','touchmove','touchend','pointerdown','pointermove'].forEach(function(ev) {
-    if (_loginOv) _loginOv.addEventListener(ev, function(e) {
-      // Laisser passer les events qui viennent de l'intérieur du panel
-      if (_loginPanel && _loginPanel.contains(e.target)) return;
-      e.preventDefault();
-      e.stopPropagation();
-    }, { passive: false });
-    if (_loginPanel) _loginPanel.addEventListener(ev, function(e) {
-      // Permettre le scroll interne du panel mais pas le swipe vers le bas global
-      if (ev === 'touchmove' || ev === 'pointermove') {
-        var el = e.target;
-        while (el && el !== _loginPanel) {
-          if (el.scrollHeight > el.clientHeight && getComputedStyle(el).overflowY !== 'hidden') return;
-          el = el.parentElement;
-        }
-        e.preventDefault();
-      }
-    }, { passive: false });
-  });
-
-  // Vérification Turnstile avant sign-in
-  function _checkTurnstile() {
-    var token = window._turnstileToken;
-    if (!token) {
-      toast_('Veuillez compléter la vérification de sécurité', 'err');
-      return false;
-    }
-    return true;
   }
 
-  // Boutons du sheet avec spinner + Turnstile
-  window._mobileGoogleSignIn = function() {
-    if (!_checkTurnstile()) return;
-    var sp = document.getElementById('mobileLoginSpinner');
-    if (sp) sp.style.display = 'block';
-    if (window.googleSignIn) window.googleSignIn();
-  };
-  window._mobileFbSignIn = function() {
-    if (!_checkTurnstile()) return;
-    var sp = document.getElementById('mobileLoginSpinner');
-    if (sp) sp.style.display = 'block';
-    if (window.facebookSignIn) window.facebookSignIn();
-  };
-
-  // ── PWA install popup ──
-  function showPWAInstall() {
-    if (!isMobile || isPWA) return false;
-    var ov = document.getElementById('pwaInstallOverlay');
-    if (!ov) return false;
-    var ios = document.getElementById('pwaInstructIOS');
-    var and = document.getElementById('pwaInstructAndroid');
-    if (ios) ios.style.display = isIOS ? 'block' : 'none';
-    if (and) and.style.display = isAndroid ? 'block' : 'none';
-    ov.style.display = 'flex';
-    return true;
-  }
-  window._showPWAInstall = showPWAInstall;
-
-  // ── Intercept openAuth sur mobile ──
-  // Non-PWA → popup install (TOUJOURS, même si connecté)
-  // PWA + non-connecté → bottom-sheet login
-  if (isMobile) {
-    setTimeout(function() {
-      var origOpenAuth = window.openAuth;
-      window.openAuth = function(mode) {
-        if (!isPWA) {
-          // Navigateur mobile → install popup (bloque tout)
-          showPWAInstall();
-          return;
-        }
-        if (window._user) {
-          if (origOpenAuth) origOpenAuth(mode);
-          return;
-        }
-        window.openMobileLoginSheet();
-      };
-    }, 600);
-
-    // ── Bloquer toute interaction sur navigateur mobile (non-PWA) ──
-    if (!isPWA) {
-      document.addEventListener('click', function(e) {
-        // Laisser passer les clics à l'intérieur du pwaInstallOverlay
-        var ov = document.getElementById('pwaInstallOverlay');
-        if (ov && ov.contains(e.target)) return;
-        e.preventDefault();
-        e.stopPropagation();
-        showPWAInstall();
-      }, true);
-    }
-  }
-
-  // ── PWA installé : classe pwa-mobile uniquement, pas d'auto-show du login sheet ──
-  if (isPWA) {
-    if (isMobile) document.body.classList.add('pwa-mobile');
-  }
-})();
-</script>
-<!-- ════════════════════════════════════════════
-PWA MOBILE SLIDER — arrière-plan animé (derrière les popups de notifs + login)
-Images chargées depuis Firestore : artifacts/level-ia-premium/config/slider
-Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affiché" }
-════════════════════════════════════════════ -->
-<style>
-@keyframes slideUp{from{transform:translateY(32px);opacity:0}to{transform:translateY(0);opacity:1}}
-#pwaMobileSlider{display:none;position:fixed;inset:0;z-index:99990;background:linear-gradient(145deg,#1a0533 0%,#0d0b1e 50%,#0a0812 100%);overflow:hidden;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
-#pwaMobileSlider.active{display:flex}
-.pwa-slide-item{position:absolute;top:0;left:0;right:0;height:58dvh;background-size:cover;background-position:center center;opacity:0;transition:opacity 1.1s ease}
-.pwa-slide-item.on{opacity:1}
-.pwa-slide-item::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.08) 0%,rgba(0,0,0,.02) 25%,rgba(0,0,0,.55) 60%,rgba(10,8,18,.96) 82%,#0a0812 100%)}
-#pwaSliderBrand{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;padding:18px 20px 0;flex-shrink:0;pointer-events:none}
-#pwaSliderCaption{position:absolute;bottom:calc(42dvh + 60px);left:20px;right:20px;z-index:3;font-size:.84rem;color:rgba(255,255,255,.9);text-align:center;line-height:1.65;font-weight:500;letter-spacing:-.01em;opacity:0;transition:opacity .55s ease;pointer-events:none;text-shadow:0 2px 12px rgba(0,0,0,.85)}
-#pwaSliderCaption.vis{opacity:1}
-#pwaSliderDots{position:absolute;bottom:calc(42dvh + 32px);left:0;right:0;z-index:3;display:flex;justify-content:center;align-items:center;gap:7px;pointer-events:none}
-#pwaSliderLoginBtn{position:absolute;bottom:max(env(safe-area-inset-bottom,0px),28px);left:0;right:0;z-index:5;display:flex;justify-content:center;padding:0 32px}
-.pwa-dot-item{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.28);transition:all .38s cubic-bezier(.34,1.56,.64,1);flex-shrink:0}
-.pwa-dot-item.on{width:20px;border-radius:4px;background:#a855f7;box-shadow:0 0 8px rgba(168,85,247,.6)}
-</style>
-<div id="pwaMobileSlider">
-  <div id="pwaSliderBrand">
-    <svg width="52" height="52" viewBox="0 0 576 512" fill="url(#pg)" style="filter:drop-shadow(0 0 13px rgba(168,85,247,.6))"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-    <div style="font-size:1.15rem;font-weight:900;color:white;letter-spacing:-.04em;margin-top:10px;text-shadow:0 2px 14px rgba(0,0,0,.6)">LEVELUP</div>
-    <div style="font-size:.66rem;color:rgba(255,255,255,.38);letter-spacing:.12em;text-transform:uppercase;margin-top:2px">Ecosystem</div>
-  </div>
-  <div id="pwaSliderTrack" style="position:absolute;inset:0"></div>
-  <div id="pwaSliderCaption"></div>
-  <div id="pwaSliderDots"></div>
-  <div id="pwaSliderLoginBtn">
-    <button onclick="if(window.openMobileLoginSheet)window.openMobileLoginSheet();" style="width:100%;max-width:340px;padding:16px 28px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:18px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:-.01em;box-shadow:0 8px 32px rgba(168,85,247,.45);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''"><i class="fa-brands fa-google" style="font-size:.95rem"></i> Se connecter</button>
-  </div>
-</div>
-<script>
-(function(){
-  var FALLBACKS=[
-    {url:'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1920&q=75',caption:'LevelMovie — Films & Séries en streaming premium',bg:'linear-gradient(145deg,#0f1a2e 0%,#1a0533 60%,#0a0812 100%)'},
-    {url:'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1920&q=75',caption:'Bienvenue sur LevelUp Ecosystem',bg:'linear-gradient(145deg,#1a0533 0%,#0d0b1e 60%,#0a0812 100%)'},
-    {url:'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1920&q=75',caption:'LevelMusic — La musique sans limites ni frontières',bg:'linear-gradient(145deg,#0d1f14 0%,#0f1a2e 60%,#0a0812 100%)'},
-    {url:'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1920&q=75',caption:'Level IA — Votre assistant IA personnel',bg:'linear-gradient(145deg,#1c1408 0%,#1a0533 60%,#0a0812 100%)'},
-    {url:'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=75',caption:'LevelUp Tools — Tous vos outils réunis',bg:'linear-gradient(145deg,#0f1a2e 0%,#0d1f14 60%,#0a0812 100%)'},
-    {url:'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=75',caption:'Une plateforme. Un écosystème. LevelUp.',bg:'linear-gradient(145deg,#1a0533 0%,#0d0b1e 40%,#0a0812 100%)'},
-  ];
-  var _slides=[],_cur=0,_timer=null,_capTimer=null;
-  function _build(items){
-    var track=document.getElementById('pwaSliderTrack');
-    var dots=document.getElementById('pwaSliderDots');
-    if(!track||!dots)return;
-    // Normaliser + valider : seules les vraies URLs http sont acceptées
-    var normalized=items.map(function(it,i){
-      if(typeof it==='string'){
-        var isUrl=it.indexOf('http')===0;
-        return isUrl?{url:it,caption:''}:{url:'',caption:it,bg:FALLBACKS[i%FALLBACKS.length].bg};
-      }
-      var validUrl=it.url&&it.url.indexOf('http')===0;
-      return {url:validUrl?it.url:'',caption:it.caption||'',bg:it.bg||FALLBACKS[i%FALLBACKS.length].bg};
-    });
-    _slides=normalized; track.innerHTML=''; dots.innerHTML='';
-    normalized.forEach(function(it,i){
-      var el=document.createElement('div');
-      el.className='pwa-slide-item';
-      if(i===0){el.style.transition='none';}
-      if(it.url){el.style.backgroundImage='url('+it.url+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';}
-      else{el.style.background=it.bg||FALLBACKS[i%FALLBACKS.length].bg;}
-      var ov=document.createElement('div');
-      ov.style.cssText='position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.2) 0%,transparent 40%,transparent 52%,rgba(0,0,0,.92) 100%)';
-      el.appendChild(ov); el.id='pwaSlide'+i; track.appendChild(el);
-      var d=document.createElement('div');
-      d.className='pwa-dot-item'; d.id='pwaDot'+i; dots.appendChild(d);
-    });
-    _go(0); _startTimer();
-  }
-  function _go(idx){
-    if(!_slides.length)return;
-    var prev=_cur;
-    _cur=(idx+_slides.length)%_slides.length;
-    var pe=document.getElementById('pwaSlide'+prev);
-    var ne=document.getElementById('pwaSlide'+_cur);
-    var pd=document.getElementById('pwaDot'+prev);
-    var cd=document.getElementById('pwaDot'+_cur);
-    var cap=document.getElementById('pwaSliderCaption');
-    if(pe)pe.classList.remove('on');
-    if(ne)ne.classList.add('on');
-    if(pd){pd.style.width='6px';pd.style.borderRadius='50%';pd.style.background='rgba(255,255,255,.28)';pd.style.boxShadow='none';}
-    if(cd){cd.style.width='20px';cd.style.borderRadius='4px';cd.style.background='#a855f7';cd.style.boxShadow='0 0 8px rgba(168,85,247,.6)';}
-    if(cap){cap.classList.remove('vis');clearTimeout(_capTimer);_capTimer=setTimeout(function(){cap.textContent=_slides[_cur].caption||'';cap.classList.add('vis');},450);}
-  }
-  function _startTimer(){clearInterval(_timer);_timer=setInterval(function(){_go(_cur+1);},4200);}
-  function _loadSliderImages(attempt){
-    attempt=attempt||0;
-    if(window._db&&window._fb){
-      try{
-        var fb=window._fb;
-        var _fd=fb.doc, _fg=fb.getDoc;
-        _fg(_fd(window._db,'artifacts','level-ia-premium','config','slider')).then(function(snap){
-          // N'utiliser les données Firebase que si elles contiennent des vraies URLs http
-          var raw=snap.exists()&&Array.isArray(snap.data().images)?snap.data().images:[];
-          var valid=raw.filter(function(it){ return it&&((typeof it==='string'&&it.indexOf('http')===0)||(it.url&&it.url.indexOf('http')===0)); });
-          _build(valid.length?valid:FALLBACKS);
-        }).catch(function(){/* fallbacks déjà affichés */});
-      }catch(e){/* fallbacks déjà affichés */}
-    } else if(attempt<5){
-      setTimeout(function(){_loadSliderImages(attempt+1);},800);
-    }
-    // Les fallbacks sont déjà affichés — on ne rappelle pas _build(FALLBACKS) en cas d'échec
-  }
-  // ── Popup notification gate PWA (avant le login sheet) ──
-  var _NOTIF_GATE_KEY = '_lvl_notif_gate_done';
-  function _showNotifGateThenLogin() {
-    // Désactivé — géré uniquement par le flow permissions 3 étapes après connexion
-    if (window.openMobileLoginSheet) window.openMobileLoginSheet();
-  }
-
-  window._pwaSlider={
-    show:function(){
-      var el=document.getElementById('pwaMobileSlider');
-      if(!el)return;
-      el.classList.add('active');
-      // Afficher d'abord les fallbacks pendant le chargement TMDB
-      _build(FALLBACKS);
-      // Charger les affiches TMDB trending (backdrops paysage)
-      var _TMDB_KEY = '027cc951d888c64e5f15dcb853c7347a';
-      var _TMDB_IMG = 'https://image.tmdb.org/t/p/w1280';
+  async function _swDoAction(stepId, skip) {
+    if (skip) return;
+    if (stepId===1) {
       try {
-        fetch('https://api.themoviedb.org/3/trending/movie/week?api_key='+_TMDB_KEY+'&language=fr-FR')
-          .then(function(r){ return r.json(); })
-          .then(function(data){
-            var movies = (data.results||[]).filter(function(m){ return m.backdrop_path; }).slice(0,10);
-            if (!movies.length) return;
-            var slides = movies.map(function(m){
-              return {
-                url: _TMDB_IMG + m.backdrop_path,
-                caption: m.title + (m.vote_average ? ' ⭐ ' + m.vote_average.toFixed(1) : '')
-              };
-            });
-            _build(slides);
-          }).catch(function(){});
-      } catch(_) {}
-      // Popup notification AVANT le login (pour nouveaux installeurs)
-      if (!window._user) _showNotifGateThenLogin();
-    },
-    hide:function(){
-      clearInterval(_timer); clearTimeout(_capTimer);
-      var el=document.getElementById('pwaMobileSlider');
-      if(!el)return;
-      el.style.opacity='0'; el.style.transition='opacity .5s';
-      setTimeout(function(){el.classList.remove('active');el.style.opacity='';el.style.transition='';},520);
-    }
-  };
-})();
-</script>
-
-<!-- TURNSTILE SECURITY CHECK — sites web uniquement (pas PWA), délai 5s -->
-<style>
-#lvlTurnstilePopup{position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;justify-content:center;padding:0 0 32px;background:rgba(0,0,0,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity .35s}
-#lvlTurnstilePopup.show{opacity:1;pointer-events:all}
-.ts-card{background:linear-gradient(160deg,#13111f,#0d0b1a);border:1px solid rgba(168,85,247,.3);border-radius:20px;padding:22px 22px 18px;max-width:360px;width:calc(100% - 32px);box-shadow:0 24px 64px rgba(0,0,0,.9),0 0 0 1px rgba(168,85,247,.06);position:relative;overflow:hidden;transform:translateY(32px) scale(.97);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
-#lvlTurnstilePopup.show .ts-card{transform:translateY(0) scale(1)}
-.ts-card::before{content:'';position:absolute;top:-50px;right:-30px;width:160px;height:160px;background:radial-gradient(circle,rgba(168,85,247,.16),transparent 70%);pointer-events:none;border-radius:50%}
-</style>
-<div id="lvlTurnstilePopup">
-  <div class="ts-card">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;position:relative">
-      <svg width="44" height="44" viewBox="0 0 576 512" fill="url(#pg)" style="filter:drop-shadow(0 0 11px rgba(168,85,247,.6));flex-shrink:0"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
-      <div>
-        <div style="font-size:.93rem;font-weight:800;color:#fff;letter-spacing:-.02em">Vérification de sécurité</div>
-        <div style="font-size:.7rem;color:rgba(255,255,255,.35);margin-top:1px">LevelUp protège ses membres</div>
-      </div>
-    </div>
-    <p style="font-size:.76rem;color:rgba(255,255,255,.38);line-height:1.65;margin-bottom:14px;position:relative">Une vérification rapide pour confirmer que vous êtes humain — ça protège la communauté LevelUp des bots et activités malveillantes.</p>
-    <div id="lvlTurnstileWidget" style="border-radius:10px;overflow:hidden;min-height:65px;position:relative"></div>
-    <button onclick="var p=document.getElementById('lvlTurnstilePopup');if(p){p.style.opacity='0';setTimeout(function(){p.classList.remove('show');p.style.opacity='';},350);}" style="margin-top:10px;width:100%;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.3);font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.04)'">Passer</button>
-  </div>
-</div>
-<script>
-(function(){
-  // Turnstile affiché à chaque visite — toutes plateformes (web, PWA, mobile)
-  function _show(){
-    var popup=document.getElementById('lvlTurnstilePopup');
-    var container=document.getElementById('lvlTurnstileWidget');
-    if(!popup||!container) return;
-    if(!window.turnstile){setTimeout(_show,300);return;}
-    if(container._tsRendered) return;
-    container._tsRendered=true;
-    popup.classList.add('show');
-    window.turnstile.render(container,{
-      sitekey:'0x4AAAAAADMY4-j7dozqyHdf',
-      theme:'dark',
-      size:'flexible',
-      retry:'never',
-      'refresh-expired':'never',
-      callback:function(){
-        sessionStorage.setItem('lvl_ts_session','1');
-        setTimeout(function(){
-          var p=document.getElementById('lvlTurnstilePopup');
-          if(p){p.style.opacity='0';p.style.transition='opacity .4s';setTimeout(function(){p.classList.remove('show');p.style.opacity='';container._tsRendered=false;},420);}
-        },700);
-      },
-      'error-callback':function(){
-        var p=document.getElementById('lvlTurnstilePopup');
-        if(p) p.classList.remove('show');
-        try{ window.turnstile.remove(container); }catch(_){}
-        container._tsRendered=false;
-      }
-    });
-  }
-  // Délai : 3s sur web, 1.5s sur PWA (ouvre plus vite sur app)
-  var isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
-  setTimeout(_show, isPWA ? 1500 : 3000);
-})();
-</script>
-
-<!-- ═══════════════════════════════════════
-COOKIE CONSENT BANNER (RGPD/GDPR)
-═══════════════════════════════════════ -->
-<div id="lvlCookieBanner" style="display:none!important;position:fixed;bottom:0;left:0;right:0;z-index:2147483647;pointer-events:auto">
-  <div style="max-width:680px;margin:0 auto;background:#100920;border:1px solid rgba(168,85,247,.3);border-bottom:none;border-radius:18px 18px 0 0;padding:18px 20px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 40px rgba(0,0,0,.85)">
-    <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
-      <div style="flex:1;min-width:200px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <i class="fa-solid fa-cookie-bite" style="color:#a855f7;font-size:.9rem"></i>
-          <span style="font-size:.85rem;font-weight:700;color:#fff">Paramètres des cookies</span>
-        </div>
-        <p style="font-size:.75rem;color:rgba(255,255,255,.5);line-height:1.6;margin:0">Nous utilisons des cookies essentiels pour le bon fonctionnement de LevelUp, et des cookies analytiques pour améliorer votre expérience. Aucune donnée n'est revendue.</p>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;margin-top:10px">
-        <button onclick="window._cookieDecline()" style="padding:11px 20px;border-radius:10px;background:#1e1035;border:2px solid rgba(255,255,255,.25);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Refuser</button>
-        <button onclick="window._cookieAccept()" style="padding:11px 24px;border-radius:10px;background:#a855f7;border:none;color:#fff;font-size:.82rem;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 4px 16px rgba(168,85,247,.5);pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation">Accepter tout</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-(function(){
-  // Système cookie banner désactivé — remplacé par le flow permissions 3 étapes (permsModal, étape cookies)
-  window._cookieAccept = function(){};
-  window._cookieDecline = function(){};
-  window._enforceCookieForUser = function(){};
-})();
-</script>
-
-<!-- ═══════════════════════════════════════
-PERMISSIONS ONBOARDING FLOW (3 étapes)
-═══════════════════════════════════════ -->
-<script>
-(function() {
-  var _permsUser = null;
-  var _permsStep = 0;
-  var _permsData = { notifs: null, location: null, cookies: null };
-
-  var _steps = [
-    { icoHTML: '<i class="fa-solid fa-bell" style="font-size:2.2rem;color:#a855f7"></i>', bg: 'rgba(168,85,247,.15)', bdr: 'rgba(168,85,247,.35)', title: 'Active les notifications', desc: 'Reste informé en temps réel des nouveautés LevelUp, des alertes et messages de tout l\'écosystème.', btn: 'Activer maintenant', skip: false },
-    { icoHTML: '<i class="fa-solid fa-location-dot" style="font-size:2.2rem;color:#22c55e"></i>', bg: 'rgba(34,197,94,.15)', bdr: 'rgba(34,197,94,.35)', title: 'Active la localisation', desc: 'Utilisée par LevelDay et nos autres apps pour te proposer du contenu personnalisé. Tu peux la désactiver à tout moment.', btn: 'Activer la localisation', skip: true },
-    { icoHTML: '<i class="fa-solid fa-cookie-bite" style="font-size:2.2rem;color:#f59e0b"></i>', bg: 'rgba(245,158,11,.15)', bdr: 'rgba(245,158,11,.35)', title: 'Cookies & Confidentialité', desc: 'Nous utilisons uniquement des cookies essentiels pour ton expérience. Aucune donnée n\'est revendue à des tiers.', btn: 'Accepter', skip: true }
-  ];
-
-  function _render(step) {
-    var s = _steps[step];
-    var ico = document.getElementById('permsIcoWrap');
-    var ttl = document.getElementById('permsTitle');
-    var dsc = document.getElementById('permsDesc');
-    var btn = document.getElementById('permsBtnMain');
-    var skp = document.getElementById('permsBtnSkip');
-    var sta = document.getElementById('permsStatus');
-    if (ico) { ico.innerHTML = s.icoHTML; ico.style.background = s.bg; ico.style.border = '2px solid ' + s.bdr; }
-    if (ttl) ttl.textContent = s.title;
-    if (dsc) dsc.textContent = s.desc;
-    if (btn) { btn.textContent = s.btn; btn.disabled = false; btn.onclick = window._permsMainAction; }
-    if (skp) skp.style.display = s.skip ? '' : 'none';
-    if (sta) { sta.className = 'perms-status'; sta.textContent = ''; }
-    for (var i = 0; i < 3; i++) {
-      var dot = document.getElementById('permsDot' + i);
-      if (dot) dot.className = 'perms-step-dot' + (i < step ? ' done' : i === step ? ' active' : '');
-    }
-    var card = document.getElementById('permsContent');
-    if (card) { card.style.animation = 'none'; void card.offsetWidth; card.style.animation = 'permsIn .35s ease'; }
-  }
-
-  window._showPermsModal = function() {
-    _permsStep = 0;
-    _render(0);
-    var m = document.getElementById('permsModal');
-    if (m) m.classList.add('open');
-  };
-
-  window._permsMainAction = async function() {
-    var sta = document.getElementById('permsStatus');
-    var btn = document.getElementById('permsBtnMain');
-    if (btn) btn.disabled = true;
-
-    if (_permsStep === 0) {
-      // Step 1 : Notifications
-      // iOS Safari/PWA : l'API Notification peut être absente → on saute à la localisation
-      if (typeof Notification === 'undefined') {
-        _permsStep = 1; _render(1);
-        if (btn) btn.disabled = false;
-        return;
-      }
-      try {
-        var perm = await Notification.requestPermission();
-        _permsData.notifs = perm;
-        if (perm === 'granted') {
-          if (btn) { btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)'; btn.textContent = '✓ Activé !'; }
-          if (sta) { sta.className = 'perms-status ok'; sta.textContent = '✓ Notifications activées — tu seras le premier informé des nouveautés LevelUp.'; }
-          // Effacer le flag welcome pour envoyer la notif de bienvenue même si déjà passé par le flow
+        var perm=await Notification.requestPermission();
+        if (perm==='granted') {
           try { localStorage.removeItem('lvl_welcome_notif_sent'); } catch(_) {}
-          if (_permsUser && window.initFCM) setTimeout(function() { try { initFCM(_permsUser); } catch(e) {} }, 600);
-          // Envoyer la notification de bienvenue directement aussi (en cas de no-SW)
-          setTimeout(function() { try { if (window._sendWelcomeNotification) window._sendWelcomeNotification(); } catch(_) {} }, 3000);
-          setTimeout(function() { _permsStep = 1; _render(1); }, 2200);
-        } else {
-          if (sta) { sta.className = 'perms-status err'; sta.textContent = 'Accès refusé — active-les dans les réglages de ton appareil pour ne rien rater.'; }
-          if (btn) { btn.textContent = 'Continuer quand même'; btn.disabled = false; btn.onclick = function() { _permsStep = 1; _render(1); }; }
+          if (_sw.user && window.initFCM) { try { initFCM(_sw.user); } catch(_) {} }
+          setTimeout(function(){ if(window._sendWelcomeNotification) window._sendWelcomeNotification(); },3000);
         }
-      } catch(e) {
-        if (btn) { btn.disabled = false; btn.onclick = function() { _permsStep = 1; _render(1); }; }
-      }
-    } else if (_permsStep === 1) {
-      // Step 2 : Localisation
-      if (!navigator.geolocation) {
-        _permsData.location = null;
-        _permsStep = 2; _render(2); return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        async function(pos) {
-          _permsData.location = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: Math.round(pos.coords.accuracy), ts: Date.now() };
-          if (sta) { sta.className = 'perms-status ok'; sta.textContent = '✓ Localisation enregistrée avec succès !'; }
-          if (_permsUser && window._db) {
+      } catch(e) {}
+    } else if (stepId===2) {
+      if (!navigator.geolocation) return;
+      await new Promise(function(resolve) {
+        navigator.geolocation.getCurrentPosition(async function(pos) {
+          if (_sw.user && window._db) {
             try {
-              var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-              var ref = _fi.doc(window._db, 'artifacts', 'level-ia-premium', 'users', _permsUser.uid, 'profile', 'data');
-              await _fi.setDoc(ref, { location: _permsData.location, locationGranted: true, locationUpdatedAt: Date.now() }, { merge: true });
+              var _fi=await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+              var ref=_fi.doc(window._db,'artifacts','level-ia-premium','users',_sw.user.uid,'profile','data');
+              await _fi.setDoc(ref,{location:{lat:pos.coords.latitude,lng:pos.coords.longitude,acc:Math.round(pos.coords.accuracy),ts:Date.now()},locationSaved:true,locationGranted:true,locationUpdatedAt:Date.now()},{merge:true});
             } catch(e) {}
           }
-          setTimeout(function() { _permsStep = 2; _render(2); }, 1200);
-        },
-        function(err) {
-          _permsData.location = null;
-          var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-          var isDenied = err && err.code === 1; // PERMISSION_DENIED
-          if (isDenied && isIOS) {
-            // Sur iOS : guider l'utilisateur vers les réglages système
-            if (sta) {
-              sta.className = 'perms-status err';
-              sta.innerHTML = '📍 Localisation désactivée dans les réglages.<br>'
-                + '<button onclick="try{window.open(\'App-Prefs:Privacy&path=LOCATION\');}catch(_){window.open(\'prefs:root=Privacy&path=LOCATION_SERVICES\');}" '
-                + 'style="margin-top:10px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.35);border-radius:9px;padding:9px 16px;color:#60a5fa;font-size:.8rem;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px">'
-                + '<i class="fa-solid fa-gear"></i> Ouvrir les Réglages iPhone</button>';
-            }
-          } else {
-            if (sta) { sta.className = 'perms-status err'; sta.textContent = 'Accès refusé — active la localisation dans les réglages de ton appareil.'; }
-          }
-          setTimeout(function() { _permsStep = 2; _render(2); }, isDenied && isIOS ? 5000 : 1400);
-        },
-        { timeout: 12000, maximumAge: 0, enableHighAccuracy: false }
-      );
-    } else if (_permsStep === 2) {
-      // Step 3 : Cookies
-      _permsData.cookies = 'accepted';
-      localStorage.setItem('lvl_cookie_consent', 'accepted');
-      window._cookieConsentDone = true;
+          resolve();
+        }, function(){ resolve(); }, {timeout:10000,maximumAge:0,enableHighAccuracy:false});
+      });
+    } else if (stepId===3) {
+      localStorage.setItem('lvl_cookie_consent','accepted');
+      window._cookieConsentDone=true;
       if (window._saveCookieChoice) window._saveCookieChoice('accepted');
-      _permsFinish();
     }
-  };
-
-  window._permsSkip = function() {
-    if (_permsStep === 1) { _permsData.location = null; _permsStep = 2; _render(2); }
-    else if (_permsStep === 2) { _permsData.cookies = 'declined'; localStorage.setItem('lvl_cookie_consent', 'declined'); _permsFinish(); }
-  };
-
-  async function _permsFinish() {
-    var m = document.getElementById('permsModal');
-    if (m) m.classList.remove('open');
-    var loader = document.getElementById('permsLoader');
-    if (loader) loader.classList.add('open');
-    if (_permsUser && window._db) {
-      try {
-        var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-        var ref = _fi.doc(window._db, 'artifacts', 'level-ia-premium', 'users', _permsUser.uid, 'profile', 'data');
-        await _fi.setDoc(ref, { permsDone: true, notificationsGranted: _permsData.notifs === 'granted', locationGranted: !!_permsData.location }, { merge: true });
-      } catch(e) {}
-    }
-    localStorage.setItem('lvl_perms_v2', '1');
-    setTimeout(function() { if (loader) loader.classList.remove('open'); }, 2500);
   }
+
+  window.swNextStep = async function(skip) {
+    var currentId=_sw.activeSteps[_sw.stepIndex];
+    await _swDoAction(currentId, skip);
+    if (_sw.stepIndex < _sw.activeSteps.length-1) {
+      var cur=document.getElementById('step-'+currentId);
+      if (cur) { cur.classList.remove('step-enter'); cur.classList.add('step-exit'); }
+      setTimeout(function() {
+        if (cur) { cur.classList.add('hidden'); cur.style.display='none'; }
+        _sw.stepIndex++;
+        var nxt=document.getElementById('step-'+_sw.activeSteps[_sw.stepIndex]);
+        if (nxt) { nxt.classList.remove('hidden','step-exit'); nxt.style.display='flex'; nxt.classList.add('step-enter'); }
+        _swUpdateProgress();
+        var sc=document.getElementById('sw-steps-container'); if(sc) sc.scrollTop=0;
+      },300);
+    } else { swFinishOnboarding(); }
+  };
+
+  window.swGoToSubstep = async function(from, to) {
+    if (from===1 && to===2) { var ok=await _swValidateUsername(); if(!ok) return; }
+    if (from===2 && to===3) { if(!_sw.age) { var ae=document.getElementById('age-error'); if(ae){ae.classList.remove('hidden');ae.style.display='flex';} return; } }
+    var fromEl=document.getElementById('substep-'+from);
+    if (fromEl) { fromEl.classList.remove('step-enter'); fromEl.classList.add('step-exit'); }
+    setTimeout(function() {
+      if (fromEl) { fromEl.classList.add('hidden'); fromEl.style.display='none'; }
+      var toEl=document.getElementById('substep-'+to);
+      if (toEl) { toEl.classList.remove('hidden','step-exit'); toEl.style.display='flex'; toEl.classList.add('step-enter'); }
+    },300);
+  };
+
+  window.swSelectAge = function(btn, val) {
+    document.querySelectorAll('#setupWizard .age-btn').forEach(function(b){ b.classList.remove('border-purple-500','bg-purple-500/10','text-white'); b.classList.add('border-white/10','bg-white/5','text-gray-400'); });
+    btn.classList.remove('border-white/10','bg-white/5','text-gray-400');
+    btn.classList.add('border-purple-500','bg-purple-500/10','text-white');
+    _sw.age=val;
+    var ae=document.getElementById('age-error'); if(ae){ae.classList.add('hidden');ae.style.display='none';}
+  };
+
+  async function _swValidateUsername() {
+    var inp=document.getElementById('username-input');
+    var errEl=document.getElementById('username-error');
+    var errTxt=document.getElementById('username-error-text');
+    var val=(inp?inp.value:'').trim();
+    function showErr(m){ if(errTxt) errTxt.textContent=m; if(errEl){errEl.classList.remove('hidden');errEl.style.display='flex';} }
+    function hideErr(){ if(errEl){errEl.classList.add('hidden');errEl.style.display='none';} }
+    if (!/^[a-z0-9_]{3,20}$/.test(val)) { showErr('Format invalide (3 à 20 caractères, minuscules, chiffres et _ uniquement).'); return false; }
+    try {
+      var _fi=await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      var q=_fi.query(_fi.collection(window._db,'artifacts','level-ia-premium','users'),_fi.where('username','==',val));
+      var qs=await _fi.getDocs(q);
+      if (!qs.empty) { showErr('Ce pseudo est déjà pris. Essayez un autre.'); return false; }
+    } catch(e) {}
+    hideErr(); _sw.username=val; return true;
+  }
+
+  window.swValidateImage = function(event) {
+    var file=event.target.files[0];
+    var errEl=document.getElementById('sw-image-error');
+    var errTxt=document.getElementById('sw-image-error-text');
+    var preview=document.getElementById('sw-image-preview');
+    var placeholder=document.getElementById('sw-placeholder-icon');
+    var actionBtn=document.getElementById('sw-action-btn');
+    if (errEl) { errEl.classList.add('hidden'); errEl.style.display='none'; }
+    if (!file) return;
+    if (!['image/jpeg','image/png'].includes(file.type)) {
+      if(errTxt) errTxt.textContent='Format non supporté. JPG ou PNG uniquement.';
+      if(errEl){errEl.classList.remove('hidden');errEl.style.display='flex';}
+      event.target.value=''; return;
+    }
+    var img=new Image(); var url=URL.createObjectURL(file);
+    img.onload=function() {
+      if(img.width<256||img.height<256) {
+        if(errTxt) errTxt.textContent='Résolution trop basse ('+img.width+'x'+img.height+'px). Min: 256x256.';
+        if(errEl){errEl.classList.remove('hidden');errEl.style.display='flex';}
+        URL.revokeObjectURL(url); event.target.value='';
+      } else {
+        if(preview){preview.src=url;preview.classList.remove('hidden');}
+        if(placeholder) placeholder.classList.add('opacity-0');
+        _sw.photoFile=file;
+        if(actionBtn){actionBtn.textContent='Finaliser le profil \u2713';actionBtn.onclick=swFinishOnboarding;}
+      }
+    };
+    img.src=url;
+  };
+
+  function _swShowSuccess() {
+    var mh=document.getElementById('sw-mobile-header'); if(mh) mh.classList.add('opacity-0');
+    var suc=document.getElementById('step-success');
+    if(suc){suc.classList.remove('hidden');suc.style.display='flex';suc.classList.add('step-enter');}
+    setTimeout(function(){var b=document.getElementById('sw-final-bar');if(b)b.style.width='100%';},100);
+    setTimeout(function(){
+      var sp=document.getElementById('sw-success-spinner');
+      var ck=document.getElementById('sw-success-check');
+      var st=document.getElementById('sw-success-text');
+      if(sp) sp.classList.add('opacity-0');
+      if(ck){ck.classList.remove('scale-0');ck.classList.add('scale-100');}
+      if(st){st.classList.remove('animate-pulse');st.classList.add('text-purple-400');st.textContent="Bienvenue dans l\u2019\u00e9cosyst\u00e8me LevelUp !";}
+    },2000);
+    setTimeout(function(){
+      var wiz=document.getElementById('setupWizard'); if(wiz) wiz.style.display='none';
+      if(window.refreshUI) window.refreshUI();
+      if(window.toast_) toast_('Bienvenue sur LevelUp Ecosystem !','ok');
+    },3600);
+  }
+
+  window.swFinishOnboarding = async function() {
+    var currentId=_sw.activeSteps[_sw.stepIndex];
+    var cur=document.getElementById('step-'+currentId);
+    if(cur) cur.classList.add('step-exit');
+    setTimeout(async function(){
+      if(cur){cur.classList.add('hidden');cur.style.display='none';}
+      _swShowSuccess();
+      if(!_sw.user||!window._db) return;
+      try {
+        var _fi=await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+        var ref=_fi.doc(window._db,'artifacts','level-ia-premium','users',_sw.user.uid,'profile','data');
+        var payload={onboardingDone:true,setupVersion:2,permsDone:true,notificationsGranted:(typeof Notification!=='undefined')&&Notification.permission==='granted',cookieConsent:true,setupCompletedAt:Date.now()};
+        if(_sw.username){payload.username=_sw.username.toLowerCase();payload.displayName=_sw.username;}
+        if(_sw.age) payload.ageRange=_sw.age;
+        await _fi.setDoc(ref,payload,{merge:true});
+        if(_sw.photoFile && window._storage) {
+          try {
+            var _fst=await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js');
+            var pRef=_fst.ref(window._storage,'avatars/'+_sw.user.uid+'/profile.jpg');
+            var snap=await _fst.uploadBytes(pRef,_sw.photoFile);
+            var photoURL=await _fst.getDownloadURL(snap.ref);
+            await _fi.setDoc(ref,{photoURL:photoURL},{merge:true});
+            if(window._ud) window._ud.photoURL=photoURL;
+          } catch(e) {}
+        }
+        if(window._ud){if(_sw.username){window._ud.displayName=_sw.username;window._ud.username=_sw.username.toLowerCase();}if(_sw.age) window._ud.ageRange=_sw.age;}
+        localStorage.setItem('lvl_perms_v2','1');
+        localStorage.setItem('lvl_cookie_consent','accepted');
+      } catch(e){console.warn('swFinish error',e);}
+    },300);
+  };
 
   window._checkPermissions = async function(u) {
     if (!u) return;
-    _permsUser = u;
-    // Attendre que l'onboarding pseudo/age soit fermé s'il est ouvert
-    var ob = document.getElementById('onboardingPopup');
-    if (ob && ob.classList.contains('open')) return; // sera appelé depuis _obComplete
-
-    // Si les notifications sont déjà accordées et le flow terminé → on sort
-    var notifOK = (typeof Notification !== 'undefined') && Notification.permission === 'granted';
+    var notifOK=(typeof Notification!=='undefined')&&Notification.permission==='granted';
     if (notifOK && localStorage.getItem('lvl_perms_v2')) return;
-
-    // Vérifier côté Firestore si le flow a déjà été complété avec notifs granted
-    if (notifOK && window._db) {
-      try {
-        var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-        var ref = _fi.doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
-        var snap = await _fi.getDoc(ref);
-        if (snap.exists() && snap.data().permsDone && snap.data().notificationsGranted) {
-          localStorage.setItem('lvl_perms_v2', '1');
-          return;
-        }
-      } catch(e) {}
-    }
-
-    // Si les notifications ne sont PAS encore accordées (même si déjà passé par le flow),
-    // afficher le popup obligatoire pour que l'utilisateur active les permissions
-    var alreadyDenied = (typeof Notification !== 'undefined') && Notification.permission === 'denied';
-    if (!alreadyDenied) {
-      setTimeout(window._showPermsModal, 900);
-    }
-  };
-
-})();
-</script>
-
-<!-- ═══════════════════════════════════════
-APPS DYNAMIQUES FIRESTORE + PUSH BRIDGE
-═══════════════════════════════════════ -->
-<script>
-// ── APPS DYNAMIQUES DEPUIS FIRESTORE ──
-// Structure Firestore : doc(db, 'artifacts','levelup-ecosystem','public','data','config','dashboard')
-// Champs : dynamicApps:[{name,desc,url,icon,iconSvg,color}], announcements:[{title,text,url}]
-(function() {
-  window._loadDynamicApps = async function() {
     if (!window._db) return;
     try {
-      var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
-      var ref = _fi.doc(window._db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'config', 'dashboard');
-      _fi.onSnapshot(ref, function(snap) {
-        if (!snap.exists()) return;
-        var d = snap.data();
-        _renderQaExtra(d.dynamicApps || []);
-        _renderAnnouncements(d.announcements || []);
-        _renderAfmDynamic(d.dynamicApps || []);
-      });
+      var _fi=await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      var ref=_fi.doc(window._db,'artifacts','level-ia-premium','users',u.uid,'profile','data');
+      var snap=await _fi.getDoc(ref);
+      if (!snap.exists()) return;
+      var d=snap.data();
+      if (d.setupVersion>=2) { localStorage.setItem('lvl_perms_v2','1'); return; }
+      if (d.onboardingDone && !d.setupVersion) {
+        var needsNotif=(typeof Notification!=='undefined')&&Notification.permission!=='granted'&&Notification.permission!=='denied';
+        var needsCook=!localStorage.getItem('lvl_cookie_consent');
+        if (needsNotif||needsCook) { _sw.user=u; _swBuild(u,d); }
+        else { localStorage.setItem('lvl_perms_v2','1'); }
+      }
     } catch(e) {}
   };
 
-  function _mkIco(app) {
-    if (app.iconSvg) return app.iconSvg;
-    return '<i class="' + (app.icon || 'fa-solid fa-grid-2') + '" style="font-size:.9rem"></i>';
-  }
-
-  function _renderQaExtra(apps) {
-    var c = document.getElementById('qaExtraContainer');
-    if (!c) return;
-    c.innerHTML = '';
-    apps.forEach(function(app) {
-      var clr = app.color || '#a855f7';
-      var tile = document.createElement('div');
-      tile.className = 'qa-tile';
-      tile.style.cursor = 'pointer';
-      if (app.url) tile.onclick = function() { var a = document.createElement('a'); a.href = app.url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); setTimeout(function() { document.body.removeChild(a); }, 100); };
-      tile.innerHTML = '<div class="qa-ico" style="background:' + clr + '1a;border:1px solid ' + clr + '33;color:' + clr + '">' + _mkIco(app) + '</div>'
-        + '<div class="qa-inf"><h4>' + (app.name || '') + '</h4><span>' + (app.desc || '') + '</span></div>'
-        + '<i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>';
-      c.appendChild(tile);
-    });
-  }
-
-  function _renderAnnouncements(anns) {
-    var c = document.getElementById('qaAnnouncementsContainer');
-    if (!c) return;
-    c.innerHTML = '';
-    anns.forEach(function(a) {
-      var div = document.createElement('div');
-      div.style.cssText = 'background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.15);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px' + (a.url ? ';cursor:pointer' : '');
-      if (a.url) div.onclick = function() { window.open(a.url, '_blank'); };
-      div.innerHTML = '<i class="fa-solid fa-megaphone" style="color:#a855f7;margin-top:2px;font-size:.8rem;flex-shrink:0"></i>'
-        + '<div><div style="font-size:.8rem;font-weight:700;color:#fff;margin-bottom:2px">' + (a.title || '') + '</div>'
-        + '<div style="font-size:.74rem;color:rgba(255,255,255,.45);line-height:1.5">' + (a.text || '') + '</div></div>';
-      c.appendChild(div);
-    });
-  }
-
-  function _renderAfmDynamic(apps) {
-    var c = document.getElementById('afmDynamicContainer');
-    if (!c) return;
-    c.innerHTML = '';
-    apps.forEach(function(app) {
-      var clr = app.color || '#a855f7';
-      var div = document.createElement('div');
-      div.className = 'afm-app';
-      if (app.url) div.onclick = function() { window.open(app.url, '_blank'); window.closeAppsFullModal(); };
-      div.innerHTML = '<div class="afm-ico" style="background:' + clr + '22;border:1px solid ' + clr + '33;color:' + clr + '">' + _mkIco(app) + '</div>'
-        + '<div class="afm-lbl">' + (app.name || '') + '</div>';
-      c.appendChild(div);
-    });
-  }
-
-  document.addEventListener('lvlUserReady', function() {
-    setTimeout(function() { window._loadDynamicApps && window._loadDynamicApps(); }, 1000);
-    setTimeout(function() { _updateLocationSettingUI(); _updateAppNotifsUI(); }, 500);
-  });
+  window._saveCookieChoice=function(){};
+  window._cookieDecline=function(){};
+  window._enforceCookieForUser=function(){};
 })();
 
 // ── PARAMÈTRES : LOCALISATION & NOTIFS APPS ──
