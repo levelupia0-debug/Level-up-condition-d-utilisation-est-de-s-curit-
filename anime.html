@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<!-- viewport-fit=cover est indispensable pour la Safe Area -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>LevelAnime - Premium Streaming</title>
 
@@ -48,13 +49,16 @@
     overflow-x: hidden;
   }
 
-  /* Theme LevelAnime (Rouge) */
-  .bg-main { background: radial-gradient(circle at 50% 0%, #250909 0%, #060608 80%); min-height: 100vh; }
+  /* Safe Area Utilities (Strict) */
+  .safe-pt { padding-top: max(1rem, env(safe-area-inset-top)); }
+  .safe-pb { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  .nav-safe-pb { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+  .min-h-safe { min-height: 100dvh; }
+
+  /* Theme LevelAnime */
+  .bg-main { background: radial-gradient(circle at 50% 0%, #250909 0%, #060608 80%); min-height: 100dvh; }
   .glass { background: linear-gradient(135deg, rgba(30,10,10,0.6) 0%, rgba(15,10,15,0.8) 100%); border: 1px solid rgba(239,68,68,0.2); box-shadow: inset 0 0 30px rgba(239,68,68,0.05), 0 30px 60px rgba(0,0,0,0.8); backdrop-filter: blur(30px); }
   
-  .markdown-pro { font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.75); text-align: justify; }
-  .markdown-pro strong { color: #fff; font-weight: 700; }
-
   /* Animations Splash Screen */
   .splash-text { opacity: 0; position: absolute; transform: scale(0.85); filter: blur(15px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); text-align: center; }
   .splash-text.active { opacity: 1; transform: scale(1); filter: blur(0px); }
@@ -81,21 +85,10 @@
     animation: slideInUp 0.3s ease-out forwards;
   }
 
-  .toggle-checkbox:checked {
-    right: 0;
-    border-color: #ef4444;
-  }
-  .toggle-checkbox:checked + .toggle-label {
-    background-color: #ef4444;
-  }
-  
-  /* Row Grab Cursor */
-  .row-container {
-    cursor: grab;
-  }
-  .row-container:active {
-    cursor: grabbing;
-  }
+  .toggle-checkbox:checked { right: 0; border-color: #ef4444; }
+  .toggle-checkbox:checked + .toggle-label { background-color: #ef4444; }
+  .row-container { cursor: grab; }
+  .row-container:active { cursor: grabbing; }
 </style>
 </head>
 <body>
@@ -133,14 +126,14 @@ if (shouldUpdateUrl) {
     window.history.replaceState({}, document.title, newUrl);
 }
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Component } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
   Play, Info, Search, X, Star, ChevronLeft, ChevronRight, 
   Bookmark, Home, Tv, Clapperboard, Users, Flame, Calendar, 
   Plus, CheckCircle, Bell, TrendingUp, Award, Compass, 
   Loader2, Eye, Trophy, Heart, AlignLeft, Filter, Sparkles, LayoutGrid, 
-  BellRing, Mic2, Settings, User, PlayCircle, Subtitles, HardDrive, LogOut, ShieldCheck, KeyRound, EyeOff, AlertTriangle, Server, Share2, Film
+  BellRing, Mic2, Settings, User, PlayCircle, Subtitles, HardDrive, LogOut, ShieldCheck, KeyRound, EyeOff, AlertTriangle, Server, Share2, Film, Check
 } from 'lucide-react';
 
 // --- FIREBASE SETUP ---
@@ -163,7 +156,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- CHEMINS DE L'ÉCOSYSTÈME ---
 const APP_ID = "levelanime"; 
 const VALIDATION_API_URL = "https://levelup-ecosystem.com/api/validate-key"; 
 
@@ -193,33 +185,34 @@ const copyToClipboardFallback = (text) => {
     document.body.removeChild(textArea);
 };
 
+// --- ERROR BOUNDARY (Empêche l'écran noir) ---
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false }; }
+  static getDerivedStateFromError(error) { return { hasError: true }; }
+  componentDidCatch(error, errorInfo) { console.error("LevelAnime UI Crash:", error, errorInfo); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-[100dvh] bg-[#060608] text-white flex flex-col items-center justify-center p-8 text-center">
+            <AlertTriangle className="w-16 h-16 text-primary mb-4 animate-pulse" />
+            <h2 className="text-xl font-bold mb-2">Oups, une erreur inattendue.</h2>
+            <p className="text-white/50 text-sm mb-6 max-w-sm">Le lecteur a rencontré un problème. Veuillez recharger la page.</p>
+            <button onClick={() => window.location.reload()} className="px-6 py-3 bg-primary hover:bg-red-600 rounded-xl font-bold text-xs uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(239,68,68,0.4)]">Recharger l'application</button>
+        </div>
+      );
+    }
+    return this.props.children; 
+  }
+}
+
 const ANIME_GENRES = [
-  { id: 1, name: 'Action', icon: '🔥' },
-  { id: 2, name: 'Aventure', icon: '🗺️' },
-  { id: 4, name: 'Comédie', icon: '😂' },
-  { id: 8, name: 'Drame', icon: '🎭' },
-  { id: 10, name: 'Fantasy', icon: '✨' },
-  { id: 14, name: 'Horreur', icon: '🩸' },
-  { id: 22, name: 'Romance', icon: '❤️' },
-  { id: 24, name: 'Sci-Fi', icon: '🚀' },
-  { id: 30, name: 'Sport', icon: '🏅' },
-  { id: 36, name: 'Tranche de vie', icon: '☕' },
-  { id: 37, name: 'Surnaturel', icon: '👻' },
-  { id: 7, name: 'Mystère', icon: '🔍' },
+  { id: 1, name: 'Action', icon: '🔥' }, { id: 2, name: 'Aventure', icon: '🗺️' }, { id: 4, name: 'Comédie', icon: '😂' },
+  { id: 8, name: 'Drame', icon: '🎭' }, { id: 10, name: 'Fantasy', icon: '✨' }, { id: 14, name: 'Horreur', icon: '🩸' },
+  { id: 22, name: 'Romance', icon: '❤️' }, { id: 24, name: 'Sci-Fi', icon: '🚀' }, { id: 30, name: 'Sport', icon: '🏅' },
+  { id: 36, name: 'Tranche de vie', icon: '☕' }, { id: 37, name: 'Surnaturel', icon: '👻' }, { id: 7, name: 'Mystère', icon: '🔍' },
 ];
 
-const FALLBACK_HERO = {
-  mal_id: 52299,
-  title: "Ore dake Level Up na Ken",
-  title_english: "Solo Leveling",
-  images: { webp: { large_image_url: "https://cdn.myanimelist.net/images/anime/1100/138338l.webp" } },
-  trailer: { youtube_id: "euwZ9jI_Xp8", images: { maximum_image_url: "https://img.youtube.com/vi/euwZ9jI_Xp8/maxresdefault.jpg" } },
-  synopsis: "Ils disent que tout ce qui ne vous tue pas vous rend plus fort. Ce n'est pourtant pas le cas pour Sung Jinwoo, le chasseur le plus faible du monde. Après avoir miraculeusement survécu à un double donjon mortel, il se réveille avec une étrange interface l'invitant à devenir le seul joueur capable de monter de niveau...",
-  score: 8.35, year: 2024, episodes: 12, members: 850000, status: "Terminé", rating: "R - 17+", duration: "24 min par ep", type: "TV"
-};
-
 function App() {
-  // --- AUTH STATES ---
   const [userName, setUserName] = useState('Utilisateur');
   const [userEmail, setUserEmail] = useState('');
   const [userPhoto, setUserPhoto] = useState(null);
@@ -233,16 +226,13 @@ function App() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // --- SPLASH SCREEN ---
   const [showSplash, setShowSplash] = useState(true);
   const [splashStep, setSplashStep] = useState(0);
   
-  // --- APP STATES ---
   const [currentCategory, setCurrentCategory] = useState('home');
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Data States
   const [heroAnime, setHeroAnime] = useState(null);
   const [trending, setTrending] = useState([]);
   const [popular, setPopular] = useState([]);
@@ -251,15 +241,13 @@ function App() {
   const [topRated, setTopRated] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   
-  // User Data States
   const [history, setHistory] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
   const [reminders, setReminders] = useState([]);
   
-  // UI & Modals
   const [loading, setLoading] = useState(true);
   const [selectedAnime, setSelectedAnime] = useState(null);
-  const [modalMode, setModalMode] = useState('info'); // Nouvelle gestion Modale 'info', 'play', 'trailer'
+  const [modalMode, setModalMode] = useState('info'); 
   
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -274,7 +262,6 @@ function App() {
   const [surpriseAnime, setSurpriseAnime] = useState([]);
   const [loadingSurprise, setLoadingSurprise] = useState(false);
 
-  // Explore
   const [exploreAnime, setExploreAnime] = useState([]);
   const [explorePage, setExplorePage] = useState(1);
   const [loadingExplore, setLoadingExplore] = useState(false);
@@ -283,7 +270,6 @@ function App() {
   const [selectedGenre, setSelectedGenre] = useState(null);
   const isFetchingRef = useRef(false);
 
-  // Animation de démarrage
   useEffect(() => {
     const t1 = setTimeout(() => setSplashStep(1), 100);
     const t2 = setTimeout(() => setSplashStep(2), 800);
@@ -295,7 +281,6 @@ function App() {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); }
   }, []);
 
-  // VÉRIFICATION SILENCIEUSE VIA L'API DE L'ÉCOSYSTÈME
   useEffect(() => {
     const initSilentAuth = async () => {
       try {
@@ -336,7 +321,6 @@ function App() {
           setIsVerifying(false);
       }
     };
-
     initSilentAuth();
   }, []);
 
@@ -355,7 +339,6 @@ function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key: finalKey, appId: APP_ID })
       });
-
       const data = await response.json();
 
       if (response.ok && data.valid) {
@@ -388,7 +371,7 @@ function App() {
           setIsLoadingAuth(false);
       }
     } catch (error) {
-        setErrorMsg("Erreur réseau. Le serveur d'authentification est injoignable.");
+        setErrorMsg("Erreur réseau. Le serveur est injoignable.");
         setIsLoadingAuth(false);
     }
   };
@@ -422,9 +405,7 @@ function App() {
       const prefRef = doc(db, 'artifacts', APP_ID, 'users', uid, 'preferences', 'settings');
       const prefSnap = await getDoc(prefRef);
       if(prefSnap.exists()) setReminders(prefSnap.data().reminders || []);
-    } catch (error) {
-      console.error("Error loading user data.", error);
-    }
+    } catch (error) {}
   };
 
   const saveUserData = async (newWatchlist, newReminders, newHistory) => {
@@ -434,10 +415,17 @@ function App() {
       if (newWatchlist) await setDoc(doc(db, 'artifacts', APP_ID, 'users', uid, 'watchlist', 'data'), { items: newWatchlist }, { merge: true });
       if (newReminders) await setDoc(doc(db, 'artifacts', APP_ID, 'users', uid, 'preferences', 'settings'), { reminders: newReminders }, { merge: true });
       if (newHistory) await setDoc(doc(db, 'artifacts', APP_ID, 'users', uid, 'history', 'recent'), { items: newHistory }, { merge: true });
-    } catch (error) {
-      console.error("Error saving user data", error);
-    }
+    } catch (error) {}
   };
+
+  // Met à jour l'historique avec l'épisode en cours pour la reprise de lecture !
+  const updateHistoryEpisode = (anime, seasonStr, episodeStr) => {
+      const existingHist = history.filter(a => a.mal_id !== anime.mal_id);
+      const updatedAnime = { ...anime, last_season: seasonStr, last_episode: episodeStr };
+      const newHistory = [updatedAnime, ...existingHist].slice(0, 20);
+      setHistory(newHistory);
+      saveUserData(watchlist, reminders, newHistory);
+  }
 
   const showToast = (message, icon = <CheckCircle className="w-5 h-5 text-green-400" />) => {
     const id = Date.now();
@@ -454,9 +442,6 @@ function App() {
     return () => { document.body.style.overflow = 'auto'; };
   }, [selectedAnime, showSurprise, showNotifications, showSettings, showAccountModal, showLogoutConfirm, isLoggingOut]);
 
-  // ==========================================
-  // 4. API DATA FETCHING (JIKAN)
-  // ==========================================
   useEffect(() => {
     if (!hasValidKey) return; 
 
@@ -465,52 +450,52 @@ function App() {
         setLoading(true);
         const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
-        fetch('https://api.jikan.moe/v4/genres/anime')
-          .then(res => res.json())
-          .then(data => {
-            if(data.data) {
-              const counts = {};
-              data.data.forEach(g => { counts[g.mal_id] = g.count; });
-              setGenreCounts(counts);
-            }
-          }).catch(e => console.error(e));
+        fetch('https://api.jikan.moe/v4/genres/anime').then(res => res.json()).then(data => {
+            if(data.data) { const counts = {}; data.data.forEach(g => { counts[g.mal_id] = g.count; }); setGenreCounts(counts); }
+        }).catch(e => {});
 
-        const trendingRes = await fetch('https://api.jikan.moe/v4/seasons/now?limit=25');
-        const trendingData = await trendingRes.json();
-        
-        if (trendingData.data) {
-          const validTrending = trendingData.data.filter(a => a.images?.webp?.large_image_url);
-          setTrending(validTrending);
-          const heroCandidate = validTrending.find(a => a.trailer?.images?.maximum_image_url) || validTrending[0];
-          setHeroAnime(heroCandidate || FALLBACK_HERO);
-        } else {
-          setHeroAnime(FALLBACK_HERO); 
-        }
+        try {
+          const trendingRes = await fetch('https://api.jikan.moe/v4/seasons/now?limit=25');
+          const trendingData = await trendingRes.json();
+          if (trendingData.data) {
+            const validTrending = trendingData.data.filter(a => a.images?.webp?.large_image_url);
+            setTrending(validTrending);
+            const heroCandidate = validTrending.find(a => a.trailer?.images?.maximum_image_url) || validTrending[0];
+            if(heroCandidate) setHeroAnime(heroCandidate);
+          }
+        } catch(e){}
 
         setLoading(false); 
-        await delay(1200); 
+        await delay(1000); 
 
-        const popularRes = await fetch('https://api.jikan.moe/v4/top/anime?filter=airing&limit=10');
-        const popularData = await popularRes.json();
-        if(popularData.data) setPopular(popularData.data);
-        await delay(1200);
+        try {
+          const popRes = await fetch('https://api.jikan.moe/v4/top/anime?filter=airing&limit=10');
+          const popData = await popRes.json();
+          if(popData.data) setPopular(popData.data);
+        } catch(e){}
+        await delay(1000);
 
-        const topRes = await fetch('https://api.jikan.moe/v4/top/anime?limit=15');
-        const topData = await topRes.json();
-        if(topData.data) setTopRated(topData.data);
-        await delay(1200);
+        try {
+          const topRes = await fetch('https://api.jikan.moe/v4/top/anime?limit=15');
+          const topData = await topRes.json();
+          if(topData.data) setTopRated(topData.data);
+        } catch(e){}
+        await delay(1000);
 
-        const actionRes = await fetch('https://api.jikan.moe/v4/anime?genres=1&order_by=popularity&sort=asc&limit=15');
-        const actionData = await actionRes.json();
-        if(actionData.data) setActionAnime(actionData.data);
-        await delay(1200);
+        try {
+          const actRes = await fetch('https://api.jikan.moe/v4/anime?genres=1&order_by=popularity&sort=asc&limit=15');
+          const actData = await actRes.json();
+          if(actData.data) setActionAnime(actData.data);
+        } catch(e){}
+        await delay(1000);
 
-        const romanceRes = await fetch('https://api.jikan.moe/v4/anime?genres=22&order_by=popularity&sort=asc&limit=15');
-        const romanceData = await romanceRes.json();
-        if(romanceData.data) setRomanceAnime(romanceData.data);
+        try {
+          const romRes = await fetch('https://api.jikan.moe/v4/anime?genres=22&order_by=popularity&sort=asc&limit=15');
+          const romData = await romRes.json();
+          if(romData.data) setRomanceAnime(romData.data);
+        } catch(e){}
 
       } catch (error) {
-        if(!heroAnime) setHeroAnime(FALLBACK_HERO);
         setLoading(false);
       }
     };
@@ -521,7 +506,6 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasValidKey]);
 
-  // SEARCH
   useEffect(() => {
     if (searchQuery.length < 3 || !hasValidKey) {
       setSearchResults([]);
@@ -532,12 +516,11 @@ function App() {
         const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(searchQuery)}&limit=20`);
         const data = await res.json();
         setSearchResults(data.data || []);
-      } catch (error) { console.error(error); }
+      } catch (error) {}
     }, 800);
     return () => clearTimeout(timeoutId);
   }, [searchQuery, hasValidKey]);
 
-  // EXPLORER
   const fetchExploreAnime = useCallback(async (pageToLoad, genreId = selectedGenre) => {
     if (isFetchingRef.current || (!hasMoreExplore && pageToLoad !== 1) || !hasValidKey) return;
     isFetchingRef.current = true;
@@ -559,7 +542,7 @@ function App() {
         setHasMoreExplore(false);
         if (pageToLoad === 1) setExploreAnime([]);
       }
-    } catch (error) { console.error(error); } 
+    } catch (error) { } 
     finally {
       isFetchingRef.current = false;
       setLoadingExplore(false);
@@ -604,7 +587,7 @@ function App() {
         const res = await fetch('https://api.jikan.moe/v4/top/anime?filter=favorite&limit=12');
         const data = await res.json();
         setSurpriseAnime(data.data || []);
-      } catch (e) { console.error(e); } 
+      } catch (e) { } 
       finally { setLoadingSurprise(false); }
     }
   };
@@ -649,110 +632,8 @@ function App() {
   const isReminded = (id) => reminders.some(a => a.mal_id === id);
   const getUnreadCount = () => inAppNotifications.filter(n => n.unread).length;
 
-
-  // ==========================================
-  // VUES (SPLASH, LOGIN, APP)
-  // ==========================================
-
-  if (showSplash) {
-    return (
-      <div className={`fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col transition-opacity duration-500 ${splashStep === 3 ? 'opacity-0' : 'opacity-100'}`}>
-        <div className={`splash-text flex flex-col items-center ${splashStep === 1 ? 'active' : ''} ${splashStep >= 2 ? 'exit' : ''}`}>
-          <LevelAnimeLogo className="w-20 h-20 text-primary mb-6" />
-          <div className="text-4xl font-black tracking-widest">
-            <span className="text-white">LEVEL</span><span className="text-primary">ANIME</span>
-          </div>
-        </div>
-        <div className={`splash-text flex flex-col items-center justify-center ${splashStep === 2 ? 'active' : ''} ${splashStep >= 3 ? 'exit' : ''}`}>
-          <span className="text-white font-black tracking-[0.6em] text-2xl uppercase">LevelUp</span>
-          <span className="text-[10px] font-bold tracking-[0.5em] text-primary mt-4 uppercase">Version 1.0</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoggingOut) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col transition-opacity duration-500 animate-in fade-in">
-        <LevelAnimeLogo className="w-20 h-20 text-primary mb-6 animate-pulse" />
-        <h2 className="text-3xl font-black tracking-widest text-white uppercase drop-shadow-md mb-2 animate-pulse">
-          DÉCONNEXION...
-        </h2>
-      </div>
-    );
-  }
-
-  if (isLoggingIn) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-[#060608] flex items-center justify-center flex-col transition-opacity duration-500 animate-in fade-in">
-        <LevelAnimeLogo className="w-20 h-20 text-primary mb-6 animate-pulse" />
-        <h2 className="text-3xl font-black tracking-widest text-white uppercase drop-shadow-md mb-2">
-          LEVEL<span className="text-primary">ANIME</span>
-        </h2>
-      </div>
-    );
-  }
-
-  if (!hasValidKey) {
-    return (
-      <div className="bg-main flex items-center justify-center p-4 sm:p-8 fixed inset-0 z-[5000]">
-        <div className="w-full max-w-sm text-center py-4 relative glass p-8 rounded-[2rem] border border-white/5 shadow-[0_0_50px_rgba(239,68,68,0.15)] animate-in fade-in zoom-in duration-300">
-          <LevelAnimeLogo className="w-12 h-12 text-primary mx-auto mb-4" />
-          <h1 className="text-3xl font-black tracking-widest mb-10 shrink-0 drop-shadow-md">
-            <span className="text-white">LEVEL</span><span className="text-primary">ANIME</span>
-          </h1>
-          <form onSubmit={handleLogin} className="space-y-6">
-            <p className="text-[11px] font-bold text-primary uppercase tracking-[0.1em] mb-2 flex items-center justify-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> Clé d'Accès requise
-            </p>
-            <div className="relative w-full">
-              <input
-                type={showKey ? "text" : "password"}
-                value={accessKey}
-                onChange={(e) => setAccessKey(e.target.value)}
-                placeholder="LVL-XXXXX-XXXXX"
-                className="w-full bg-[#030305] border border-primary/40 rounded-xl py-4 pl-5 pr-12 text-center text-white font-mono text-[13px] tracking-widest outline-none focus:border-primary transition-all shadow-inner uppercase"
-              />
-              <button 
-                type="button"
-                onClick={() => setShowKey(!showKey)} 
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/60 hover:text-primary transition-colors outline-none"
-              >
-                {showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-            <button
-              type="submit"
-              disabled={isLoadingAuth || !accessKey.trim()}
-              className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-4 rounded-xl font-black text-[12px] uppercase tracking-[0.1em] hover:opacity-90 active:scale-95 transition-all shadow-[0_0_25px_rgba(239,68,68,0.4)] disabled:opacity-50 disabled:cursor-not-allowed outline-none flex justify-center items-center gap-2"
-            >
-              {isLoadingAuth ? <Loader2 className="w-4 h-4 animate-spin" /> : "Connexion"}
-            </button>
-            <div className="mt-4 flex justify-center">
-              <a href="https://levelup-ecosystem.com" target="_blank" rel="noreferrer" className="flex items-center justify-center w-full gap-2 px-6 py-4 rounded-xl bg-white/10 border border-white/20 text-[11px] font-black uppercase tracking-[0.1em] text-white/90 hover:text-white hover:bg-white/20 hover:border-primary transition-all duration-300 no-underline outline-none shadow-md">
-                <KeyRound className="w-4 h-4 text-primary" /> <span>Obtenir ma clé</span>
-              </a>
-            </div>
-            {errorMsg && <p className="text-[12px] text-red-400 font-bold mt-2 bg-red-500/10 py-2 rounded-lg border border-red-500/20">{errorMsg}</p>}
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // --- UI COMPONENTS (APP CONNECTÉE) ---
-  const ToggleSwitch = ({ label, id, defaultChecked = false }) => (
-    <div className="flex items-center justify-between py-3 border-b border-white/5">
-      <span className="text-sm font-medium text-white/80">{label}</span>
-      <div className="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-        <input type="checkbox" name={id} id={id} defaultChecked={defaultChecked} className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none transition-all duration-300"/>
-        <label htmlFor={id} className="toggle-label block overflow-hidden h-6 rounded-full bg-white/20 cursor-pointer transition-colors duration-300"></label>
-      </div>
-    </div>
-  );
-
-  const Header = () => (
-    <header className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 py-3 md:py-4 ${isScrolled ? 'bg-[#060608]/95 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
+  const renderHeader = () => (
+    <header className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 pb-3 md:pb-4 pt-[max(0.75rem,env(safe-area-inset-top))] ${isScrolled ? 'bg-[#060608]/95 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
       <div className="flex items-center space-x-6 md:space-x-10">
         <div className="flex items-center gap-2 cursor-pointer outline-none" onClick={() => {setCurrentCategory('home'); setSearchQuery(''); window.scrollTo(0,0);}}>
           <h1 className="text-xl md:text-2xl font-black tracking-[0.1em] leading-none drop-shadow-lg uppercase flex items-center gap-2">
@@ -798,8 +679,8 @@ function App() {
     </header>
   );
 
-  const MobileNav = () => (
-    <nav className="lg:hidden fixed bottom-0 w-full z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-white/5 flex justify-around items-center py-3 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] pb-[env(safe-area-inset-bottom)]">
+  const renderMobileNav = () => (
+    <nav className="lg:hidden fixed bottom-0 w-full z-50 bg-[#060608]/95 backdrop-blur-xl border-t border-white/5 flex justify-around items-center pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
       <button onClick={() => setCurrentCategory('home')} className={`flex flex-col items-center gap-1 transition-colors outline-none ${currentCategory === 'home' ? 'text-primary' : 'text-white/50 hover:text-white'}`}>
         <Home className="w-5 h-5" /> <span className="text-[9px] font-bold uppercase tracking-widest">Accueil</span>
       </button>
@@ -824,7 +705,7 @@ function App() {
     </nav>
   );
 
-  const HeroBanner = () => {
+  const renderHeroBanner = () => {
     if (loading || !heroAnime) {
        return (
          <div className="h-[70vh] md:h-[85vh] w-full bg-[#060608] flex items-center justify-center flex-col gap-4">
@@ -877,7 +758,7 @@ function App() {
     );
   };
 
-  const Top10Row = ({ title, animes }) => {
+  const renderTop10Row = (title, animes) => {
     const rowRef = useRef(null);
     const scrollAction = (direction) => {
       if (rowRef.current) {
@@ -905,6 +786,14 @@ function App() {
               </span>
               <div className="relative rounded-xl overflow-hidden shadow-2xl border border-white/5 bg-[#151520] group-hover:scale-105 transition-transform duration-300 w-full aspect-[2/3] z-10">
                 <img className="object-cover w-full h-full transition-opacity duration-500" src={anime.images.webp.large_image_url} loading="lazy" alt={anime.title} draggable="false" />
+                
+                {/* Historique/Reprise affichage Badge */}
+                {anime.last_season && anime.last_episode && (
+                    <div className="absolute top-2 left-2 bg-primary/90 backdrop-blur-md text-white font-black text-[10px] px-2 py-1 rounded-md shadow-md z-20 border border-white/20">
+                        {`S${anime.last_season} E${anime.last_episode}`}
+                    </div>
+                )}
+
                 <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
                   <h3 className="text-white font-black text-[9px] md:text-xs uppercase tracking-wider line-clamp-2 drop-shadow-md leading-tight mb-1">{anime.title_english || anime.title}</h3>
                   <div className="flex items-center gap-1 text-primary font-black text-[9px] bg-primary/20 px-1.5 py-0.5 rounded border border-primary/30 w-fit">
@@ -923,7 +812,7 @@ function App() {
     );
   };
 
-  const AnimeRow = ({ title, animes, icon: Icon }) => {
+  const renderAnimeRow = (title, animes, Icon) => {
     const rowRef = useRef(null);
     const scrollAction = (direction) => {
       if (rowRef.current) {
@@ -945,6 +834,14 @@ function App() {
           {animes.map((anime, index) => (
             <div key={`${anime.mal_id}-${index}`} className="relative flex-none cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform duration-300 w-[140px] md:w-[180px] lg:w-[220px] aspect-[2/3] group" onClick={() => openModal(anime, 'info')}>
               <img className="object-cover w-full h-full transition-opacity duration-500" src={anime.images.webp.large_image_url} loading="lazy" alt={anime.title} draggable="false" />
+              
+              {/* Historique/Reprise affichage Badge */}
+              {anime.last_season && anime.last_episode && (
+                    <div className="absolute top-2 left-2 bg-primary/90 backdrop-blur-md text-white font-black text-[10px] px-2 py-1 rounded-md shadow-md z-20 border border-white/20">
+                        {`S${anime.last_season} E${anime.last_episode}`}
+                    </div>
+              )}
+
               <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 pointer-events-none z-20">
                 <h3 className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider line-clamp-2 drop-shadow-md leading-tight mb-2">
                   {anime.title_english || anime.title}
@@ -970,7 +867,7 @@ function App() {
     );
   };
 
-  const MassiveTrendingGrid = ({ animes }) => {
+  const renderMassiveGrid = (animes) => {
     if (!animes || animes.length === 0) return null;
     return (
       <div className="mb-12 mt-6">
@@ -999,16 +896,20 @@ function App() {
     );
   };
 
-  // --- MODAL ANIME THEATER MODE PRO (LevelMovie Clone) ---
-  const AnimeModal = () => {
+  const renderAnimeModal = () => {
       const [characters, setCharacters] = useState([]);
       const [recommendations, setRecommendations] = useState([]);
       const [loadingChars, setLoadingChars] = useState(false);
-      const [localModalMode, setLocalModalMode] = useState(modalMode); // 'info', 'trailer', 'play'
+      const [localModalMode, setLocalModalMode] = useState(modalMode); 
 
+      // TMDB / Saisons / Épisodes
       const [tmdbId, setTmdbId] = useState(null);
       const [mediaType, setMediaType] = useState('tv');
       const [trailerKey, setTrailerKey] = useState(null);
+      const [seasons, setSeasons] = useState([]);
+      const [selectedSeason, setSelectedSeason] = useState(1);
+      const [episodes, setEpisodes] = useState([]);
+      const [activeEpisode, setActiveEpisode] = useState(null);
       
       const [showDisclaimer, setShowDisclaimer] = useState(false);
       const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
@@ -1017,36 +918,42 @@ function App() {
       const [iframeLoading, setIframeLoading] = useState(true);
 
       const AVAILABLE_SERVERS = [
-          { id: 'vidsrc_cc', name: '1. ANIME DIRECT' },
-          { id: 'vidsrc_me', name: '2. GLOBAL' },
-          { id: 'superembed', name: '3. MULTI' },
-          { id: 'autoembed', name: '4. OMEGA' },
-          { id: 'vidlink', name: '5. ALPHA' },
-          { id: 'vidsrc_to', name: '6. BETA' },
-          { id: 'vidsrc_pro', name: '7. GAMMA' },
-          { id: 'smashy', name: '8. DELTA' }
+          { id: 'vidsrc_cc', name: '1. ANIME DIRECT (VF/VOSTFR)' },
+          { id: 'vidsrc_me', name: '2. GLOBAL (VF/VOSTFR)' },
+          { id: 'autoembed', name: '3. OMEGA (MULTI-LANGUES)' },
+          { id: 'superembed', name: '4. MULTI (VO/VOSTFR)' },
+          { id: 'vidlink', name: '5. ALPHA (VOSTFR)' },
+          { id: 'vidsrc_to', name: '6. BETA (VOSTFR)' },
+          { id: 'vidsrc_pro', name: '7. GAMMA (VOSTFR)' },
+          { id: 'smashy', name: '8. DELTA (VOSTFR)' }
       ];
 
-      // TMDB API KEY (Utilisé uniquement pour récupérer le trailer et l'ID serveur)
       const TMDB_API_KEY = '027cc951d888c64e5f15dcb853c7347a';
 
+      // Setup initial data based on selectedAnime
       useEffect(() => {
         if (selectedAnime) {
           setLoadingChars(true);
           setLocalModalMode(modalMode);
           
+          // Récupère les données depuis l'historique si on doit reprendre la lecture
+          if (modalMode === 'play' && selectedAnime.last_season && selectedAnime.last_episode) {
+              setActiveEpisode({ s: parseInt(selectedAnime.last_season), e: parseInt(selectedAnime.last_episode) });
+          } else {
+              setActiveEpisode(null);
+          }
+
           fetch(`https://api.jikan.moe/v4/anime/${selectedAnime.mal_id}/characters`)
             .then(res => res.json())
             .then(data => setCharacters(data.data?.slice(0, 15) || []))
-            .catch(e => console.error(e))
+            .catch(e => {})
             .finally(() => setLoadingChars(false));
 
           fetch(`https://api.jikan.moe/v4/anime/${selectedAnime.mal_id}/recommendations`)
             .then(res => res.json())
             .then(data => setRecommendations(data.data?.slice(0, 10).map(r => r.entry) || []))
-            .catch(e => console.error(e));
+            .catch(e => {});
 
-          // Mapping silencieux vers TMDB
           const fetchTmdb = async () => {
             try {
                 const query = selectedAnime.title_english || selectedAnime.title;
@@ -1057,6 +964,23 @@ function App() {
                 if (match) {
                     setTmdbId(match.id);
                     setMediaType(match.media_type);
+
+                    // Si c'est une série, on charge les saisons
+                    if (match.media_type === 'tv') {
+                        const tvRes = await fetch(`https://api.themoviedb.org/3/tv/${match.id}?api_key=${TMDB_API_KEY}&language=fr-FR`);
+                        const tvData = await tvRes.json();
+                        if (tvData.seasons) {
+                            const validSeasons = tvData.seasons.filter(s => s.season_number > 0);
+                            setSeasons(validSeasons);
+                            
+                            // Load first season episodes or the season we left off at
+                            let seasonToLoad = validSeasons.length > 0 ? validSeasons[0].season_number : 1;
+                            if (selectedAnime.last_season) {
+                                seasonToLoad = parseInt(selectedAnime.last_season);
+                            }
+                            fetchEpisodes(match.id, seasonToLoad);
+                        }
+                    }
 
                     const vidRes = await fetch(`https://api.themoviedb.org/3/${match.media_type}/${match.id}/videos?api_key=${TMDB_API_KEY}&language=fr-FR`);
                     const vidData = await vidRes.json();
@@ -1079,13 +1003,22 @@ function App() {
         }
       }, [selectedAnime, modalMode]);
 
+      const fetchEpisodes = async (tId, sNum) => {
+          setSelectedSeason(sNum);
+          try {
+              const epRes = await fetch(`https://api.themoviedb.org/3/tv/${tId}/season/${sNum}?api_key=${TMDB_API_KEY}&language=fr-FR`);
+              const epData = await epRes.json();
+              setEpisodes(epData.episodes || []);
+          } catch(e) {}
+      };
+
       useEffect(() => {
         let timer;
         if (iframeLoading && (localModalMode === 'play' || localModalMode === 'trailer')) {
-            timer = setTimeout(() => { setIframeLoading(false); }, 8000); // Coupe circuit anti-loader infini
+            timer = setTimeout(() => { setIframeLoading(false); }, 8000); 
         }
         return () => clearTimeout(timer);
-      }, [iframeLoading, localModalMode, selectedServer]);
+      }, [iframeLoading, localModalMode, selectedServer, activeEpisode]);
 
       const handlePlayRequest = (serverId) => {
         if (!disclaimerAccepted) {
@@ -1095,9 +1028,27 @@ function App() {
             if (selectedServer !== serverId) setIframeLoading(true);
             setSelectedServer(serverId);
             setLocalModalMode('play');
+            
+            // Si c'est une série et qu'aucun épisode n'est sélectionné, on force le premier
+            if (mediaType === 'tv' && !activeEpisode && episodes.length > 0) {
+                handleEpisodeClick(selectedSeason, episodes[0].episode_number);
+            }
+
             const container = document.getElementById('anime-modal-container');
             if (container) container.scrollTo({top: 0, behavior: 'smooth'});
         }
+      };
+
+      const handleEpisodeClick = (seasonNum, episodeNum) => {
+          setIframeLoading(true);
+          setActiveEpisode({ s: seasonNum, e: episodeNum });
+          setLocalModalMode('play');
+          
+          // Mise à jour de l'historique global pour mémoriser l'avancement !
+          updateHistoryEpisode(selectedAnime, seasonNum, episodeNum);
+
+          const container = document.getElementById('anime-modal-container');
+          if (container) container.scrollTo({top: 0, behavior: 'smooth'});
       };
 
       if (!selectedAnime) return null;
@@ -1107,24 +1058,46 @@ function App() {
       const isAiring = selectedAnime.status === 'Currently Airing' || selectedAnime.status === 'Not yet aired';
 
       let iframeSrc = '';
-      if (selectedServer === 'vidsrc_cc') {
-          iframeSrc = `https://vidsrc.cc/v2/embed/anime/${selectedAnime.mal_id}`; 
-      } else if (selectedServer === 'vidsrc_me' && tmdbId) {
-          iframeSrc = `https://vidsrc.me/embed/${mediaType}?tmdb=${tmdbId}`;
-      } else if (selectedServer === 'superembed' && tmdbId) {
-          iframeSrc = `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`;
-      } else if (selectedServer === 'autoembed' && tmdbId) {
-          iframeSrc = `https://autoembed.co/${mediaType}/tmdb/${tmdbId}`;
-      } else if (selectedServer === 'vidlink' && tmdbId) {
-          iframeSrc = `https://vidlink.pro/${mediaType}/${tmdbId}`;
-      } else if (selectedServer === 'vidsrc_to' && tmdbId) {
-          iframeSrc = `https://vidsrc.to/embed/${mediaType}/${tmdbId}`;
-      } else if (selectedServer === 'vidsrc_pro' && tmdbId) {
-          iframeSrc = `https://vidsrc.pro/embed/${mediaType}/${tmdbId}`;
-      } else if (selectedServer === 'smashy' && tmdbId) {
-          iframeSrc = `https://player.smashy.stream/${mediaType}/${tmdbId}`;
+      if (mediaType === 'tv' && activeEpisode) {
+          // Serveurs pour Séries (Episodes)
+          if (selectedServer === 'vidsrc_cc') {
+              iframeSrc = `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${activeEpisode.s}/${activeEpisode.e}`;
+          } else if (selectedServer === 'vidsrc_me') {
+              iframeSrc = `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${activeEpisode.s}&episode=${activeEpisode.e}`;
+          } else if (selectedServer === 'autoembed') {
+              iframeSrc = `https://autoembed.co/tv/tmdb/${tmdbId}-${activeEpisode.s}-${activeEpisode.e}`;
+          } else if (selectedServer === 'superembed') {
+              iframeSrc = `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${activeEpisode.s}&e=${activeEpisode.e}`;
+          } else if (selectedServer === 'vidlink') {
+              iframeSrc = `https://vidlink.pro/tv/${tmdbId}/${activeEpisode.s}/${activeEpisode.e}`;
+          } else if (selectedServer === 'vidsrc_to') {
+              iframeSrc = `https://vidsrc.to/embed/tv/${tmdbId}/${activeEpisode.s}/${activeEpisode.e}`;
+          } else if (selectedServer === 'vidsrc_pro') {
+              iframeSrc = `https://vidsrc.pro/embed/tv/${tmdbId}/${activeEpisode.s}/${activeEpisode.e}`;
+          } else if (selectedServer === 'smashy') {
+              iframeSrc = `https://player.smashy.stream/tv/${tmdbId}?s=${activeEpisode.s}&e=${activeEpisode.e}`;
+          }
       } else {
-          iframeSrc = `https://vidsrc.cc/v2/embed/anime/${selectedAnime.mal_id}`; // Fallback ultime via Jikan ID
+          // Serveurs pour Films (ou Fallback)
+          if (selectedServer === 'vidsrc_cc') {
+              iframeSrc = `https://vidsrc.cc/v2/embed/anime/${selectedAnime.mal_id}`; 
+          } else if (selectedServer === 'vidsrc_me' && tmdbId) {
+              iframeSrc = `https://vidsrc.me/embed/${mediaType}?tmdb=${tmdbId}`;
+          } else if (selectedServer === 'autoembed' && tmdbId) {
+              iframeSrc = `https://autoembed.co/${mediaType}/tmdb/${tmdbId}`;
+          } else if (selectedServer === 'superembed' && tmdbId) {
+              iframeSrc = `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`;
+          } else if (selectedServer === 'vidlink' && tmdbId) {
+              iframeSrc = `https://vidlink.pro/${mediaType}/${tmdbId}`;
+          } else if (selectedServer === 'vidsrc_to' && tmdbId) {
+              iframeSrc = `https://vidsrc.to/embed/${mediaType}/${tmdbId}`;
+          } else if (selectedServer === 'vidsrc_pro' && tmdbId) {
+              iframeSrc = `https://vidsrc.pro/embed/${mediaType}/${tmdbId}`;
+          } else if (selectedServer === 'smashy' && tmdbId) {
+              iframeSrc = `https://player.smashy.stream/${mediaType}/${tmdbId}`;
+          } else {
+              iframeSrc = `https://vidsrc.cc/v2/embed/anime/${selectedAnime.mal_id}`;
+          }
       }
 
       const renderIframe = () => {
@@ -1173,9 +1146,8 @@ function App() {
       };
 
       return (
-        <div id="anime-modal-container" className="fixed inset-0 z-[8000] bg-[#0a0a0f] flex flex-col overflow-x-hidden overflow-y-auto no-scrollbar animate-in fade-in duration-300">
+        <div id="anime-modal-container" className="fixed inset-0 z-[8000] bg-[#0a0a0f] flex flex-col overflow-x-hidden overflow-y-auto no-scrollbar animate-in fade-in duration-300 p-[max(0rem,env(safe-area-inset-top))] pb-[max(0rem,env(safe-area-inset-bottom))]">
             
-            {/* OVERLAY SÉCURITÉ & AVERTISSEMENT */}
             {showDisclaimer && (
                 <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
                     <div className="bg-[#0a0a0f] border border-primary/30 rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in duration-300">
@@ -1184,7 +1156,7 @@ function App() {
                         </h3>
                         <div className="bg-gradient-to-r from-red-900/40 to-orange-900/40 border border-primary/50 p-5 rounded-2xl mb-6 shadow-[0_0_20px_rgba(239,68,68,0.15)]">
                             <h4 className="text-white font-black text-sm md:text-base mb-2 tracking-widest">⭐ RECOMMANDATION IMPORTANTE</h4>
-                            <p className="text-white/80 text-xs md:text-sm leading-relaxed">Pour une lecture fluide et sans publicité bloquante, utilisez le <b>Serveur 1 (Global)</b>.</p>
+                            <p className="text-white/80 text-xs md:text-sm leading-relaxed">Pour une lecture fluide, utilisez <b>OMEGA</b> ou <b>GLOBAL</b>.</p>
                         </div>
                         <p className="text-white/60 text-[10px] md:text-xs leading-relaxed mb-6 text-justify">Les flux vidéo gratuits sont fournis par des serveurs externes. LevelUp n'héberge aucun contenu. Nous recommandons un bloqueur de publicités.</p>
                         <label className="flex items-start gap-3 cursor-pointer mb-8 bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors shadow-sm outline-none">
@@ -1199,9 +1171,8 @@ function App() {
                 </div>
             )}
 
-            <div className="w-full flex-1 flex flex-col bg-[#0a0a0f] z-10 relative min-h-screen">
-                {/* HEADER PLEIN ÉCRAN */}
-                <div className="w-full bg-black/60 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-4 md:px-10 py-3 md:py-4 shrink-0 sticky top-0 z-[60] shadow-md">
+            <div className="w-full flex-1 flex flex-col bg-[#0a0a0f] z-10 relative min-h-safe">
+                <div className="w-full bg-black/60 backdrop-blur-md border-b border-white/5 flex justify-between items-center px-4 md:px-10 py-3 md:py-4 shrink-0 sticky top-0 z-[60] shadow-md safe-pt">
                     <div className="flex items-center gap-2">
                         <LevelAnimeLogo className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                         <span className="text-white font-black tracking-[0.2em] text-sm md:text-base uppercase drop-shadow-md">LEVEL<span className="text-primary">ANIME</span></span>
@@ -1211,114 +1182,161 @@ function App() {
                     </button>
                 </div>
 
-                {/* LECTEUR VIDÉO */}
                 <div className="relative pt-[56.25%] md:h-[70vh] md:pt-0 w-full bg-black shrink-0 overflow-hidden border-b border-white/10 shadow-lg flex items-center justify-center">
                     {renderIframe()}
                 </div>
 
+                {/* SÉLECTEUR DE SERVEURS EN BARRE */}
+                {localModalMode === 'play' && (
+                    <div className="w-full bg-[#0a0a0f] p-3 md:p-4 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-30 flex flex-col md:flex-row items-center justify-between gap-3 relative border-b border-white/10">
+                        <div className="flex items-center gap-2">
+                            <Server className="w-4 h-4 text-primary" />
+                            <span className="text-[10px] md:text-xs font-bold text-white/70 uppercase tracking-widest">Sources vidéos :</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2 md:justify-end">
+                            {AVAILABLE_SERVERS.map(srv => (
+                                <button 
+                                    key={srv.id} 
+                                    onClick={() => handlePlayRequest(srv.id)} 
+                                    className={`px-3 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold uppercase transition-all outline-none ${selectedServer === srv.id ? 'bg-primary text-white shadow-[0_0_10px_rgba(239,68,68,0.4)]' : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/5'}`}
+                                >
+                                    {srv.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="p-5 md:p-10 lg:p-14 shrink-0 bg-gradient-to-b from-[#250909]/30 to-[#0a0a0f] flex-1 pb-32 w-full mx-auto">
                     
-                    {/* SÉLECTEUR DE SERVEURS CLONE LEVELMOVIE */}
-                    {localModalMode === 'play' && (
-                        <div className="mb-8 flex flex-col gap-5 bg-black/40 p-5 md:p-6 rounded-2xl border border-white/5 shadow-inner max-w-5xl mx-auto">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-[11px] font-black text-white/70 uppercase tracking-widest"><Server className="w-4 h-4 inline mr-2 text-primary" /> Sources Externes</span>
-                                <button onClick={() => setLocalModalMode('info')} className="text-[10px] font-bold text-white/50 hover:text-white uppercase tracking-widest border border-white/10 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors outline-none"><Info className="w-3 h-3 inline mr-1" /> Infos de l'anime</button>
-                            </div>
-                            <p className="text-[10px] text-primary mb-2 font-bold uppercase tracking-widest">
-                                <Info className="w-3 h-3 inline mr-1" /> Astuce : Si l'épisode ne se lance pas, changez de serveur ci-dessous.
-                            </p>
-                            <div className="flex flex-wrap gap-3">
-                                {AVAILABLE_SERVERS.map(srv => (
-                                    <button key={srv.id} onClick={() => handlePlayRequest(srv.id)} className={`px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase transition-all outline-none ${selectedServer === srv.id ? 'bg-primary text-white shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'}`}>
-                                        {srv.name}
+                    {/* SECTION SAISONS ET ÉPISODES (Affiche Uniquement si TV et Mode Lecture) */}
+                    {localModalMode === 'play' && mediaType === 'tv' && seasons.length > 0 && (
+                        <div className="mb-12 max-w-7xl mx-auto">
+                            <h3 className="text-white/90 text-lg md:text-xl font-black mb-6 uppercase tracking-[0.2em] border-l-4 border-primary pl-4">Épisodes</h3>
+                            
+                            {/* Sélecteur de Saisons */}
+                            <div className="flex overflow-x-auto gap-3 no-scrollbar mb-6 row-container">
+                                {seasons.map(season => (
+                                    <button
+                                        key={season.season_number}
+                                        onClick={() => fetchEpisodes(tmdbId, season.season_number)}
+                                        className={`px-5 py-2.5 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all outline-none shrink-0 border ${selectedSeason === season.season_number ? 'bg-primary text-white border-primary shadow-lg' : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'}`}
+                                    >
+                                        Saison {season.season_number}
                                     </button>
                                 ))}
+                            </div>
+
+                            {/* Grille d'Épisodes */}
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                {episodes.map(episode => {
+                                    const isActive = activeEpisode?.s === selectedSeason && activeEpisode?.e === episode.episode_number;
+                                    return (
+                                        <div 
+                                            key={episode.id} 
+                                            onClick={() => handleEpisodeClick(selectedSeason, episode.episode_number)}
+                                            className={`relative cursor-pointer rounded-xl overflow-hidden shadow-lg border transition-all duration-300 group aspect-video bg-[#151520] ${isActive ? 'border-primary shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'border-white/5 hover:border-primary/50'}`}
+                                        >
+                                            {episode.still_path ? (
+                                                <img src={`https://image.tmdb.org/t/p/w300${episode.still_path}`} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt={episode.name} loading="lazy" />
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center text-white/10"><Film className="w-8 h-8" /></div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-black/40 to-transparent flex flex-col justify-end p-3">
+                                                <span className="text-primary font-black text-[10px] uppercase tracking-widest drop-shadow-md mb-0.5">Épisode {episode.episode_number}</span>
+                                                <h4 className="text-white text-[11px] font-bold truncate drop-shadow-md">{episode.name}</h4>
+                                            </div>
+                                            {isActive && (
+                                                <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]"></div>
+                                            )}
+                                            {/* Bouton Play Flottant */}
+                                            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                                <div className="w-10 h-10 bg-primary/90 rounded-full flex items-center justify-center shadow-lg border border-white/20 backdrop-blur-sm">
+                                                    <Play className="w-4 h-4 fill-white text-white ml-0.5" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
                     )}
 
-                    {/* INFOS DU FILM (CACHÉES EN MODE LECTURE COMME LEVELMOVIE) */}
-                    {(localModalMode === 'info' || localModalMode === 'trailer') && (
-                        <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 max-w-7xl mx-auto">
+                    {/* SECTION INFOS TOUJOURS VISIBLE */}
+                    <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 max-w-7xl mx-auto border-t border-white/10 pt-10">
+                        <div className="flex-1">
+                            <h2 className="text-4xl md:text-6xl font-black mb-4 text-white uppercase tracking-tighter drop-shadow-lg leading-tight">
+                                {selectedAnime.title_english || selectedAnime.title}
+                            </h2>
                             
-                            <div className="flex-1">
-                                <h2 className="text-4xl md:text-6xl font-black mb-4 text-white uppercase tracking-tighter drop-shadow-lg leading-tight">
-                                    {selectedAnime.title_english || selectedAnime.title}
-                                </h2>
-                                
-                                <div className="flex items-center space-x-4 mb-8 flex-wrap gap-y-4">
-                                    <span className="text-green-400 font-black text-xs md:text-sm uppercase tracking-widest border border-green-400/30 px-3 py-1.5 rounded bg-green-400/10 shadow-sm flex items-center gap-1.5"><Mic2 className="w-4 h-4"/> VF / VOSTFR</span>
-                                    <span className="text-blue-400 font-bold text-xs md:text-sm uppercase tracking-widest border border-blue-400/30 px-3 py-1.5 rounded bg-blue-400/10">{selectedAnime.status}</span>
-                                    <span className="text-white/80 font-bold text-sm md:text-base border-l border-white/20 pl-4">{selectedAnime.year || (selectedAnime.aired?.prop?.from?.year || 'N/A')}</span>
-                                    <span className="text-white/80 font-bold text-sm md:text-base border-l border-white/20 pl-4">{selectedAnime.episodes ? `${selectedAnime.episodes} EPS` : '? EPS'}</span>
-                                    <span className="px-2.5 py-1.5 border border-white/20 rounded text-[10px] font-bold text-white uppercase tracking-widest bg-white/5 shadow-sm border-l border-white/20 pl-4 ml-2">HD 1080p</span>
-                                </div>
-
-                                <div className="mb-6">
-                                    <span className="text-white/40 font-bold text-[10px] uppercase tracking-widest block mb-1">TITRE ORIGINAL</span>
-                                    <span className="text-white/70 font-medium text-sm italic">{selectedAnime.title_japanese || selectedAnime.title || "N/A"}</span>
-                                </div>
-
-                                <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-8">
-                                    <button onClick={() => handlePlayRequest(selectedServer)} className="flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl text-xs md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-[0_0_30px_rgba(239,68,68,0.4)] active:scale-95 outline-none">
-                                        <Play className="w-5 h-5 fill-white" /> <span>Lecture</span>
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            if (localModalMode !== 'trailer') {
-                                                setIframeLoading(true);
-                                                setLocalModalMode('trailer');
-                                                const container = document.getElementById('anime-modal-container');
-                                                if (container) container.scrollTo({top: 0, behavior: 'smooth'});
-                                            }
-                                        }}
-                                        disabled={localModalMode === 'trailer' || !trailerKey}
-                                        className={`flex-1 items-center justify-center flex gap-3 px-6 py-4 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest transition-all active:scale-95 outline-none ${
-                                            localModalMode === 'trailer'
-                                            ? 'bg-primary/10 border border-primary/50 text-primary cursor-default shadow-inner'
-                                            : 'bg-white/5 border border-white/20 text-white hover:bg-white/10 backdrop-blur-md shadow-md'
-                                        }`}>
-                                        {localModalMode === 'trailer' ? (
-                                            <>
-                                                <div className="flex gap-1.5 items-center justify-center">
-                                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: "0.1s"}}></div>
-                                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></div>
-                                                </div>
-                                                <span>Bande-annonce...</span>
-                                            </>
-                                        ) : (
-                                            <><Clapperboard className="w-5 h-5" /> <span>Bande-annonce</span></>
-                                        )}
-                                    </button>
-                                </div>
-
-                                <div className="markdown-pro pr-2">
-                                    {selectedAnime.synopsis ? selectedAnime.synopsis.split('\n').map((p,i) => <p key={i} className="mb-4">{p}</p>) : <p>Aucun résumé disponible pour cet anime.</p>}
-                                </div>
-
-                                <div className="mt-10 flex gap-4 pt-8 border-t border-white/10">
-                                    <button onClick={(e) => toggleWatchlist(selectedAnime, e)} className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all active:scale-95 outline-none ${added ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10'}`}>
-                                        {added ? <><CheckCircle className="w-6 h-6" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">DANS MA LISTE</span></> : <><Plus className="w-6 h-6 text-primary" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">MA LISTE</span></>}
-                                    </button>
-                                    
-                                    {isAiring && (
-                                        <button onClick={() => toggleReminder(selectedAnime)} className={`flex items-center justify-center gap-3 px-8 py-4 rounded-xl border transition-all active:scale-95 outline-none ${alerted ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'border border-white/20 bg-white/5 text-white/80 hover:text-white hover:bg-white/10'}`}>
-                                            {alerted ? <BellRing className="w-6 h-6 animate-pulse" /> : <Bell className="w-6 h-6 text-white/50" />}
-                                        </button>
-                                    )}
-                                    <button onClick={() => showToast("Copié !", 'success')} className="flex items-center justify-center gap-3 px-8 py-4 rounded-xl border border-white/20 bg-white/5 text-white/80 hover:text-white hover:bg-white/10 transition-all active:scale-95 outline-none">
-                                        <Share2 className="w-6 h-6 text-blue-400" />
-                                    </button>
-                                </div>
+                            <div className="flex items-center space-x-4 mb-8 flex-wrap gap-y-4">
+                                <span className="text-green-400 font-black text-xs md:text-sm uppercase tracking-widest border border-green-400/30 px-3 py-1.5 rounded bg-green-400/10 shadow-sm flex items-center gap-1.5"><Mic2 className="w-4 h-4"/> VF / VOSTFR</span>
+                                <span className="text-blue-400 font-bold text-xs md:text-sm uppercase tracking-widest border border-blue-400/30 px-3 py-1.5 rounded bg-blue-400/10">{selectedAnime.status}</span>
+                                <span className="text-white/80 font-bold text-sm md:text-base border-l border-white/20 pl-4">{selectedAnime.year || (selectedAnime.aired?.prop?.from?.year || 'N/A')}</span>
+                                <span className="text-white/80 font-bold text-sm md:text-base border-l border-white/20 pl-4">{selectedAnime.episodes ? `${selectedAnime.episodes} EPS` : '? EPS'}</span>
+                                <span className="px-2.5 py-1.5 border border-white/20 rounded text-[10px] font-bold text-white uppercase tracking-widest bg-white/5 shadow-sm border-l border-white/20 pl-4 ml-2">HD 1080p</span>
                             </div>
 
-                            {/* COLONNE DROITE : CASTING */}
-                            <div className="w-full lg:w-[40%] space-y-8 bg-black/40 p-6 md:p-8 rounded-3xl border border-white/5 shadow-inner h-fit">
-                                <div>
-                                    <span className="text-white/40 font-bold block mb-4 uppercase tracking-widest text-xs flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> <span>Casting Principal</span></span>
+                            <div className="mb-6">
+                                <span className="text-white/40 font-bold text-[10px] uppercase tracking-widest block mb-1">TITRE ORIGINAL</span>
+                                <span className="text-white/70 font-medium text-sm italic">{selectedAnime.title_japanese || selectedAnime.title || "N/A"}</span>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-8">
+                                <button onClick={() => handlePlayRequest(selectedServer)} className={`flex-1 items-center justify-center flex gap-3 px-6 py-4 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest transition-all active:scale-95 outline-none ${localModalMode === 'play' ? 'bg-primary/10 border border-primary/50 text-primary shadow-inner' : 'bg-gradient-to-r from-red-600 to-red-500 text-white hover:opacity-90 shadow-[0_0_30px_rgba(239,68,68,0.4)]'}`}>
+                                    <Play className={`w-5 h-5 ${localModalMode === 'play' ? 'text-primary' : 'fill-white'}`} /> <span>{localModalMode === 'play' ? 'En lecture' : 'Lecture'}</span>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        if (localModalMode !== 'trailer') {
+                                            setIframeLoading(true);
+                                            setLocalModalMode('trailer');
+                                            const container = document.getElementById('anime-modal-container');
+                                            if (container) container.scrollTo({top: 0, behavior: 'smooth'});
+                                        }
+                                    }}
+                                    disabled={localModalMode === 'trailer' || !trailerKey}
+                                    className={`flex-1 items-center justify-center flex gap-3 px-6 py-4 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest transition-all active:scale-95 outline-none ${
+                                        localModalMode === 'trailer'
+                                        ? 'bg-primary/10 border border-primary/50 text-primary cursor-default shadow-inner'
+                                        : 'bg-white/5 border border-white/20 text-white hover:bg-white/10 backdrop-blur-md shadow-md'
+                                    }`}>
+                                    {localModalMode === 'trailer' ? (
+                                        <>
+                                            <div className="flex gap-1.5 items-center justify-center">
+                                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: "0.1s"}}></div>
+                                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></div>
+                                            </div>
+                                            <span>Bande-annonce...</span>
+                                        </>
+                                    ) : (
+                                        <><Clapperboard className="w-5 h-5" /> <span>Bande-annonce</span></>
+                                    )}
+                                </button>
+                            </div>
+
+                            <div className="text-justify text-sm md:text-base leading-relaxed text-white/80 font-medium pr-2">
+                                {selectedAnime.synopsis ? selectedAnime.synopsis.split('\n').map((p,i) => <p key={i} className="mb-4">{p}</p>) : "Aucun résumé disponible pour cet anime."}
+                            </div>
+
+                            <div className="mt-10 flex gap-4 pt-8 border-t border-white/10">
+                                <button onClick={(e) => toggleWatchlist(selectedAnime, e)} className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all active:scale-95 outline-none ${added ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-white/5 border-white/20 text-white/80 hover:bg-white/10'}`}>
+                                    {added ? <><CheckCircle className="w-6 h-6" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">DANS MA LISTE</span></> : <><Plus className="w-6 h-6 text-primary" /><span className="text-xs md:text-sm font-bold uppercase tracking-widest">MA LISTE</span></>}
+                                </button>
+                                
+                                {isAiring && (
+                                    <button onClick={() => toggleReminder(selectedAnime)} className={`flex items-center justify-center gap-3 px-8 py-4 rounded-xl border transition-all active:scale-95 outline-none ${alerted ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'border border-white/20 bg-white/5 text-white/80 hover:text-white hover:bg-white/10'}`}>
+                                        {alerted ? <BellRing className="w-6 h-6 animate-pulse" /> : <Bell className="w-6 h-6 text-white/50" />}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="w-full lg:w-[40%] space-y-8 bg-black/40 p-6 md:p-8 rounded-3xl border border-white/5 shadow-inner h-fit">
+                            <div>
+                                <span className="text-white/40 font-bold block mb-4 uppercase tracking-widest text-xs flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> <span>Casting Principal</span></span>
                                     {loadingChars ? (
                                         <div className="flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
                                     ) : (
@@ -1327,7 +1345,7 @@ function App() {
                                                 <div key={c.character.mal_id} className="flex flex-col items-center min-w-[80px] md:min-w-[100px] gap-2 shrink-0 select-none">
                                                     <img src={c.character.images?.webp?.image_url} className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border border-white/10 shadow-md bg-black/50" draggable="false" alt=""/>
                                                     <span className="text-[10px] md:text-xs text-white/90 text-center font-bold w-[90px] md:w-[110px] truncate px-1">{c.character.name}</span>
-                                                    {c.role && <span className="text-[9px] md:text-[10px] text-primary text-center w-full truncate">{c.role}</span>}
+                                                    <span className="text-[9px] md:text-[10px] text-primary text-center w-full truncate">{c.role}</span>
                                                 </div>
                                             )) : <span className="text-white/40 text-sm italic">Aucun personnage répertorié.</span>}
                                         </div>
@@ -1349,7 +1367,6 @@ function App() {
                                 </div>
                             </div>
                         </div>
-                    )}
 
                     {recommendations.length > 0 && (
                         <div className="mt-16 pt-10 border-t border-white/10 max-w-7xl mx-auto">
@@ -1372,14 +1389,13 @@ function App() {
       );
   };
 
-  // --- PANNEAU PARAMÈTRES (SETTINGS) ---
-  const SettingsPanel = () => {
+  const renderSettingsPanel = () => {
     if(!showSettings) return null;
     return (
         <div className="fixed inset-0 z-[9000] flex justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSettings(false)}></div>
           <div className="relative w-full max-w-sm bg-[#0a0a0f] border-l border-white/5 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] h-full flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-white/5 shrink-0 bg-[#060608]">
+            <div className="flex items-center justify-between p-6 border-b border-white/5 shrink-0 bg-[#060608] safe-pt">
               <h3 className="text-white font-black uppercase tracking-widest text-lg flex items-center gap-2">
                 <Settings className="w-5 h-5 text-primary" /> Paramètres
               </h3>
@@ -1388,7 +1404,7 @@ function App() {
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8 safe-pb">
               
               {/* Profil */}
               <div>
@@ -1453,8 +1469,7 @@ function App() {
     );
   };
 
-  // --- MODAL COMPTE ---
-  const AccountModal = () => {
+  const renderAccountModal = () => {
     if(!showAccountModal) return null;
     const loginDate = auth.currentUser?.metadata?.creationTime ? new Date(auth.currentUser.metadata.creationTime).toLocaleDateString('fr-FR') : "N/A";
     
@@ -1492,8 +1507,7 @@ function App() {
     );
   };
 
-  // --- MODAL DÉCONNEXION CONFIRMATION ---
-  const LogoutConfirmModal = () => {
+  const renderLogoutConfirmModal = () => {
     if(!showLogoutConfirm) return null;
     return (
       <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
@@ -1510,13 +1524,12 @@ function App() {
     );
   };
 
-  // --- RENDER MAIN ---
   return (
-    <div className="min-h-screen bg-[#060608] text-white">
-      <Header />
+    <div className="min-h-safe bg-[#060608] text-white">
+      {renderHeader()}
 
       {searchQuery.length >= 3 ? (
-         <div className="pt-24 px-4 md:px-14 pb-24 relative z-30 min-h-screen">
+         <div className="pt-24 px-4 md:px-14 pb-24 relative z-30 min-h-safe">
           <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest border-l-4 border-primary pl-3 mb-6">Résultats pour "{searchQuery}"</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
             {searchResults.map(anime => (
@@ -1531,7 +1544,7 @@ function App() {
           </div>
         </div>
       ) : currentCategory === 'watchlist' ? (
-        <div className="pt-24 px-4 md:px-14 pb-24 min-h-screen">
+        <div className="pt-24 px-4 md:px-14 pb-24 min-h-safe">
           <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest pl-3 border-l-4 border-primary mb-8">Ma Liste</h2>
           {watchlist.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-32 opacity-50">
@@ -1552,7 +1565,7 @@ function App() {
           )}
         </div>
       ) : currentCategory === 'explore' ? (
-        <div className="pt-24 px-4 md:px-14 pb-32 min-h-screen">
+        <div className="pt-24 px-4 md:px-14 pb-32 min-h-safe">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/40 shadow-inner shrink-0">
@@ -1605,26 +1618,25 @@ function App() {
         </div>
       ) : (
         <>
-          {currentCategory === 'home' && <HeroBanner />}
+          {currentCategory === 'home' && renderHeroBanner()}
           
-          <main className={`pb-24 relative z-20 ${currentCategory === 'home' ? 'mt-6 md:-mt-10' : 'pt-24'}`}>
+          <main className={`pb-[max(6rem,calc(env(safe-area-inset-bottom)+6rem))] relative z-20 ${currentCategory === 'home' ? 'mt-6 md:-mt-10' : 'pt-24'}`}>
             {loading && currentCategory !== 'home' ? (
               <div className="flex justify-center items-center py-32"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>
             ) : (
               <>
                 {history.length > 0 && currentCategory === 'home' && (
-                  <AnimeRow title="Reprendre la lecture" animes={history} icon={PlayCircle} />
+                  renderAnimeRow("Reprendre la lecture", history, PlayCircle)
                 )}
 
-                {currentCategory === 'trending' && <MassiveTrendingGrid animes={trending} />}
+                {currentCategory === 'trending' && renderMassiveGrid(trending)}
                 
                 {currentCategory === 'home' && (
                   <>
-                    <Top10Row title="Top 10 de la Semaine" animes={popular} />
-                    
-                    <AnimeRow title="Action & Aventure" animes={actionAnime} icon={Flame} />
-                    <AnimeRow title="Chefs-d'œuvre Mieux Notés" animes={topRated} icon={Award} />
-                    <AnimeRow title="Romance & Drame" animes={romanceAnime} icon={Users} />
+                    {renderTop10Row("Top 10 de la Semaine", popular)}
+                    {renderAnimeRow("Action & Aventure", actionAnime, Flame)}
+                    {renderAnimeRow("Chefs-d'œuvre Mieux Notés", topRated, Award)}
+                    {renderAnimeRow("Romance & Drame", romanceAnime, Users)}
                     
                     <div className="group relative ml-4 md:ml-12 mb-10 md:mb-16 mt-16 pt-8 border-t border-white/5">
                       <h2 className="text-white/90 text-[13px] md:text-lg font-black mb-6 uppercase tracking-[0.2em] border-l-4 border-primary pl-3 md:pl-4 drop-shadow-sm flex items-center gap-3">
@@ -1657,7 +1669,7 @@ function App() {
       {/* MODAL SURPRISE ME */}
       {showSurprise && (
         <div className="fixed inset-0 z-[9000] flex justify-center items-center p-4 sm:p-8 bg-[#060608]/95 backdrop-blur-3xl overflow-hidden">
-          <div className="relative w-full max-w-5xl bg-[#0a0a0f] rounded-[2rem] p-6 md:p-10 flex flex-col animate-in zoom-in duration-300 z-10 shadow-[0_0_80px_rgba(239,68,68,0.3)] border border-primary/30 max-h-[95vh]">
+          <div className="relative w-full max-w-5xl bg-[#0a0a0f] rounded-[2rem] p-6 md:p-10 flex flex-col animate-in zoom-in duration-300 z-10 shadow-[0_0_80px_rgba(239,68,68,0.3)] border border-primary/30 max-h-[95vh] safe-pt safe-pb">
             <button onClick={() => setShowSurprise(false)} className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors shadow-sm z-20 outline-none">
               <X className="w-5 h-5" />
             </button>
@@ -1700,19 +1712,16 @@ function App() {
         </div>
       )}
 
-      {/* PARAMETRES */}
-      <SettingsPanel />
-
-      {/* MODALS COMPTE & DÉCONNEXION */}
-      <AccountModal />
-      <LogoutConfirmModal />
+      {renderSettingsPanel()}
+      {renderAccountModal()}
+      {renderLogoutConfirmModal()}
 
       {/* PANNEAU NOTIFICATIONS */}
       {showNotifications && (
         <div className="fixed inset-0 z-[9000] flex justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowNotifications(false)}></div>
           <div className="relative w-full max-w-sm bg-[#0a0a0f] border-l border-white/5 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] h-full flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-white/5 shrink-0">
+            <div className="flex items-center justify-between p-6 border-b border-white/5 shrink-0 safe-pt">
               <h3 className="text-white font-black uppercase tracking-widest text-lg flex items-center gap-2">
                 <Bell className="w-5 h-5 text-primary" /> Notifications
               </h3>
@@ -1736,7 +1745,7 @@ function App() {
                 <span className="text-[10px] uppercase font-bold tracking-widest">Vous êtes à jour</span>
               </div>
             </div>
-            <div className="p-4 border-t border-white/5 shrink-0 bg-black/20">
+            <div className="p-4 border-t border-white/5 shrink-0 bg-black/20 safe-pb">
               <button onClick={() => {
                 setInAppNotifications(inAppNotifications.map(n => ({...n, unread: false})));
               }} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors outline-none">
@@ -1748,7 +1757,7 @@ function App() {
       )}
 
       {/* TOAST SYSTEM */}
-      <div className="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none items-center w-full px-4">
+      <div className="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none items-center w-full px-4 safe-pb">
         {toasts.map(toast => (
           <div key={toast.id} className="toast-enter flex items-center gap-3 px-6 py-3 md:py-4 bg-[#151520]/95 backdrop-blur-md border border-white/10 rounded-full shadow-2xl">
             {toast.icon} <span className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-white">{toast.message}</span>
@@ -1756,14 +1765,18 @@ function App() {
         ))}
       </div>
 
-      <AnimeModal />
-      <MobileNav />
+      {renderAnimeModal()}
+      {renderMobileNav()}
     </div>
   );
 }
 
 const root = createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
 </script>
 
 </body>
