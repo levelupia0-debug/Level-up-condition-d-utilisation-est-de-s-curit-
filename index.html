@@ -418,16 +418,13 @@ footer{border-top:1px solid var(--bdr);padding:72px 5% 36px}
 .db-main{flex:1;padding:28px;overflow-y:auto;min-height:calc(100vh - 65px)}
 
 
-/* ── SETUP WIZARD ── */
-#setupWizard { font-family:'Inter',sans-serif; color:#fff; }
-#setupWizard .step-enter { animation: swSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
-#setupWizard .step-exit { animation: swFadeOut 0.3s cubic-bezier(0.16,1,0.3,1) forwards; }
-@keyframes swSlideUp { 0%{opacity:0;transform:translateY(20px)} 100%{opacity:1;transform:translateY(0)} }
-@keyframes swFadeOut { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.98)} }
-#setupWizard .animate-spin-slow { animation: swSpin 4s linear infinite; }
-@keyframes swSpin { 100% { transform:rotate(360deg); } }
-#setupWizard .glass-panel { background:rgba(10,10,10,0.8); backdrop-filter:blur(12px); border-right:1px solid rgba(255,255,255,0.05); }
-#setupWizard .text-gradient { background:linear-gradient(135deg,#fff 0%,#a8a8a8 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+/* ── TOGGLE SWITCH (2FA, notifs) ── */
+.tog-wrap{position:relative;display:inline-flex;align-items:center;cursor:pointer;width:44px;height:24px;flex-shrink:0}
+.tog-wrap input{opacity:0;width:0;height:0;position:absolute}
+.tog-sl{position:absolute;inset:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);border-radius:100px;transition:background .25s,border-color .25s}
+.tog-sl::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .25s,opacity .25s;opacity:.5}
+.tog-wrap input:checked ~ .tog-sl{background:rgba(168,85,247,.35);border-color:rgba(168,85,247,.6)}
+.tog-wrap input:checked ~ .tog-sl::after{transform:translateX(20px);opacity:1}
 
 /* PANELS */
 .panel{display:none}
@@ -2021,7 +2018,7 @@ Créer un compte
 
 <div class="foot-col">
   <h5>Nouveautés</h5>
-  <a onclick="window.open('https://levelup-ecosystem.com/dona','_blank')" style="display:flex;align-items:center;gap:6px;cursor:pointer"><i class="fa-solid fa-sparkles" style="color:#a855f7;font-size:.8rem"></i> Assistant LevelUp</a>
+  <a onclick="window.location.href='https://levelup-ecosystem.com/dona'" style="display:flex;align-items:center;gap:6px;cursor:pointer"><i class="fa-solid fa-sparkles" style="color:#a855f7;font-size:.8rem"></i> Assistant LevelUp</a>
   <a onclick="window._openOppa&&window._openOppa()" style="display:flex;align-items:center;gap:6px;cursor:pointer"><i class="fa-solid fa-users" style="color:#ec4899;font-size:.8rem"></i> Oppa</a>
   <a onclick="window._openLevelDay&&window._openLevelDay()" style="display:flex;align-items:center;gap:6px;cursor:pointer"><i class="fa-solid fa-calendar-days" style="color:#22c55e;font-size:.8rem"></i> LevelDay</a>
 </div>
@@ -2209,7 +2206,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="qa-inf"><h4>LevelDay</h4><span>Planification</span></div>
 <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
 </div>
-<div class="qa-tile" onclick="window.open('https://levelup-ecosystem.com/anime','_blank')">
+<div class="qa-tile" onclick="window.openApp('anime')">
 <div class="qa-ico" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);overflow:hidden;padding:0">
   <svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
     <path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -3971,9 +3968,11 @@ setTimeout(() => {
 // 🌟 LE PONT D'ÉCOSYSTÈME (SSO) 🌟
 // ── Popup recommandation Opera avant d'ouvrir une app streaming ──
 window._openOperaModal = function(appId, finalUrl) {
-  var appName = appId === 'movie' ? 'LevelMovie' : appId === 'music' ? 'LevelMusic' : 'LevelUp';
+  var appName = appId === 'movie' ? 'LevelMovie' : appId === 'anime' ? 'LevelAnime' : appId === 'music' ? 'LevelMusic' : 'LevelUp';
   var appIcon = appId === 'movie'
     ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M5 4V17C5 19.2 6.79 21 9 21H20" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round"/><path d="M10 8.36c0-.93 1.02-1.51 1.82-1.03l5.77 3.49c.77.47.77 1.59 0 2.06l-5.77 3.49C11.02 16.78 10 16.2 10 15.27V8.36Z" fill="#60a5fa"/></svg>'
+    : appId === 'anime'
+    ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M5 4V17C5 19.2091 6.79 21 9 21H20" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/><path d="M10 8.36c0-.93 1.02-1.51 1.82-1.03l5.77 3.49c.77.47.77 1.59 0 2.06l-5.77 3.49C11.02 16.78 10 16.2 10 15.27V8.36Z" fill="#ef4444"/></svg>'
     : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M9 18V5l12-2v13" stroke="#a855f7" stroke-width="2" stroke-linecap="round"/><circle cx="6" cy="18" r="3" fill="#a855f7"/><circle cx="18" cy="16" r="3" fill="#a855f7"/></svg>';
 
   var m = document.getElementById('_operaRecModal');
@@ -4034,10 +4033,7 @@ window._operaOpenDirect = function() {
   var m = document.getElementById('_operaRecModal');
   if (!m || !m._finalUrl) return;
   m.style.display = 'none';
-  var a = document.createElement('a');
-  a.href = m._finalUrl; a.target = '_blank'; a.rel = 'noopener noreferrer';
-  document.body.appendChild(a); a.click();
-  setTimeout(function(){ document.body.removeChild(a); }, 100);
+  window.location.href = m._finalUrl;
 };
 
 // Ouvre levelup-ecosystem.com/oppa avec la clé de l'utilisateur
@@ -4118,8 +4114,8 @@ if (access === 'free') {
         lvl_free: '1'
     }).toString();
     let freeUrl = appId === 'movie' ? 'https://levelup-ecosystem.com/movie' : appId === 'music' ? 'https://levelup-ecosystem.com/music' : 'https://levelup-ecosystem.com/dona';
-    // Toujours ouvrir dans le vrai navigateur
-    window.open(freeUrl + '?' + payload, '_blank');
+    // Ouvrir dans le même onglet
+    window.location.href = freeUrl + '?' + payload;
     return;
 }
 if (!window._ud?.apiKey) {
@@ -4149,6 +4145,8 @@ targetUrl = 'https://levelup-ecosystem.com/movie';
 targetUrl = 'https://levelup-ecosystem.com/music';
 } else if (appId === 'ia') {
 targetUrl = 'https://levelup-ecosystem.com/ia';
+} else if (appId === 'anime') {
+  targetUrl = 'https://levelup-ecosystem.com/anime';
 } else if (appId === 'oppa') {
   window._openOppa && window._openOppa(); return;
 } else if (appId === 'levelday') {
@@ -4165,18 +4163,13 @@ try {
     localStorage.setItem('_lvl_email_bk', cu.email || '');
   }
 } catch(_) {}
-// Pour movie → afficher le popup Opera d'abord
-if (appId === 'movie') {
+// Pour movie et anime → afficher le popup Opera d'abord
+if (appId === 'movie' || appId === 'anime') {
   window._openOperaModal(appId, finalUrl);
   return;
 }
-// Pour les autres apps → ouvrir directement
-(function(url){
-  var a = document.createElement('a');
-  a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-  document.body.appendChild(a); a.click();
-  setTimeout(function(){ document.body.removeChild(a); }, 100);
-})(finalUrl);
+// Pour les autres apps → même onglet
+window.location.href = finalUrl;
 }
 };
 
@@ -9664,22 +9657,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (neededSteps.length === 0) return;
 
-            // Injecter le flow dynamique et afficher le wizard
+            // Afficher le popup d'onboarding si profil incomplet
             setTimeout(() => {
                 try {
-                    // Mettre à jour le flow du wizard
-                    window._swOverrideFlow && window._swOverrideFlow(neededSteps);
-                    const wizard = document.getElementById('setupWizard');
-                    if (wizard) {
-                        wizard.style.display = 'flex';
-                        // Déclencher l'init du wizard si disponible
-                        if (typeof window._swInit === 'function') window._swInit();
-                    } else {
-                        // Fallback: ancien popup pour le profil uniquement
-                        if (!profileDone) {
-                            const popup = document.getElementById('onboardingPopup');
-                            if (popup) popup.classList.add('open');
-                        }
+                    if (!profileDone) {
+                        const popup = document.getElementById('onboardingPopup');
+                        if (popup) popup.classList.add('open');
                     }
                 } catch(_) {}
             }, 900);
@@ -9781,9 +9764,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 onboardingDone: true
             }, { merge: true });
             if (window._ud) { window._ud.displayName = _obChosenName; window._ud.username = _obChosenName.toLowerCase(); }
-            // Fermer popup et/ou setup wizard
+            // Fermer le popup d'onboarding
             const _obPop = document.getElementById('onboardingPopup'); if (_obPop) _obPop.classList.remove('open');
-            const _swEl = document.getElementById('setupWizard'); if (_swEl) _swEl.style.display = 'none';
             toast_ && toast_('Profil créé — bienvenue sur LevelUp !', 'ok');
             window.refreshUI && window.refreshUI();
         } catch(e) {
@@ -10300,48 +10282,7 @@ Champ « images » : tableau d'objets { url: "https://...", caption: "Texte affi
   // ── Popup notification gate PWA (avant le login sheet) ──
   var _NOTIF_GATE_KEY = '_lvl_notif_gate_done';
   function _showNotifGateThenLogin() {
-    // Si déjà vu OU permission déjà répondue → aller direct au login
-    var alreadyDone = localStorage.getItem(_NOTIF_GATE_KEY);
-    var permAlready = typeof Notification !== 'undefined' && Notification.permission !== 'default';
-    if (alreadyDone || permAlready) {
-      if (window.openMobileLoginSheet) window.openMobileLoginSheet();
-      return;
-    }
-    // Créer le popup notification
-    var gate = document.getElementById('_pwaNotifGate');
-    if (!gate) {
-      gate = document.createElement('div');
-      gate.id = '_pwaNotifGate';
-      gate.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;justify-content:center;padding:0;pointer-events:all;background:linear-gradient(to bottom,transparent 35%,rgba(10,8,18,.98) 65%,#0a0812 100%)';
-      gate.innerHTML = '\
-<div style="width:100%;max-width:480px;padding:28px 24px calc(20px + env(safe-area-inset-bottom,16px));animation:slideUp .38s cubic-bezier(.32,.72,0,1)">\
-<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">\
-  <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;box-shadow:0 0 20px rgba(168,85,247,.5)">🔔</div>\
-  <div><div style="font-size:1rem;font-weight:800;color:#fff;letter-spacing:-.02em">Activer les notifications</div><div style="font-size:.75rem;color:rgba(255,255,255,.45);margin-top:2px">LevelUp Ecosystem</div></div>\
-</div>\
-<p style="font-size:.82rem;color:rgba(255,255,255,.62);line-height:1.7;margin-bottom:20px">Recevez les alertes LevelUp — nouvelles clés disponibles, outils ajoutés, et sécurité de votre compte.</p>\
-<button id="_pwaNotifYes" style="width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 20px rgba(168,85,247,.45)">Activer les notifications</button>\
-<button id="_pwaNotifNo" style="width:100%;padding:12px;border:none;border-radius:14px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:.82rem;cursor:pointer">Plus tard</button>\
-</div>';
-      document.body.appendChild(gate);
-    }
-    gate.style.display = 'flex';
-    function _done() {
-      localStorage.setItem(_NOTIF_GATE_KEY, '1');
-      gate.style.display = 'none';
-      setTimeout(function() { if (window.openMobileLoginSheet) window.openMobileLoginSheet(); }, 200);
-    }
-    document.getElementById('_pwaNotifYes').onclick = function() {
-      if (typeof Notification !== 'undefined') {
-        Notification.requestPermission().then(function(p) {
-          if (p === 'granted' && typeof _registerFCMAnonOrUser === 'function') {
-            try { _registerFCMAnonOrUser(); } catch(_) {}
-          }
-          _done();
-        }).catch(_done);
-      } else { _done(); }
-    };
-    document.getElementById('_pwaNotifNo').onclick = _done;
+    if (window.openMobileLoginSheet) window.openMobileLoginSheet();
   }
 
   window._pwaSlider={
@@ -10628,644 +10569,6 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
     var panel = document.getElementById('panel-home');
     if (panel && panel.classList.contains('on')) _initCarousel();
   }, 2000);
-})();
-</script>
-
-<!-- ═══════════════════════════════════════
-SETUP WIZARD — ONBOARDING NOUVELLE GÉNÉRATION
-═══════════════════════════════════════ -->
-<style>
-  .sw-step-enter { animation: swSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
-  @keyframes swSlideUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
-  .sw-gradient-ring { background:linear-gradient(to right,#a855f7,#ec4899,#a855f7);background-size:200% auto;animation:swGradRot 3s linear infinite; }
-  @keyframes swGradRot { to{background-position:200% center} }
-  #setupWizard { padding-top: max(0px, env(safe-area-inset-top)); padding-bottom: max(0px, env(safe-area-inset-bottom)); }
-  #sw-mobile-header { padding-top: max(1.5rem, env(safe-area-inset-top)); }
-  #sw-steps-inner { padding-bottom: max(2.5rem, env(safe-area-inset-bottom)); }
-</style>
-<div id="setupWizard" style="display:none;position:fixed;inset:0;z-index:9999999;background:#0a0a0a;flex-direction:row;font-family:'Inter',sans-serif">
-  <!-- SIDEBAR DESKTOP -->
-  <div id="sw-desktop-sidebar" class="hidden md:flex" style="flex-direction:column;width:320px;background:#0a0a0a;border-right:1px solid rgba(255,255,255,.07);padding:32px;flex-shrink:0;z-index:20">
-    <div style="margin-bottom:56px">
-      <span style="font-size:1.2rem;font-weight:700;color:#fff;letter-spacing:-.02em">Level<span style="color:#a855f7">Up</span> Ecosystem</span>
-    </div>
-    <div style="position:relative;flex:1" id="sw-desktop-timeline">
-      <div style="position:absolute;left:11px;top:8px;bottom:0;width:2px;background:rgba(255,255,255,.06);border-radius:2px"></div>
-      <div id="sw-desktop-indicators" style="position:relative;z-index:10;display:flex;flex-direction:column;gap:32px"></div>
-    </div>
-    <div style="margin-top:auto">
-      <p style="font-size:.68rem;color:rgba(255,255,255,.2);letter-spacing:.1em;text-transform:uppercase;font-weight:600">Secured Setup</p>
-    </div>
-  </div>
-  <!-- ZONE CONTENU PRINCIPAL -->
-  <div style="flex:1;display:flex;flex-direction:column;position:relative;background:#0a0a0a;overflow:hidden">
-    <!-- HEADER MOBILE -->
-    <div id="sw-mobile-header" class="md:hidden" style="padding-left:24px;padding-right:24px;padding-bottom:20px;background:rgba(10,10,10,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:sticky;top:0;z-index:20;border-bottom:1px solid rgba(255,255,255,.06)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <span style="font-size:1rem;font-weight:700;color:#fff;letter-spacing:-.02em">Level<span style="color:#a855f7">Up</span></span>
-        <span id="sw-step-counter" style="font-size:.68rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.07em;text-transform:uppercase">Préparation...</span>
-      </div>
-      <div style="width:100%;background:rgba(255,255,255,.08);border-radius:100px;height:2px;overflow:hidden">
-        <div id="sw-progress-bar" style="background:#a855f7;height:100%;width:0;transition:width .5s ease-out;border-radius:100px"></div>
-      </div>
-    </div>
-    <!-- CONTENEUR DES ÉTAPES -->
-    <div id="sw-steps-container" style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
-      <div id="sw-steps-inner" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px">
-        <div style="max-width:420px;width:100%;margin:auto" id="sw-steps-wrapper">
-
-          <!-- ÉTAPE 1 : NOTIFICATIONS -->
-          <div id="step-notifications" class="step-content" style="display:none;flex-direction:column;align-items:center;text-align:center">
-            <div style="width:80px;height:80px;background:#18181b;border:1px solid rgba(255,255,255,.08);border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 20px 40px rgba(0,0,0,.5)">
-              <i class="ph-duotone ph-bell-ringing" style="font-size:2.2rem;color:#a855f7"></i>
-            </div>
-            <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin:0 0 14px;letter-spacing:-.02em">Ne ratez rien</h2>
-            <p style="color:rgba(255,255,255,.45);margin:0 0 32px;line-height:1.65;font-size:.9rem">Activez les notifications pour recevoir les alertes critiques, vos invitations et les mises à jour de sécurité en temps réel.</p>
-            <div style="display:flex;flex-direction:column;gap:10px;width:100%">
-              <button onclick="swNextStep()" style="width:100%;background:#7c3aed;color:#fff;font-weight:700;padding:14px 16px;border-radius:14px;border:none;cursor:pointer;font-size:.9rem;font-family:inherit;transition:background .2s;box-shadow:0 4px 20px rgba(124,58,237,.3)" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">Activer les notifications</button>
-              <button onclick="swNextStep(true)" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-weight:500;padding:12px 16px;border-radius:14px;cursor:pointer;font-size:.85rem;font-family:inherit;transition:all .2s" onmouseover="this.style.color='rgba(255,255,255,.7)';this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.color='rgba(255,255,255,.4)';this.style.background='transparent'">Plus tard</button>
-            </div>
-          </div>
-
-          <!-- ÉTAPE 2 : LOCALISATION -->
-          <div id="step-localisation" class="step-content" style="display:none;flex-direction:column;align-items:center;text-align:center">
-            <div style="width:80px;height:80px;background:#18181b;border:1px solid rgba(255,255,255,.08);border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 20px 40px rgba(0,0,0,.5)">
-              <i class="ph-duotone ph-map-pin" style="font-size:2.2rem;color:#a855f7"></i>
-            </div>
-            <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin:0 0 14px;letter-spacing:-.02em">Où êtes-vous ?</h2>
-            <p style="color:rgba(255,255,255,.45);margin:0 0 32px;line-height:1.65;font-size:.9rem">Autorisez la localisation pour du contenu pertinent, adapter la langue et sécuriser vos connexions.</p>
-            <div style="display:flex;flex-direction:column;gap:10px;width:100%">
-              <button onclick="swNextStep()" style="width:100%;background:#7c3aed;color:#fff;font-weight:700;padding:14px 16px;border-radius:14px;border:none;cursor:pointer;font-size:.9rem;font-family:inherit;transition:background .2s;box-shadow:0 4px 20px rgba(124,58,237,.3)" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">Autoriser la localisation</button>
-              <button onclick="swNextStep(true)" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-weight:500;padding:12px 16px;border-radius:14px;cursor:pointer;font-size:.85rem;font-family:inherit;transition:all .2s" onmouseover="this.style.color='rgba(255,255,255,.7)';this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.color='rgba(255,255,255,.4)';this.style.background='transparent'">Ignorer pour le moment</button>
-            </div>
-          </div>
-
-          <!-- ÉTAPE 3 : COOKIES -->
-          <div id="step-cookies" class="step-content" style="display:none;flex-direction:column;align-items:center;text-align:center">
-            <div style="width:80px;height:80px;background:#18181b;border:1px solid rgba(255,255,255,.08);border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 20px 40px rgba(0,0,0,.5)">
-              <i class="ph-duotone ph-cookie" style="font-size:2.2rem;color:#a855f7"></i>
-            </div>
-            <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin:0 0 14px;letter-spacing:-.02em">Votre vie privée</h2>
-            <p style="color:rgba(255,255,255,.45);margin:0 0 32px;line-height:1.65;font-size:.9rem">Nous utilisons des cookies essentiels pour sécuriser votre session et des cookies analytiques pour améliorer l'écosystème.</p>
-            <div style="display:flex;flex-direction:column;gap:10px;width:100%">
-              <button onclick="swNextStep()" style="width:100%;background:#7c3aed;color:#fff;font-weight:700;padding:14px 16px;border-radius:14px;border:none;cursor:pointer;font-size:.9rem;font-family:inherit;transition:background .2s;box-shadow:0 4px 20px rgba(124,58,237,.3)" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">Accepter tout</button>
-              <button onclick="swNextStep()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-weight:500;padding:12px 16px;border-radius:14px;cursor:pointer;font-size:.85rem;font-family:inherit;transition:all .2s" onmouseover="this.style.color='rgba(255,255,255,.7)';this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.color='rgba(255,255,255,.4)';this.style.background='transparent'">Paramétrer</button>
-            </div>
-          </div>
-
-          <!-- ÉTAPE 4 : PROFIL -->
-          <div id="step-profil" class="step-content" style="display:none;flex-direction:column;align-items:center;width:100%;text-align:center">
-            <!-- 4.1 : PSEUDO -->
-            <div id="substep-pseudo" style="display:flex;flex-direction:column;align-items:center;width:100%">
-              <div style="width:80px;height:80px;background:#18181b;border:1px solid rgba(255,255,255,.08);border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 20px 40px rgba(0,0,0,.5)">
-                <i class="ph-duotone ph-at" style="font-size:2.2rem;color:#a855f7"></i>
-              </div>
-              <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin:0 0 12px;letter-spacing:-.02em">Choisissez un pseudo</h2>
-              <p style="color:rgba(255,255,255,.45);margin:0 0 28px;line-height:1.65;font-size:.9rem">Ce nom sera public. Minuscules, chiffres et tirets du bas uniquement.</p>
-              <div style="width:100%;margin-bottom:24px">
-                <div style="display:flex;background:#0a0a0a;border:1px solid rgba(255,255,255,.12);border-radius:14px;overflow:hidden;transition:border-color .2s" onfocusin="this.style.borderColor='rgba(168,85,247,.7)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.12)'" onfocusout="this.style.borderColor='rgba(255,255,255,.12)';this.style.boxShadow='none'">
-                  <div style="display:flex;align-items:center;justify-content:center;padding:0 14px;background:#18181b;color:rgba(255,255,255,.35);border-right:1px solid rgba(255,255,255,.08);font-size:1rem">@</div>
-                  <input type="text" id="username-input" placeholder="mon_pseudo" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')" style="flex:1;background:transparent;color:#fff;padding:14px 14px;outline:none;font-size:.9rem;font-family:inherit;border:none">
-                </div>
-                <div id="username-error" style="display:none;margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:.76rem;padding:10px 13px;border-radius:10px;text-align:left">
-                  <span id="username-error-text">Format invalide (3 à 20 caractères, minuscules, chiffres et _ uniquement).</span>
-                </div>
-              </div>
-              <button onclick="swGoToSubstep(1,2)" style="width:100%;background:#7c3aed;color:#fff;font-weight:700;padding:14px 16px;border-radius:14px;border:none;cursor:pointer;font-size:.9rem;font-family:inherit;transition:background .2s;box-shadow:0 4px 20px rgba(124,58,237,.3)" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">Continuer</button>
-            </div>
-            <!-- 4.2 : ÂGE -->
-            <div id="substep-age" style="display:none;flex-direction:column;align-items:center;width:100%">
-              <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin:0 0 12px;letter-spacing:-.02em">Quel âge avez-vous ?</h2>
-              <p style="color:rgba(255,255,255,.45);margin:0 0 28px;line-height:1.65;font-size:.9rem">Cela nous permet d'adapter les contenus à votre profil.</p>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin-bottom:28px">
-                <button class="age-btn" onclick="swSelectAge(this,'17-18')" style="background:#18181b;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-weight:600;padding:22px 12px;border-radius:14px;cursor:pointer;font-size:.88rem;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='rgba(168,85,247,.4)';this.style.background='rgba(168,85,247,.08)'" onmouseout="if(!this.dataset.sel){this.style.borderColor='rgba(255,255,255,.08)';this.style.background='#18181b'}">17 - 18 ans</button>
-                <button class="age-btn" onclick="swSelectAge(this,'19-24')" style="background:#18181b;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-weight:600;padding:22px 12px;border-radius:14px;cursor:pointer;font-size:.88rem;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='rgba(168,85,247,.4)';this.style.background='rgba(168,85,247,.08)'" onmouseout="if(!this.dataset.sel){this.style.borderColor='rgba(255,255,255,.08)';this.style.background='#18181b'}">19 - 24 ans</button>
-                <button class="age-btn" onclick="swSelectAge(this,'25-34')" style="background:#18181b;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-weight:600;padding:22px 12px;border-radius:14px;cursor:pointer;font-size:.88rem;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='rgba(168,85,247,.4)';this.style.background='rgba(168,85,247,.08)'" onmouseout="if(!this.dataset.sel){this.style.borderColor='rgba(255,255,255,.08)';this.style.background='#18181b'}">25 - 34 ans</button>
-                <button class="age-btn" onclick="swSelectAge(this,'35+')" style="background:#18181b;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-weight:600;padding:22px 12px;border-radius:14px;cursor:pointer;font-size:.88rem;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='rgba(168,85,247,.4)';this.style.background='rgba(168,85,247,.08)'" onmouseout="if(!this.dataset.sel){this.style.borderColor='rgba(255,255,255,.08)';this.style.background='#18181b'}">35 ans et +</button>
-              </div>
-              <div id="age-error" style="display:none;width:100%;margin-bottom:14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:.76rem;padding:10px 13px;border-radius:10px;text-align:left">Veuillez sélectionner une tranche d'âge.</div>
-              <div style="display:flex;gap:10px;width:100%">
-                <button onclick="swGoToSubstep(2,1)" style="width:48px;background:#18181b;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;flex-shrink:0;transition:all .2s" onmouseover="this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.color='rgba(255,255,255,.4)'"><i class="ph-bold ph-arrow-left"></i></button>
-                <button onclick="swGoToSubstep(2,3)" style="flex:1;background:#7c3aed;color:#fff;font-weight:700;padding:14px 16px;border-radius:14px;border:none;cursor:pointer;font-size:.9rem;font-family:inherit;transition:background .2s" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">Continuer</button>
-              </div>
-            </div>
-            <!-- 4.3 : PHOTO -->
-            <div id="substep-photo" style="display:none;flex-direction:column;align-items:center;width:100%">
-              <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin:0 0 12px;letter-spacing:-.02em">Dernière touche</h2>
-              <p style="color:rgba(255,255,255,.45);margin:0 0 28px;line-height:1.65;font-size:.9rem">Une image au format carré (min. 256×256) pour que vos amis vous reconnaissent.</p>
-              <div style="position:relative;width:144px;height:144px;margin:0 auto 28px;cursor:pointer" onclick="document.getElementById('sw-file-upload').click()">
-                <div id="sw-photo-ring" style="position:absolute;inset:-4px;border-radius:50%;opacity:0;transition:opacity .5s" class="sw-gradient-ring"></div>
-                <div id="sw-photo-circle" style="position:absolute;inset:0;background:#18181b;border:2px dashed rgba(255,255,255,.2);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;z-index:1;transition:border-color .3s">
-                  <div id="sw-placeholder-icon" style="display:flex;flex-direction:column;align-items:center;color:rgba(255,255,255,.25)"><i class="ph-duotone ph-image" style="font-size:2.2rem;margin-bottom:6px"></i><span style="font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Upload</span></div>
-                  <img id="sw-image-preview" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none">
-                </div>
-                <input id="sw-file-upload" type="file" accept="image/jpeg,image/png" style="display:none" onchange="swValidateImage(event)">
-              </div>
-              <div id="sw-image-error" style="display:none;width:100%;margin-bottom:16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:.76rem;padding:10px 13px;border-radius:10px;text-align:left"><span id="sw-image-error-text">L'image ne respecte pas les critères requis.</span></div>
-              <div style="display:flex;flex-direction:column;gap:10px;width:100%">
-                <button id="sw-action-btn" onclick="document.getElementById('sw-file-upload').click()" style="width:100%;background:#18181b;border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:700;padding:14px 16px;border-radius:14px;cursor:pointer;font-size:.9rem;font-family:inherit;transition:all .2s" onmouseover="this.style.background='#27272a'" onmouseout="this.style.background='#18181b'">Importer une image</button>
-                <div style="display:flex;gap:10px">
-                  <button onclick="swGoToSubstep(3,2)" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-weight:500;padding:12px 16px;border-radius:14px;cursor:pointer;font-size:.85rem;font-family:inherit;transition:all .2s" onmouseover="this.style.color='rgba(255,255,255,.7)';this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.color='rgba(255,255,255,.4)';this.style.background='transparent'">Retour</button>
-                  <button onclick="swFinishOnboarding()" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-weight:500;padding:12px 16px;border-radius:14px;cursor:pointer;font-size:.85rem;font-family:inherit;transition:all .2s" onmouseover="this.style.color='rgba(255,255,255,.7)';this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.color='rgba(255,255,255,.4)';this.style.background='transparent'">Ignorer</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ÉTAPE SUCCÈS -->
-          <div id="step-success" class="step-content" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:60vh">
-            <div id="sw-success-icon" style="width:88px;height:88px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:24px;transform:scale(0);transition:transform .6s cubic-bezier(.34,1.56,.64,1)">
-              <i class="ph-bold ph-check" style="font-size:2.5rem;color:#c084fc"></i>
-            </div>
-            <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin:0 0 10px;letter-spacing:-.02em">Bienvenue !</h2>
-            <p id="sw-success-text" style="color:rgba(255,255,255,.45);font-size:.9rem;display:flex;align-items:center;gap:8px"><i class="ph-duotone ph-spinner-gap" style="animation:spin 1s linear infinite"></i> Préparation de vos informations...</p>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// ══════════════════════════════════════════════════════════════
-// SYSTÈME 2FA — CODE EMAIL 6 CHIFFRES
-// ══════════════════════════════════════════════════════════════
-(function() {
-  var _2fa = { code: null, expiresAt: 0, uid: null, user: null, callback: null, attempts: 0 };
-  function _genCode() { return String(Math.floor(100000 + Math.random() * 900000)); }
-  function _isTrustedDevice(uid) {
-    try { var ts = parseInt(localStorage.getItem('lvl_trusted_' + uid) || '0'); return Date.now() - ts < 30 * 24 * 60 * 60 * 1000; } catch(_) { return false; }
-  }
-  function _trustDevice(uid) { try { localStorage.setItem('lvl_trusted_' + uid, String(Date.now())); } catch(_) {} }
-  window._isTrustedDevice = _isTrustedDevice;
-  function _getResendQuota(uid) {
-    try { var raw = localStorage.getItem('lvl_2fa_resend_' + uid); var p = raw ? JSON.parse(raw) : null; var today = new Date().toDateString(); return (p && p.date === today) ? p : { count: 0, date: today }; } catch(_) { return { count: 0, date: new Date().toDateString() }; }
-  }
-  function _saveResendQuota(uid, q) { try { localStorage.setItem('lvl_2fa_resend_' + uid, JSON.stringify(q)); } catch(_) {} }
-  function _updateQuotaUI(uid) {
-    var q = _getResendQuota(uid); var remaining = Math.max(0, 2 - q.count);
-    var btn = document.getElementById('twoFaResendBtn'); var info = document.getElementById('twoFaQuotaInfo');
-    if (remaining === 0) { if (btn) { btn.disabled = true; btn.style.opacity = '.3'; btn.style.cursor = 'default'; } if (info) info.textContent = 'Limite atteinte — attendez 24h, utilisez votre clé ou cliquez Retour'; }
-    else { if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = 'pointer'; } if (info) info.textContent = remaining === 1 ? '1 renvoi restant aujourd\'hui' : ''; }
-  }
-  function _showView(name) {
-    var views = ['twofaViewCode', 'twofaViewKey', 'twofaViewSuccess'];
-    views.forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = (id === name) ? 'block' : 'none'; });
-  }
-  window._switch2FAToKey = function() {
-    _showView('twofaViewKey'); var ki = document.getElementById('twoFaKeyInput'); if (ki) { ki.value = ''; setTimeout(function(){ ki.focus(); }, 100); } var ke = document.getElementById('twoFaKeyError'); if (ke) ke.style.display = 'none';
-  };
-  window._switch2FAToCode = function() {
-    _showView('twofaViewCode'); var inp = document.getElementById('twoFaSingleInput'); if (inp) { inp.value = ''; inp.style.borderColor = '#3f3f46'; setTimeout(function(){ inp.focus(); }, 100); } var err = document.getElementById('twoFaError'); if (err) err.style.display = 'none';
-  };
-  window._show2FAOverlay = function(u, onSuccess) {
-    if (_isTrustedDevice(u.uid)) { try { sessionStorage.setItem('lvl_2fa_ok_' + u.uid, '1'); } catch(_) {} if (onSuccess) onSuccess(u); return; }
-    _2fa.code = _genCode(); _2fa.expiresAt = Date.now() + 10 * 60 * 1000;
-    _2fa.uid = u.uid; _2fa.user = u; _2fa.callback = onSuccess; _2fa.attempts = 0;
-    var email = u.email || ''; var masked = email.replace(/(.{2})(.*)(@.*)/, function(_, a, b, c) { return a + b.replace(/./g, '*') + c; });
-    var el = document.getElementById('twoFaEmail'); if (el) el.textContent = masked;
-    var inp = document.getElementById('twoFaSingleInput'); if (inp) { inp.value = ''; inp.style.borderColor = '#3f3f46'; inp.style.boxShadow = 'none'; }
-    var err = document.getElementById('twoFaError'); if (err) err.style.display = 'none';
-    var ki = document.getElementById('twoFaKeyInput'); if (ki) ki.value = '';
-    var ov = document.getElementById('twoFaOverlay'); if (ov) ov.style.display = 'flex';
-    _showView('twofaViewCode');
-    try { sessionStorage.setItem('lvl_2fa_pending_' + u.uid, '1'); } catch(_) {}
-    _updateQuotaUI(u.uid);
-    _send2FACode(u, _2fa.code);
-    setTimeout(function() { var f = document.getElementById('twoFaSingleInput'); if (f) f.focus(); }, 220);
-  };
-  function _send2FACode(u, code) {
-    var name = (window._ud && window._ud.displayName) || u.displayName || (u.email && u.email.split('@')[0]) || '';
-    fetch('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: u.email, name: name, type: 'TWO_FA', code: code }) }).catch(function() {});
-  }
-  function _on2FASuccess() {
-    _trustDevice(_2fa.uid); try { sessionStorage.removeItem('lvl_2fa_pending_' + _2fa.uid); } catch(_) {} try { sessionStorage.setItem('lvl_2fa_ok_' + _2fa.uid, '1'); } catch(_) {}
-    _showView('twofaViewSuccess');
-    setTimeout(function() { var ov = document.getElementById('twoFaOverlay'); if (ov) ov.style.display = 'none'; if (_2fa.callback) _2fa.callback(_2fa.user); }, 1200);
-  }
-  window._verify2FA = function() {
-    var inp = document.getElementById('twoFaSingleInput'); var entered = inp ? inp.value.replace(/\D/g, '').slice(0, 6) : '';
-    if (entered.length < 6) { _show2FAError('Entrez les 6 chiffres'); return; }
-    if (Date.now() > _2fa.expiresAt) { _show2FAError('Code expiré — cliquez "Renvoyer"'); return; }
-    if (entered === _2fa.code) {
-      if (inp) { inp.style.borderColor = 'rgba(34,197,94,.6)'; inp.style.boxShadow = '0 0 0 3px rgba(34,197,94,.12)'; }
-      setTimeout(_on2FASuccess, 300);
-    } else {
-      _2fa.attempts++;
-      if (inp) { inp.style.borderColor = 'rgba(248,113,113,.6)'; inp.style.boxShadow = '0 0 0 3px rgba(248,113,113,.1)'; }
-      var left = Math.max(0, 3 - _2fa.attempts);
-      _show2FAError(_2fa.attempts >= 3 ? 'Trop de tentatives — renvoyez un nouveau code ou utilisez votre clé' : 'Code incorrect — ' + left + ' essai' + (left > 1 ? 's' : '') + ' restant');
-      if (_2fa.attempts >= 3 && inp) { inp.value = ''; inp.style.borderColor = '#3f3f46'; }
-    }
-  };
-  window._confirmKeyVerify = function() {
-    var ki = document.getElementById('twoFaKeyInput'); var ke = document.getElementById('twoFaKeyError');
-    var enteredKey = ki ? ki.value.trim().toUpperCase() : '';
-    function showKeyErr(msg) { if (ke) { ke.textContent = msg; ke.style.display = 'block'; } }
-    if (!enteredKey) { showKeyErr('Entrez votre clé LevelUp'); return; }
-    if (!/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(enteredKey)) { showKeyErr('Format invalide — ex: LVL-AB12C-34DEF'); return; }
-    var storedKey = localStorage.getItem('lm_key'), storedUid = localStorage.getItem('lm_uid');
-    if (storedKey && storedKey.toUpperCase() === enteredKey && storedUid === _2fa.uid) {
-      if (ki) { ki.style.borderColor = 'rgba(34,197,94,.6)'; ki.style.boxShadow = '0 0 0 3px rgba(34,197,94,.12)'; }
-      setTimeout(_on2FASuccess, 300);
-    } else { showKeyErr('Clé incorrecte ou non reconnue sur cet appareil'); }
-  };
-  window._resend2FA = function() {
-    if (!_2fa.user) return;
-    var q = _getResendQuota(_2fa.uid);
-    if (q.count >= 2) { _show2FAError('Limite atteinte — attendez 24h ou utilisez votre clé'); _updateQuotaUI(_2fa.uid); return; }
-    q.count++; _saveResendQuota(_2fa.uid, q);
-    _2fa.code = _genCode(); _2fa.expiresAt = Date.now() + 10 * 60 * 1000; _2fa.attempts = 0;
-    var inp = document.getElementById('twoFaSingleInput'); if (inp) { inp.value = ''; inp.style.borderColor = '#3f3f46'; inp.style.boxShadow = 'none'; }
-    var err = document.getElementById('twoFaError'); if (err) err.style.display = 'none';
-    _send2FACode(_2fa.user, _2fa.code); _updateQuotaUI(_2fa.uid);
-    if (window.toast_) toast_('Nouveau code envoyé à ' + (_2fa.user.email || '') + ' !', 'ok');
-  };
-  window._back2FAToLogin = async function() {
-    var ov = document.getElementById('twoFaOverlay'); if (ov) ov.style.display = 'none';
-    try { sessionStorage.removeItem('lvl_2fa_pending_' + (_2fa.uid || '')); } catch(_) {}
-    _2fa.uid = null; _2fa.user = null; _2fa.callback = null;
-    try { const { signOut: _so } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js'); await _so(window._auth); } catch(_e) {}
-    var dash = document.getElementById('dashboard'); if (dash) dash.style.display = 'none';
-    var authEl = document.getElementById('authOverlay') || document.querySelector('.auth-screen');
-    if (authEl) { authEl.classList.remove('hidden'); authEl.style.display = ''; }
-    document.body.classList.remove('lvl-panel-mode', 'lvl-in-settings');
-  };
-  function _show2FAError(msg) { var err = document.getElementById('twoFaError'); if (err) { err.textContent = msg; err.style.display = 'block'; } }
-  document.addEventListener('DOMContentLoaded', function() {
-    var inp = document.getElementById('twoFaSingleInput');
-    if (!inp) return;
-    inp.addEventListener('input', function(e) { var val = e.target.value.replace(/\D/g, '').slice(0, 6); e.target.value = val; if (val.length === 6) setTimeout(window._verify2FA, 150); });
-    inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') window._verify2FA(); });
-    inp.addEventListener('paste', function(e) { e.preventDefault(); var paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6); inp.value = paste; if (paste.length === 6) setTimeout(window._verify2FA, 150); });
-    var ki = document.getElementById('twoFaKeyInput');
-    if (ki) {
-      ki.addEventListener('input', function(e) { var val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (val.length > 3) val = val.slice(0, 3) + '-' + val.slice(3); if (val.length > 9) val = val.slice(0, 9) + '-' + val.slice(9); e.target.value = val.slice(0, 15); });
-      ki.addEventListener('keydown', function(e) { if (e.key === 'Enter') window._confirmKeyVerify(); });
-    }
-  });
-  window._2fa_state = _2fa;
-})();
-
-// ── Détermine si une connexion est "nouvelle" ──
-window._isNewLogin = function(ud, locData) {
-  if (!ud) return false; if (!ud.lastLoginAt) return true;
-  if (window._isTrustedDevice && window._isTrustedDevice(ud.uid)) return false;
-  var knownIps = ud.knownIps || []; var currentIp = locData && locData.ip;
-  if (!currentIp) return false; return !knownIps.includes(currentIp);
-};
-
-// ── Affichage erreurs Firestore dans les paramètres ──
-window._showSettingsError = function(title, text) {
-  var banner = document.getElementById('settingsErrorBanner'); var t = document.getElementById('settingsErrorTitle'); var p = document.getElementById('settingsErrorText');
-  if (banner) banner.style.display = 'block'; if (t) t.textContent = title || 'Problème de connexion'; if (p) p.textContent = text || '';
-};
-window._clearSettingsError = function() { var banner = document.getElementById('settingsErrorBanner'); if (banner) banner.style.display = 'none'; };
-
-// ── PHOTO PICKER ──
-window.openPhotoPicker = function() {
-  var ov = document.getElementById('photoPickerOv'); if (!ov) return;
-  var d = window._ud; var u = window._user;
-  var photo = d?.customPhotoURL || d?.photoURL || u?.photoURL;
-  var name = d?.displayName || u?.email?.split('@')[0] || '?';
-  var init = name.charAt(0).toUpperCase();
-  var prev = document.getElementById('photoPickerPreview');
-  if (prev) { if (photo) prev.innerHTML = `<img src="${photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" referrerpolicy="no-referrer">`; else prev.textContent = init; }
-  var rcr = document.getElementById('removeCustomPhotoRow'); if (rcr) { if(d?.customPhotoURL) rcr.classList.remove('hidden'); else rcr.classList.add('hidden'); }
-  document.getElementById('photoUploadProgress')?.classList.add('hidden');
-  var pb = document.getElementById('photoProgressBar'); if(pb) pb.style.width = '0%';
-  ov.classList.remove('hidden');
-};
-window.closePhotoPicker = function() { document.getElementById('photoPickerOv')?.classList.add('hidden'); if(document.getElementById('photoFileInput')) document.getElementById('photoFileInput').value = ''; };
-window.triggerPhotoUpload = function() { document.getElementById('photoFileInput')?.click(); };
-window.handlePhotoFileSelected = async function(input) {
-  var file = input.files?.[0]; if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { toast_ && toast_('Fichier trop grand — max 5 Mo', 'err'); input.value = ''; return; }
-  var prog = document.getElementById('photoUploadProgress'); var pb = document.getElementById('photoProgressBar'); var pt = document.getElementById('photoProgressTxt');
-  if (prog) prog.classList.remove('hidden'); if (pb) pb.style.width = '30%'; if (pt) pt.textContent = 'Upload en cours…';
-  try {
-    var formData = new FormData(); formData.append('file', file); formData.append('folder', '/levelup/avatars'); formData.append('fileName', `avatar_${window._user?.uid || Date.now()}_${Date.now()}.${file.name.split('.').pop()}`);
-    if (pb) pb.style.width = '60%';
-    var resp = await fetch('/api/imagekit-upload', { method: 'POST', body: formData }); if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    var data = await resp.json(); if (!data.url) throw new Error(data.error || 'Erreur upload');
-    if (pb) pb.style.width = '90%';
-    if (window._db && window._user?.uid) { const { doc: fsDoc, setDoc: fsSet } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js'); await fsSet(fsDoc(window._db, 'artifacts', 'level-ia-premium', 'users', window._user.uid, 'profile', 'data'), { customPhotoURL: data.url }, { merge: true }); }
-    if (!window._ud) window._ud = {}; window._ud.customPhotoURL = data.url; localStorage.setItem('lm_custom_photo', data.url);
-    if (pb) pb.style.width = '100%'; if (pt) pt.textContent = 'Photo mise à jour !';
-    window.refreshUI && window.refreshUI();
-    var prev = document.getElementById('photoPickerPreview'); if (prev) prev.innerHTML = `<img src="${data.url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" referrerpolicy="no-referrer">`;
-    var rcr = document.getElementById('removeCustomPhotoRow'); if (rcr) rcr.classList.remove('hidden');
-    toast_ && toast_('Photo de profil mise à jour !', 'ok'); setTimeout(() => window.closePhotoPicker(), 1200);
-  } catch(err) {
-    if (pt) pt.textContent = 'Une erreur est survenue'; if (pb) pb.style.background = 'var(--red)'; toast_ && toast_('Impossible de mettre à jour la photo. Réessayez.', 'err');
-  }
-  input.value = '';
-};
-window.resetToGooglePhoto = async function() {
-  try {
-    var u = window._user; var googlePhoto = u?.photoURL || '';
-    if (window._db && u?.uid) { const { doc: fsDoc, setDoc: fsSet } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js'); await fsSet(fsDoc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data'), { customPhotoURL: '' }, { merge: true }); }
-    if (window._ud) window._ud.customPhotoURL = ''; localStorage.removeItem('lm_custom_photo');
-    window.refreshUI && window.refreshUI();
-    var d = window._ud; var init = (d?.displayName || u?.email?.split('@')[0] || '?').charAt(0).toUpperCase();
-    var prev = document.getElementById('photoPickerPreview');
-    if (prev) { if(googlePhoto) prev.innerHTML = `<img src="${googlePhoto}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" referrerpolicy="no-referrer">`; else prev.textContent = init; }
-    var rcr = document.getElementById('removeCustomPhotoRow'); if (rcr) rcr.classList.add('hidden');
-    toast_ && toast_('Photo Google restaurée', 'ok'); setTimeout(() => window.closePhotoPicker(), 900);
-  } catch(err) { toast_ && toast_('Impossible de restaurer la photo. Réessayez.', 'err'); }
-};
-window.removeCustomPhoto = window.resetToGooglePhoto;
-
-// ── LIAISON COMPTE FACEBOOK + GOOGLE ──
-window._linkFbToGoogle = async function() {
-  var btn = document.getElementById('fbLinkConfirmBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion Google…'; }
-  try {
-    var { GoogleAuthProvider, signInWithPopup, linkWithCredential, FacebookAuthProvider } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js');
-    var gProv = new GoogleAuthProvider(); var result = await signInWithPopup(window._auth, gProv);
-    if (window._pendingFbCred) { await linkWithCredential(result.user, window._pendingFbCred); window._pendingFbCred = null; }
-    closeOverlay('fbLinkOv'); toast_('✅ Comptes Facebook & Google liés avec succès !', 'ok');
-  } catch(err) {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-brands fa-facebook" style="margin-right:7px"></i>Lier les deux comptes'; }
-    toast_('Erreur de liaison : ' + (err.message || err.code), 'err');
-  }
-};
-
-window._toggleFbLink = async function() {
-  var btn = document.getElementById('linkedFbBtn'); if(btn) { btn.disabled = true; btn.textContent = '…'; }
-  try {
-    var { FacebookAuthProvider, signInWithPopup, linkWithCredential } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js');
-    var fbP = new FacebookAuthProvider(); var res = await signInWithPopup(window._auth, fbP);
-    if(window._user) await linkWithCredential(window._user, FacebookAuthProvider.credentialFromResult(res));
-    toast_('Facebook lié avec succès !', 'ok');
-    var fbSt2 = document.getElementById('linkedFbStatus'); if(fbSt2) fbSt2.textContent = 'Lié';
-    var fbBd = document.getElementById('linkedFbBadge'); if(fbBd) fbBd.style.display = 'flex';
-    if(btn) { btn.style.display = 'none'; }
-  } catch(err) {
-    if(btn) { btn.disabled = false; btn.textContent = 'Lier'; }
-    if(err.code !== 'auth/popup-closed-by-user') toast_('Erreur : ' + (err.message || err.code), 'err');
-  }
-};
-
-// ── PARAMÈTRES : LOCALISATION & NOTIFS APPS ──
-(function() {
-  function _updateLocationSettingUI() {
-    var granted = localStorage.getItem('lvl_location_pref') === 'granted';
-    var btn = document.getElementById('setLocationBtn'); var txt = document.getElementById('setLocationBtnTxt'); var sta = document.getElementById('setLocationStatus');
-    if (txt) txt.textContent = granted ? 'Désactiver' : 'Activer';
-    if (btn) { btn.style.background = granted ? 'rgba(34,197,94,.15)' : ''; btn.style.borderColor = granted ? 'rgba(34,197,94,.35)' : ''; btn.style.color = granted ? '#4ade80' : ''; }
-    if (sta) sta.textContent = granted ? 'Localisation activée' : 'Améliore votre expérience';
-  }
-  function _updateAppNotifsUI() {
-    var on = localStorage.getItem('lvl_inbox_notifs') !== 'off';
-    var btn = document.getElementById('setAppNotifsBtn'); var txt = document.getElementById('setAppNotifsBtnTxt');
-    if (txt) txt.textContent = on ? 'Désactiver' : 'Activer';
-    if (btn) { btn.style.background = on ? 'rgba(168,85,247,.15)' : ''; btn.style.borderColor = on ? 'rgba(168,85,247,.35)' : ''; btn.style.color = on ? '#c084fc' : ''; }
-  }
-  window._updateLocationSettingUI = _updateLocationSettingUI;
-  window._updateAppNotifsUI = _updateAppNotifsUI;
-  window._settingsToggleLocation = function() {
-    if (!navigator.geolocation) { if (window.toast_) toast_('Géolocalisation non supportée par ce navigateur.', 'error'); return; }
-    var granted = localStorage.getItem('lvl_location_pref') === 'granted';
-    if (granted) {
-      localStorage.setItem('lvl_location_pref', 'denied');
-      if (window._user && window._db) { import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js').then(function(_fi) { _fi.setDoc(_fi.doc(window._db,'artifacts','level-ia-premium','users',window._user.uid,'profile','data'), { locationGranted: false }, { merge: true }); }).catch(function(){}); }
-      _updateLocationSettingUI(); if (window.toast_) toast_('Localisation désactivée', 'info');
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        async function(pos) {
-          var loc = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: Math.round(pos.coords.accuracy), ts: Date.now() };
-          localStorage.setItem('lvl_location_pref', 'granted');
-          if (window._user && window._db) { try { var _fi = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js'); await _fi.setDoc(_fi.doc(window._db,'artifacts','level-ia-premium','users',window._user.uid,'profile','data'), { location: loc, locationGranted: true, locationUpdatedAt: Date.now() }, { merge: true }); } catch(e) {} }
-          _updateLocationSettingUI(); if (window.toast_) toast_('✓ Localisation activée', 'success');
-        },
-        function() { localStorage.setItem('lvl_location_pref', 'denied'); _updateLocationSettingUI(); if (window.toast_) toast_('Accès refusé — modifiez les permissions dans les réglages de votre appareil.', 'error'); },
-        { timeout: 10000, maximumAge: 0, enableHighAccuracy: false }
-      );
-    }
-  };
-  window._settingsToggleAppNotifs = function() {
-    var on = localStorage.getItem('lvl_inbox_notifs') !== 'off';
-    localStorage.setItem('lvl_inbox_notifs', on ? 'off' : 'on');
-    _updateAppNotifsUI(); if (window.toast_) toast_(on ? 'Notifications apps désactivées' : '✓ Notifications apps activées', on ? 'info' : 'success');
-  };
-  document.addEventListener('lvlUserReady', function() { setTimeout(function() { _updateLocationSettingUI(); _updateAppNotifsUI(); }, 800); });
-})();
-
-// ── SETUP WIZARD JS (nouvelle génération) ──
-(function() {
-  // Étapes actives dans l'ordre
-  var _swFlow = ['notifications','localisation','cookies','profil'];
-  var _swCurrentIdx = 0;
-  var _swSubstep = 1; // 1=pseudo, 2=age, 3=photo
-  var _swSelectedAge = null;
-  var _swFile = null;
-  var _swTotalSteps = _swFlow.length;
-
-  // Permet à _checkOnboarding d'injecter un flow personnalisé
-  window._swOverrideFlow = function(newFlow) {
-    _swFlow = newFlow;
-    _swCurrentIdx = 0;
-    _swTotalSteps = newFlow.length;
-  };
-
-  // Init/reset du wizard (appelé depuis _checkOnboarding)
-  window._swInit = function() {
-    _swBuildSidebar();
-    _swSetProgress(0);
-    _swShowStepById('step-' + _swFlow[0]);
-  };
-
-  // ─── INDICATEURS SIDEBAR DESKTOP ───────────────────────────
-  var _swLabels = { notifications:'Notifications', localisation:'Localisation', cookies:'Confidentialité', profil:'Profil' };
-
-  function _swBuildSidebar() {
-    var cont = document.getElementById('sw-desktop-indicators'); if (!cont) return;
-    cont.innerHTML = '';
-    _swFlow.forEach(function(key, i) {
-      var row = document.createElement('div');
-      row.id = 'sw-ind-' + i;
-      row.style.cssText = 'display:flex;align-items:center;gap:14px;opacity:' + (i === 0 ? '1' : '0.35') + ';transition:opacity .35s';
-      var dot = document.createElement('div');
-      dot.id = 'sw-ind-dot-' + i;
-      dot.style.cssText = 'width:22px;height:22px;border-radius:50%;border:2px solid ' + (i === 0 ? '#a855f7' : 'rgba(255,255,255,.15)') + ';background:' + (i === 0 ? 'rgba(168,85,247,.15)' : 'transparent') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .35s';
-      if (i === 0) { var chk = document.createElement('i'); chk.className = 'ph-bold ph-check'; chk.style.cssText = 'font-size:.6rem;color:#a855f7;display:none'; chk.id = 'sw-ind-chk-' + i; dot.appendChild(chk); }
-      var lbl = document.createElement('span');
-      lbl.style.cssText = 'font-size:.82rem;font-weight:' + (i === 0 ? '700' : '500') + ';color:' + (i === 0 ? '#fff' : 'rgba(255,255,255,.4)') + ';transition:all .35s';
-      lbl.textContent = _swLabels[key] || key;
-      row.appendChild(dot); row.appendChild(lbl);
-      cont.appendChild(row);
-    });
-  }
-
-  function _swSetProgress(idx) {
-    var bar = document.getElementById('sw-progress-bar');
-    if (bar) bar.style.width = ((idx + 1) / _swTotalSteps * 100) + '%';
-    var ctr = document.getElementById('sw-step-counter');
-    if (ctr) ctr.textContent = 'Étape ' + (idx + 1) + ' / ' + _swTotalSteps;
-    // Mise à jour des indicateurs
-    _swFlow.forEach(function(key, i) {
-      var row = document.getElementById('sw-ind-' + i);
-      var dot = document.getElementById('sw-ind-dot-' + i);
-      var chk = document.getElementById('sw-ind-chk-' + i);
-      var lbl = row ? row.querySelector('span') : null;
-      if (!row) return;
-      if (i < idx) {
-        row.style.opacity = '0.7';
-        if (dot) { dot.style.borderColor = '#22c55e'; dot.style.background = 'rgba(34,197,94,.15)'; }
-        if (chk) chk.style.display = 'block';
-        if (lbl) { lbl.style.color = 'rgba(255,255,255,.45)'; lbl.style.fontWeight = '500'; }
-      } else if (i === idx) {
-        row.style.opacity = '1';
-        if (dot) { dot.style.borderColor = '#a855f7'; dot.style.background = 'rgba(168,85,247,.15)'; }
-        if (lbl) { lbl.style.color = '#fff'; lbl.style.fontWeight = '700'; }
-      } else {
-        row.style.opacity = '0.35';
-        if (dot) { dot.style.borderColor = 'rgba(255,255,255,.15)'; dot.style.background = 'transparent'; }
-        if (lbl) { lbl.style.color = 'rgba(255,255,255,.4)'; lbl.style.fontWeight = '500'; }
-      }
-    });
-  }
-
-  function _swShowStepById(stepId) {
-    document.querySelectorAll('#setupWizard .step-content').forEach(function(el) {
-      el.style.display = 'none'; el.classList.remove('sw-step-enter');
-    });
-    var el = document.getElementById(stepId);
-    if (el) { el.style.display = 'flex'; requestAnimationFrame(function(){ el.classList.add('sw-step-enter'); }); }
-  }
-
-  // ─── NAVIGATION PRINCIPALE ────────────────────────────────
-  window.swNextStep = async function(skip) {
-    var currentKey = _swFlow[_swCurrentIdx];
-    if (currentKey === 'notifications' && !skip) {
-      try { await Notification.requestPermission(); } catch(_) {}
-    }
-    if (currentKey === 'localisation' && !skip) {
-      try {
-        navigator.geolocation.getCurrentPosition(
-          function() { localStorage.setItem('lvl_location_pref','granted'); if (window._updateLocationSettingUI) window._updateLocationSettingUI(); },
-          function() {},
-          { timeout: 5000 }
-        );
-      } catch(_) {}
-    }
-    if (currentKey === 'cookies') { localStorage.setItem('lvl_cookies_accepted','1'); }
-    _swCurrentIdx++;
-    if (_swCurrentIdx < _swTotalSteps) {
-      _swSetProgress(_swCurrentIdx);
-      _swShowStepById('step-' + _swFlow[_swCurrentIdx]);
-    } else {
-      _swShowSuccess();
-    }
-  };
-
-  // ─── SOUS-ÉTAPES DU PROFIL ────────────────────────────────
-  window.swGoToSubstep = function(from, to) {
-    var subMap = { 1:'substep-pseudo', 2:'substep-age', 3:'substep-photo' };
-    if (from === 1 && to === 2) {
-      var inp = document.getElementById('username-input');
-      var val = inp ? inp.value.trim() : '';
-      var errEl = document.getElementById('username-error');
-      var errTxt = document.getElementById('username-error-text');
-      if (!val || val.length < 3 || val.length > 20 || /[^a-z0-9_]/.test(val)) {
-        if (errEl) errEl.style.display = 'block';
-        if (errTxt) errTxt.textContent = 'Format invalide (3–20 caractères, minuscules, chiffres et _ uniquement).';
-        return;
-      }
-      if (errEl) errEl.style.display = 'none';
-      window._swUsername = val;
-    }
-    if (from === 2 && to === 3) {
-      var errAge = document.getElementById('age-error');
-      if (!_swSelectedAge) { if (errAge) errAge.style.display = 'block'; return; }
-      if (errAge) errAge.style.display = 'none';
-    }
-    var fromEl = document.getElementById(subMap[from]);
-    var toEl = document.getElementById(subMap[to]);
-    if (fromEl) fromEl.style.display = 'none';
-    if (toEl) { toEl.style.display = 'flex'; toEl.classList.add('sw-step-enter'); }
-    _swSubstep = to;
-  };
-
-  window.swSelectAge = function(btn, age) {
-    document.querySelectorAll('#setupWizard .age-btn').forEach(function(b) {
-      b.style.borderColor = 'rgba(255,255,255,.08)';
-      b.style.background = '#18181b';
-      b.style.color = 'rgba(255,255,255,.75)';
-      delete b.dataset.sel;
-    });
-    btn.style.borderColor = 'rgba(168,85,247,.6)';
-    btn.style.background = 'rgba(168,85,247,.1)';
-    btn.style.color = '#c084fc';
-    btn.dataset.sel = '1';
-    _swSelectedAge = age;
-  };
-
-  window.swValidateImage = function(e) {
-    var file = e.target.files[0];
-    var errEl = document.getElementById('sw-image-error');
-    var errTxt = document.getElementById('sw-image-error-text');
-    if (!file) return;
-    if (!['image/jpeg','image/png'].includes(file.type)) {
-      if (errEl) errEl.style.display = 'block';
-      if (errTxt) errTxt.textContent = 'Format non supporté. Utilisez JPG ou PNG.';
-      return;
-    }
-    var img = new Image();
-    img.onload = function() {
-      if (img.width < 256 || img.height < 256) {
-        if (errEl) errEl.style.display = 'block';
-        if (errTxt) errTxt.textContent = 'Image trop petite (minimum 256×256px).';
-        return;
-      }
-      if (errEl) errEl.style.display = 'none';
-      _swFile = file;
-      var prev = document.getElementById('sw-image-preview');
-      var icon = document.getElementById('sw-placeholder-icon');
-      var ring = document.getElementById('sw-photo-ring');
-      var btn  = document.getElementById('sw-action-btn');
-      if (prev) { prev.src = URL.createObjectURL(file); prev.style.display = 'block'; }
-      if (icon) icon.style.display = 'none';
-      if (ring) ring.style.opacity = '1';
-      if (btn) {
-        btn.onclick = window.swFinishOnboarding;
-        btn.textContent = 'Continuer avec cette photo';
-        btn.style.background = 'rgba(34,197,94,.12)';
-        btn.style.borderColor = 'rgba(34,197,94,.25)';
-        btn.style.color = '#4ade80';
-      }
-    };
-    img.src = URL.createObjectURL(file);
-  };
-
-  window.swFinishOnboarding = async function() {
-    _swShowSuccess();
-  };
-
-  function _swShowSuccess() {
-    _swShowStepById('step-success');
-    setTimeout(function() {
-      var icon = document.getElementById('sw-success-icon');
-      if (icon) icon.style.transform = 'scale(1)';
-    }, 100);
-    setTimeout(function() {
-      var wiz = document.getElementById('setupWizard');
-      if (wiz) wiz.style.display = 'none';
-      if (window._checkOnboarding && window._user) window._checkOnboarding(window._user);
-    }, 2200);
-  }
-
-  window._showSetupWizard = function() {
-    var wiz = document.getElementById('setupWizard');
-    if (!wiz) return;
-    _swCurrentIdx = 0; _swSubstep = 1; _swSelectedAge = null; _swFile = null;
-    _swBuildSidebar();
-    _swSetProgress(0);
-    wiz.style.display = 'flex';
-    _swShowStepById('step-' + _swFlow[0]);
-  };
 })();
 </script>
 </body>
