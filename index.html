@@ -1367,15 +1367,16 @@ NAVIGATION (INVISIBLE BACKGROUND)
 <script>
 (function(){
   var _isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  var _isMobDevice = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || window.navigator.standalone === true;
   if (_isPWA) {
     document.documentElement.classList.add('is-pwa');
-    document.body.classList.add('pwa-mobile');
+    // pwa-mobile UNIQUEMENT pour mobile — le desktop PWA garde son interface normale
+    if (_isMobDevice) document.body.classList.add('pwa-mobile');
   }
 })();
 </script>
 <style>
-html.is-pwa #landing { display:none !important; }
-html.is-pwa #landing * { visibility:hidden !important; }
+html.is-pwa body.pwa-mobile #landing { display:none !important; }
 </style>
 
 <!-- ═══════════════════════════════════════
@@ -2462,6 +2463,83 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="set-row" style="margin-top:4px;flex-wrap:wrap;gap:10px">
   <div class="set-info" style="min-width:0;flex:1"><h5>Notifs apps LevelUp</h5><p style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Alertes d'Oppa, LevelDay et autres</p></div>
   <button class="btn btn-g btn-xs" id="setAppNotifsBtn" onclick="window._settingsToggleAppNotifs()" style="flex-shrink:0"><i class="fa-solid fa-bell-ring"></i> <span id="setAppNotifsBtnTxt">Activer</span></button>
+</div>
+</div>
+
+<!-- ── SECTION ÉCOSYSTÈME ── -->
+<div class="set-sec">
+<div class="set-title"><i class="fa-solid fa-layer-group" style="color:#f97316;margin-right:6px;font-size:.78rem"></i>Écosystème</div>
+<div class="set-row" style="cursor:pointer" onclick="pnl('services')">
+  <div class="set-info"><h5><i class="fa-solid fa-globe" style="color:#3b82f6;margin-right:6px;font-size:.8rem"></i>Services intégrés</h5><p>Accédez aux sites partenaires directement dans l'app</p></div>
+  <i class="fa-solid fa-chevron-right" style="color:var(--dim);font-size:.8rem"></i>
+</div>
+<div class="set-row" style="cursor:pointer" onclick="pnl('tools')">
+  <div class="set-info"><h5><i class="fa-solid fa-wrench" style="color:#22c55e;margin-right:6px;font-size:.8rem"></i>Outils LevelUp</h5><p>Boîte à outils intelligente de l'écosystème</p></div>
+  <i class="fa-solid fa-chevron-right" style="color:var(--dim);font-size:.8rem"></i>
+</div>
+<div class="set-row" style="cursor:pointer" onclick="pnl('keys')">
+  <div class="set-info"><h5><i class="fa-solid fa-key" style="color:var(--purple);margin-right:6px;font-size:.8rem"></i>Clé d'accès LevelUp</h5><p>Gère l'accès à LevelMovie, LevelMusic et Level IA</p></div>
+  <i class="fa-solid fa-chevron-right" style="color:var(--dim);font-size:.8rem"></i>
+</div>
+<div class="set-row" style="cursor:pointer" onclick="window.openAppsOverlay && window.openAppsOverlay()">
+  <div class="set-info"><h5><i class="fa-solid fa-border-all" style="color:#a855f7;margin-right:6px;font-size:.8rem"></i>Toutes les applications</h5><p>Voir et accéder à toutes les apps de l'écosystème</p></div>
+  <i class="fa-solid fa-chevron-right" style="color:var(--dim);font-size:.8rem"></i>
+</div>
+</div>
+
+<!-- ── SECTION CONFIDENTIALITÉ & DONNÉES ── -->
+<div class="set-sec">
+<div class="set-title"><i class="fa-solid fa-user-shield" style="color:#22c55e;margin-right:6px;font-size:.78rem"></i>Confidentialité &amp; Données</div>
+<div class="set-row" style="flex-wrap:wrap;gap:10px">
+  <div class="set-info" style="min-width:0;flex:1"><h5>Cookies analytiques</h5><p id="setCookieStatus">Améliore l'expérience et les performances</p></div>
+  <label class="tog-wrap" style="flex-shrink:0">
+    <input type="checkbox" id="setCookieToggle" onchange="window._settingsToggleCookies(this.checked)">
+    <span class="tog-sl"></span>
+  </label>
+</div>
+<div class="set-row" style="cursor:pointer;margin-top:4px" onclick="window._resetOnboarding && window._resetOnboarding()">
+  <div class="set-info"><h5><i class="fa-solid fa-rotate-left" style="color:#f97316;margin-right:6px;font-size:.8rem"></i>Relancer la configuration</h5><p>Refaire le setup wizard (notifications, localisation, profil)</p></div>
+  <button class="btn btn-g btn-xs"><i class="fa-solid fa-wand-magic-sparkles"></i> Relancer</button>
+</div>
+<div class="set-row" style="margin-top:4px">
+  <div class="set-info"><h5>Exporter mes données</h5><p>Télécharger une copie de vos informations LevelUp</p></div>
+  <button class="btn btn-g btn-xs" onclick="window._exportUserData && window._exportUserData()"><i class="fa-solid fa-download"></i> Exporter</button>
+</div>
+</div>
+
+<!-- ── SECTION APPARENCE ── -->
+<div class="set-sec">
+<div class="set-title"><i class="fa-solid fa-palette" style="color:#ec4899;margin-right:6px;font-size:.78rem"></i>Apparence</div>
+<div class="set-row" style="flex-wrap:wrap;gap:10px">
+  <div class="set-info" style="min-width:0;flex:1"><h5>Thème</h5><p>Interface sombre exclusive LevelUp</p></div>
+  <span style="font-size:.75rem;color:rgba(255,255,255,.25);font-weight:600;padding:4px 10px;background:rgba(255,255,255,.05);border-radius:100px;border:1px solid rgba(255,255,255,.08)"><i class="fa-solid fa-moon" style="margin-right:5px"></i>Sombre</span>
+</div>
+<div class="set-row" style="flex-wrap:wrap;gap:10px;margin-top:4px">
+  <div class="set-info" style="min-width:0;flex:1"><h5>Langue de l'interface</h5><p id="setLangStatus">Français</p></div>
+  <select id="setLangSelect" onchange="window._settingsSetLang(this.value)" style="padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.78rem;font-family:var(--sans);outline:none;cursor:pointer">
+    <option value="fr">🇫🇷 Français</option>
+    <option value="en">🇬🇧 English</option>
+    <option value="es">🇪🇸 Español</option>
+    <option value="de">🇩🇪 Deutsch</option>
+    <option value="pt">🇧🇷 Português</option>
+  </select>
+</div>
+</div>
+
+<!-- ── SECTION À PROPOS ── -->
+<div class="set-sec">
+<div class="set-title"><i class="fa-solid fa-circle-info" style="color:var(--purple);margin-right:6px;font-size:.78rem"></i>À propos</div>
+<div class="set-row">
+  <div class="set-info"><h5>Version de l'application</h5><p>LevelUp Ecosystem — Build 2.7</p></div>
+  <span style="font-size:.72rem;color:rgba(255,255,255,.2);font-weight:700;letter-spacing:.06em;font-family:monospace">v2.7</span>
+</div>
+<div class="set-row" style="cursor:pointer" onclick="window.open('https://levelup-ecosystem.com','_blank')">
+  <div class="set-info"><h5>Site officiel</h5><p>levelup-ecosystem.com</p></div>
+  <i class="fa-solid fa-arrow-up-right-from-square" style="color:var(--dim);font-size:.8rem"></i>
+</div>
+<div class="set-row" style="cursor:pointer" onclick="window.open('mailto:support@levelup-ecosystem.com','_blank')">
+  <div class="set-info"><h5>Contacter le support</h5><p>support@levelup-ecosystem.com</p></div>
+  <i class="fa-solid fa-envelope" style="color:var(--dim);font-size:.8rem"></i>
 </div>
 </div>
 
@@ -5240,6 +5318,8 @@ function showDash(u) {
 if (window._pwaSlider) window._pwaSlider.hide();
 // Fermer le sheet de login mobile
 if (window.closeMobileLoginSheet) window.closeMobileLoginSheet();
+// Fermer le panel PC auth si ouvert
+if (window._closePcAuth) window._closePcAuth();
 const landing = document.getElementById('landing');
 const dashboard = document.getElementById('dashboard');
 const mobileNav = document.getElementById('mobileNav');
@@ -5267,6 +5347,17 @@ if (window._enforceCookieForUser) window._enforceCookieForUser();
 document.dispatchEvent(new CustomEvent('lvlUserReady', { detail: { user: u } }));
 // Sauvegarder session pour persistance iOS
 try { localStorage.setItem('lvl_session', JSON.stringify({ uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL, ts: Date.now() })); } catch(_) {}
+
+// ── Setup Wizard : vérifier si nécessaire (Firestore, pas localStorage) ──
+setTimeout(async function() {
+  try {
+    if (!u || u.isKeyAuth || !window._showSetupWizard) return;
+    var { doc: _d, getDoc: _g } = window._fb;
+    var snap = await _g(_d(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data'));
+    var isFirstTime = !snap.exists() || !snap.data().onboardingDone;
+    window._showSetupWizard(u, isFirstTime);
+  } catch(e) { console.warn('Setup wizard check:', e); }
+}, 900);
 
 // Notification clé manquante — après 1.5s pour laisser le dashboard se charger
 setTimeout(function() {
@@ -10569,6 +10660,1058 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
     var panel = document.getElementById('panel-home');
     if (panel && panel.classList.contains('on')) _initCarousel();
   }, 2000);
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SETUP WIZARD — LevelUp Ecosystem
+     Formulaire d'inscription et configuration intelligente
+═══════════════════════════════════════════════════════════ -->
+<style>
+/* ── Animations Setup Wizard ── */
+@keyframes swSlideUp {
+  from { opacity:0; transform:translateY(28px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes swFadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@keyframes swSpin {
+  to { transform:rotate(360deg); }
+}
+@keyframes swSuccessBounce {
+  0%   { transform:scale(0); }
+  60%  { transform:scale(1.18); }
+  80%  { transform:scale(0.92); }
+  100% { transform:scale(1); }
+}
+
+#lvlSetupWizard {
+  display:none;
+  position:fixed; inset:0; z-index:9999999;
+  background:#0a0a0a;
+  flex-direction:row;
+  font-family:'Inter',var(--sans,sans-serif);
+  animation:swFadeIn .35s ease;
+}
+#lvlSetupWizard.visible { display:flex; }
+
+/* Sidebar desktop */
+#swSidebar {
+  display:none;
+  flex-direction:column;
+  width:280px; min-width:280px;
+  background:#0a0a0a;
+  border-right:1px solid rgba(255,255,255,.07);
+  padding:40px 28px;
+  flex-shrink:0;
+}
+@media(min-width:680px) {
+  #swSidebar { display:flex; }
+}
+
+/* Mobile header */
+#swMobileHeader {
+  padding:max(env(safe-area-inset-top,20px),20px) 24px 18px;
+  background:rgba(10,10,10,.95);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.07);
+  position:sticky; top:0; z-index:10;
+}
+@media(min-width:680px) { #swMobileHeader { display:none; } }
+
+/* Content area */
+#swContentArea {
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+}
+#swStepsScroll {
+  flex:1; overflow-y:auto;
+  padding:40px 24px max(env(safe-area-inset-bottom,32px),64px);
+  display:flex; flex-direction:column; align-items:center;
+}
+@media(min-width:680px) { #swStepsScroll { padding:60px 48px; } }
+
+#swStepsInner { width:100%; max-width:440px; margin:auto; }
+
+/* Steps */
+.sw-step {
+  display:none; flex-direction:column; align-items:center; text-align:center;
+  width:100%;
+}
+.sw-step.sw-active { display:flex; animation:swSlideUp .45s cubic-bezier(.16,1,.3,1) forwards; }
+
+/* Step icon container */
+.sw-ico {
+  width:80px; height:80px; border-radius:20px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:2rem; margin-bottom:28px;
+  flex-shrink:0;
+}
+.sw-ico-purple { background:rgba(168,85,247,.12); border:1px solid rgba(168,85,247,.25); }
+.sw-ico-blue   { background:rgba(59,130,246,.12);  border:1px solid rgba(59,130,246,.25); }
+.sw-ico-yellow { background:rgba(234,179,8,.12);   border:1px solid rgba(234,179,8,.25); }
+.sw-ico-green  { background:rgba(34,197,94,.12);   border:1px solid rgba(34,197,94,.25); }
+
+.sw-h2 {
+  font-size:1.85rem; font-weight:900; color:#fff;
+  margin:0 0 12px; letter-spacing:-.025em; line-height:1.15;
+}
+.sw-p {
+  font-size:.9rem; color:rgba(255,255,255,.42); line-height:1.75;
+  margin:0 0 32px; max-width:360px;
+}
+
+/* Buttons */
+.sw-btn-primary {
+  width:100%; padding:16px 24px; border-radius:14px;
+  background:linear-gradient(135deg,#a855f7,#7c3aed);
+  border:none; color:#fff; font-size:.95rem; font-weight:700;
+  cursor:pointer; font-family:inherit; transition:opacity .2s, transform .15s;
+  margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.sw-btn-primary:hover { opacity:.88; }
+.sw-btn-primary:active { transform:scale(.98); }
+.sw-btn-secondary {
+  width:100%; padding:13px 24px; border-radius:14px;
+  background:transparent; border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.38); font-size:.85rem; font-weight:600;
+  cursor:pointer; font-family:inherit; transition:all .2s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.sw-btn-secondary:hover { border-color:rgba(255,255,255,.28); color:rgba(255,255,255,.65); }
+.sw-btn-blue { background:linear-gradient(135deg,#3b82f6,#2563eb); }
+.sw-btn-yellow { background:linear-gradient(135deg,#f59e0b,#d97706); }
+
+/* Pseudo input */
+#swPseudoWrap {
+  display:flex; align-items:stretch;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px; overflow:hidden;
+  margin-bottom:8px; transition:border-color .2s; width:100%;
+}
+#swPseudoWrap:focus-within { border-color:rgba(168,85,247,.5); }
+#swPseudoPrefix {
+  padding:14px 16px; background:rgba(255,255,255,.06);
+  border-right:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.35); font-size:.95rem;
+  display:flex; align-items:center; flex-shrink:0;
+}
+#swPseudoInput {
+  flex:1; padding:14px 16px; background:transparent;
+  border:none; color:#fff; font-size:.9rem;
+  font-family:inherit; outline:none;
+}
+
+/* Age grid */
+#swAgeGrid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:12px; width:100%; margin-bottom:28px;
+}
+.sw-age-btn {
+  padding:22px 12px; border-radius:14px;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
+  color:rgba(255,255,255,.7); font-size:.9rem; font-weight:600;
+  cursor:pointer; font-family:inherit; transition:all .2s;
+}
+.sw-age-btn:hover { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.2); }
+.sw-age-btn.selected { background:rgba(168,85,247,.15); border-color:rgba(168,85,247,.5); color:#c4b5fd; }
+
+/* Photo upload */
+#swPhotoZone {
+  position:relative; width:140px; height:140px;
+  cursor:pointer; margin:0 auto 20px;
+}
+#swPhotoRing {
+  position:absolute; inset:-3px; border-radius:50%;
+  background:linear-gradient(135deg,#a855f7,#ec4899,#a855f7);
+  background-size:200% auto;
+  animation:gradRot 3s linear infinite;
+  opacity:0; transition:opacity .5s; z-index:0;
+}
+@keyframes gradRot { to { background-position:200% center; } }
+#swPhotoCircle {
+  position:absolute; inset:0; background:rgba(255,255,255,.05);
+  border:2px dashed rgba(255,255,255,.2); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; z-index:1; transition:all .3s;
+}
+#swPhotoPreview { display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+
+/* Substeps */
+.sw-sub { display:none; flex-direction:column; align-items:center; width:100%; }
+.sw-sub.sw-sub-active { display:flex; animation:swSlideUp .4s ease; }
+
+/* Success spinner */
+.sw-spinner {
+  width:16px; height:16px;
+  border:2.5px solid rgba(168,85,247,.3);
+  border-top-color:#a855f7;
+  border-radius:50%;
+  display:inline-block;
+  animation:swSpin .8s linear infinite;
+}
+
+/* Success icon */
+#swSuccessIcon {
+  width:96px; height:96px;
+  background:rgba(168,85,247,.15); border:1px solid rgba(168,85,247,.3);
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  margin:0 auto 28px; transform:scale(0);
+  transition:transform .7s cubic-bezier(.34,1.56,.64,1);
+}
+#swSuccessIcon.pop { transform:scale(1); }
+</style>
+
+<!-- Setup Wizard HTML -->
+<div id="lvlSetupWizard">
+  <!-- Sidebar Desktop -->
+  <div id="swSidebar">
+    <div style="margin-bottom:44px">
+      <div style="font-size:1.1rem;font-weight:900;letter-spacing:-.02em;color:#fff">Level<span style="color:#a855f7">Up</span> <span style="color:rgba(255,255,255,.45);font-weight:500">Ecosystem</span></div>
+      <div style="font-size:.75rem;color:rgba(255,255,255,.25);margin-top:4px">Configuration de votre espace</div>
+    </div>
+    <div style="position:relative;flex:1">
+      <div style="position:absolute;left:10px;top:8px;bottom:8px;width:2px;background:rgba(255,255,255,.07);border-radius:2px"></div>
+      <div id="swIndicators" style="display:flex;flex-direction:column;gap:24px;position:relative;z-index:1"></div>
+    </div>
+  </div>
+
+  <!-- Content Area -->
+  <div id="swContentArea">
+    <!-- Mobile Header -->
+    <div id="swMobileHeader">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:.95rem;font-weight:900;color:#fff">Level<span style="color:#a855f7">Up</span></span>
+        <span id="swMobCounter" style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em">1 / 1</span>
+      </div>
+      <div style="width:100%;height:3px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden">
+        <div id="swProgressBar" style="height:100%;background:linear-gradient(90deg,#a855f7,#7c3aed);border-radius:100px;transition:width .5s cubic-bezier(.4,0,.2,1);width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Steps Scroll -->
+    <div id="swStepsScroll">
+      <div id="swStepsInner">
+
+        <!-- ── STEP NOTIFICATIONS ── -->
+        <div id="sw-step-notif" class="sw-step">
+          <div class="sw-ico sw-ico-purple">🔔</div>
+          <h2 class="sw-h2">Ne ratez rien</h2>
+          <p class="sw-p">Activez les notifications pour recevoir les mises à jour importantes, vos invitations et les alertes de sécurité en temps réel.</p>
+          <button class="sw-btn-primary" onclick="window._swNotifAllow()">
+            <i class="fa-solid fa-bell"></i> Activer les notifications
+          </button>
+          <button class="sw-btn-secondary" onclick="window._swNext()">Pas maintenant</button>
+        </div>
+
+        <!-- ── STEP LOCALISATION ── -->
+        <div id="sw-step-loc" class="sw-step">
+          <div class="sw-ico sw-ico-blue">📍</div>
+          <h2 class="sw-h2">Où êtes-vous ?</h2>
+          <p class="sw-p">Autorisez la localisation pour du contenu adapté à votre région, une langue précise et des connexions sécurisées.</p>
+          <button class="sw-btn-primary sw-btn-blue" onclick="window._swLocAllow()">
+            <i class="fa-solid fa-location-dot"></i> Autoriser la localisation
+          </button>
+          <button class="sw-btn-secondary" onclick="window._swNext()">Ignorer pour le moment</button>
+        </div>
+
+        <!-- ── STEP COOKIES ── -->
+        <div id="sw-step-cookies" class="sw-step">
+          <div class="sw-ico sw-ico-yellow">🍪</div>
+          <h2 class="sw-h2">Votre vie privée</h2>
+          <p class="sw-p">Nous utilisons des cookies essentiels pour sécuriser votre session et des cookies analytiques pour améliorer l'écosystème.</p>
+          <button class="sw-btn-primary sw-btn-yellow" onclick="window._swCookies(true)">
+            <i class="fa-solid fa-check"></i> Accepter tout
+          </button>
+          <button class="sw-btn-secondary" onclick="window._swCookies(false)">Essentiels uniquement</button>
+        </div>
+
+        <!-- ── STEP PROFIL ── -->
+        <div id="sw-step-profil" class="sw-step" style="text-align:left">
+
+          <!-- Substep: Pseudo -->
+          <div id="sw-sub-pseudo" class="sw-sub sw-sub-active">
+            <div style="text-align:center;width:100%">
+              <div class="sw-ico sw-ico-purple" style="margin:0 auto 28px">@</div>
+              <h2 class="sw-h2">Choisissez un pseudo</h2>
+              <p class="sw-p">Ce nom sera visible dans l'écosystème. Lettres, chiffres et tirets du bas uniquement.</p>
+            </div>
+            <div id="swPseudoWrap">
+              <span id="swPseudoPrefix">@</span>
+              <input id="swPseudoInput" type="text" placeholder="mon_pseudo" maxlength="20" autocomplete="off" spellcheck="false"
+                oninput="window._swFmtPseudo(this)"
+                onkeydown="if(event.key==='Enter')window._swNextSub('sw-sub-age')">
+            </div>
+            <div id="swPseudoErr" style="display:none;font-size:.78rem;color:#ef4444;margin-bottom:10px;width:100%">Pseudo invalide — min. 3 caractères (lettres, chiffres, _)</div>
+            <button class="sw-btn-primary" onclick="window._swNextSub('sw-sub-age')" style="margin-top:8px">Continuer</button>
+          </div>
+
+          <!-- Substep: Âge -->
+          <div id="sw-sub-age" class="sw-sub">
+            <div style="text-align:center;width:100%">
+              <h2 class="sw-h2">Quel âge avez-vous ?</h2>
+              <p class="sw-p">Nous adaptons les contenus à votre profil.</p>
+            </div>
+            <div id="swAgeGrid">
+              <button class="sw-age-btn" onclick="window._swPickAge(this,'17-18')">17 – 18 ans</button>
+              <button class="sw-age-btn" onclick="window._swPickAge(this,'19-24')">19 – 24 ans</button>
+              <button class="sw-age-btn" onclick="window._swPickAge(this,'25-34')">25 – 34 ans</button>
+              <button class="sw-age-btn" onclick="window._swPickAge(this,'35+')">35 ans et +</button>
+            </div>
+            <div style="display:flex;gap:10px;width:100%">
+              <button onclick="window._swPrevSub('sw-sub-pseudo')" style="width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0"><i class="fa-solid fa-arrow-left" style="font-size:.8rem"></i></button>
+              <button class="sw-btn-primary" onclick="window._swNextSub('sw-sub-photo')" style="margin:0;flex:1">Continuer</button>
+            </div>
+          </div>
+
+          <!-- Substep: Photo -->
+          <div id="sw-sub-photo" class="sw-sub">
+            <div style="text-align:center;width:100%">
+              <h2 class="sw-h2">Dernière touche</h2>
+              <p class="sw-p">Une photo carrée (min. 256×256) pour que l'écosystème vous reconnaisse.</p>
+            </div>
+            <div id="swPhotoZone" onclick="document.getElementById('swPhotoFile').click()" title="Choisir une photo">
+              <div id="swPhotoRing"></div>
+              <div id="swPhotoCircle">
+                <div id="swPhotoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.28)">
+                  <i class="fa-solid fa-camera" style="font-size:1.4rem"></i>
+                  <span style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Photo</span>
+                </div>
+                <img id="swPhotoPreview" alt="Aperçu">
+              </div>
+            </div>
+            <input id="swPhotoFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="window._swPhotoChange(event)">
+            <div id="swPhotoErr" style="display:none;font-size:.78rem;color:#ef4444;margin-bottom:6px;text-align:center">Image trop petite — minimum 256×256 pixels</div>
+            <div style="display:flex;flex-direction:column;gap:8px;width:100%;margin-top:4px">
+              <button id="swPhotoPrimaryBtn" class="sw-btn-primary" onclick="document.getElementById('swPhotoFile').click()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)">
+                <i class="fa-solid fa-image"></i> Importer une image
+              </button>
+              <div style="display:flex;gap:8px;width:100%">
+                <button class="sw-btn-secondary" onclick="window._swPrevSub('sw-sub-age')" style="flex:1">Retour</button>
+                <button class="sw-btn-secondary" onclick="window._swNext()" style="flex:1">Ignorer</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- / step-profil -->
+
+        <!-- ── STEP SUCCESS ── -->
+        <div id="sw-step-success" class="sw-step" style="justify-content:center;min-height:65vh">
+          <div id="swSuccessIcon"><i class="fa-solid fa-check" style="font-size:2.2rem;color:#a855f7"></i></div>
+          <h2 class="sw-h2" style="font-size:2.1rem">Bienvenue !</h2>
+          <p class="sw-p" style="display:flex;align-items:center;gap:10px;justify-content:center">
+            <span class="sw-spinner"></span>
+            Préparation de votre espace...
+          </p>
+        </div>
+
+      </div><!-- /swStepsInner -->
+    </div><!-- /swStepsScroll -->
+  </div><!-- /swContentArea -->
+</div><!-- /lvlSetupWizard -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// SETUP WIZARD — LevelUp Ecosystem (Logique intelligente)
+// ═══════════════════════════════════════════════════════════
+(function() {
+
+var _swSteps = [];
+var _swIdx   = 0;
+var _swUser  = null;
+var _swAge   = null;
+var _swPhoto = null; // DataURL
+
+var _swLabels = {
+  notif:   { ico:'🔔', label:'Notifications' },
+  loc:     { ico:'📍', label:'Localisation'  },
+  cookies: { ico:'🍪', label:'Cookies'       },
+  profil:  { ico:'👤', label:'Profil'        }
+};
+
+// ── Entrée principale ──
+window._showSetupWizard = function(user, isFirstTime) {
+  _swUser = user;
+  _swAge  = null;
+  _swPhoto = null;
+  _swIdx  = 0;
+  _swSteps = [];
+
+  // Calcul intelligent des étapes nécessaires
+  var notifOk   = Notification.permission === 'granted';
+  var locOk     = !!localStorage.getItem('lvl_location_pref');
+  var cookiesOk = !!localStorage.getItem('lvl_cookies_accepted');
+  var hasName   = window._ud && window._ud.displayName && window._ud.displayName !== 'Utilisateur';
+
+  if (isFirstTime) {
+    // Première connexion → toutes les étapes manquantes
+    if (!notifOk)   _swSteps.push('notif');
+    if (!locOk)     _swSteps.push('loc');
+    if (!cookiesOk) _swSteps.push('cookies');
+    if (!hasName)   _swSteps.push('profil');
+  } else {
+    // Utilisateur de retour → seulement les autorisations manquantes
+    if (Notification.permission === 'default') _swSteps.push('notif');
+    if (!locOk) _swSteps.push('loc');
+  }
+
+  if (_swSteps.length === 0) return; // Rien à faire
+
+  _buildSidebar();
+  _showStep(0);
+  _updateProgress();
+
+  var wiz = document.getElementById('lvlSetupWizard');
+  if (wiz) { wiz.style.display = 'flex'; wiz.style.animation = 'swFadeIn .35s ease'; }
+};
+
+// ── Relancer le wizard (paramètres) ──
+window._resetOnboarding = function() {
+  if (!window._user || window._user.isKeyAuth) {
+    toast_('Connectez-vous pour reconfigurer votre profil', 'warn'); return;
+  }
+  window._showSetupWizard(window._user, true);
+};
+
+// ── Construire le sidebar ──
+function _buildSidebar() {
+  var cont = document.getElementById('swIndicators');
+  if (!cont) return;
+  cont.innerHTML = '';
+  _swSteps.forEach(function(key, idx) {
+    var info = _swLabels[key];
+    var el = document.createElement('div');
+    el.id = 'sw-ind-' + idx;
+    el.style.cssText = 'display:flex;align-items:center;gap:14px;transition:all .35s';
+    el.innerHTML =
+      '<div id="sw-ic-'+idx+'" style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;color:rgba(255,255,255,.3);flex-shrink:0;transition:all .35s;z-index:1">'+( idx+1 )+'</div>'+
+      '<span id="sw-it-'+idx+'" style="font-size:.83rem;font-weight:500;color:rgba(255,255,255,.3);transition:all .35s">'+info.ico+' '+info.label+'</span>';
+    cont.appendChild(el);
+  });
+  // Sidebar visible seulement si >1 étape
+  var sb = document.getElementById('swSidebar');
+  if (sb) sb.style.display = _swSteps.length > 1 ? 'flex' : 'none';
+}
+
+// ── Afficher une étape ──
+function _showStep(idx) {
+  document.querySelectorAll('.sw-step').forEach(function(s) {
+    s.classList.remove('sw-active');
+  });
+  var key = _swSteps[idx];
+  if (!key) { _finish(); return; }
+  var el = document.getElementById('sw-step-' + key);
+  if (!el) { _finish(); return; }
+  if (key === 'profil') {
+    // Reset substeps
+    ['sw-sub-pseudo','sw-sub-age','sw-sub-photo'].forEach(function(id) {
+      var s = document.getElementById(id);
+      if (s) { s.classList.remove('sw-sub-active'); s.style.display = ''; }
+    });
+    var p = document.getElementById('sw-sub-pseudo');
+    if (p) { p.classList.add('sw-sub-active'); p.style.display = 'flex'; }
+  }
+  el.classList.add('sw-active');
+  _updateIndicators(idx);
+}
+
+// ── Indicateurs sidebar ──
+function _updateIndicators(cur) {
+  _swSteps.forEach(function(_, idx) {
+    var ic = document.getElementById('sw-ic-' + idx);
+    var it = document.getElementById('sw-it-' + idx);
+    var ind = document.getElementById('sw-ind-' + idx);
+    if (!ic || !it || !ind) return;
+    if (idx < cur) {
+      ic.style.background = 'rgba(34,197,94,.18)';
+      ic.style.borderColor = 'rgba(34,197,94,.35)';
+      ic.style.color = '#4ade80';
+      ic.innerHTML = '<i class="fa-solid fa-check" style="font-size:.55rem"></i>';
+      it.style.color = 'rgba(255,255,255,.28)';
+      it.style.textDecoration = 'line-through';
+      ind.style.opacity = '1';
+    } else if (idx === cur) {
+      ic.style.background = '#a855f7';
+      ic.style.borderColor = '#a855f7';
+      ic.style.color = '#fff';
+      ic.innerHTML = String(idx + 1);
+      it.style.color = '#fff';
+      it.style.fontWeight = '700';
+      it.style.textDecoration = 'none';
+      ind.style.opacity = '1';
+    } else {
+      ic.style.background = 'rgba(255,255,255,.06)';
+      ic.style.borderColor = 'rgba(255,255,255,.1)';
+      ic.style.color = 'rgba(255,255,255,.25)';
+      ic.innerHTML = String(idx + 1);
+      it.style.color = 'rgba(255,255,255,.3)';
+      it.style.fontWeight = '500';
+      it.style.textDecoration = 'none';
+      ind.style.opacity = '.45';
+    }
+  });
+}
+
+// ── Progression ──
+function _updateProgress() {
+  var total = _swSteps.length;
+  var pct = total > 0 ? Math.round((_swIdx / total) * 100) : 100;
+  var bar = document.getElementById('swProgressBar');
+  if (bar) bar.style.width = pct + '%';
+  var ctr = document.getElementById('swMobCounter');
+  if (ctr) ctr.textContent = (_swIdx + 1) + ' / ' + total;
+}
+
+// ── Navigation ──
+window._swNext = function() {
+  _swIdx++;
+  if (_swIdx >= _swSteps.length) { _finish(); return; }
+  _updateProgress();
+  _showStep(_swIdx);
+};
+
+window._swNextSub = function(targetId) {
+  // Validation pseudo
+  if (targetId === 'sw-sub-age') {
+    var val = (document.getElementById('swPseudoInput').value || '').trim();
+    if (!val || val.length < 3) {
+      var err = document.getElementById('swPseudoErr');
+      if (err) err.style.display = 'block';
+      return;
+    }
+    var err2 = document.getElementById('swPseudoErr');
+    if (err2) err2.style.display = 'none';
+  }
+  ['sw-sub-pseudo','sw-sub-age','sw-sub-photo'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.classList.remove('sw-sub-active'); el.style.display = 'none'; }
+  });
+  var target = document.getElementById(targetId);
+  if (target) { target.classList.add('sw-sub-active'); target.style.display = 'flex'; }
+};
+
+window._swPrevSub = function(targetId) {
+  ['sw-sub-pseudo','sw-sub-age','sw-sub-photo'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.classList.remove('sw-sub-active'); el.style.display = 'none'; }
+  });
+  var target = document.getElementById(targetId);
+  if (target) { target.classList.add('sw-sub-active'); target.style.display = 'flex'; }
+};
+
+// ── Actions par étape ──
+window._swNotifAllow = async function() {
+  try {
+    var perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      try { localStorage.setItem('lvl_push_pref','granted'); } catch(_) {}
+      try { if (window._registerFCMAnonOrUser) await window._registerFCMAnonOrUser(); } catch(_) {}
+      if (typeof toast_ === 'function') toast_('Notifications activées ✓','ok');
+    }
+  } catch(e) {}
+  window._swNext();
+};
+
+window._swLocAllow = function() {
+  if (!navigator.geolocation) { window._swNext(); return; }
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      try {
+        localStorage.setItem('lvl_location_pref','granted');
+        localStorage.setItem('lvl_location_lat', pos.coords.latitude.toFixed(4));
+        localStorage.setItem('lvl_location_lng', pos.coords.longitude.toFixed(4));
+      } catch(_) {}
+      if (typeof toast_ === 'function') toast_('Localisation activée ✓','ok');
+      window._swNext();
+    },
+    function() {
+      try { localStorage.setItem('lvl_location_pref','denied'); } catch(_) {}
+      window._swNext();
+    },
+    { timeout:8000 }
+  );
+};
+
+window._swCookies = function(all) {
+  try {
+    localStorage.setItem('lvl_cookies_accepted', all ? 'all' : 'essential');
+    document.cookie = 'lvl_cookie_consent=' + (all ? 'all' : 'essential') + '; max-age=31536000; path=/; SameSite=Lax';
+  } catch(_) {}
+  window._swNext();
+};
+
+window._swFmtPseudo = function(input) {
+  var v = input.value.toLowerCase().replace(/[^a-z0-9_]/g,'_').replace(/_{2,}/g,'_');
+  input.value = v;
+  var err = document.getElementById('swPseudoErr');
+  if (err) err.style.display = 'none';
+};
+
+window._swPickAge = function(btn) {
+  document.querySelectorAll('.sw-age-btn').forEach(function(b) {
+    b.classList.remove('selected');
+  });
+  btn.classList.add('selected');
+  _swAge = btn.textContent.trim();
+};
+
+window._swPhotoChange = function(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var err = document.getElementById('swPhotoErr');
+  var img = new Image();
+  var url = URL.createObjectURL(file);
+  img.onload = function() {
+    URL.revokeObjectURL(url);
+    if (this.width < 128 || this.height < 128) {
+      if (err) err.style.display = 'block'; return;
+    }
+    if (err) err.style.display = 'none';
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      _swPhoto = e.target.result;
+      var prev = document.getElementById('swPhotoPreview');
+      var ph   = document.getElementById('swPhotoPlaceholder');
+      var ring = document.getElementById('swPhotoRing');
+      var circ = document.getElementById('swPhotoCircle');
+      var btn2 = document.getElementById('swPhotoPrimaryBtn');
+      if (prev)  { prev.src = _swPhoto; prev.style.display = 'block'; }
+      if (ph)    ph.style.display = 'none';
+      if (ring)  ring.style.opacity = '1';
+      if (circ)  { circ.style.borderStyle = 'solid'; circ.style.borderColor = 'rgba(168,85,247,.4)'; }
+      if (btn2)  {
+        btn2.innerHTML = '<i class="fa-solid fa-check-circle" style="color:#4ade80"></i> Photo prête — Finaliser';
+        btn2.style.background = 'linear-gradient(135deg,#a855f7,#7c3aed)';
+        btn2.style.border = 'none';
+        btn2.onclick = window._swNext;
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  img.src = url;
+};
+
+// ── Écran de succès + sauvegarde Firestore ──
+async function _finish() {
+  // Afficher écran succès
+  document.querySelectorAll('.sw-step').forEach(function(s) { s.classList.remove('sw-active'); });
+  var suc = document.getElementById('sw-step-success');
+  if (suc) { suc.classList.add('sw-active'); }
+  setTimeout(function() {
+    var ico = document.getElementById('swSuccessIcon');
+    if (ico) ico.classList.add('pop');
+  }, 120);
+
+  // Sauvegarder en Firestore (source de vérité, pas localStorage)
+  try {
+    if (_swUser && !_swUser.isKeyAuth && window._fb && typeof db !== 'undefined') {
+      var pseudo   = (document.getElementById('swPseudoInput') || {}).value || '';
+      pseudo = pseudo.trim();
+      var { doc: _d, setDoc: _sd } = window._fb;
+      var profileData = {
+        onboardingDone: true,
+        onboardingAt:   Date.now()
+      };
+      if (_swAge)           profileData.ageRange    = _swAge;
+      if (pseudo.length>=3) profileData.displayName = pseudo;
+      if (_swPhoto)         profileData.photoURL    = _swPhoto;
+
+      await _sd(
+        _d(db, 'artifacts', 'level-ia-premium', 'users', _swUser.uid, 'profile', 'data'),
+        profileData, { merge: true }
+      );
+
+      // Mettre à jour le profil local
+      if (pseudo.length >= 3 && window._ud) window._ud.displayName = pseudo;
+      if (_swPhoto && window._ud)            window._ud.photoURL    = _swPhoto;
+      if (window.refreshUI) window.refreshUI();
+      if (typeof toast_ === 'function') toast_('Profil configuré ✓','ok');
+    }
+  } catch(e) { console.warn('Setup wizard save:', e); }
+
+  // Fermer le wizard après 2.4s
+  setTimeout(function() {
+    var wiz = document.getElementById('lvlSetupWizard');
+    if (!wiz) return;
+    wiz.style.transition = 'opacity .4s ease';
+    wiz.style.opacity = '0';
+    setTimeout(function() {
+      wiz.style.display = 'none';
+      wiz.style.opacity = '1';
+      wiz.style.transition = '';
+    }, 420);
+  }, 2400);
+}
+
+// ── Handlers paramètres (settings) ──
+window._settingsToggleCookies = function(val) {
+  try {
+    localStorage.setItem('lvl_cookies_accepted', val ? 'all' : 'essential');
+    document.cookie = 'lvl_cookie_consent=' + (val ? 'all' : 'essential') + '; max-age=31536000; path=/; SameSite=Lax';
+  } catch(_) {}
+  var st = document.getElementById('setCookieStatus');
+  if (st) st.textContent = val ? 'Activés (analytics + essentiels)' : 'Essentiels uniquement';
+};
+
+window._settingsSetLang = function(lang) {
+  try { localStorage.setItem('lvl_lang', lang); } catch(_) {}
+  if (typeof toast_ === 'function') toast_('Langue mise à jour — Rechargez pour appliquer', 'info');
+};
+
+window._exportUserData = function() {
+  try {
+    var data = {
+      uid:         window._user && window._user.uid,
+      email:       window._ud && window._ud.email,
+      displayName: window._ud && window._ud.displayName,
+      apiKey:      window._ud && window._ud.apiKey ? '[MASQUÉ]' : null,
+      exportedAt:  new Date().toISOString()
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'levelup-data-' + (data.uid || 'user') + '.json';
+    a.click();
+    if (typeof toast_ === 'function') toast_('Données exportées ✓','ok');
+  } catch(e) { if (typeof toast_ === 'function') toast_('Erreur export','err'); }
+};
+
+// Init settings page: sync cookie toggle
+window.addEventListener('lvlUserReady', function() {
+  var ct = document.getElementById('setCookieToggle');
+  if (ct) {
+    var pref = localStorage.getItem('lvl_cookies_accepted');
+    ct.checked = pref === 'all';
+    var st = document.getElementById('setCookieStatus');
+    if (st) st.textContent = pref === 'all' ? 'Activés (analytics + essentiels)' : 'Essentiels uniquement';
+  }
+  var ls = document.getElementById('setLangSelect');
+  if (ls) {
+    var lang = localStorage.getItem('lvl_lang') || 'fr';
+    ls.value = lang;
+  }
+});
+
+})();
+
+// ═══════════════════════════════════════════════════════════
+// FONCTIONS CRITIQUES SETTINGS — Photo, 2FA, Notifications
+// ═══════════════════════════════════════════════════════════
+(function() {
+
+// ── Photo de profil — Ouvre l'overlay existant ──
+window.openPhotoPicker = function() {
+  var ov = document.getElementById('photoPickerOv');
+  if (!ov) return;
+  // Pré-charger l'aperçu avec la photo actuelle
+  var preview = document.getElementById('photoPickerPreview');
+  if (preview) {
+    var currentPhoto = (window._ud && window._ud.photoURL) || '';
+    if (currentPhoto) {
+      preview.style.backgroundImage = 'url("'+currentPhoto+'")';
+      preview.style.backgroundSize = 'cover';
+      preview.style.backgroundPosition = 'center';
+      preview.innerHTML = '';
+    } else {
+      preview.style.backgroundImage = '';
+      var letter = (window._ud && window._ud.displayName) ? window._ud.displayName.charAt(0).toUpperCase() : '?';
+      preview.innerHTML = letter;
+    }
+  }
+  // Afficher/masquer bouton suppression photo perso
+  var removeRow = document.getElementById('removeCustomPhotoRow');
+  if (removeRow) {
+    var hasCustom = localStorage.getItem('lvl_custom_photo') === '1';
+    removeRow.classList.toggle('hidden', !hasCustom);
+  }
+  ov.classList.remove('hidden');
+};
+
+window.closePhotoPicker = function() {
+  var ov = document.getElementById('photoPickerOv');
+  if (ov) ov.classList.add('hidden');
+  // Cacher la barre de progression
+  var prog = document.getElementById('photoUploadProgress');
+  if (prog) prog.classList.add('hidden');
+  var bar = document.getElementById('photoProgressBar');
+  if (bar) bar.style.width = '0%';
+};
+
+window.triggerPhotoUpload = function() {
+  var fi = document.getElementById('photoFileInput');
+  if (fi) fi.click();
+};
+
+window.handlePhotoFileSelected = async function(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    toast_('Image trop grande — max 5 Mo','warn'); return;
+  }
+
+  // Afficher barre de progression
+  var prog = document.getElementById('photoUploadProgress');
+  var bar  = document.getElementById('photoProgressBar');
+  var txt  = document.getElementById('photoProgressTxt');
+  if (prog) prog.classList.remove('hidden');
+  if (bar) bar.style.width = '10%';
+  if (txt) txt.textContent = 'Chargement…';
+
+  try {
+    var reader = new FileReader();
+    reader.onprogress = function(e) {
+      if (e.lengthComputable && bar) {
+        bar.style.width = Math.round((e.loaded / e.total) * 80) + '%';
+      }
+    };
+    reader.onload = async function(ev) {
+      if (bar) bar.style.width = '90%';
+      if (txt) txt.textContent = 'Sauvegarde…';
+      var dataUrl = ev.target.result;
+      try {
+        if (window._user && !window._user.isKeyAuth && window._fb && typeof db !== 'undefined') {
+          var { doc: _d, setDoc: _sd } = window._fb;
+          await _sd(_d(db,'artifacts','level-ia-premium','users',window._user.uid,'profile','data'),
+            { photoURL: dataUrl }, { merge: true });
+        }
+        // Mettre à jour localement
+        if (window._ud) window._ud.photoURL = dataUrl;
+        localStorage.setItem('lvl_custom_photo', '1');
+        // Mettre à jour l'aperçu dans l'overlay
+        var preview = document.getElementById('photoPickerPreview');
+        if (preview) {
+          preview.style.backgroundImage = 'url("'+dataUrl+'")';
+          preview.style.backgroundSize = 'cover';
+          preview.innerHTML = '';
+        }
+        // Mettre à jour l'avatar dans les paramètres
+        var ava = document.getElementById('settingsAva');
+        if (ava) {
+          ava.innerHTML = '<img src="'+dataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        }
+        if (bar) bar.style.width = '100%';
+        if (txt) txt.textContent = 'Photo mise à jour ✓';
+        if (window.refreshUI) window.refreshUI();
+        toast_('Photo de profil mise à jour ✓','ok');
+        setTimeout(function() { window.closePhotoPicker(); }, 900);
+      } catch(e) {
+        toast_('Erreur lors de la sauvegarde','err');
+        if (prog) prog.classList.add('hidden');
+        console.warn(e);
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch(e) {
+    toast_('Erreur lors du chargement de la photo','err');
+    if (prog) prog.classList.add('hidden');
+  }
+};
+
+window.resetToGooglePhoto = async function() {
+  if (!window._user || !window._user.photoURL) {
+    toast_('Aucune photo Google disponible','warn'); return;
+  }
+  try {
+    var googlePhoto = window._user.photoURL;
+    if (window._ud) window._ud.photoURL = googlePhoto;
+    localStorage.removeItem('lvl_custom_photo');
+    if (!window._user.isKeyAuth && window._fb && typeof db !== 'undefined') {
+      var { doc: _d, setDoc: _sd } = window._fb;
+      await _sd(_d(db,'artifacts','level-ia-premium','users',window._user.uid,'profile','data'),
+        { photoURL: googlePhoto }, { merge: true });
+    }
+    var preview = document.getElementById('photoPickerPreview');
+    if (preview) {
+      preview.style.backgroundImage = 'url("'+googlePhoto+'")';
+      preview.style.backgroundSize = 'cover';
+      preview.innerHTML = '';
+    }
+    var ava = document.getElementById('settingsAva');
+    if (ava) {
+      ava.innerHTML = '<img src="'+googlePhoto+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    }
+    if (window.refreshUI) window.refreshUI();
+    toast_('Photo Google restaurée ✓','ok');
+    setTimeout(function() { window.closePhotoPicker(); }, 700);
+  } catch(e) { toast_('Erreur','err'); console.warn(e); }
+};
+
+window.removeCustomPhoto = async function() {
+  if (window._user && !window._user.isKeyAuth && window._fb && typeof db !== 'undefined') {
+    try {
+      var { doc: _d, setDoc: _sd } = window._fb;
+      await _sd(_d(db,'artifacts','level-ia-premium','users',window._user.uid,'profile','data'),
+        { photoURL: null }, { merge: true });
+    } catch(_) {}
+  }
+  if (window._ud) window._ud.photoURL = (window._user && window._user.photoURL) || null;
+  localStorage.removeItem('lvl_custom_photo');
+  if (window.refreshUI) window.refreshUI();
+  toast_('Photo personnalisée supprimée','info');
+  window.closePhotoPicker();
+};
+
+// ── Toggle 2FA (Firestore source de vérité) ──
+window._toggle2FA = async function(enabled) {
+  if (!window._user || window._user.isKeyAuth) {
+    toast_('Double authentification disponible avec un compte Google','warn');
+    var t = document.getElementById('toggle2FA');
+    if (t) t.checked = false;
+    return;
+  }
+  try {
+    var { doc: _d, setDoc: _sd, getDoc: _g } = window._fb;
+    var ref = _d(db, 'artifacts','level-ia-premium','users',window._user.uid,'security','2fa');
+    if (enabled) {
+      // Vérifier si déjà configuré en Firestore
+      var snap = await _g(ref);
+      var alreadyDone = snap.exists() && snap.data().enabled;
+      if (!alreadyDone) {
+        await _sd(ref, { enabled: true, enabledAt: Date.now(), uid: window._user.uid }, { merge: true });
+      }
+      var desc = document.getElementById('settings2FADesc');
+      if (desc) desc.textContent = 'Double authentification active ✓';
+      toast_('Double authentification activée','ok');
+    } else {
+      await _sd(ref, { enabled: false, disabledAt: Date.now() }, { merge: true });
+      var desc2 = document.getElementById('settings2FADesc');
+      if (desc2) desc2.textContent = 'Sécurisez votre compte avec une vérification supplémentaire';
+      toast_('Double authentification désactivée','info');
+    }
+  } catch(e) {
+    toast_('Erreur lors de la configuration 2FA','err');
+    var t2 = document.getElementById('toggle2FA');
+    if (t2) t2.checked = !enabled; // Rollback
+    console.warn(e);
+  }
+};
+
+// ── Charger l'état 2FA depuis Firestore (sécurité) ──
+window._load2FAState = async function() {
+  if (!window._user || window._user.isKeyAuth) return;
+  try {
+    var { doc: _d, getDoc: _g } = window._fb;
+    var snap = await _g(_d(db,'artifacts','level-ia-premium','users',window._user.uid,'security','2fa'));
+    var isEnabled = snap.exists() && snap.data().enabled;
+    var toggle = document.getElementById('toggle2FA');
+    if (toggle) toggle.checked = isEnabled;
+    var desc = document.getElementById('settings2FADesc');
+    if (desc) desc.textContent = isEnabled
+      ? 'Double authentification active ✓'
+      : 'Sécurisez votre compte avec une vérification supplémentaire';
+  } catch(e) {}
+};
+
+// ── loadNotifPrefs : synchroniser les toggles notifications ──
+window.loadNotifPrefs = function() {
+  // Push notifications toggle
+  try { window._updatePushToggleUI && window._updatePushToggleUI(); } catch(_) {}
+  // Location status
+  var locStatus = document.getElementById('setLocationStatus');
+  var locBtn    = document.getElementById('setLocationBtnTxt');
+  var locPref   = localStorage.getItem('lvl_location_pref');
+  if (locStatus) locStatus.textContent = locPref === 'granted' ? 'Activée ✓' : locPref === 'denied' ? 'Refusée par le navigateur' : 'Améliore votre expérience';
+  if (locBtn)    locBtn.textContent    = locPref === 'granted' ? 'Gérer' : 'Activer';
+  // Cookie status
+  var cookiePref = localStorage.getItem('lvl_cookies_accepted');
+  var cookieEl   = document.getElementById('setCookieStatus');
+  var cookieTgl  = document.getElementById('setCookieToggle');
+  if (cookieEl)  cookieEl.textContent = cookiePref === 'all' ? 'Activés (analytics + essentiels)' : 'Essentiels uniquement';
+  if (cookieTgl) cookieTgl.checked    = cookiePref === 'all';
+  // 2FA state from Firestore
+  window._load2FAState && window._load2FAState();
+};
+
+// ── _updatePushToggleUI : refléter l'état de la permission navigateur ──
+window._updatePushToggleUI = function() {
+  var perm   = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+  var pref   = localStorage.getItem('lvl_push_pref') || 'default';
+  // Chercher des toggles push dans la page
+  ['pushToggle','notifPushToggle','mainPushToggle'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.type === 'checkbox') el.checked = (perm === 'granted');
+  });
+  // Chercher des textes de statut
+  var statusEl = document.getElementById('pushPermStatus');
+  if (statusEl) statusEl.textContent = perm === 'granted' ? 'Activées ✓' : perm === 'denied' ? 'Bloquées par le navigateur' : 'Non activées';
+};
+
+// ── _syncSettingsNotifToggles : synchro complète à l'ouverture des paramètres ──
+window._syncSettingsNotifToggles = function() {
+  window.loadNotifPrefs && window.loadNotifPrefs();
+};
+
+// ── Location toggle depuis paramètres ──
+window._settingsToggleLocation = function() {
+  var locPref = localStorage.getItem('lvl_location_pref');
+  if (locPref === 'granted') {
+    // Déjà accordée — ouvrir les paramètres système
+    toast_('Gérez la localisation dans les paramètres de votre navigateur','info'); return;
+  }
+  if (!navigator.geolocation) { toast_('Géolocalisation non supportée','warn'); return; }
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      localStorage.setItem('lvl_location_pref','granted');
+      localStorage.setItem('lvl_location_lat', pos.coords.latitude.toFixed(4));
+      localStorage.setItem('lvl_location_lng', pos.coords.longitude.toFixed(4));
+      toast_('Localisation activée ✓','ok');
+      window.loadNotifPrefs && window.loadNotifPrefs();
+    },
+    function() {
+      localStorage.setItem('lvl_location_pref','denied');
+      toast_('Accès à la localisation refusé','warn');
+      window.loadNotifPrefs && window.loadNotifPrefs();
+    },
+    { timeout:8000 }
+  );
+};
+
+// ── App notifications toggle ──
+window._settingsToggleAppNotifs = function() {
+  var current = localStorage.getItem('lvl_app_notifs_enabled') !== 'false';
+  var next = !current;
+  localStorage.setItem('lvl_app_notifs_enabled', next ? 'true' : 'false');
+  var btn = document.getElementById('setAppNotifsBtnTxt');
+  if (btn) btn.textContent = next ? 'Désactiver' : 'Activer';
+  toast_(next ? 'Notifications apps activées ✓' : 'Notifications apps désactivées', next ? 'ok' : 'info');
+};
+
+// Init au chargement du panel settings (inclure 2FA, location, cookies)
+document.addEventListener('lvlUserReady', function() {
+  setTimeout(function() {
+    window.loadNotifPrefs && window.loadNotifPrefs();
+  }, 500);
+});
+
+})();
+
+// ── Garder le titre de l'onglet constant (protection contre les iframes) ──
+(function() {
+  var _lvlTitle = 'LevelUp Ecosystem';
+  var _faviconEl = document.querySelector("link[rel*='icon']");
+  var _faviconHref = _faviconEl ? _faviconEl.href : null;
+
+  // Observer le titre
+  var titleEl = document.querySelector('title');
+  if (titleEl) {
+    new MutationObserver(function() {
+      if (document.title !== _lvlTitle) {
+        document.title = _lvlTitle;
+        if (_faviconEl && _faviconHref) _faviconEl.href = _faviconHref;
+      }
+    }).observe(titleEl, { childList:true, subtree:true, characterData:true });
+  }
+
+  // Fallback polling (cas edge des iframes cross-origin)
+  setInterval(function() {
+    if (document.title !== _lvlTitle) {
+      document.title = _lvlTitle;
+      if (_faviconEl && _faviconHref) _faviconEl.href = _faviconHref;
+    }
+  }, 800);
 })();
 </script>
 </body>
