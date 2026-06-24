@@ -2200,8 +2200,23 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
 </div>
 <div class="qa-tile" onclick="window._openLevelDay&&window._openLevelDay()">
-<div class="qa-ico" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#22c55e"><i class="fa-solid fa-calendar-days" style="font-size:.9rem"></i></div>
+<div class="qa-ico" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);overflow:hidden;padding:0">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="36" height="36" style="display:block">
+    <circle cx="42" cy="18" r="12" fill="#FFC107"/>
+    <g fill="#4A8BFF"><circle cx="19" cy="36" r="10"/><circle cx="31" cy="30" r="16"/><circle cx="45" cy="36" r="10"/><rect x="19" y="30" width="26" height="16"/></g>
+  </svg>
+</div>
 <div class="qa-inf"><h4>LevelDay</h4><span>Planification</span></div>
+<i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
+</div>
+<div class="qa-tile" onclick="window.openToolWindow('https://levelup-ecosystem.com/anime','LevelAnime')">
+<div class="qa-ico" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);overflow:hidden;padding:0">
+  <svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M10 8.35824C10 7.42436 11.0185 6.8488 11.8153 7.33235L17.5855 10.8242C18.3571 11.2915 18.3571 12.4137 17.5855 12.881L11.8153 16.3728C11.0185 16.8564 10 16.2808 10 15.347V8.35824Z" fill="#ef4444"/>
+  </svg>
+</div>
+<div class="qa-inf"><h4>LevelAnime</h4><span>Anime & Séries</span></div>
 <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
 </div>
 </div>
@@ -2285,6 +2300,16 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="set-row" style="cursor:pointer" onclick="window.open('https://myaccount.google.com/security','_blank')">
   <div class="set-info"><h5>Sécurité Google</h5><p>Gérer votre mot de passe et la vérification en 2 étapes</p></div>
   <i class="fa-solid fa-arrow-up-right-from-square" style="color:var(--dim);font-size:.8rem"></i>
+</div>
+<div class="set-row" id="settings2FARow">
+  <div class="set-info" style="display:flex;align-items:center;gap:10px">
+    <div style="width:34px;height:34px;border-radius:50%;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-mobile-screen-button" style="color:#a855f7;font-size:.85rem"></i></div>
+    <div><h5 style="margin-bottom:2px">Double authentification (2FA)</h5><p id="settings2FADesc" style="font-size:.74rem;color:var(--muted)">Sécurisez votre compte avec une vérification supplémentaire</p></div>
+  </div>
+  <label class="tog-wrap" style="flex-shrink:0">
+    <input type="checkbox" id="toggle2FA" onchange="window._toggle2FA(this.checked)">
+    <span class="tog-sl"></span>
+  </label>
 </div>
 <div class="set-row" style="cursor:pointer" onclick="confirmLogout()">
   <div class="set-info"><h5>Se déconnecter</h5><p>Fermer la session sur cet appareil</p></div>
@@ -4851,6 +4876,27 @@ window.loadNotifPrefs = function() {
     const toolsEl = document.getElementById('notifToolsToggle');
     if (loginEl) loginEl.checked = window.getNotifPref('login');
     if (toolsEl) toolsEl.checked = window.getNotifPref('tools');
+    // Synchroniser l'état 2FA
+    const t2 = document.getElementById('toggle2FA');
+    if (t2) t2.checked = !!(window._ud && window._ud.twoFaEnabled);
+};
+
+// Activation / désactivation de la 2FA depuis les paramètres
+window._toggle2FA = async function(enabled) {
+    if (!window._user || !window._db) return;
+    const desc = document.getElementById('settings2FADesc');
+    try {
+        const { doc: fsDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+        await setDoc(fsDoc(window._db, 'artifacts', 'level-ia-premium', 'users', window._user.uid, 'profile', 'data'), { twoFaEnabled: enabled }, { merge: true });
+        if (window._ud) window._ud.twoFaEnabled = enabled;
+        if (desc) desc.textContent = enabled ? 'Activée — vérification requise à chaque connexion' : 'Désactivée — vérification supplémentaire non requise';
+        toast_(enabled ? '🔐 Double authentification activée' : '🔓 Double authentification désactivée', 'ok');
+    } catch(err) {
+        // Annuler le toggle visuellement en cas d'erreur
+        const t2 = document.getElementById('toggle2FA');
+        if (t2) t2.checked = !enabled;
+        toast_('Impossible de modifier la 2FA. Réessayez.', 'err');
+    }
 };
 
 
@@ -5249,6 +5295,12 @@ setTimeout(function() {
 }
 
 
+// Détection intelligente : touch sans souris précise = mobile/tablette
+window._isTouchDevice = function() {
+  return (navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches) &&
+         !window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+};
+
 function showLand() {
 // En mode PWA (mobile ET desktop) : jamais afficher la page d'accueil
 var _isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -5259,16 +5311,30 @@ if (_isPWA) {
   if (typeof updateGuestUI === 'function') updateGuestUI();
   window.updateAppCards && window.updateAppCards();
   if (window.updateFabContext) window.updateFabContext();
-  var _isMob = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || window.navigator.standalone === true;
+  // Détection tactile intelligente (pas UA) : pointer:coarse sans hover précise = mobile/tablette
+  var _isMob = window._isTouchDevice();
   if (_isMob && window._pwaSlider) {
     window._pwaSlider.show();
+    // Afficher la feuille de connexion mobile après animation du slider
+    setTimeout(function() {
+      if (window.openMobileLoginSheet) window.openMobileLoginSheet();
+    }, 450);
   } else {
-    // PWA desktop : ouvrir directement l'overlay de connexion PC
+    // PWA desktop (souris + clavier) : overlay de connexion PC
     setTimeout(function() {
       if (window._openPcAuth) window._openPcAuth();
       else if (window.openMobileLoginSheet) window.openMobileLoginSheet();
     }, 200);
   }
+  return;
+}
+// Sur navigateur mobile/tablette (non PWA) : afficher écran d'installation
+if (window._isTouchDevice() && !_isPWA) {
+  document.body.classList.add('pwa-mobile');
+  window._hideLoadingScreen && window._hideLoadingScreen();
+  if (typeof renderNavGuest === 'function') renderNavGuest();
+  if (window._pwaSlider) window._pwaSlider.show();
+  setTimeout(function() { if (window.openMobileLoginSheet) window.openMobileLoginSheet(); }, 450);
   return;
 }
 const landing = document.getElementById('landing');
@@ -5969,6 +6035,17 @@ async function _registerFCMAnonOrUser() {
         localStorage.setItem(_FCM_REG_KEY, String(Date.now()));
         _attachFCMListeners();
         _updatePushToggleUI();
+        // Notification de test 15 secondes après activation FCM réussie
+        setTimeout(function() {
+            try {
+                new Notification('🎉 LevelUp Notifications activées !', {
+                    body: 'Vous recevrez désormais les alertes importantes de l\'écosystème.',
+                    icon: '/icon-192.png',
+                    badge: '/icon-192.png',
+                    tag: 'lvl-test-notif'
+                });
+            } catch(_) {}
+        }, 15000);
     } catch(err) {
         console.error('[FCM] _registerFCMAnonOrUser error:', err);
     } finally {
@@ -6842,11 +6919,14 @@ if (id === 'tools') {
     try { localStorage.setItem('lvl_tools_seen_at', String(Date.now())); } catch(_) {}
 }
 
-// ── CHARGER LES PRÉFÉRENCES NOTIF ──
+// ── CHARGER LES PRÉFÉRENCES NOTIF + GÉRER LE FAB ──
 if (id === 'settings') {
+    document.body.classList.add('lvl-in-settings');
     if (window.loadNotifPrefs) window.loadNotifPrefs();
     try { _updatePushToggleUI(); } catch(_) {}
     try { if (window._syncSettingsNotifToggles) window._syncSettingsNotifToggles(); } catch(_) {}
+} else {
+    document.body.classList.remove('lvl-in-settings');
 }
 }
 
@@ -8313,30 +8393,7 @@ MODALE ALERTE SÉCURITÉ
   </div>
 </div>
 
-<!-- ── POPUP NOTIF — déclenché selon plateforme (après auth) ── -->
-<script>
-(function() {
-    // Ne déclencher qu'après connexion utilisateur confirmée, pas en aveugle pour tous les visiteurs
-    // Le showPushPermPopup adapte le comportement selon la plateforme (iOS/Android/Desktop)
-    function _triggerPushPopupOnce() {
-        try {
-            if (typeof showPushPermPopup === 'function') {
-                showPushPermPopup();
-            } else {
-                const t = setInterval(function() {
-                    if (typeof showPushPermPopup === 'function') {
-                        clearInterval(t);
-                        showPushPermPopup();
-                    }
-                }, 300);
-                setTimeout(function() { clearInterval(t); }, 15000);
-            }
-        } catch(_) {}
-    }
-    // Déclencher pour TOUS les visiteurs — pas besoin d'être connecté
-    setTimeout(function() { _triggerPushPopupOnce(); }, 3500);
-})();
-</script>
+<!-- ── POPUP NOTIF — déclenché uniquement via le setup wizard ── -->
 
 <!-- ═══ STREAMING PROVIDERS POPUP ═══ -->
 <div id="streamPopup" onclick="if(event.target===this)window._closeStreamPopup()">
@@ -9579,20 +9636,51 @@ document.addEventListener('DOMContentLoaded', function() {
             const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
             const ref = doc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
             const snap = await getDoc(ref);
-            if (!snap.exists()) return;
-            const data = snap.data();
-            // Si onboarding déjà complété → skip
-            if (data.onboardingDone) return;
-            // Afficher popup avec le nom Google pré-rempli
-            const inp = document.getElementById('obUsername');
-            const keepBtn = document.getElementById('obKeepGoogleName');
-            if (inp) inp.placeholder = data.displayName || u.displayName || 'Votre pseudo';
-            if (keepBtn) keepBtn.textContent = `Garder "${(data.displayName || u.displayName || '').split(' ')[0]}"`;
-            // Petit délai pour laisser le dashboard s'afficher
+            const data = snap.exists() ? snap.data() : {};
+
+            // Vérifier l'état RÉEL du device
+            const notifGranted = (typeof Notification !== 'undefined' && Notification.permission === 'granted');
+            const locGranted   = localStorage.getItem('lvl_location_pref') === 'granted';
+            const profileDone  = !!data.onboardingDone;
+
+            // Si tout est OK → rien à faire
+            if (profileDone && notifGranted && locGranted) return;
+
+            // Préparer l'ancien popup si profil non terminé (username/age requis)
+            if (!profileDone) {
+                const inp = document.getElementById('obUsername');
+                const keepBtn = document.getElementById('obKeepGoogleName');
+                if (inp) inp.placeholder = data.displayName || u.displayName || 'Votre pseudo';
+                if (keepBtn) keepBtn.textContent = `Garder "${(data.displayName || u.displayName || '').split(' ')[0]}"`;
+            }
+
+            // Construire le flow du setup wizard selon ce qui manque
+            const neededSteps = [];
+            if (!notifGranted) neededSteps.push('notifications');
+            if (!locGranted)   neededSteps.push('localisation');
+            if (!profileDone)  neededSteps.push('cookies','profil');
+
+            if (neededSteps.length === 0) return;
+
+            // Injecter le flow dynamique et afficher le wizard
             setTimeout(() => {
-                const popup = document.getElementById('onboardingPopup');
-                if (popup) popup.classList.add('open');
-            }, 800);
+                try {
+                    // Mettre à jour le flow du wizard
+                    window._swOverrideFlow && window._swOverrideFlow(neededSteps);
+                    const wizard = document.getElementById('setupWizard');
+                    if (wizard) {
+                        wizard.style.display = 'flex';
+                        // Déclencher l'init du wizard si disponible
+                        if (typeof window._swInit === 'function') window._swInit();
+                    } else {
+                        // Fallback: ancien popup pour le profil uniquement
+                        if (!profileDone) {
+                            const popup = document.getElementById('onboardingPopup');
+                            if (popup) popup.classList.add('open');
+                        }
+                    }
+                } catch(_) {}
+            }, 900);
         } catch(_) {}
     };
 
@@ -9691,7 +9779,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 onboardingDone: true
             }, { merge: true });
             if (window._ud) { window._ud.displayName = _obChosenName; window._ud.username = _obChosenName.toLowerCase(); }
-            document.getElementById('onboardingPopup').classList.remove('open');
+            // Fermer popup et/ou setup wizard
+            const _obPop = document.getElementById('onboardingPopup'); if (_obPop) _obPop.classList.remove('open');
+            const _swEl = document.getElementById('setupWizard'); if (_swEl) _swEl.style.display = 'none';
             toast_ && toast_('Profil créé — bienvenue sur LevelUp !', 'ok');
             window.refreshUI && window.refreshUI();
         } catch(e) {
@@ -9778,22 +9868,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script> 
 <script>
 (function() {
-    function _triggerPushPopupOnce() {
-        try {
-            if (typeof showPushPermPopup === 'function') {
-                showPushPermPopup();
-            } else {
-                const t = setInterval(function() {
-                    if (typeof showPushPermPopup === 'function') {
-                        clearInterval(t);
-                        showPushPermPopup();
-                    }
-                }, 300);
-                setTimeout(function() { clearInterval(t); }, 15000);
-            }
-        } catch(_) {}
-    }
-
     // 1. ANALYSE DU SMARTPHONE
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -9810,13 +9884,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Contexte FAB initial (home page = tous les boutons)
     if (window.updateFabContext) window.updateFabContext();
 
-    // 3. APRÈS 1 SECONDE : Notification pour tous les mobiles
+    // 3. APRÈS 1 SECONDE : retrait animation (pas de popup push auto)
     setTimeout(function() {
         document.body.classList.remove('lvl-iphone-star-anim');
-        var isMob = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || window.navigator.standalone === true;
-        if (isMob && typeof window.showPushPermPopup === 'function') {
-            window.showPushPermPopup();
-        }
+        // Les notifications push sont demandées uniquement via le Setup Wizard
     }, 1000);
 })();
 </script>
@@ -10877,7 +10948,7 @@ window.handlePhotoFileSelected = async function(input) {
     var resp = await fetch('/api/imagekit-upload', { method: 'POST', body: formData }); if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     var data = await resp.json(); if (!data.url) throw new Error(data.error || 'Erreur upload');
     if (pb) pb.style.width = '90%';
-    if (window._db && window._user?.uid) { const { doc: fsDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js'); await updateDoc(fsDoc(window._db, 'artifacts', 'level-ia-premium', 'users', window._user.uid), { customPhotoURL: data.url }); }
+    if (window._db && window._user?.uid) { const { doc: fsDoc, setDoc: fsSet } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js'); await fsSet(fsDoc(window._db, 'artifacts', 'level-ia-premium', 'users', window._user.uid, 'profile', 'data'), { customPhotoURL: data.url }, { merge: true }); }
     if (!window._ud) window._ud = {}; window._ud.customPhotoURL = data.url; localStorage.setItem('lm_custom_photo', data.url);
     if (pb) pb.style.width = '100%'; if (pt) pt.textContent = 'Photo mise à jour !';
     window.refreshUI && window.refreshUI();
@@ -10885,14 +10956,14 @@ window.handlePhotoFileSelected = async function(input) {
     var rcr = document.getElementById('removeCustomPhotoRow'); if (rcr) rcr.classList.remove('hidden');
     toast_ && toast_('Photo de profil mise à jour !', 'ok'); setTimeout(() => window.closePhotoPicker(), 1200);
   } catch(err) {
-    if (pt) pt.textContent = 'Erreur : ' + err.message; if (pb) pb.style.background = 'var(--red)'; toast_ && toast_('Erreur upload : ' + err.message, 'err');
+    if (pt) pt.textContent = 'Une erreur est survenue'; if (pb) pb.style.background = 'var(--red)'; toast_ && toast_('Impossible de mettre à jour la photo. Réessayez.', 'err');
   }
   input.value = '';
 };
 window.resetToGooglePhoto = async function() {
   try {
     var u = window._user; var googlePhoto = u?.photoURL || '';
-    if (window._db && u?.uid) { const { doc: fsDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js'); await updateDoc(fsDoc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid), { customPhotoURL: '' }); }
+    if (window._db && u?.uid) { const { doc: fsDoc, setDoc: fsSet } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js'); await fsSet(fsDoc(window._db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data'), { customPhotoURL: '' }, { merge: true }); }
     if (window._ud) window._ud.customPhotoURL = ''; localStorage.removeItem('lm_custom_photo');
     window.refreshUI && window.refreshUI();
     var d = window._ud; var init = (d?.displayName || u?.email?.split('@')[0] || '?').charAt(0).toUpperCase();
@@ -10900,7 +10971,7 @@ window.resetToGooglePhoto = async function() {
     if (prev) { if(googlePhoto) prev.innerHTML = `<img src="${googlePhoto}" style="width:80px;height:80px;border-radius:50%;object-fit:cover" referrerpolicy="no-referrer">`; else prev.textContent = init; }
     var rcr = document.getElementById('removeCustomPhotoRow'); if (rcr) rcr.classList.add('hidden');
     toast_ && toast_('Photo Google restaurée', 'ok'); setTimeout(() => window.closePhotoPicker(), 900);
-  } catch(err) { toast_ && toast_('Erreur : ' + err.message, 'err'); }
+  } catch(err) { toast_ && toast_('Impossible de restaurer la photo. Réessayez.', 'err'); }
 };
 window.removeCustomPhoto = window.resetToGooglePhoto;
 
@@ -10989,6 +11060,20 @@ window._toggleFbLink = async function() {
   var _swSelectedAge = null;
   var _swFile = null;
   var _swTotalSteps = _swFlow.length;
+
+  // Permet à _checkOnboarding d'injecter un flow personnalisé
+  window._swOverrideFlow = function(newFlow) {
+    _swFlow = newFlow;
+    _swCurrentIdx = 0;
+    _swTotalSteps = newFlow.length;
+  };
+
+  // Init/reset du wizard (appelé depuis _checkOnboarding)
+  window._swInit = function() {
+    _swBuildSidebar();
+    _swSetProgress(0);
+    _swShowStepById('step-' + _swFlow[0]);
+  };
 
   // ─── INDICATEURS SIDEBAR DESKTOP ───────────────────────────
   var _swLabels = { notifications:'Notifications', localisation:'Localisation', cookies:'Confidentialité', profil:'Profil' };
