@@ -2209,7 +2209,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="qa-inf"><h4>LevelDay</h4><span>Planification</span></div>
 <i class="fa-solid fa-arrow-up-right-from-square qa-arr"></i>
 </div>
-<div class="qa-tile" onclick="window.openToolWindow('https://levelup-ecosystem.com/anime','LevelAnime')">
+<div class="qa-tile" onclick="window.open('https://levelup-ecosystem.com/anime','_blank')">
 <div class="qa-ico" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);overflow:hidden;padding:0">
   <svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block">
     <path d="M5 4V17C5 19.2091 6.79086 21 9 21H20" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -5079,7 +5079,7 @@ const _has2FAKey = localStorage.getItem('lvl_2fa_trusted_' + u.uid);
 const _sessionOk2fa = (() => { try { return sessionStorage.getItem('lvl_2fa_ok_' + u.uid); } catch(_) { return null; } })();
 const _sessionPending2fa = (() => { try { return sessionStorage.getItem('lvl_2fa_pending_' + u.uid); } catch(_) { return null; } })();
 
-if ((_isNewConn || _sessionPending2fa) && !_has2FAKey && !_sessionOk2fa && window._show2FAOverlay) {
+if ((_isNewConn || _sessionPending2fa) && !_has2FAKey && !_sessionOk2fa && window._show2FAOverlay && window._ud?.twoFaEnabled) {
   try { sessionStorage.setItem('lvl_2fa_pending_' + u.uid, '1'); } catch(_) {}
   window._show2FAOverlay(u, function(_u) {
     localStorage.setItem('lvl_2fa_trusted_' + _u.uid, Date.now().toString());
@@ -5302,34 +5302,26 @@ window._isTouchDevice = function() {
 };
 
 function showLand() {
-// En mode PWA (mobile ET desktop) : jamais afficher la page d'accueil
 var _isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-if (_isPWA) {
+var _isMob = window._isTouchDevice();
+
+// PWA mobile/tablette (touch) : afficher le slider + feuille de connexion
+if (_isPWA && _isMob) {
   document.body.classList.add('pwa-mobile');
   window._hideLoadingScreen && window._hideLoadingScreen();
   if (typeof renderNavGuest === 'function') renderNavGuest();
   if (typeof updateGuestUI === 'function') updateGuestUI();
   window.updateAppCards && window.updateAppCards();
   if (window.updateFabContext) window.updateFabContext();
-  // Détection tactile intelligente (pas UA) : pointer:coarse sans hover précise = mobile/tablette
-  var _isMob = window._isTouchDevice();
-  if (_isMob && window._pwaSlider) {
+  if (window._pwaSlider) {
     window._pwaSlider.show();
-    // Afficher la feuille de connexion mobile après animation du slider
-    setTimeout(function() {
-      if (window.openMobileLoginSheet) window.openMobileLoginSheet();
-    }, 450);
-  } else {
-    // PWA desktop (souris + clavier) : overlay de connexion PC
-    setTimeout(function() {
-      if (window._openPcAuth) window._openPcAuth();
-      else if (window.openMobileLoginSheet) window.openMobileLoginSheet();
-    }, 200);
+    setTimeout(function() { if (window.openMobileLoginSheet) window.openMobileLoginSheet(); }, 450);
   }
   return;
 }
-// Sur navigateur mobile/tablette (non PWA) : afficher écran d'installation
-if (window._isTouchDevice() && !_isPWA) {
+
+// Navigateur mobile/tablette sans PWA : afficher écran d'installation
+if (!_isPWA && _isMob) {
   document.body.classList.add('pwa-mobile');
   window._hideLoadingScreen && window._hideLoadingScreen();
   if (typeof renderNavGuest === 'function') renderNavGuest();
@@ -5337,6 +5329,9 @@ if (window._isTouchDevice() && !_isPWA) {
   setTimeout(function() { if (window.openMobileLoginSheet) window.openMobileLoginSheet(); }, 450);
   return;
 }
+
+// PC PWA ou navigateur PC : afficher la page d'accueil normalement
+document.body.classList.remove('pwa-mobile');
 const landing = document.getElementById('landing');
 const dashboard = document.getElementById('dashboard');
 const mobileNav = document.getElementById('mobileNav');
@@ -7089,6 +7084,12 @@ try {
 }
 function copyKey(){
 if(!window._ud?.apiKey) return;
+// Si l'utilisateur a défini un PIN, il doit le saisir avant de copier la clé
+if(window._ud.pinHash){ openPin('copy'); return; }
+_doCopyKey();
+}
+function _doCopyKey(){
+if(!window._ud?.apiKey) return;
 navigator.clipboard.writeText(window._ud.apiKey).then(()=>toast_('Clé copiée !','ok')).catch(()=>{
 const ta=document.createElement('textarea'); ta.value=window._ud.apiKey; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast_('Clé copiée !','ok');
 });
@@ -7119,6 +7120,7 @@ document.getElementById('pinErrorTxt').classList.add('hidden');
 
 const m={
 view:['Code PIN requis','Entrez votre PIN pour afficher votre clé'],
+copy:['Code PIN requis','Entrez votre PIN pour copier la clé'],
 setup_new:['Choisir un PIN','Créez un code à 4 chiffres'],
 setup_confirm:['Confirmer le PIN','Entrez à nouveau votre PIN']
 };
