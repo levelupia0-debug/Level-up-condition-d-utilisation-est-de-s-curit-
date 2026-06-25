@@ -924,10 +924,34 @@ body.pwa-mobile .fab-wrap.ctx-dashboard #fabNavBtn { display: none !important; }
 
 /* ── PUSH PERMISSION POPUP ── */
 /* iOS push permission popup — petit & propre */
-#pushPermModal { position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;padding:0 0 32px;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .3s }
+/* ── PUSH PERM MODAL ── */
+#pushPermModal { position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;padding:0;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .3s }
 #pushPermModal.show { opacity:1;pointer-events:all }
-.push-perm-card { background:linear-gradient(160deg,#12101c,#0e0c18);border:1px solid rgba(168,85,247,.28);border-radius:20px;padding:20px 20px 18px;max-width:360px;width:calc(100% - 32px);box-shadow:0 24px 60px rgba(0,0,0,.85),0 0 0 1px rgba(168,85,247,.06);position:relative;overflow:hidden;transform:translateY(30px) scale(.97);transition:transform .38s cubic-bezier(.34,1.56,.64,1) }
-#pushPermModal.show .push-perm-card { transform:translateY(0) scale(1) }
+/* Desktop: carte flottante centrée en bas */
+.push-perm-card { background:#12101c;background:linear-gradient(160deg,#12101c,#0e0c18);border:1px solid rgba(168,85,247,.28);border-radius:20px;padding:20px 20px 18px;max-width:360px;width:calc(100% - 32px);margin-bottom:32px;box-shadow:0 24px 60px rgba(0,0,0,.85);position:relative;overflow:hidden;transform:translateY(40px);transition:transform .38s cubic-bezier(.34,1.56,.64,1),opacity .38s }
+#pushPermModal.show .push-perm-card { transform:translateY(0) }
+/* Mobile: bottom sheet pleine largeur collée en bas */
+@media(max-width:700px){
+  #pushPermModal { align-items:flex-end; justify-content:stretch; padding:0 }
+  .push-perm-card {
+    width:100%;
+    max-width:100%;
+    margin-bottom:0;
+    border-radius:22px 22px 0 0;
+    padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px)) 20px;
+    transform:translateY(100%);
+    transition:transform .42s cubic-bezier(.22,1,.36,1);
+    box-sizing:border-box;
+  }
+  #pushPermModal.show .push-perm-card { transform:translateY(0) }
+  .push-perm-inner { gap:12px; margin-bottom:18px }
+  .push-perm-logo { width:40px; height:40px }
+  .push-perm-title { font-size:.95rem }
+  .push-perm-desc { font-size:.76rem }
+  .push-perm-btns { flex-direction:column; gap:10px }
+  .push-perm-yes { width:100%; padding:13px; font-size:.88rem }
+  .push-perm-no { width:100%; padding:12px; text-align:center; border-radius:11px }
+}
 .push-perm-card::before { content:'';position:absolute;top:-60px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(168,85,247,.14),transparent 70%);pointer-events:none;border-radius:50% }
 .push-perm-inner { display:flex;align-items:flex-start;gap:14px;margin-bottom:16px }
 .push-perm-logo { width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(124,58,237,.35));border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0 }
@@ -979,18 +1003,32 @@ body.is-super-admin .card-img-upload-btn { display:flex }
 @keyframes splashDotPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
 /* ── Onboarding popup ── */
-#onboardingPopup { position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px }
+/* ── ONBOARDING POPUP ── */
+#onboardingPopup { position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px }
 #onboardingPopup.open { display:flex }
-.ob-card { background:linear-gradient(160deg,#0f0a1a,#130d20);border:1px solid rgba(168,85,247,.2);border-radius:22px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.8);animation:cIn .32s cubic-bezier(.34,1.46,.64,1) }
-@keyframes obSlideUp { from { transform:translateY(100%) } to { transform:translateY(0) } }
+.ob-card { background:#12102a;background:linear-gradient(160deg,#0f0a1a,#130d20);border:1px solid rgba(168,85,247,.25);border-radius:22px;width:100%;max-width:440px;overflow:visible;box-shadow:0 32px 80px rgba(0,0,0,.85);animation:cIn .3s cubic-bezier(.34,1.46,.64,1) both }
+/* MOBILE — bottom sheet */
 @media(max-width:700px){
-  #onboardingPopup { align-items:flex-end; padding:0 }
-  #onboardingPopup .ob-card { border-radius:22px 22px 0 0; max-width:100%; animation:obSlideUp .38s cubic-bezier(.22,1,.36,1); box-shadow:0 -16px 60px rgba(0,0,0,.9) }
-  #onboardingPopup .ob-header { padding:18px 18px 14px }
-  #onboardingPopup .ob-body { padding:16px 18px }
-  #onboardingPopup .ob-footer { padding:0 18px 28px }
-  #onboardingPopup .ob-title { font-size:1.08rem }
+  #onboardingPopup { align-items:flex-end; padding:0; background:rgba(0,0,0,.88) }
+  #onboardingPopup.open { display:flex }
+  #onboardingPopup .ob-card {
+    border-radius:24px 24px 0 0;
+    max-width:100%;
+    width:100%;
+    animation:obSlideUp .42s cubic-bezier(.22,1,.36,1) both;
+    box-shadow:0 -12px 60px rgba(0,0,0,.9);
+    overflow:hidden;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  #onboardingPopup .ob-header { padding:20px 20px 16px }
+  #onboardingPopup .ob-body { padding:18px 20px }
+  #onboardingPopup .ob-footer { padding:0 20px calc(16px + env(safe-area-inset-bottom,0px)) }
+  #onboardingPopup .ob-title { font-size:1.1rem }
+  #onboardingPopup .ob-btn-primary { padding:14px; font-size:.92rem; border-radius:14px }
+  #onboardingPopup .ob-age-grid { grid-template-columns:1fr 1fr }
+  #onboardingPopup .ob-age-btn { padding:13px 10px; font-size:.85rem }
 }
+@keyframes obSlideUp { from { transform:translateY(105%); opacity:1 } to { transform:translateY(0); opacity:1 } }
 .ob-header { background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(124,58,237,.06));border-bottom:1px solid rgba(168,85,247,.12);padding:20px 22px 18px;text-align:center }
 .ob-step-dots { display:flex;justify-content:center;gap:6px;margin-bottom:14px }
 .ob-dot { width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12);transition:all .3s }
