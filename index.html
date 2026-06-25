@@ -10771,10 +10771,10 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
 #lvlSetupWizard {
   display:none;
   position:fixed; inset:0; z-index:9999999;
-  background:#0a0a0a;
+  background:#09090b;
   flex-direction:row;
   font-family:'Inter',var(--sans,sans-serif);
-  animation:swFadeIn .35s ease;
+  animation:swFadeIn .25s ease both;
 }
 #lvlSetupWizard.visible { display:flex; }
 
@@ -10794,14 +10794,26 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
 
 /* Mobile header */
 #swMobileHeader {
-  padding:max(env(safe-area-inset-top,20px),20px) 24px 18px;
-  background:rgba(10,10,10,.95);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
+  padding:max(env(safe-area-inset-top,20px),20px) 20px 16px;
+  background:#09090b;
   border-bottom:1px solid rgba(255,255,255,.07);
   position:sticky; top:0; z-index:10;
+  flex-shrink:0;
 }
 @media(min-width:680px) { #swMobileHeader { display:none; } }
+
+/* Mobile scroll — pas de sur-padding desktop */
+@media(max-width:679px) {
+  #swStepsScroll { padding:28px 20px max(env(safe-area-inset-bottom,24px),72px); }
+  #swStepsInner { max-width:100%; }
+  .sw-ico { width:64px; height:64px; font-size:1.6rem; margin-bottom:20px; }
+  .sw-h2 { font-size:1.5rem; }
+  .sw-p  { font-size:.85rem; margin-bottom:24px; }
+  .sw-btn-primary { padding:15px 20px; font-size:.92rem; border-radius:13px; }
+  .sw-btn-secondary { padding:12px 20px; font-size:.83rem; border-radius:13px; }
+  #swAgeGrid { gap:10px; }
+  .sw-age-btn { padding:18px 10px; font-size:.85rem; }
+}
 
 /* Content area */
 #swContentArea {
@@ -10856,12 +10868,12 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
 .sw-btn-primary:active { transform:scale(.98); }
 .sw-btn-secondary {
   width:100%; padding:13px 24px; border-radius:14px;
-  background:transparent; border:1px solid rgba(255,255,255,.1);
-  color:rgba(255,255,255,.38); font-size:.85rem; font-weight:600;
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.65); font-size:.85rem; font-weight:600;
   cursor:pointer; font-family:inherit; transition:all .2s;
   display:flex; align-items:center; justify-content:center; gap:8px;
 }
-.sw-btn-secondary:hover { border-color:rgba(255,255,255,.28); color:rgba(255,255,255,.65); }
+.sw-btn-secondary:hover { border-color:rgba(255,255,255,.35); color:#fff; background:rgba(255,255,255,.12); }
 .sw-btn-blue { background:linear-gradient(135deg,#3b82f6,#2563eb); }
 .sw-btn-yellow { background:linear-gradient(135deg,#f59e0b,#d97706); }
 
@@ -11172,9 +11184,12 @@ function _buildSidebar() {
       '<span id="sw-it-'+idx+'" style="font-size:.83rem;font-weight:500;color:rgba(255,255,255,.3);transition:all .35s">'+info.ico+' '+info.label+'</span>';
     cont.appendChild(el);
   });
-  // Sidebar visible seulement si >1 étape
+  // Sidebar : CSS media query gère mobile/desktop — inline style seulement sur desktop
   var sb = document.getElementById('swSidebar');
-  if (sb) sb.style.display = _swSteps.length > 1 ? 'flex' : 'none';
+  if (sb) {
+    var _isDesktopWiz = window.innerWidth >= 680;
+    sb.style.display = (_isDesktopWiz && _swSteps.length > 1) ? 'flex' : 'none';
+  }
 }
 
 // ── Afficher une étape ──
