@@ -11199,7 +11199,9 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// SETUP WIZARD — LevelUp Ecosystem (Logique intelligente)
+// SETUP WIZARD — CORRECTIONS COMPLÈTES
+// Remplace TOUT le bloc (function() { ... })() du Setup Wizard
+// dans ton HTML (le dernier gros bloc <script> avant </script>)
 // ═══════════════════════════════════════════════════════════
 (function() {
 
@@ -11207,7 +11209,7 @@ var _swSteps = [];
 var _swIdx   = 0;
 var _swUser  = null;
 var _swAge   = null;
-var _swPhoto = null; // DataURL
+var _swPhoto = null;
 
 var _swLabels = {
   notif:   { ico:'🔔', label:'Notifications' },
@@ -11216,18 +11218,55 @@ var _swLabels = {
   profil:  { ico:'👤', label:'Profil'        }
 };
 
-// ── Entrée principale ──
+// ══════════════════════════════════════════════════
+// CORRECTION 1 — Notification de bienvenue FIABLE
+// Envoi garanti après acceptation permission
+// ══════════════════════════════════════════════════
+async function _sendWelcomeNotifNow() {
+  // Attendre que le SW soit prêt (max 5s)
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    var reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise(function(_, rej) { setTimeout(function() { rej(new Error('SW timeout')); }, 5000); })
+    ]);
+    // Délai 3s pour laisser le wizard se fermer proprement
+    await new Promise(function(r) { setTimeout(r, 3000); });
+    await reg.showNotification('🎉 Bienvenue sur LevelUp !', {
+      body: 'Notifications activées. Tu recevras les alertes importantes, nouveautés et mises à jour en temps réel.',
+      icon: '/icon-eco.svg',
+      badge: '/favicon.png',
+      vibrate: [200, 80, 200, 80, 200],
+      requireInteraction: false,
+      data: { url: 'https://levelup-ecosystem.com/' }
+    });
+  } catch(e) {
+    // Fallback : notification simple sans SW
+    try {
+      new Notification('🎉 Bienvenue sur LevelUp !', {
+        body: 'Notifications activées avec succès.',
+        icon: '/icon-eco.svg'
+      });
+    } catch(_) {}
+  }
+}
+
+// ══════════════════════════════════════════════════
+// ENTRÉE PRINCIPALE
+// ══════════════════════════════════════════════════
 window._showSetupWizard = function(user, isFirstTime) {
-  _swUser = user;
-  _swAge  = null;
+  _swUser  = user;
+  _swAge   = null;
   _swPhoto = null;
-  _swIdx  = 0;
+  _swIdx   = 0;
   _swSteps = [];
 
   var notifOk   = Notification.permission === 'granted';
   var locOk     = !!localStorage.getItem('lvl_location_pref');
   var cookiesOk = !!localStorage.getItem('lvl_cookies_accepted');
-  var hasName   = window._ud && window._ud.displayName && window._ud.displayName !== 'Utilisateur';
+  var hasName   = window._ud && window._ud.displayName &&
+                  window._ud.displayName !== 'Utilisateur' &&
+                  window._ud.displayName.length > 2;
 
   if (isFirstTime) {
     if (!notifOk)   _swSteps.push('notif');
@@ -11236,60 +11275,76 @@ window._showSetupWizard = function(user, isFirstTime) {
     if (!hasName)   _swSteps.push('profil');
   } else {
     if (Notification.permission === 'default') _swSteps.push('notif');
-    if (!locOk) _swSteps.push('loc');
+    if (!locOk)                                _swSteps.push('loc');
   }
 
   if (_swSteps.length === 0) return;
 
-  // ── Utilisateur existant + 1 seule étape → mini popup Turnstile ──
   if (!isFirstTime && _swSteps.length === 1) {
     _showMiniPopup(_swSteps[0]);
     return;
   }
 
-  // ── Nouveau compte ou plusieurs étapes → wizard complet ──
   _buildSidebar();
   _showStep(0);
   _updateProgress();
 
   var wiz = document.getElementById('lvlSetupWizard');
-  if (wiz) { wiz.classList.add('sw-visible'); }
+  if (wiz) wiz.classList.add('sw-visible');
 };
 
-// ── Mini popup (1 étape) ──
+// ══════════════════════════════════════════════════
+// MINI POPUP (utilisateur existant, 1 étape)
+// ══════════════════════════════════════════════════
 var _miniConfigs = {
   notif: {
-    ico:'🔔', title:'Activer les notifications',
+    ico:'🔔',
+    title:'Activer les notifications',
     desc:'Restez informé des alertes importantes, mises à jour et nouveautés LevelUp en temps réel.',
     btn:'Activer les notifications',
-    action: function(done) {
-      Notification.requestPermission().then(function(r) {
-        if (r === 'granted') toast_('🔔 Notifications activées','ok');
-        window._closeMiniPopup(); if(done) done();
-      });
+    action: async function() {
+      window._closeMiniPopup();
+      await new Promise(function(r) { setTimeout(r, 400); });
+      var perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        localStorage.setItem('lvl_push_pref', 'granted');
+        try { if (window._registerFCMAnonOrUser) await window._registerFCMAnonOrUser(); } catch(_) {}
+        if (typeof toast_ === 'function') toast_('🔔 Notifications activées !', 'ok');
+        await _sendWelcomeNotifNow();
+      } else {
+        if (typeof toast_ === 'function') toast_('Notifications refusées', 'warn');
+      }
     }
   },
   loc: {
-    ico:'📍', title:'Partager ma localisation',
+    ico:'📍',
+    title:'Partager ma localisation',
     desc:'Améliore votre expérience LevelUp avec des contenus adaptés à votre région.',
     btn:'Autoriser la localisation',
-    action: function(done) {
-      if (!navigator.geolocation) { window._closeMiniPopup(); return; }
-      navigator.geolocation.getCurrentPosition(function(pos) {
-        localStorage.setItem('lvl_location_pref', JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() }));
-        toast_('📍 Localisation enregistrée','ok');
-        window._closeMiniPopup(); if(done) done();
-      }, function() { window._closeMiniPopup(); });
+    action: function() {
+      window._closeMiniPopup();
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          localStorage.setItem('lvl_location_pref', 'granted');
+          if (typeof toast_ === 'function') toast_('📍 Localisation activée', 'ok');
+        },
+        function() {
+          localStorage.setItem('lvl_location_pref', 'denied');
+        },
+        { timeout: 8000 }
+      );
     }
   },
   cookies: {
-    ico:'🍪', title:'Cookies analytiques',
-    desc:'Acceptez les cookies pour une expérience optimisée et des performances améliorées.',
+    ico:'🍪',
+    title:'Cookies analytiques',
+    desc:'Acceptez les cookies pour une expérience optimisée.',
     btn:'Accepter les cookies',
-    action: function(done) {
-      localStorage.setItem('lvl_cookies_accepted','all');
-      toast_('🍪 Cookies acceptés','ok');
-      window._closeMiniPopup(); if(done) done();
+    action: function() {
+      localStorage.setItem('lvl_cookies_accepted', 'all');
+      if (typeof toast_ === 'function') toast_('🍪 Cookies acceptés', 'ok');
+      window._closeMiniPopup();
     }
   }
 };
@@ -11309,7 +11364,7 @@ function _showMiniPopup(key) {
   act.innerHTML = '';
   var btn = document.createElement('button');
   btn.className = 'sw-btn-primary';
-  btn.style.cssText = 'width:100%;padding:14px 20px;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px';
+  btn.style.cssText = 'width:100%;padding:14px 20px;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:0';
   btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + cfg.btn;
   btn.onclick = function() { cfg.action(); };
   act.appendChild(btn);
@@ -11328,15 +11383,17 @@ window._closeMiniPopup = function() {
   }, 260);
 };
 
-// ── Relancer le wizard (paramètres) ──
 window._resetOnboarding = function() {
   if (!window._user || window._user.isKeyAuth) {
-    toast_('Connectez-vous pour reconfigurer votre profil', 'warn'); return;
+    if (typeof toast_ === 'function') toast_('Connectez-vous pour reconfigurer votre profil', 'warn');
+    return;
   }
   window._showSetupWizard(window._user, true);
 };
 
-// ── Construire le sidebar ──
+// ══════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════
 function _buildSidebar() {
   var cont = document.getElementById('swIndicators');
   if (!cont) return;
@@ -11347,45 +11404,59 @@ function _buildSidebar() {
     el.id = 'sw-ind-' + idx;
     el.style.cssText = 'display:flex;align-items:center;gap:14px;transition:all .35s';
     el.innerHTML =
-      '<div id="sw-ic-'+idx+'" style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;color:rgba(255,255,255,.3);flex-shrink:0;transition:all .35s;z-index:1">'+( idx+1 )+'</div>'+
-      '<span id="sw-it-'+idx+'" style="font-size:.83rem;font-weight:500;color:rgba(255,255,255,.3);transition:all .35s">'+info.ico+' '+info.label+'</span>';
+      '<div id="sw-ic-' + idx + '" style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;color:rgba(255,255,255,.3);flex-shrink:0;transition:all .35s;z-index:1">' + (idx + 1) + '</div>' +
+      '<span id="sw-it-' + idx + '" style="font-size:.83rem;font-weight:500;color:rgba(255,255,255,.3);transition:all .35s">' + info.ico + ' ' + info.label + '</span>';
     cont.appendChild(el);
   });
-  // Sidebar : CSS media query gère mobile/desktop — inline style seulement sur desktop
   var sb = document.getElementById('swSidebar');
-  if (sb) {
-    var _isDesktopWiz = window.innerWidth >= 680;
-    sb.style.display = (_isDesktopWiz && _swSteps.length > 1) ? 'flex' : 'none';
-  }
+  if (sb) sb.style.display = (window.innerWidth >= 680 && _swSteps.length > 1) ? 'flex' : 'none';
 }
 
-// ── Afficher une étape ──
+// ══════════════════════════════════════════════════
+// CORRECTION 2 — _showStep avec display:flex forcé
+// ══════════════════════════════════════════════════
 function _showStep(idx) {
   document.querySelectorAll('.sw-step').forEach(function(s) {
     s.classList.remove('sw-active');
+    s.style.display = 'none';
   });
+
   var key = _swSteps[idx];
   if (!key) { _finish(); return; }
+
   var el = document.getElementById('sw-step-' + key);
   if (!el) { _finish(); return; }
-  if (key === 'profil') {
-    // Reset substeps
-    ['sw-sub-pseudo','sw-sub-age','sw-sub-photo'].forEach(function(id) {
-      var s = document.getElementById(id);
-      if (s) { s.classList.remove('sw-sub-active'); s.style.display = ''; }
-    });
-    var p = document.getElementById('sw-sub-pseudo');
-    if (p) { p.classList.add('sw-sub-active'); p.style.display = 'flex'; }
-  }
+
+  // CORRECTION : forcer display:flex sur l'étape
+  el.style.display = 'flex';
   el.classList.add('sw-active');
+
+  // Réinitialiser les substeps du profil
+  if (key === 'profil') {
+    ['sw-sub-pseudo', 'sw-sub-age', 'sw-sub-photo'].forEach(function(id) {
+      var s = document.getElementById(id);
+      if (s) {
+        s.classList.remove('sw-sub-active');
+        s.style.display = 'none';
+      }
+    });
+    var pseudo = document.getElementById('sw-sub-pseudo');
+    if (pseudo) {
+      pseudo.classList.add('sw-sub-active');
+      pseudo.style.display = 'flex'; // CORRECTION : display:flex explicite
+    }
+  }
+
   _updateIndicators(idx);
 }
 
-// ── Indicateurs sidebar ──
+// ══════════════════════════════════════════════════
+// INDICATEURS
+// ══════════════════════════════════════════════════
 function _updateIndicators(cur) {
   _swSteps.forEach(function(_, idx) {
-    var ic = document.getElementById('sw-ic-' + idx);
-    var it = document.getElementById('sw-it-' + idx);
+    var ic  = document.getElementById('sw-ic-' + idx);
+    var it  = document.getElementById('sw-it-' + idx);
     var ind = document.getElementById('sw-ind-' + idx);
     if (!ic || !it || !ind) return;
     if (idx < cur) {
@@ -11418,17 +11489,21 @@ function _updateIndicators(cur) {
   });
 }
 
-// ── Progression ──
+// ══════════════════════════════════════════════════
+// PROGRESSION
+// ══════════════════════════════════════════════════
 function _updateProgress() {
   var total = _swSteps.length;
-  var pct = total > 0 ? Math.round((_swIdx / total) * 100) : 100;
-  var bar = document.getElementById('swProgressBar');
+  var pct   = total > 0 ? Math.round((_swIdx / total) * 100) : 100;
+  var bar   = document.getElementById('swProgressBar');
   if (bar) bar.style.width = pct + '%';
-  var ctr = document.getElementById('swMobCounter');
+  var ctr   = document.getElementById('swMobCounter');
   if (ctr) ctr.textContent = (_swIdx + 1) + ' / ' + total;
 }
 
-// ── Navigation ──
+// ══════════════════════════════════════════════════
+// NAVIGATION STEPS
+// ══════════════════════════════════════════════════
 window._swNext = function() {
   _swIdx++;
   if (_swIdx >= _swSteps.length) { _finish(); return; }
@@ -11436,10 +11511,12 @@ window._swNext = function() {
   _showStep(_swIdx);
 };
 
+// CORRECTION 3 — _swNextSub avec display:flex explicite
 window._swNextSub = function(targetId) {
-  // Validation pseudo
+  // Validation pseudo avant de passer à l'âge
   if (targetId === 'sw-sub-age') {
-    var val = (document.getElementById('swPseudoInput').value || '').trim();
+    var val = (document.getElementById('swPseudoInput') || {}).value || '';
+    val = val.trim();
     if (!val || val.length < 3) {
       var err = document.getElementById('swPseudoErr');
       if (err) err.style.display = 'block';
@@ -11448,99 +11525,155 @@ window._swNextSub = function(targetId) {
     var err2 = document.getElementById('swPseudoErr');
     if (err2) err2.style.display = 'none';
   }
-  ['sw-sub-pseudo','sw-sub-age','sw-sub-photo'].forEach(function(id) {
+
+  // Validation âge avant de passer à la photo
+  if (targetId === 'sw-sub-photo') {
+    if (!_swAge) {
+      if (typeof toast_ === 'function') toast_('Sélectionnez votre tranche d\'âge', 'warn');
+      return;
+    }
+  }
+
+  // Masquer toutes les substeps
+  ['sw-sub-pseudo', 'sw-sub-age', 'sw-sub-photo'].forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) { el.classList.remove('sw-sub-active'); el.style.display = 'none'; }
+    if (el) {
+      el.classList.remove('sw-sub-active');
+      el.style.display = 'none';
+    }
   });
+
+  // Afficher la cible
   var target = document.getElementById(targetId);
-  if (target) { target.classList.add('sw-sub-active'); target.style.display = 'flex'; }
+  if (target) {
+    target.classList.add('sw-sub-active');
+    target.style.display = 'flex'; // CORRECTION : display:flex explicite
+  }
 };
 
 window._swPrevSub = function(targetId) {
-  ['sw-sub-pseudo','sw-sub-age','sw-sub-photo'].forEach(function(id) {
+  ['sw-sub-pseudo', 'sw-sub-age', 'sw-sub-photo'].forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) { el.classList.remove('sw-sub-active'); el.style.display = 'none'; }
+    if (el) {
+      el.classList.remove('sw-sub-active');
+      el.style.display = 'none';
+    }
   });
   var target = document.getElementById(targetId);
-  if (target) { target.classList.add('sw-sub-active'); target.style.display = 'flex'; }
+  if (target) {
+    target.classList.add('sw-sub-active');
+    target.style.display = 'flex'; // CORRECTION : display:flex explicite
+  }
 };
 
-// ── Actions par étape ──
+// ══════════════════════════════════════════════════
+// ACTIONS PAR ÉTAPE
+// ══════════════════════════════════════════════════
+
+// CORRECTION 4 — _swNotifAllow : notification envoyée immédiatement
 window._swNotifAllow = async function() {
   try {
+    // Demander la permission
     var perm = await Notification.requestPermission();
+
     if (perm === 'granted') {
-      try { localStorage.setItem('lvl_push_pref','granted'); } catch(_) {}
-      try { if (window._registerFCMAnonOrUser) await window._registerFCMAnonOrUser(); } catch(_) {}
-      if (typeof toast_ === 'function') toast_('Notifications activées ✓','ok');
+      // Sauvegarder la préférence
+      localStorage.setItem('lvl_push_pref', 'granted');
+
+      // Enregistrer FCM en arrière-plan
+      try {
+        if (window._registerFCMAnonOrUser) await window._registerFCMAnonOrUser();
+      } catch(_) {}
+
+      if (typeof toast_ === 'function') toast_('🔔 Notifications activées !', 'ok');
+
+      // Passer à l'étape suivante PUIS envoyer la notif
+      window._swNext();
+
+      // Envoyer la notification de bienvenue après fermeture du wizard
+      await _sendWelcomeNotifNow();
+
+    } else {
+      if (typeof toast_ === 'function') toast_('Notifications refusées — vous pouvez les activer plus tard dans les paramètres', 'info');
+      window._swNext();
     }
-  } catch(e) {}
-  window._swNext();
+  } catch(e) {
+    console.warn('_swNotifAllow error:', e);
+    window._swNext();
+  }
 };
 
 window._swLocAllow = function() {
   if (!navigator.geolocation) { window._swNext(); return; }
   navigator.geolocation.getCurrentPosition(
     function(pos) {
-      try {
-        localStorage.setItem('lvl_location_pref','granted');
-        localStorage.setItem('lvl_location_lat', pos.coords.latitude.toFixed(4));
-        localStorage.setItem('lvl_location_lng', pos.coords.longitude.toFixed(4));
-      } catch(_) {}
-      if (typeof toast_ === 'function') toast_('Localisation activée ✓','ok');
+      localStorage.setItem('lvl_location_pref', 'granted');
+      localStorage.setItem('lvl_location_lat', pos.coords.latitude.toFixed(4));
+      localStorage.setItem('lvl_location_lng', pos.coords.longitude.toFixed(4));
+      if (typeof toast_ === 'function') toast_('📍 Localisation activée ✓', 'ok');
       window._swNext();
     },
     function() {
-      try { localStorage.setItem('lvl_location_pref','denied'); } catch(_) {}
+      localStorage.setItem('lvl_location_pref', 'denied');
       window._swNext();
     },
-    { timeout:8000 }
+    { timeout: 8000 }
   );
 };
 
 window._swCookies = function(all) {
+  localStorage.setItem('lvl_cookies_accepted', all ? 'all' : 'essential');
   try {
-    localStorage.setItem('lvl_cookies_accepted', all ? 'all' : 'essential');
     document.cookie = 'lvl_cookie_consent=' + (all ? 'all' : 'essential') + '; max-age=31536000; path=/; SameSite=Lax';
   } catch(_) {}
   window._swNext();
 };
 
+// CORRECTION 5 — Format pseudo
 window._swFmtPseudo = function(input) {
-  var v = input.value.toLowerCase().replace(/[^a-z0-9_]/g,'_').replace(/_{2,}/g,'_');
+  var v = input.value.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_{2,}/g, '_');
   input.value = v;
   var err = document.getElementById('swPseudoErr');
   if (err) err.style.display = 'none';
 };
 
-window._swPickAge = function(btn) {
+// CORRECTION 6 — _swPickAge reçoit bien les deux arguments
+window._swPickAge = function(btn, age) {
   document.querySelectorAll('.sw-age-btn').forEach(function(b) {
     b.classList.remove('selected');
+    b.style.background = '';
+    b.style.borderColor = '';
+    b.style.color = '';
   });
   btn.classList.add('selected');
-  _swAge = btn.textContent.trim();
+  btn.style.background = 'rgba(168,85,247,.15)';
+  btn.style.borderColor = 'rgba(168,85,247,.5)';
+  btn.style.color = '#c4b5fd';
+  _swAge = age; // CORRECTION : utilise le paramètre, pas textContent
 };
 
+// Photo picker
 window._swPhotoChange = function(event) {
   var file = event.target.files[0];
   if (!file) return;
   var err = document.getElementById('swPhotoErr');
-  var img = new Image();
   var url = URL.createObjectURL(file);
+  var img = new Image();
   img.onload = function() {
     URL.revokeObjectURL(url);
     if (this.width < 128 || this.height < 128) {
-      if (err) err.style.display = 'block'; return;
+      if (err) err.style.display = 'block';
+      return;
     }
     if (err) err.style.display = 'none';
     var reader = new FileReader();
     reader.onload = function(e) {
       _swPhoto = e.target.result;
-      var prev = document.getElementById('swPhotoPreview');
-      var ph   = document.getElementById('swPhotoPlaceholder');
-      var ring = document.getElementById('swPhotoRing');
-      var circ = document.getElementById('swPhotoCircle');
-      var btn2 = document.getElementById('swPhotoPrimaryBtn');
+      var prev  = document.getElementById('swPhotoPreview');
+      var ph    = document.getElementById('swPhotoPlaceholder');
+      var ring  = document.getElementById('swPhotoRing');
+      var circ  = document.getElementById('swPhotoCircle');
+      var btn2  = document.getElementById('swPhotoPrimaryBtn');
       if (prev)  { prev.src = _swPhoto; prev.style.display = 'block'; }
       if (ph)    ph.style.display = 'none';
       if (ring)  ring.style.opacity = '1';
@@ -11557,58 +11690,117 @@ window._swPhotoChange = function(event) {
   img.src = url;
 };
 
-// ── Écran de succès + sauvegarde Firestore ──
+// ══════════════════════════════════════════════════
+// CORRECTION 7 — _finish utilise window._db (pas db)
+// ══════════════════════════════════════════════════
 async function _finish() {
   // Afficher écran succès
-  document.querySelectorAll('.sw-step').forEach(function(s) { s.classList.remove('sw-active'); });
+  document.querySelectorAll('.sw-step').forEach(function(s) {
+    s.classList.remove('sw-active');
+    s.style.display = 'none';
+  });
   var suc = document.getElementById('sw-step-success');
-  if (suc) { suc.classList.add('sw-active'); }
+  if (suc) {
+    suc.style.display = 'flex'; // CORRECTION : display:flex explicite
+    suc.classList.add('sw-active');
+  }
   setTimeout(function() {
     var ico = document.getElementById('swSuccessIcon');
     if (ico) ico.classList.add('pop');
   }, 120);
 
-  // Sauvegarder en Firestore (source de vérité, pas localStorage)
-  try {
-    if (_swUser && !_swUser.isKeyAuth && window._fb && typeof db !== 'undefined') {
-      var pseudo   = (document.getElementById('swPseudoInput') || {}).value || '';
+  // CORRECTION : window._db au lieu de db (variable locale du module)
+  var _db = window._db;
+  var _fb = window._fb;
+
+  if (_swUser && !_swUser.isKeyAuth && _fb && _db) {
+    try {
+      var pseudo = (document.getElementById('swPseudoInput') || {}).value || '';
       pseudo = pseudo.trim();
-      var { doc: _d, setDoc: _sd } = window._fb;
+
       var profileData = {
         onboardingDone: true,
-        onboardingAt:   Date.now()
+        onboardingAt: Date.now()
       };
-      if (_swAge)           profileData.ageRange    = _swAge;
-      if (pseudo.length>=3) profileData.displayName = pseudo;
-      if (_swPhoto)         profileData.photoURL    = _swPhoto;
+
+      if (_swAge && _swAge.length > 0)  profileData.ageRange    = _swAge;
+      if (pseudo.length >= 3)           profileData.displayName = pseudo;
+      if (_swPhoto)                     profileData.photoURL    = _swPhoto;
+
+      var { doc: _d, setDoc: _sd } = _fb;
 
       await _sd(
-        _d(db, 'artifacts', 'level-ia-premium', 'users', _swUser.uid, 'profile', 'data'),
-        profileData, { merge: true }
+        _d(_db, 'artifacts', 'level-ia-premium', 'users', _swUser.uid, 'profile', 'data'),
+        profileData,
+        { merge: true }
       );
 
-      // Mettre à jour le profil local
+      // Mettre à jour le profil local immédiatement
       if (pseudo.length >= 3 && window._ud) window._ud.displayName = pseudo;
       if (_swPhoto && window._ud)            window._ud.photoURL    = _swPhoto;
-      if (window.refreshUI) window.refreshUI();
-      if (typeof toast_ === 'function') toast_('Profil configuré ✓','ok');
+      if (window.refreshUI)                  window.refreshUI();
+
+      if (typeof toast_ === 'function') toast_('✅ Profil configuré — Bienvenue !', 'ok');
+
+    } catch(e) {
+      console.warn('Setup wizard Firestore save error:', e);
+      // Ne pas bloquer — l'erreur Firestore ne doit pas empêcher la fermeture
     }
-  } catch(e) { console.warn('Setup wizard save:', e); }
+  }
 
   // Fermer le wizard après 2.4s
   setTimeout(function() {
     var wiz = document.getElementById('lvlSetupWizard');
     if (!wiz) return;
-    wiz.style.transition = 'opacity .35s ease';
+    wiz.style.transition = 'opacity .4s ease';
     wiz.style.opacity = '0';
     setTimeout(function() {
       wiz.classList.remove('sw-visible');
       wiz.style.opacity = '';
       wiz.style.transition = '';
-    }, 370);
+    }, 420);
   }, 2400);
 }
 
+})(); // fin IIFE
+
+// ══════════════════════════════════════════════════════════
+// CORRECTION CSS — Ajouter dans <style> ou en JS directement
+// Les .sw-step ont display:none par défaut via CSS (.sw-step)
+// mais .sw-step.sw-active doit être display:flex
+// Ce patch force ça au cas où le CSS est surchargé
+// ══════════════════════════════════════════════════════════
+(function() {
+  var style = document.createElement('style');
+  style.id = 'sw-fix-style';
+  style.textContent = [
+    /* Étapes cachées par défaut */
+    '.sw-step { display: none !important; }',
+    /* Étape active = flex */
+    '.sw-step.sw-active { display: flex !important; }',
+    /* Substeps cachées par défaut */
+    '.sw-sub { display: none !important; }',
+    /* Substep active = flex */
+    '.sw-sub.sw-sub-active { display: flex !important; }',
+    /* Boutons du wizard TOUJOURS cliquables */
+    '#lvlSetupWizard button, #swMiniPopup button {',
+    '  pointer-events: auto !important;',
+    '  cursor: pointer !important;',
+    '  opacity: 1 !important;',
+    '  visibility: visible !important;',
+    '}',
+    /* Wizard visible au-dessus de TOUT */
+    '#lvlSetupWizard.sw-visible {',
+    '  display: flex !important;',
+    '  z-index: 9999999 !important;',
+    '}',
+    '#swMiniPopup.sw-visible {',
+    '  display: flex !important;',
+    '  z-index: 9999999 !important;',
+    '}'
+  ].join('\n');
+  document.head.appendChild(style);
+})();
 // ═══════════════════════════════════════════════════════════
 // GESTION APPAREILS CONNECTÉS — LevelUp Ecosystem
 // ═══════════════════════════════════════════════════════════
