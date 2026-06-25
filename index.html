@@ -2501,6 +2501,48 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 </div>
 </div>
 
+<!-- ── SECTION NOTIFICATIONS PAR EMAIL ── -->
+<div class="set-sec" id="emailNotifSection">
+<div class="set-title"><i class="fa-solid fa-envelope-circle-check" style="color:#3b82f6;margin-right:6px;font-size:.78rem"></i>Notifications par email</div>
+<div class="set-row" style="flex-wrap:wrap;gap:10px">
+  <div class="set-info" style="min-width:0;flex:1">
+    <h5>Nouvelle connexion suspecte</h5>
+    <p>Recevez un email si une connexion est détectée depuis un nouvel appareil ou une nouvelle adresse IP</p>
+  </div>
+  <label class="tog-wrap" style="flex-shrink:0">
+    <input type="checkbox" id="notifLoginToggle" onchange="window._settingsToggleEmailAlert(this.checked)" checked>
+    <span class="tog-sl"></span>
+  </label>
+</div>
+<div class="set-row" style="flex-wrap:wrap;gap:10px;margin-top:4px">
+  <div class="set-info" style="min-width:0;flex:1">
+    <h5>Alertes de sécurité</h5>
+    <p>Changement de mot de passe, révocation d'accès, actions importantes sur votre compte</p>
+  </div>
+  <label class="tog-wrap" style="flex-shrink:0">
+    <input type="checkbox" id="notifSecurityToggle" onchange="window._settingsToggleEmailAlert2(this.checked)" checked>
+    <span class="tog-sl"></span>
+  </label>
+</div>
+</div>
+
+<!-- ── SECTION APPAREILS CONNECTÉS ── -->
+<div class="set-sec" id="devicesSection">
+<div class="set-title" style="display:flex;align-items:center;justify-content:space-between">
+  <span><i class="fa-solid fa-laptop" style="color:#f97316;margin-right:6px;font-size:.78rem"></i>Appareils connectés</span>
+  <span id="devicesCount" style="font-size:.72rem;color:rgba(255,255,255,.3);font-weight:600"></span>
+</div>
+<div id="devicesList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+  <div style="text-align:center;padding:20px;color:rgba(255,255,255,.25);font-size:.82rem">
+    <i class="fa-solid fa-circle-notch fa-spin" style="margin-bottom:8px;display:block;font-size:1.1rem"></i>Chargement des appareils...
+  </div>
+</div>
+<div style="background:rgba(249,115,22,.05);border:1px solid rgba(249,115,22,.15);border-radius:11px;padding:10px 14px;font-size:.75rem;color:rgba(255,255,255,.4);line-height:1.55">
+  <i class="fa-solid fa-circle-info" style="color:#f97316;margin-right:5px"></i>
+  Maximum <strong style="color:rgba(249,115,22,.8)">3 appareils</strong> simultanément. Déconnectez un appareil pour libérer une place.
+</div>
+</div>
+
 <div class="set-sec" id="locationSection">
 <div class="set-title"><i class="fa-solid fa-sliders" style="color:var(--purple);margin-right:6px;font-size:.8rem"></i>Autorisations</div>
 <div class="set-row" style="flex-wrap:wrap;gap:10px">
@@ -5042,6 +5084,8 @@ if (!u.isAnonymous) {
 // 🟢 UTILISATEUR GOOGLE CONNECTÉ
 window._user = u;
 document.dispatchEvent(new CustomEvent('lvl_auth_ready', { detail: { uid: u.uid } }));
+// Enregistrer l'appareil (max 3)
+setTimeout(function() { try { window._registerDevice && window._registerDevice(u.uid); } catch(_) {} }, 2000);
 try {
 const ref = doc(db, 'artifacts', 'level-ia-premium', 'users', u.uid, 'profile', 'data');
 const snap = await getDoc(ref);
@@ -10751,8 +10795,8 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
 <style>
 /* ── Animations Setup Wizard ── */
 @keyframes swSlideUp {
-  from { opacity:0; transform:translateY(28px); }
-  to   { opacity:1; transform:translateY(0); }
+  from { transform:translateY(22px); opacity:.4; }
+  to   { transform:translateY(0);    opacity:1; }
 }
 @keyframes swFadeIn {
   from { opacity:0; }
@@ -10774,9 +10818,43 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
   background:#09090b;
   flex-direction:row;
   font-family:'Inter',var(--sans,sans-serif);
-  animation:swFadeIn .25s ease both;
+  opacity:1;
 }
-#lvlSetupWizard.visible { display:flex; }
+#lvlSetupWizard.sw-visible {
+  display:flex;
+  animation:swFadeIn .2s ease both;
+}
+
+/* ── Mini popup Turnstile-style (1 seule étape) ── */
+#swMiniPopup {
+  display:none; position:fixed; z-index:9999999;
+  inset:0; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.7); backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+#swMiniPopup.sw-visible { display:flex; animation:swFadeIn .2s ease both; }
+#swMiniCard {
+  background:#111118; border:1px solid rgba(255,255,255,.1);
+  border-radius:22px; padding:32px 28px; width:340px; max-width:calc(100vw - 40px);
+  box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 1px rgba(168,85,247,.08);
+  display:flex; flex-direction:column; gap:18px;
+  animation:swSuccessBounce .3s ease both;
+}
+#swMiniCard .sw-mini-ico {
+  width:56px; height:56px; border-radius:16px;
+  background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(124,58,237,.1));
+  border:1px solid rgba(168,85,247,.25); display:flex;
+  align-items:center; justify-content:center; font-size:1.5rem;
+}
+#swMiniCard h3 { font-size:1.05rem; font-weight:800; color:#fff; margin:0; line-height:1.3; }
+#swMiniCard p  { font-size:.82rem; color:rgba(255,255,255,.5); margin:0; line-height:1.6; }
+.sw-mini-skip {
+  background:none; border:none; color:rgba(255,255,255,.3);
+  font-size:.78rem; cursor:pointer; font-family:inherit;
+  font-weight:600; padding:6px 0; align-self:center;
+  transition:color .2s;
+}
+.sw-mini-skip:hover { color:rgba(255,255,255,.6); }
 
 /* Sidebar desktop */
 #swSidebar {
@@ -10833,7 +10911,7 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
   display:none; flex-direction:column; align-items:center; text-align:center;
   width:100%;
 }
-.sw-step.sw-active { display:flex; animation:swSlideUp .45s cubic-bezier(.16,1,.3,1) forwards; }
+.sw-step.sw-active { display:flex; opacity:1; animation:swSlideUp .3s ease both; }
 
 /* Step icon container */
 .sw-ico {
@@ -10935,7 +11013,7 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
 
 /* Substeps */
 .sw-sub { display:none; flex-direction:column; align-items:center; width:100%; }
-.sw-sub.sw-sub-active { display:flex; animation:swSlideUp .4s ease; }
+.sw-sub.sw-sub-active { display:flex; opacity:1; animation:swSlideUp .3s ease both; }
 
 /* Success spinner */
 .sw-spinner {
@@ -11106,6 +11184,19 @@ CAROUSEL TRENDING DASHBOARD (PWA mobile)
   </div><!-- /swContentArea -->
 </div><!-- /lvlSetupWizard -->
 
+<!-- ── MINI POPUP (1 seule étape, utilisateur existant) ── -->
+<div id="swMiniPopup">
+  <div id="swMiniCard">
+    <div class="sw-mini-ico" id="swMiniIco">🔔</div>
+    <div>
+      <h3 id="swMiniTitle">Configuration</h3>
+      <p id="swMiniDesc">Une étape rapide pour améliorer votre expérience.</p>
+    </div>
+    <div id="swMiniActions" style="display:flex;flex-direction:column;gap:8px"></div>
+    <button class="sw-mini-skip" onclick="window._closeMiniPopup()">Ignorer pour l'instant</button>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════
 // SETUP WIZARD — LevelUp Ecosystem (Logique intelligente)
@@ -11133,32 +11224,108 @@ window._showSetupWizard = function(user, isFirstTime) {
   _swIdx  = 0;
   _swSteps = [];
 
-  // Calcul intelligent des étapes nécessaires
   var notifOk   = Notification.permission === 'granted';
   var locOk     = !!localStorage.getItem('lvl_location_pref');
   var cookiesOk = !!localStorage.getItem('lvl_cookies_accepted');
   var hasName   = window._ud && window._ud.displayName && window._ud.displayName !== 'Utilisateur';
 
   if (isFirstTime) {
-    // Première connexion → toutes les étapes manquantes
     if (!notifOk)   _swSteps.push('notif');
     if (!locOk)     _swSteps.push('loc');
     if (!cookiesOk) _swSteps.push('cookies');
     if (!hasName)   _swSteps.push('profil');
   } else {
-    // Utilisateur de retour → seulement les autorisations manquantes
     if (Notification.permission === 'default') _swSteps.push('notif');
     if (!locOk) _swSteps.push('loc');
   }
 
-  if (_swSteps.length === 0) return; // Rien à faire
+  if (_swSteps.length === 0) return;
 
+  // ── Utilisateur existant + 1 seule étape → mini popup Turnstile ──
+  if (!isFirstTime && _swSteps.length === 1) {
+    _showMiniPopup(_swSteps[0]);
+    return;
+  }
+
+  // ── Nouveau compte ou plusieurs étapes → wizard complet ──
   _buildSidebar();
   _showStep(0);
   _updateProgress();
 
   var wiz = document.getElementById('lvlSetupWizard');
-  if (wiz) { wiz.style.display = 'flex'; wiz.style.animation = 'swFadeIn .35s ease'; }
+  if (wiz) { wiz.classList.add('sw-visible'); }
+};
+
+// ── Mini popup (1 étape) ──
+var _miniConfigs = {
+  notif: {
+    ico:'🔔', title:'Activer les notifications',
+    desc:'Restez informé des alertes importantes, mises à jour et nouveautés LevelUp en temps réel.',
+    btn:'Activer les notifications',
+    action: function(done) {
+      Notification.requestPermission().then(function(r) {
+        if (r === 'granted') toast_('🔔 Notifications activées','ok');
+        window._closeMiniPopup(); if(done) done();
+      });
+    }
+  },
+  loc: {
+    ico:'📍', title:'Partager ma localisation',
+    desc:'Améliore votre expérience LevelUp avec des contenus adaptés à votre région.',
+    btn:'Autoriser la localisation',
+    action: function(done) {
+      if (!navigator.geolocation) { window._closeMiniPopup(); return; }
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        localStorage.setItem('lvl_location_pref', JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() }));
+        toast_('📍 Localisation enregistrée','ok');
+        window._closeMiniPopup(); if(done) done();
+      }, function() { window._closeMiniPopup(); });
+    }
+  },
+  cookies: {
+    ico:'🍪', title:'Cookies analytiques',
+    desc:'Acceptez les cookies pour une expérience optimisée et des performances améliorées.',
+    btn:'Accepter les cookies',
+    action: function(done) {
+      localStorage.setItem('lvl_cookies_accepted','all');
+      toast_('🍪 Cookies acceptés','ok');
+      window._closeMiniPopup(); if(done) done();
+    }
+  }
+};
+
+function _showMiniPopup(key) {
+  var cfg = _miniConfigs[key];
+  if (!cfg) return;
+  var pop = document.getElementById('swMiniPopup');
+  var ico = document.getElementById('swMiniIco');
+  var ttl = document.getElementById('swMiniTitle');
+  var dsc = document.getElementById('swMiniDesc');
+  var act = document.getElementById('swMiniActions');
+  if (!pop || !act) return;
+  if (ico) ico.textContent = cfg.ico;
+  if (ttl) ttl.textContent = cfg.title;
+  if (dsc) dsc.textContent = cfg.desc;
+  act.innerHTML = '';
+  var btn = document.createElement('button');
+  btn.className = 'sw-btn-primary';
+  btn.style.cssText = 'width:100%;padding:14px 20px;border-radius:14px;background:linear-gradient(135deg,#a855f7,#7c3aed);border:none;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px';
+  btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + cfg.btn;
+  btn.onclick = function() { cfg.action(); };
+  act.appendChild(btn);
+  pop.classList.add('sw-visible');
+}
+
+window._closeMiniPopup = function() {
+  var pop = document.getElementById('swMiniPopup');
+  if (!pop) return;
+  pop.style.transition = 'opacity .25s ease';
+  pop.style.opacity = '0';
+  setTimeout(function() {
+    pop.classList.remove('sw-visible');
+    pop.style.opacity = '';
+    pop.style.transition = '';
+  }, 260);
 };
 
 // ── Relancer le wizard (paramètres) ──
@@ -11432,15 +11599,179 @@ async function _finish() {
   setTimeout(function() {
     var wiz = document.getElementById('lvlSetupWizard');
     if (!wiz) return;
-    wiz.style.transition = 'opacity .4s ease';
+    wiz.style.transition = 'opacity .35s ease';
     wiz.style.opacity = '0';
     setTimeout(function() {
-      wiz.style.display = 'none';
-      wiz.style.opacity = '1';
+      wiz.classList.remove('sw-visible');
+      wiz.style.opacity = '';
       wiz.style.transition = '';
-    }, 420);
+    }, 370);
   }, 2400);
 }
+
+// ═══════════════════════════════════════════════════════════
+// GESTION APPAREILS CONNECTÉS — LevelUp Ecosystem
+// ═══════════════════════════════════════════════════════════
+
+// Génère ou récupère l'ID unique de cet appareil (persisté en localStorage)
+function _getOrCreateDeviceId() {
+  var id = localStorage.getItem('lvl_device_id');
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).substr(2,9) + '_' + Date.now().toString(36);
+    localStorage.setItem('lvl_device_id', id);
+  }
+  return id;
+}
+
+// Nom lisible de l'appareil à partir du userAgent
+function _getDeviceName() {
+  var ua = navigator.userAgent || '';
+  var platform = 'Navigateur';
+  if (/iPhone/i.test(ua))       platform = 'iPhone';
+  else if (/iPad/i.test(ua))    platform = 'iPad';
+  else if (/Android/i.test(ua)) platform = 'Android';
+  else if (/Windows/i.test(ua)) platform = 'Windows';
+  else if (/Mac/i.test(ua))     platform = 'Mac';
+  else if (/Linux/i.test(ua))   platform = 'Linux';
+  var browser = 'Navigateur';
+  if (/Chrome/i.test(ua) && !/Edge/i.test(ua))  browser = 'Chrome';
+  else if (/Firefox/i.test(ua))                  browser = 'Firefox';
+  else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+  else if (/Edge/i.test(ua))                     browser = 'Edge';
+  return browser + ' sur ' + platform;
+}
+
+function _getDeviceIcon(name) {
+  var n = (name || '').toLowerCase();
+  if (n.includes('iphone') || n.includes('android')) return 'fa-mobile-screen-button';
+  if (n.includes('ipad'))   return 'fa-tablet-screen-button';
+  return 'fa-laptop';
+}
+
+// Enregistrer l'appareil en Firestore lors de la connexion (max 3)
+window._registerDevice = async function(uid) {
+  if (!uid || !window._db) return;
+  try {
+    var { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, orderBy, limit } =
+      await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+    var deviceId   = _getOrCreateDeviceId();
+    var deviceName = _getDeviceName();
+    var devRef = doc(window._db, 'artifacts','level-ia-premium','users', uid, 'devices', deviceId);
+    // Vérifier si l'appareil existe déjà
+    var existing = await getDoc(devRef);
+    if (existing.exists()) {
+      // Mettre à jour lastAt
+      await setDoc(devRef, { lastAt: Date.now() }, { merge: true });
+      return;
+    }
+    // Compter les appareils actuels
+    var col = collection(window._db, 'artifacts','level-ia-premium','users', uid, 'devices');
+    var snap = await getDocs(col);
+    var devs = [];
+    snap.forEach(function(d) { devs.push({ id: d.id, ...d.data() }); });
+    // Si déjà 3 appareils, supprimer le plus ancien
+    if (devs.length >= 3) {
+      devs.sort(function(a,b) { return (a.loginAt||0) - (b.loginAt||0); });
+      var oldest = devs[0];
+      await deleteDoc(doc(window._db, 'artifacts','level-ia-premium','users', uid, 'devices', oldest.id));
+    }
+    // Ajouter ce nouvel appareil
+    await setDoc(devRef, {
+      id:        deviceId,
+      name:      deviceName,
+      loginAt:   Date.now(),
+      lastAt:    Date.now(),
+      current:   true
+    });
+  } catch(e) { console.warn('_registerDevice:', e); }
+};
+
+// Charger et afficher la liste des appareils dans les paramètres
+window._loadDevices = async function() {
+  var uid = window._user && window._user.uid;
+  if (!uid || !window._db) return;
+  var list = document.getElementById('devicesList');
+  var cnt  = document.getElementById('devicesCount');
+  if (!list) return;
+  try {
+    var { collection, getDocs } =
+      await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+    var col  = collection(window._db, 'artifacts','level-ia-premium','users', uid, 'devices');
+    var snap = await getDocs(col);
+    var devs = [];
+    snap.forEach(function(d) { devs.push({ id: d.id, ...d.data() }); });
+    devs.sort(function(a,b) { return (b.lastAt||0) - (a.lastAt||0); });
+    var myId = _getOrCreateDeviceId();
+    if (cnt) cnt.textContent = devs.length + ' / 3 appareil' + (devs.length > 1 ? 's' : '');
+    if (devs.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:16px;color:rgba(255,255,255,.25);font-size:.82rem">Aucun appareil enregistré</div>';
+      return;
+    }
+    list.innerHTML = devs.map(function(dev) {
+      var isCurrent = dev.id === myId;
+      var ico = _getDeviceIcon(dev.name || '');
+      var ago = _timeAgo(dev.lastAt);
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,' + (isCurrent ? '.14' : '.07') + ');border-radius:12px' + (isCurrent ? ';border-color:rgba(168,85,247,.25)' : '') + '">'
+        + '<div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid ' + ico + '" style="color:' + (isCurrent ? '#a855f7' : 'rgba(255,255,255,.5)') + ';font-size:.9rem"></i></div>'
+        + '<div style="flex:1;min-width:0"><div style="font-size:.83rem;font-weight:600;color:' + (isCurrent ? '#fff' : 'rgba(255,255,255,.7)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (dev.name || 'Appareil inconnu') + (isCurrent ? ' <span style=\'font-size:.65rem;color:#a855f7;font-weight:700;background:rgba(168,85,247,.12);padding:2px 7px;border-radius:100px;border:1px solid rgba(168,85,247,.2)\'>Cet appareil</span>' : '') + '</div><div style="font-size:.72rem;color:rgba(255,255,255,.3);margin-top:2px">Dernière activité : ' + ago + '</div></div>'
+        + (isCurrent ? '' : '<button onclick="window._disconnectDevice(\'' + dev.id + '\')" style="flex-shrink:0;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .2s" onmouseover="this.style.background=\'rgba(239,68,68,.15)\'" onmouseout="this.style.background=\'rgba(239,68,68,.08)\'"><i class="fa-solid fa-plug-circle-xmark" style="margin-right:4px"></i>Déconnecter</button>')
+        + '</div>';
+    }).join('');
+  } catch(e) {
+    if (list) list.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,.3);font-size:.8rem">Impossible de charger les appareils.</div>';
+  }
+};
+
+// Déconnecter un appareil
+window._disconnectDevice = async function(deviceId) {
+  var uid = window._user && window._user.uid;
+  if (!uid || !window._db || !deviceId) return;
+  if (!confirm('Déconnecter cet appareil ? Il devra se reconnecter.')) return;
+  try {
+    var { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+    await deleteDoc(doc(window._db, 'artifacts','level-ia-premium','users', uid, 'devices', deviceId));
+    toast_('Appareil déconnecté','ok');
+    window._loadDevices();
+  } catch(e) { toast_('Erreur lors de la déconnexion','err'); }
+};
+
+function _timeAgo(ts) {
+  if (!ts) return 'inconnu';
+  var d = Math.floor((Date.now() - ts) / 1000);
+  if (d < 60)  return 'à l\'instant';
+  if (d < 3600) return Math.floor(d/60) + ' min';
+  if (d < 86400) return Math.floor(d/3600) + 'h';
+  return Math.floor(d/86400) + 'j';
+}
+
+// ── Alertes email ──
+window._settingsToggleEmailAlert = async function(val) {
+  try {
+    var prefs = JSON.parse(localStorage.getItem('lvl_email_alerts') || '{}');
+    prefs.login = val;
+    localStorage.setItem('lvl_email_alerts', JSON.stringify(prefs));
+    if (window._user && window._db) {
+      var { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      await setDoc(doc(window._db,'artifacts','level-ia-premium','users',window._user.uid,'profile','data'),
+        { emailAlerts: { login: val } }, { merge: true });
+    }
+    toast_(val ? '📧 Alertes email de connexion activées' : '🔕 Alertes email désactivées', 'ok');
+  } catch(e) { toast_('Impossible de modifier la préférence','err'); }
+};
+
+window._settingsToggleEmailAlert2 = async function(val) {
+  try {
+    var prefs = JSON.parse(localStorage.getItem('lvl_email_alerts') || '{}');
+    prefs.security = val;
+    localStorage.setItem('lvl_email_alerts', JSON.stringify(prefs));
+    if (window._user && window._db) {
+      var { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+      await setDoc(doc(window._db,'artifacts','level-ia-premium','users',window._user.uid,'profile','data'),
+        { emailAlerts: { security: val } }, { merge: true });
+    }
+    toast_(val ? '📧 Alertes de sécurité activées' : '🔕 Alertes de sécurité désactivées', 'ok');
+  } catch(e) { toast_('Impossible de modifier la préférence','err'); }
+};
 
 // ── Handlers paramètres (settings) ──
 window._settingsToggleCookies = function(val) {
@@ -11719,6 +12050,16 @@ window.loadNotifPrefs = function() {
   if (cookieTgl) cookieTgl.checked    = cookiePref === 'all';
   // 2FA state from Firestore
   window._load2FAState && window._load2FAState();
+  // Email alert prefs
+  try {
+    var emailPrefs = JSON.parse(localStorage.getItem('lvl_email_alerts') || '{"login":true,"security":true}');
+    var loginTgl = document.getElementById('notifLoginToggle');
+    var secTgl   = document.getElementById('notifSecurityToggle');
+    if (loginTgl) loginTgl.checked = emailPrefs.login !== false;
+    if (secTgl)   secTgl.checked   = emailPrefs.security !== false;
+  } catch(_) {}
+  // Charger les appareils connectés
+  try { window._loadDevices && window._loadDevices(); } catch(_) {}
 };
 
 // ── _updatePushToggleUI : refléter l'état de la permission navigateur ──
