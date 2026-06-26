@@ -72,6 +72,21 @@ DESIGN SYSTEM — LEVELUP ECOSYSTEM
 --sans:'Inter',system-ui,sans-serif;--display:'Syne',sans-serif;
 --r4:4px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;--r24:24px;--r-full:100px;
 }
+/* ── MODE CLAIR (Dawn) ── */
+html.lvl-light{
+--bg:#f4f0ff;--surf:#ebe5ff;--elev:#e0d8ff;--elev2:#d6ccff;
+--bdr:rgba(110,60,220,.1);--bdr-hi:rgba(110,60,220,.18);--bdr-s:rgba(110,60,220,.28);
+--txt:#1a1030;--muted:#4a3870;--dim:#7c6aaa;--xdim:#9880cc;
+--purple:#7c3aed;--purple-d:#6d28d9;--purple-g:rgba(124,58,237,.12);--purple-gl:rgba(124,58,237,.06);
+--blue:#2563eb;--blue-g:rgba(37,99,235,.1);
+--green:#16a34a;--green-g:rgba(22,163,74,.1);
+--pink:#db2777;--pink-g:rgba(219,39,119,.1);
+--red:#dc2626;--orange:#ea580c;--yellow:#ca8a04;
+}
+html.lvl-light body,html.lvl-light{background:var(--bg);color:var(--txt)}
+html.lvl-light .toast{background:var(--elev);color:var(--txt)}
+html.lvl-light input,html.lvl-light textarea,html.lvl-light select{background:rgba(0,0,0,.05)!important;color:var(--txt)!important;border-color:var(--bdr-hi)!important}
+html.lvl-light p{color:var(--muted)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth;background:var(--bg)}
 body{font-family:var(--sans);background:var(--bg);color:var(--txt);line-height:1.6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden}
@@ -2496,8 +2511,8 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <a href="https://levelup-ecosystem.com/privacy" target="_blank" class="btn btn-g btn-sm" style="flex:1;justify-content:center;text-decoration:none;gap:6px"><i class="fa-solid fa-shield-halved"></i> Confidentialité</a>
 </div>
 <div class="set-row" style="border-color:rgba(239,68,68,.14)">
-<div class="set-info"><h5 style="color:var(--red)">Supprimer mon compte</h5><p>Action irréversible — toutes vos données seront effacées.</p></div>
-<button class="btn btn-xs" style="background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.2);white-space:nowrap" onclick="toast_('Contactez support@levelup-ecosystem.com pour supprimer votre compte','info')">Supprimer</button>
+<div class="set-info"><h5 style="color:var(--red)">Supprimer mon compte</h5><p>Suspension 12 jours puis suppression définitive.</p></div>
+<button class="btn btn-xs" style="background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.2);white-space:nowrap" onclick="window._openDeleteAccountPopup()">Supprimer</button>
 </div>
 </div>
 
@@ -2580,6 +2595,13 @@ DASHBOARD (CENTRE DE CONTRÔLE)
 <div class="set-sec">
 <div class="set-title"><i class="fa-solid fa-user-shield" style="color:#22c55e;margin-right:6px;font-size:.78rem"></i>Confidentialité &amp; Données</div>
 <div class="set-row" style="flex-wrap:wrap;gap:10px">
+  <div class="set-info" style="min-width:0;flex:1"><h5>Profil public</h5><p id="setProfilePublicStatus">Permet aux autres utilisateurs de voir votre profil</p></div>
+  <label class="tog-wrap" style="flex-shrink:0">
+    <input type="checkbox" id="setProfilePublicToggle" onchange="window._settingsToggleProfilePublic(this.checked)">
+    <span class="tog-sl"></span>
+  </label>
+</div>
+<div class="set-row" style="flex-wrap:wrap;gap:10px;margin-top:4px">
   <div class="set-info" style="min-width:0;flex:1"><h5>Cookies analytiques</h5><p id="setCookieStatus">Améliore l'expérience et les performances</p></div>
   <label class="tog-wrap" style="flex-shrink:0">
     <input type="checkbox" id="setCookieToggle" onchange="window._settingsToggleCookies(this.checked)">
@@ -2594,24 +2616,25 @@ DASHBOARD (CENTRE DE CONTRÔLE)
   <div class="set-info"><h5>Exporter mes données</h5><p>Télécharger une copie de vos informations LevelUp</p></div>
   <button class="btn btn-g btn-xs" onclick="window._exportUserData && window._exportUserData()"><i class="fa-solid fa-download"></i> Exporter</button>
 </div>
+<div id="setInstallAppRow" class="set-row" style="margin-top:4px;display:none">
+  <div class="set-info"><h5><i class="fa-solid fa-mobile-screen" style="color:#a855f7;margin-right:6px;font-size:.8rem"></i>Installer l'application</h5><p>Ajouter LevelUp sur l'écran d'accueil de votre appareil</p></div>
+  <button class="btn btn-g btn-xs" id="setInstallAppBtn" onclick="window._installPWA()"><i class="fa-solid fa-download"></i> Installer</button>
+</div>
 </div>
 
 <!-- ── SECTION APPARENCE ── -->
 <div class="set-sec">
 <div class="set-title"><i class="fa-solid fa-palette" style="color:#ec4899;margin-right:6px;font-size:.78rem"></i>Apparence</div>
 <div class="set-row" style="flex-wrap:wrap;gap:10px">
-  <div class="set-info" style="min-width:0;flex:1"><h5>Thème</h5><p>Interface sombre exclusive LevelUp</p></div>
-  <span style="font-size:.75rem;color:rgba(255,255,255,.25);font-weight:600;padding:4px 10px;background:rgba(255,255,255,.05);border-radius:100px;border:1px solid rgba(255,255,255,.08)"><i class="fa-solid fa-moon" style="margin-right:5px"></i>Sombre</span>
+  <div class="set-info" style="min-width:0;flex:1"><h5>Thème</h5><p id="setThemeStatus">Interface sombre</p></div>
+  <div style="display:flex;gap:6px">
+    <button id="setThemeDarkBtn" onclick="window._setTheme('dark')" style="padding:5px 12px;border-radius:100px;border:1px solid rgba(168,85,247,.4);background:rgba(168,85,247,.15);color:#c4b5fd;font-size:.72rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s"><i class="fa-solid fa-moon" style="margin-right:5px"></i>Sombre</button>
+    <button id="setThemeLightBtn" onclick="window._setTheme('light')" style="padding:5px 12px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:.72rem;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s"><i class="fa-solid fa-sun" style="margin-right:5px"></i>Dawn</button>
+  </div>
 </div>
 <div class="set-row" style="flex-wrap:wrap;gap:10px;margin-top:4px">
   <div class="set-info" style="min-width:0;flex:1"><h5>Langue de l'interface</h5><p id="setLangStatus">Français</p></div>
-  <select id="setLangSelect" onchange="window._settingsSetLang(this.value)" style="padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.78rem;font-family:var(--sans);outline:none;cursor:pointer">
-    <option value="fr">🇫🇷 Français</option>
-    <option value="en">🇬🇧 English</option>
-    <option value="es">🇪🇸 Español</option>
-    <option value="de">🇩🇪 Deutsch</option>
-    <option value="pt">🇧🇷 Português</option>
-  </select>
+  <span style="font-size:.75rem;color:rgba(255,255,255,.35);font-weight:600;padding:4px 10px;background:rgba(255,255,255,.05);border-radius:100px;border:1px solid rgba(255,255,255,.08)">🇫🇷 Français</span>
 </div>
 </div>
 
@@ -2622,7 +2645,7 @@ DASHBOARD (CENTRE DE CONTRÔLE)
   <div class="set-info"><h5>Version de l'application</h5><p>LevelUp Ecosystem — Build 2.7</p></div>
   <span style="font-size:.72rem;color:rgba(255,255,255,.2);font-weight:700;letter-spacing:.06em;font-family:monospace">v2.7</span>
 </div>
-<div class="set-row" style="cursor:pointer" onclick="window.open('https://levelup-ecosystem.com','_blank')">
+<div class="set-row" style="cursor:pointer" onclick="window._openSiteOfficiel()">
   <div class="set-info"><h5>Site officiel</h5><p>levelup-ecosystem.com</p></div>
   <i class="fa-solid fa-arrow-up-right-from-square" style="color:var(--dim);font-size:.8rem"></i>
 </div>
@@ -2971,72 +2994,88 @@ LOGOUT LOADING ANIMATION
 <!-- ═══════════════════════════════════════
 OVERLAY 2FA — CODE EMAIL 6 CHIFFRES
 ═══════════════════════════════════════ -->
-<div id="twoFaOverlay" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top,20px)) 16px max(20px,env(safe-area-inset-bottom,20px));overflow-y:auto">
-  <div style="background:#09090b;border:1px solid #27272a;border-radius:24px;max-width:380px;width:100%;position:relative;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.9)">
-    <div style="height:2px;background:linear-gradient(90deg,transparent,#7c3aed 30%,#a855f7 50%,#7c3aed 70%,transparent)"></div>
+<div id="twoFaOverlay" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.93);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top,20px)) 16px max(20px,env(safe-area-inset-bottom,20px));overflow-y:auto">
+  <div style="background:linear-gradient(160deg,#0f0f1e,#111128);border:1px solid rgba(168,85,247,.15);border-radius:28px;max-width:400px;width:100%;position:relative;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.04),0 40px 80px rgba(0,0,0,.95)">
+    <div style="height:3px;background:linear-gradient(90deg,#5b21b6,#7c3aed,#a855f7,#c084fc,#a855f7,#7c3aed,#5b21b6)"></div>
     <!-- VIEW CODE -->
-    <div id="twofaViewCode" style="padding:32px 28px 28px">
-      <button onclick="window._back2FAToLogin()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 12px;color:rgba(255,255,255,.45);font-size:.72rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;margin-bottom:28px" onmouseover="this.style.color='rgba(255,255,255,.8)';this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.color='rgba(255,255,255,.45)';this.style.background='rgba(255,255,255,.05)'">
-        <i class="fa-solid fa-arrow-left" style="font-size:.6rem"></i> Retour
+    <div id="twofaViewCode" style="padding:36px 30px 30px">
+      <button onclick="window._back2FAToLogin()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:7px 14px;color:rgba(255,255,255,.38);font-size:.72rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;margin-bottom:30px" onmouseover="this.style.color='rgba(255,255,255,.75)';this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.color='rgba(255,255,255,.38)';this.style.background='rgba(255,255,255,.04)'">
+        <i class="fa-solid fa-arrow-left" style="font-size:.58rem"></i> Retour
       </button>
-      <div style="text-align:center;margin-bottom:28px">
-        <div style="font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:14px">Level<span style="color:#a855f7">Up</span></div>
-        <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:100px;margin-bottom:16px">
-          <span style="width:5px;height:5px;border-radius:50%;background:#a855f7;display:inline-block;animation:bdot 1.4s ease infinite"></span>
-          <span style="font-size:.7rem;color:#c084fc;font-weight:700;letter-spacing:.04em" id="twoFaBadgeText">Nouvel appareil détecté</span>
+      <div style="text-align:center;margin-bottom:30px">
+        <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(168,85,247,.1));border:1px solid rgba(168,85,247,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative">
+          <i class="fa-solid fa-shield-halved" style="font-size:1.9rem;color:#a855f7"></i>
+          <div style="position:absolute;bottom:-5px;right:-5px;width:22px;height:22px;border-radius:50%;background:#a855f7;border:3px solid #0f0f1e;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-lock" style="font-size:.5rem;color:#fff"></i></div>
         </div>
-        <h2 style="color:#fff;font-size:1.15rem;font-weight:700;margin:0 0 8px">Vérification</h2>
-        <p id="twoFaSubtitle" style="color:rgba(255,255,255,.4);font-size:.8rem;margin:0;line-height:1.65">Code à 6 chiffres envoyé à<br><strong id="twoFaEmail" style="color:rgba(255,255,255,.7)"></strong></p>
+        <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.18);border-radius:100px;margin-bottom:14px">
+          <span style="width:5px;height:5px;border-radius:50%;background:#a855f7;display:inline-block;animation:bdot 1.4s ease infinite"></span>
+          <span id="twoFaBadgeText" style="font-size:.68rem;color:#c084fc;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Vérification 2FA</span>
+        </div>
+        <h2 style="color:#fff;font-size:1.2rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em">Confirmez votre identité</h2>
+        <p id="twoFaSubtitle" style="color:rgba(255,255,255,.38);font-size:.81rem;margin:0;line-height:1.7">Code à 6 chiffres envoyé à<br><strong id="twoFaEmail" style="color:rgba(255,255,255,.75)"></strong></p>
       </div>
-      <div style="margin-bottom:16px">
-        <input type="number" id="twoFaSingleInput" maxlength="6" inputmode="numeric" placeholder="000000" autocomplete="one-time-code"
-          style="width:100%;box-sizing:border-box;background:#18181b;border:1px solid #3f3f46;border-radius:14px;color:#fff;font-size:2rem;font-weight:800;text-align:center;padding:18px 12px;outline:none;font-family:'Courier New',monospace;letter-spacing:.45em;transition:all .2s"
-          onfocus="this.style.borderColor='rgba(168,85,247,.7)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.15)'"
-          onblur="this.style.borderColor='#3f3f46';this.style.boxShadow='none'">
+      <!-- 6 separate digit boxes -->
+      <div id="twoFaDigits" style="display:flex;gap:8px;justify-content:center;margin-bottom:18px">
+        <input class="twofa-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" style="width:46px;height:58px;text-align:center;font-size:1.5rem;font-weight:800;font-family:'Courier New',monospace;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;outline:none;transition:all .18s;caret-color:transparent" onfocus="this.style.borderColor='rgba(168,85,247,.7)';this.style.background='rgba(168,85,247,.08)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.12)'" onblur="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='rgba(255,255,255,.05)';this.style.boxShadow='none'">
+        <input class="twofa-digit" type="text" inputmode="numeric" maxlength="1" style="width:46px;height:58px;text-align:center;font-size:1.5rem;font-weight:800;font-family:'Courier New',monospace;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;outline:none;transition:all .18s;caret-color:transparent" onfocus="this.style.borderColor='rgba(168,85,247,.7)';this.style.background='rgba(168,85,247,.08)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.12)'" onblur="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='rgba(255,255,255,.05)';this.style.boxShadow='none'">
+        <input class="twofa-digit" type="text" inputmode="numeric" maxlength="1" style="width:46px;height:58px;text-align:center;font-size:1.5rem;font-weight:800;font-family:'Courier New',monospace;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;outline:none;transition:all .18s;caret-color:transparent" onfocus="this.style.borderColor='rgba(168,85,247,.7)';this.style.background='rgba(168,85,247,.08)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.12)'" onblur="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='rgba(255,255,255,.05)';this.style.boxShadow='none'">
+        <input class="twofa-digit" type="text" inputmode="numeric" maxlength="1" style="width:46px;height:58px;text-align:center;font-size:1.5rem;font-weight:800;font-family:'Courier New',monospace;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;outline:none;transition:all .18s;caret-color:transparent" onfocus="this.style.borderColor='rgba(168,85,247,.7)';this.style.background='rgba(168,85,247,.08)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.12)'" onblur="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='rgba(255,255,255,.05)';this.style.boxShadow='none'">
+        <input class="twofa-digit" type="text" inputmode="numeric" maxlength="1" style="width:46px;height:58px;text-align:center;font-size:1.5rem;font-weight:800;font-family:'Courier New',monospace;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;outline:none;transition:all .18s;caret-color:transparent" onfocus="this.style.borderColor='rgba(168,85,247,.7)';this.style.background='rgba(168,85,247,.08)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.12)'" onblur="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='rgba(255,255,255,.05)';this.style.boxShadow='none'">
+        <input class="twofa-digit" type="text" inputmode="numeric" maxlength="1" style="width:46px;height:58px;text-align:center;font-size:1.5rem;font-weight:800;font-family:'Courier New',monospace;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;outline:none;transition:all .18s;caret-color:transparent" onfocus="this.style.borderColor='rgba(168,85,247,.7)';this.style.background='rgba(168,85,247,.08)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.12)'" onblur="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='rgba(255,255,255,.05)';this.style.boxShadow='none'">
       </div>
-      <div id="twoFaError" style="display:none;color:#f87171;font-size:.78rem;padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;text-align:center;margin-bottom:14px"></div>
-      <button id="twoFaVerifyBtn" onclick="window._verify2FA()" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:14px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:var(--sans);margin-bottom:12px;transition:opacity .2s;box-shadow:0 4px 20px rgba(168,85,247,.3)">Vérifier le code</button>
+      <div id="twoFaError" style="display:none;color:#f87171;font-size:.78rem;padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;text-align:center;margin-bottom:16px"></div>
+      <button id="twoFaVerifyBtn" onclick="window._verify2FA()" style="width:100%;padding:15px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:16px;color:#fff;font-size:.92rem;font-weight:800;cursor:pointer;font-family:var(--sans);margin-bottom:14px;transition:all .2s;box-shadow:0 6px 24px rgba(168,85,247,.3);letter-spacing:.01em"><i class="fa-solid fa-shield-check" style="margin-right:8px"></i>Vérifier le code</button>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
-        <span style="color:rgba(255,255,255,.2);font-size:.7rem;letter-spacing:.04em">ou</span>
-        <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.06)"></div>
+        <span style="color:rgba(255,255,255,.18);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase">ou</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,.06)"></div>
       </div>
-      <button onclick="window._switch2FAToKey()" style="width:100%;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;color:rgba(255,255,255,.55);font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.55)'">
+      <button onclick="window._switch2FAToKey()" style="width:100%;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;color:rgba(255,255,255,.45);font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.45)'">
         <i class="fa-solid fa-key" style="font-size:.72rem;color:#a855f7"></i> Utiliser ma clé LevelUp
       </button>
       <div style="text-align:center">
-        <button id="twoFaResendBtn" onclick="window._resend2FA()" style="background:none;border:none;color:rgba(255,255,255,.28);font-size:.74rem;cursor:pointer;font-family:var(--sans);padding:4px 8px;border-radius:6px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.28)'">
-          <i class="fa-solid fa-rotate-right" style="font-size:.65rem;margin-right:4px"></i>Renvoyer le code
+        <button id="twoFaResendBtn" onclick="window._resend2FA()" style="background:none;border:none;color:rgba(255,255,255,.28);font-size:.74rem;cursor:pointer;font-family:var(--sans);padding:4px 8px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.28)'">
+          <i class="fa-solid fa-rotate-right" style="font-size:.6rem;margin-right:5px"></i>Renvoyer le code
         </button>
-        <div id="twoFaQuotaInfo" style="font-size:.68rem;color:rgba(255,255,255,.2);margin-top:2px"></div>
+        <div id="twoFaQuotaInfo" style="font-size:.67rem;color:rgba(255,255,255,.2);margin-top:3px"></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:7px;margin-top:18px;padding:10px 14px;background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.1);border-radius:11px">
+        <i class="fa-solid fa-circle-check" style="color:#22c55e;font-size:.75rem;flex-shrink:0;margin-top:1px"></i>
+        <span style="font-size:.7rem;color:rgba(255,255,255,.28);line-height:1.45">Cet appareil sera mémorisé après vérification. Vous ne serez plus sollicité ici.</span>
       </div>
     </div>
     <!-- VIEW KEY -->
-    <div id="twofaViewKey" style="display:none;padding:32px 28px 28px">
-      <button onclick="window._switch2FAToCode()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 12px;color:rgba(255,255,255,.45);font-size:.72rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;margin-bottom:28px" onmouseover="this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.color='rgba(255,255,255,.45)'">
-        <i class="fa-solid fa-arrow-left" style="font-size:.6rem"></i> Retour au code
+    <div id="twofaViewKey" style="display:none;padding:36px 30px 30px">
+      <button onclick="window._switch2FAToCode()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:7px 14px;color:rgba(255,255,255,.38);font-size:.72rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;margin-bottom:30px" onmouseover="this.style.color='rgba(255,255,255,.75)'" onmouseout="this.style.color='rgba(255,255,255,.38)'">
+        <i class="fa-solid fa-arrow-left" style="font-size:.58rem"></i> Retour au code email
       </button>
-      <div style="text-align:center;margin-bottom:28px">
-        <div style="font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:14px">Level<span style="color:#a855f7">Up</span></div>
-        <h2 style="color:#fff;font-size:1.15rem;font-weight:700;margin:0 0 8px">Clé de sécurité</h2>
-        <p style="color:rgba(255,255,255,.38);font-size:.8rem;margin:0">Format <span style="color:rgba(255,255,255,.6);font-family:'Courier New',monospace">LVL-XXXXX-XXXXX</span></p>
+      <div style="text-align:center;margin-bottom:26px">
+        <div style="width:64px;height:64px;border-radius:18px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <i class="fa-solid fa-key" style="font-size:1.6rem;color:#fbbf24"></i>
+        </div>
+        <h2 style="color:#fff;font-size:1.15rem;font-weight:800;margin:0 0 6px;letter-spacing:-.02em">Clé d'accès LevelUp</h2>
+        <p style="color:rgba(255,255,255,.35);font-size:.8rem;margin:0">Format <code style="color:rgba(255,255,255,.6);background:rgba(255,255,255,.06);padding:2px 8px;border-radius:6px;font-size:.76rem">LVL-XXXXX-XXXXX</code></p>
       </div>
-      <div style="margin-bottom:16px">
-        <input type="text" id="twoFaKeyInput" placeholder="LVL-00000-00000" autocomplete="off"
-          style="width:100%;box-sizing:border-box;background:#18181b;border:1px solid #3f3f46;border-radius:14px;color:#fff;font-size:1rem;font-weight:700;text-align:center;padding:16px 12px;outline:none;font-family:'Courier New',monospace;letter-spacing:.1em;text-transform:uppercase;transition:all .2s"
-          onfocus="this.style.borderColor='rgba(168,85,247,.7)';this.style.boxShadow='0 0 0 3px rgba(168,85,247,.15)'"
-          onblur="this.style.borderColor='#3f3f46';this.style.boxShadow='none'">
-      </div>
+      <input type="text" id="twoFaKeyInput" placeholder="LVL-00000-00000" autocomplete="off"
+        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:1.05rem;font-weight:700;text-align:center;padding:16px 12px;outline:none;font-family:'Courier New',monospace;letter-spacing:.12em;text-transform:uppercase;transition:all .2s;margin-bottom:14px"
+        onfocus="this.style.borderColor='rgba(251,191,36,.5)';this.style.boxShadow='0 0 0 3px rgba(251,191,36,.1)'"
+        onblur="this.style.borderColor='rgba(255,255,255,.1)';this.style.boxShadow='none'"
+        oninput="this.value=this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter')window._confirmKeyVerify()">
       <div id="twoFaKeyError" style="display:none;color:#f87171;font-size:.78rem;padding:10px 14px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;text-align:center;margin-bottom:14px"></div>
-      <button onclick="window._confirmKeyVerify()" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:14px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:var(--sans);box-shadow:0 4px 20px rgba(168,85,247,.3)">Valider la clé</button>
+      <button onclick="window._confirmKeyVerify()" style="width:100%;padding:15px;background:linear-gradient(135deg,#d97706,#f59e0b);border:none;border-radius:16px;color:#fff;font-size:.92rem;font-weight:800;cursor:pointer;font-family:var(--sans);box-shadow:0 6px 24px rgba(245,158,11,.2);letter-spacing:.01em"><i class="fa-solid fa-key" style="margin-right:8px"></i>Valider la clé</button>
     </div>
     <!-- VIEW SUCCESS -->
-    <div id="twofaViewSuccess" style="display:none;padding:48px 28px;text-align:center">
-      <div style="width:72px;height:72px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-        <i class="fa-solid fa-check" style="color:#22c55e;font-size:1.6rem"></i>
+    <div id="twofaViewSuccess" style="display:none;padding:56px 30px;text-align:center">
+      <div style="width:80px;height:80px;background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.07));border:1px solid rgba(34,197,94,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;animation:swSuccessPop .5s cubic-bezier(.34,1.56,.64,1) both">
+        <i class="fa-solid fa-shield-check" style="color:#22c55e;font-size:2rem"></i>
       </div>
-      <h2 style="color:#fff;font-size:1.2rem;font-weight:700;margin:0 0 8px">Vérification réussie</h2>
-      <p style="color:rgba(255,255,255,.4);font-size:.85rem;margin:0">Appareil de confiance enregistré</p>
+      <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 14px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);border-radius:100px;margin-bottom:14px">
+        <i class="fa-solid fa-check-circle" style="color:#22c55e;font-size:.65rem"></i>
+        <span style="font-size:.68rem;color:#4ade80;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Identité confirmée</span>
+      </div>
+      <h2 style="color:#fff;font-size:1.25rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em">Connexion sécurisée</h2>
+      <p style="color:rgba(255,255,255,.38);font-size:.84rem;margin:0;line-height:1.6">Appareil de confiance enregistré.<br>Vous ne serez plus sollicité ici.</p>
     </div>
   </div>
 </div>
@@ -5095,6 +5134,8 @@ let locData = await fetchUserLocation();
 
 if (snap.exists()) {
 window._ud = snap.data();
+// Assure que trustedDevices est un tableau (pour la vérification 2FA Firestore)
+if (!Array.isArray(window._ud.trustedDevices)) window._ud.trustedDevices = [];
 if(locData) {
 window._ud.country = locData.country;
 window._ud.city = locData.city;
@@ -5251,14 +5292,15 @@ const _isNewConn = !!(
   window._ud?.lastLoginAt &&
   !_knownIps2fa.includes(_currentIp2fa)
 );
-const _has2FAKey = localStorage.getItem('lvl_2fa_trusted_' + u.uid);
+const _myDeviceId2fa = localStorage.getItem('lvl_device_id') || '';
+const _has2FAKey = _myDeviceId2fa && (window._ud?.trustedDevices || []).includes(_myDeviceId2fa);
 const _sessionOk2fa = (() => { try { return sessionStorage.getItem('lvl_2fa_ok_' + u.uid); } catch(_) { return null; } })();
 const _sessionPending2fa = (() => { try { return sessionStorage.getItem('lvl_2fa_pending_' + u.uid); } catch(_) { return null; } })();
 
 if ((_isNewConn || _sessionPending2fa) && !_has2FAKey && !_sessionOk2fa && window._show2FAOverlay && window._ud?.twoFaEnabled) {
   try { sessionStorage.setItem('lvl_2fa_pending_' + u.uid, '1'); } catch(_) {}
   window._show2FAOverlay(u, function(_u) {
-    localStorage.setItem('lvl_2fa_trusted_' + _u.uid, Date.now().toString());
+    // L'appareil de confiance est maintenant sauvegardé dans Firestore (dans _show2FAOverlay)
     showDash(_u);
     window._checkOnboarding && window._checkOnboarding(_u);
     setTimeout(function() { window._checkPermissions && window._checkPermissions(_u); }, 1500);
@@ -11216,6 +11258,25 @@ var _swLabels = {
   profil:  { ico:'👤', label:'Profil'        }
 };
 
+// ── Notification de bienvenue fiable après permission ──
+async function _sendWelcomeNotifNow() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    var reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise(function(_, rej) { setTimeout(function() { rej(new Error('timeout')); }, 5000); })
+    ]);
+    await new Promise(function(r) { setTimeout(r, 3000); });
+    await reg.showNotification('\uD83C\uDF89 Welcome to LevelUp!', {
+      body: 'Notifications enabled. You\'ll receive important alerts and updates in real time.',
+      icon: '/icon-eco.svg', badge: '/favicon.png', vibrate: [200,80,200,80,200],
+      requireInteraction: false, data: { url: 'https://levelup-ecosystem.com/' }
+    });
+  } catch(e) {
+    try { new Notification('\uD83C\uDF89 Welcome to LevelUp!', { body: 'Notifications enabled.', icon: '/icon-eco.svg' }); } catch(_) {}
+  }
+}
+
 // ── Entrée principale ──
 window._showSetupWizard = function(user, isFirstTime) {
   _swUser = user;
@@ -11328,12 +11389,18 @@ window._closeMiniPopup = function() {
   }, 260);
 };
 
-// ── Relancer le wizard (paramètres) ──
+// ── Relancer le wizard (paramètres) — force TOUTES les étapes ──
 window._resetOnboarding = function() {
   if (!window._user || window._user.isKeyAuth) {
     toast_('Connectez-vous pour reconfigurer votre profil', 'warn'); return;
   }
-  window._showSetupWizard(window._user, true);
+  _swUser = window._user; _swAge = null; _swPhoto = null; _swIdx = 0;
+  _swSteps = ['notif', 'loc', 'cookies', 'profil'];
+  _buildSidebar();
+  _showStep(0);
+  _updateProgress();
+  var wiz = document.getElementById('lvlSetupWizard');
+  if (wiz) wiz.classList.add('sw-visible');
 };
 
 // ── Construire le sidebar ──
@@ -11363,21 +11430,22 @@ function _buildSidebar() {
 function _showStep(idx) {
   document.querySelectorAll('.sw-step').forEach(function(s) {
     s.classList.remove('sw-active');
+    s.style.display = 'none';
   });
   var key = _swSteps[idx];
   if (!key) { _finish(); return; }
   var el = document.getElementById('sw-step-' + key);
   if (!el) { _finish(); return; }
+  el.style.display = 'flex';
+  el.classList.add('sw-active');
   if (key === 'profil') {
-    // Reset substeps
     ['sw-sub-pseudo','sw-sub-age','sw-sub-photo'].forEach(function(id) {
       var s = document.getElementById(id);
-      if (s) { s.classList.remove('sw-sub-active'); s.style.display = ''; }
+      if (s) { s.classList.remove('sw-sub-active'); s.style.display = 'none'; }
     });
     var p = document.getElementById('sw-sub-pseudo');
     if (p) { p.classList.add('sw-sub-active'); p.style.display = 'flex'; }
   }
-  el.classList.add('sw-active');
   _updateIndicators(idx);
 }
 
@@ -11473,6 +11541,9 @@ window._swNotifAllow = async function() {
       try { localStorage.setItem('lvl_push_pref','granted'); } catch(_) {}
       try { if (window._registerFCMAnonOrUser) await window._registerFCMAnonOrUser(); } catch(_) {}
       if (typeof toast_ === 'function') toast_('Notifications activées ✓','ok');
+      window._swNext();
+      await _sendWelcomeNotifNow();
+      return;
     }
   } catch(e) {}
   window._swNext();
@@ -11513,12 +11584,18 @@ window._swFmtPseudo = function(input) {
   if (err) err.style.display = 'none';
 };
 
-window._swPickAge = function(btn) {
+window._swPickAge = function(btn, age) {
   document.querySelectorAll('.sw-age-btn').forEach(function(b) {
     b.classList.remove('selected');
+    b.style.background = '';
+    b.style.borderColor = '';
+    b.style.color = '';
   });
   btn.classList.add('selected');
-  _swAge = btn.textContent.trim();
+  btn.style.background = 'rgba(168,85,247,.15)';
+  btn.style.borderColor = 'rgba(168,85,247,.5)';
+  btn.style.color = '#c4b5fd';
+  _swAge = age || btn.textContent.trim();
 };
 
 window._swPhotoChange = function(event) {
@@ -11559,18 +11636,17 @@ window._swPhotoChange = function(event) {
 
 // ── Écran de succès + sauvegarde Firestore ──
 async function _finish() {
-  // Afficher écran succès
-  document.querySelectorAll('.sw-step').forEach(function(s) { s.classList.remove('sw-active'); });
+  document.querySelectorAll('.sw-step').forEach(function(s) { s.classList.remove('sw-active'); s.style.display = 'none'; });
   var suc = document.getElementById('sw-step-success');
-  if (suc) { suc.classList.add('sw-active'); }
+  if (suc) { suc.style.display = 'flex'; suc.classList.add('sw-active'); }
   setTimeout(function() {
     var ico = document.getElementById('swSuccessIcon');
     if (ico) ico.classList.add('pop');
   }, 120);
 
-  // Sauvegarder en Firestore (source de vérité, pas localStorage)
+  var _db = window._db;
   try {
-    if (_swUser && !_swUser.isKeyAuth && window._fb && typeof db !== 'undefined') {
+    if (_swUser && !_swUser.isKeyAuth && window._fb && _db) {
       var pseudo   = (document.getElementById('swPseudoInput') || {}).value || '';
       pseudo = pseudo.trim();
       var { doc: _d, setDoc: _sd } = window._fb;
@@ -11583,7 +11659,7 @@ async function _finish() {
       if (_swPhoto)         profileData.photoURL    = _swPhoto;
 
       await _sd(
-        _d(db, 'artifacts', 'level-ia-premium', 'users', _swUser.uid, 'profile', 'data'),
+        _d(_db, 'artifacts', 'level-ia-premium', 'users', _swUser.uid, 'profile', 'data'),
         profileData, { merge: true }
       );
 
@@ -11790,20 +11866,38 @@ window._settingsSetLang = function(lang) {
 
 window._exportUserData = function() {
   try {
-    var data = {
-      uid:         window._user && window._user.uid,
-      email:       window._ud && window._ud.email,
-      displayName: window._ud && window._ud.displayName,
-      apiKey:      window._ud && window._ud.apiKey ? '[MASQUÉ]' : null,
-      exportedAt:  new Date().toISOString()
-    };
-    var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    var ud = window._ud || {};
+    var u  = window._user || {};
+    var date = new Date();
+    var fmt  = date.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+    var items = [
+      ['Identifiant unique (UID)', u.uid || '—'],
+      ['Adresse e-mail', ud.email || u.email || '—'],
+      ['Nom affiché', ud.displayName || '—'],
+      ['Ville', ud.city || '—'],
+      ['Pays', ud.country || '—'],
+      ['Langue', ud.lang || localStorage.getItem('lvl_lang') || 'fr'],
+      ['Profil public', ud.profilePublic ? 'Oui' : 'Non'],
+      ['Date de création', ud.createdAt ? new Date(ud.createdAt).toLocaleDateString('fr-FR') : '—'],
+      ['Dernière connexion', ud.lastLogin ? new Date(ud.lastLogin).toLocaleDateString('fr-FR') : '—'],
+      ['Tranche d\u2019\u00e2ge', ud.ageRange || '\u2014'],
+      ['Clé API', ud.apiKey ? '••••••••' + String(ud.apiKey).slice(-4) : '—'],
+      ['Notifications push', Notification.permission === 'granted' ? 'Activées' : 'Non activées'],
+      ['Localisation', localStorage.getItem('lvl_location_pref') === 'granted' ? 'Autorisée' : 'Non autorisée'],
+      ['Cookies analytics', localStorage.getItem('lvl_cookies_accepted') === 'all' ? 'Acceptés' : 'Essentiels uniquement'],
+      ['Appareils de confiance', (ud.trustedDevices||[]).length + ' appareil(s)'],
+      ['Date d\u2019export', fmt]
+    ];
+    var rows = items.map(function(r){ return '<tr><td style="padding:9px 14px;border-bottom:1px solid #e8e0ff;font-weight:600;color:#4a3870;white-space:nowrap">'+r[0]+'</td><td style="padding:9px 14px;border-bottom:1px solid #e8e0ff;color:#1a1030">'+r[1]+'</td></tr>'; }).join('');
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Export données LevelUp</title><style>@import url(\'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap\');body{font-family:Inter,sans-serif;background:#f4f0ff;margin:0;padding:32px;color:#1a1030}header{display:flex;align-items:center;gap:16px;margin-bottom:32px;padding:24px 28px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:18px;color:#fff}.logo{width:48px;height:48px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:1.5rem}h1{font-size:1.4rem;font-weight:800;margin:0}h1 small{display:block;font-size:.75rem;font-weight:500;opacity:.75;margin-top:2px}table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(110,60,220,.12)}footer{margin-top:28px;text-align:center;font-size:.72rem;color:#7c6aaa;line-height:1.8}@media print{body{background:#fff;padding:0}header{border-radius:0}}</style></head><body><header><div class="logo">⚡</div><div><h1>Rapport de données personnelles <small>LevelUp Ecosystem — Exporté le ' + fmt + '</small></h1></div></header><table><thead><tr style="background:rgba(124,58,237,.08)"><th style="padding:10px 14px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:#7c3aed">Champ</th><th style="padding:10px 14px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:#7c3aed">Valeur collectée</th></tr></thead><tbody>' + rows + '</tbody></table><footer>Document généré automatiquement par LevelUp Ecosystem.<br>Ces données vous appartiennent — Art. 20 RGPD (portabilité). Pour toute question : <strong>support@levelup-ecosystem.com</strong><br>Imprimez cette page ou faites « Enregistrer en PDF » pour conserver une copie.</footer></body></html>';
+    var blob = new Blob([html], {type:'text/html'});
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'levelup-data-' + (data.uid || 'user') + '.json';
+    a.download = 'LevelUp-données-' + (ud.displayName||u.uid||'user').replace(/\s+/g,'-') + '-' + date.toISOString().slice(0,10) + '.html';
     a.click();
-    if (typeof toast_ === 'function') toast_('Données exportées ✓','ok');
-  } catch(e) { if (typeof toast_ === 'function') toast_('Erreur export','err'); }
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+    if (typeof toast_ === 'function') toast_('Export prêt — ouvrez le fichier et imprimez en PDF ✓','ok');
+  } catch(e) { console.warn('exportUserData',e); if (typeof toast_ === 'function') toast_('Erreur lors de l'export','err'); }
 };
 
 // Init settings page: sync cookie toggle
@@ -11822,6 +11916,23 @@ window.addEventListener('lvlUserReady', function() {
   }
 });
 
+})();
+
+// ── CSS Fix : forcer display:none/flex sur les steps du wizard ──
+(function() {
+  var s = document.createElement('style');
+  s.id = 'sw-fix-style';
+  s.textContent = [
+    '.sw-step{display:none!important}',
+    '.sw-step.sw-active{display:flex!important}',
+    '.sw-sub{display:none!important}',
+    '.sw-sub.sw-sub-active{display:flex!important}',
+    '#lvlSetupWizard button,#swMiniPopup button{pointer-events:auto!important;cursor:pointer!important;opacity:1!important;visibility:visible!important}',
+    '#lvlSetupWizard.sw-visible{display:flex!important;z-index:9999999!important}',
+    '#swMiniPopup.sw-visible{display:flex!important;z-index:9999999!important}',
+    '@keyframes twofa-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}'
+  ].join('\n');
+  document.head.appendChild(s);
 })();
 
 // ═══════════════════════════════════════════════════════════
@@ -12084,23 +12195,34 @@ window._syncSettingsNotifToggles = function() {
 // ── Location toggle depuis paramètres ──
 window._settingsToggleLocation = function() {
   var locPref = localStorage.getItem('lvl_location_pref');
+  var btn = document.getElementById('setLocationBtn');
+  var txt = document.getElementById('setLocationBtnTxt');
+  var st  = document.getElementById('setLocationStatus');
   if (locPref === 'granted') {
-    // Déjà accordée — ouvrir les paramètres système
-    toast_('Gérez la localisation dans les paramètres de votre navigateur','info'); return;
+    localStorage.removeItem('lvl_location_pref');
+    localStorage.removeItem('lvl_location_lat');
+    localStorage.removeItem('lvl_location_lng');
+    if (txt) txt.textContent = 'Activer';
+    if (btn) { btn.style.background=''; btn.style.borderColor=''; btn.style.color=''; }
+    if (st)  st.textContent = 'Améliore votre expérience';
+    toast_('Localisation désactivée','info'); return;
   }
   if (!navigator.geolocation) { toast_('Géolocalisation non supportée','warn'); return; }
+  if (txt) txt.textContent = '…';
   navigator.geolocation.getCurrentPosition(
     function(pos) {
       localStorage.setItem('lvl_location_pref','granted');
       localStorage.setItem('lvl_location_lat', pos.coords.latitude.toFixed(4));
       localStorage.setItem('lvl_location_lng', pos.coords.longitude.toFixed(4));
+      if (txt) txt.textContent = 'Désactiver';
+      if (btn) { btn.style.background='rgba(239,68,68,.08)'; btn.style.borderColor='rgba(239,68,68,.2)'; btn.style.color='var(--red)'; }
+      if (st)  st.textContent = 'Localisation active ✓';
       toast_('Localisation activée ✓','ok');
-      window.loadNotifPrefs && window.loadNotifPrefs();
     },
     function() {
       localStorage.setItem('lvl_location_pref','denied');
+      if (txt) txt.textContent = 'Activer';
       toast_('Accès à la localisation refusé','warn');
-      window.loadNotifPrefs && window.loadNotifPrefs();
     },
     { timeout:8000 }
   );
@@ -12111,8 +12233,10 @@ window._settingsToggleAppNotifs = function() {
   var current = localStorage.getItem('lvl_app_notifs_enabled') !== 'false';
   var next = !current;
   localStorage.setItem('lvl_app_notifs_enabled', next ? 'true' : 'false');
-  var btn = document.getElementById('setAppNotifsBtnTxt');
-  if (btn) btn.textContent = next ? 'Désactiver' : 'Activer';
+  var txt = document.getElementById('setAppNotifsBtnTxt');
+  var btn = document.getElementById('setAppNotifsBtn');
+  if (txt) txt.textContent = next ? 'Désactiver' : 'Activer';
+  if (btn) { btn.style.background = next ? 'rgba(239,68,68,.08)' : ''; btn.style.borderColor = next ? 'rgba(239,68,68,.2)' : ''; btn.style.color = next ? 'var(--red)' : ''; }
   toast_(next ? 'Notifications apps activées ✓' : 'Notifications apps désactivées', next ? 'ok' : 'info');
 };
 
@@ -12122,6 +12246,319 @@ document.addEventListener('lvlUserReady', function() {
     window.loadNotifPrefs && window.loadNotifPrefs();
   }, 500);
 });
+
+})();
+
+// ═══════════════════════════════════════════════════════════
+// OVERLAY 2FA — Fonctions complètes (show, verify, resend, etc.)
+// ═══════════════════════════════════════════════════════════
+(function() {
+  var _2faUser = null;
+  var _2faCallback = null;
+  var _2faCode = null;
+  var _2faExpiry = 0;
+  var _2faAttempts = 0;
+  var _2faResendCount = 0;
+  var _2faResendTimer = null;
+
+  function _genCode() {
+    var arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return String(100000 + (arr[0] % 900000));
+  }
+
+  function _getDigits() {
+    var val = '';
+    document.querySelectorAll('.twofa-digit').forEach(function(i) { val += i.value || ''; });
+    return val;
+  }
+
+  function _setupDigits() {
+    var digits = Array.from(document.querySelectorAll('.twofa-digit'));
+    digits.forEach(function(inp, idx) {
+      inp.value = '';
+      inp.oninput = function(e) {
+        var v = e.target.value.replace(/\D/g, '');
+        e.target.value = v.slice(-1);
+        if (v && idx < digits.length - 1) digits[idx + 1].focus();
+        if (_getDigits().length === 6) setTimeout(window._verify2FA, 300);
+      };
+      inp.onkeydown = function(e) {
+        if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+          digits[idx - 1].focus(); digits[idx - 1].value = '';
+        }
+        if (e.key === 'Enter') window._verify2FA();
+      };
+      inp.onpaste = function(e) {
+        e.preventDefault();
+        var text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+        digits.forEach(function(d, i) { d.value = text[i] || ''; });
+        if (text.length >= 6) setTimeout(window._verify2FA, 300);
+      };
+    });
+    setTimeout(function() { if (digits[0]) digits[0].focus(); }, 200);
+  }
+
+  function _sendCode(user, code) {
+    if (window._emailQuota) {
+      window._emailQuota.send({
+        email: user.email || '',
+        name: (window._ud && window._ud.displayName) || '',
+        type: '2FA_CODE',
+        code: code,
+        device: navigator.userAgent.substring(0, 150)
+      });
+    }
+  }
+
+  function _startResendCountdown(seconds) {
+    clearInterval(_2faResendTimer);
+    var btn = document.getElementById('twoFaResendBtn');
+    var quotaEl = document.getElementById('twoFaQuotaInfo');
+    var remaining = seconds;
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.35'; }
+    _2faResendTimer = setInterval(function() {
+      remaining--;
+      if (quotaEl) quotaEl.textContent = 'Renvoyer dans ' + remaining + 's \u2014 ' + _2faResendCount + '/3 renvois';
+      if (remaining <= 0) {
+        clearInterval(_2faResendTimer);
+        if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+        if (quotaEl) quotaEl.textContent = _2faResendCount + '/3 renvois utilis\u00e9s';
+      }
+    }, 1000);
+  }
+
+  function _resetDigits() {
+    document.querySelectorAll('.twofa-digit').forEach(function(d) { d.value = ''; });
+    var first = document.querySelector('.twofa-digit');
+    if (first) first.focus();
+  }
+
+  async function _saveTrustedDevice() {
+    var deviceId = localStorage.getItem('lvl_device_id') || '';
+    if (!deviceId || !window._db || !_2faUser || _2faUser.isKeyAuth) return;
+    try {
+      var { doc: _d, setDoc: _sd, arrayUnion: _au } = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js');
+      await _sd(
+        _d(window._db, 'artifacts', 'level-ia-premium', 'users', _2faUser.uid, 'profile', 'data'),
+        { trustedDevices: _au(deviceId) },
+        { merge: true }
+      );
+      if (window._ud) {
+        if (!Array.isArray(window._ud.trustedDevices)) window._ud.trustedDevices = [];
+        if (!window._ud.trustedDevices.includes(deviceId)) window._ud.trustedDevices.push(deviceId);
+      }
+    } catch(e) { console.warn('2FA device save:', e); }
+  }
+
+  function _showSuccessAndClose() {
+    var codeView = document.getElementById('twofaViewCode');
+    var keyView = document.getElementById('twofaViewKey');
+    var successView = document.getElementById('twofaViewSuccess');
+    if (codeView) codeView.style.display = 'none';
+    if (keyView) keyView.style.display = 'none';
+    if (successView) { successView.style.display = 'flex'; }
+    try { sessionStorage.setItem('lvl_2fa_ok_' + (_2faUser && _2faUser.uid), '1'); } catch(_) {}
+    try { sessionStorage.removeItem('lvl_2fa_pending_' + (_2faUser && _2faUser.uid)); } catch(_) {}
+    setTimeout(function() {
+      var ov = document.getElementById('twoFaOverlay');
+      if (ov) ov.style.display = 'none';
+      if (_2faCallback) _2faCallback(_2faUser);
+    }, 1400);
+  }
+
+  window._show2FAOverlay = function(user, callback) {
+    _2faUser = user;
+    _2faCallback = callback;
+    _2faAttempts = 0;
+    _2faResendCount = 0;
+    _2faCode = _genCode();
+    _2faExpiry = Date.now() + 10 * 60 * 1000;
+
+    var emailEl = document.getElementById('twoFaEmail');
+    if (emailEl) emailEl.textContent = user.email || '';
+
+    _sendCode(user, _2faCode);
+
+    var ov = document.getElementById('twoFaOverlay');
+    if (ov) ov.style.display = 'flex';
+
+    var codeView = document.getElementById('twofaViewCode');
+    var keyView = document.getElementById('twofaViewKey');
+    var successView = document.getElementById('twofaViewSuccess');
+    if (codeView) codeView.style.display = 'block';
+    if (keyView) keyView.style.display = 'none';
+    if (successView) successView.style.display = 'none';
+
+    var errEl = document.getElementById('twoFaError');
+    if (errEl) errEl.style.display = 'none';
+    var quotaEl = document.getElementById('twoFaQuotaInfo');
+    if (quotaEl) quotaEl.textContent = '';
+
+    _setupDigits();
+    _startResendCountdown(60);
+  };
+
+  window._verify2FA = async function() {
+    var entered = _getDigits();
+    var errEl = document.getElementById('twoFaError');
+    if (entered.length < 6) {
+      if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Entrez les 6 chiffres du code.'; }
+      return;
+    }
+    if (Date.now() > _2faExpiry) {
+      if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Code expir\u00e9. Cliquez sur Renvoyer.'; }
+      return;
+    }
+    _2faAttempts++;
+    if (_2faAttempts > 5) {
+      if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Trop de tentatives. Cliquez sur Renvoyer.'; }
+      return;
+    }
+    if (entered !== _2faCode) {
+      var remaining5 = 5 - _2faAttempts;
+      if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Code incorrect. ' + remaining5 + ' tentative' + (remaining5 > 1 ? 's' : '') + ' restante' + (remaining5 > 1 ? 's' : '') + '.'; }
+      var boxes = document.getElementById('twoFaDigits');
+      if (boxes) { boxes.style.animation = 'twofa-shake .4s ease'; setTimeout(function() { boxes.style.animation = ''; }, 400); }
+      setTimeout(_resetDigits, 350);
+      return;
+    }
+    if (errEl) errEl.style.display = 'none';
+    var btn = document.getElementById('twoFaVerifyBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-check"></i> V\u00e9rifi\u00e9 !'; }
+    await _saveTrustedDevice();
+    _showSuccessAndClose();
+  };
+
+  window._resend2FA = async function() {
+    if (_2faResendCount >= 3) {
+      if (typeof toast_ === 'function') toast_('Maximum 3 renvois atteint', 'warn');
+      return;
+    }
+    _2faCode = _genCode();
+    _2faExpiry = Date.now() + 10 * 60 * 1000;
+    _2faAttempts = 0;
+    _2faResendCount++;
+    _sendCode(_2faUser, _2faCode);
+    if (typeof toast_ === 'function') toast_('Code renvoy\u00e9 \u00e0 ' + ((_2faUser && _2faUser.email) || ''), 'ok');
+    var errEl = document.getElementById('twoFaError');
+    if (errEl) errEl.style.display = 'none';
+    _resetDigits();
+    _startResendCountdown(60);
+  };
+
+  window._back2FAToLogin = function() {
+    var ov = document.getElementById('twoFaOverlay');
+    if (ov) ov.style.display = 'none';
+    try { sessionStorage.removeItem('lvl_2fa_pending_' + (_2faUser && _2faUser.uid)); } catch(_) {}
+    location.href = '/login';
+  };
+
+  window._switch2FAToCode = function() {
+    var c = document.getElementById('twofaViewCode');
+    var k = document.getElementById('twofaViewKey');
+    if (c) c.style.display = 'block';
+    if (k) k.style.display = 'none';
+  };
+
+  window._switch2FAToKey = function() {
+    var c = document.getElementById('twofaViewCode');
+    var k = document.getElementById('twofaViewKey');
+    if (c) c.style.display = 'none';
+    if (k) k.style.display = 'block';
+    var keyErr = document.getElementById('twoFaKeyError');
+    if (keyErr) keyErr.style.display = 'none';
+    setTimeout(function() {
+      var ki = document.getElementById('twoFaKeyInput');
+      if (ki) ki.focus();
+    }, 200);
+  };
+
+  window._confirmKeyVerify = async function() {
+    var ki = document.getElementById('twoFaKeyInput');
+    var errEl = document.getElementById('twoFaKeyError');
+    var val = ki ? ki.value.trim().toUpperCase() : '';
+    if (!val || !/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(val)) {
+      if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Format invalide : LVL-XXXXX-XXXXX'; }
+      return;
+    }
+    var userKey = window._ud && window._ud.apiKey;
+    if (!userKey || val !== userKey) {
+      if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Cl\u00e9 incorrecte.'; }
+      return;
+    }
+    if (errEl) errEl.style.display = 'none';
+    await _saveTrustedDevice();
+    _showSuccessAndClose();
+  };
+
+  // ── Profil public toggle (Firestore via window._fb) ──
+  window._settingsToggleProfilePublic = async function(checked) {
+    var user = window._user;
+    if (!user || user.isKeyAuth || !window._db || !window._fb) {
+      if (typeof toast_ === 'function') toast_('Connectez-vous avec un compte pour activer cette option', 'warn');
+      var el = document.getElementById('setProfilePublicToggle');
+      if (el) el.checked = !checked;
+      return;
+    }
+    try {
+      var _d = window._fb.doc, _sd = window._fb.setDoc;
+      await _sd(
+        _d(window._db, 'artifacts', 'level-ia-premium', 'users', user.uid, 'profile', 'data'),
+        { profilePublic: checked, profilePublicFields: ['displayName','city','country','photoURL'] },
+        { merge: true }
+      );
+      if (window._ud) window._ud.profilePublic = checked;
+      var statusEl = document.getElementById('setProfilePublicStatus');
+      if (statusEl) statusEl.textContent = checked
+        ? 'Visible : nom, ville, pays et photo (pas l\u2019email, pas la cl\u00e9)'
+        : 'Votre profil est priv\u00e9 — personne ne peut vous voir';
+      if (typeof toast_ === 'function') toast_(checked ? 'Profil public activ\u00e9 \u2713' : 'Profil priv\u00e9 \u2713', 'ok');
+    } catch(e) {
+      console.warn('profilePublic save:', e);
+      if (typeof toast_ === 'function') toast_('Erreur de sauvegarde', 'err');
+      var el2 = document.getElementById('setProfilePublicToggle');
+      if (el2) el2.checked = !checked;
+    }
+  };
+
+  // ── Init : charger l'état du profil public dans les settings ──
+  document.addEventListener('lvlUserReady', function() {
+    setTimeout(function() {
+      var tog = document.getElementById('setProfilePublicToggle');
+      if (tog && window._ud) {
+        tog.checked = !!window._ud.profilePublic;
+        var statusEl = document.getElementById('setProfilePublicStatus');
+        if (statusEl) statusEl.textContent = window._ud.profilePublic
+          ? 'Votre profil est visible par les autres utilisateurs'
+          : 'Votre profil est priv\u00e9';
+      }
+    }, 600);
+  });
+
+  // ── PWA Install ──
+  var _pwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    _pwaPrompt = e;
+    var row = document.getElementById('setInstallAppRow');
+    if (row) row.style.display = '';
+  });
+
+  window._installPWA = async function() {
+    if (!_pwaPrompt) {
+      if (typeof toast_ === 'function') toast_('D\u00e9j\u00e0 install\u00e9 ou non disponible sur ce navigateur', 'info');
+      return;
+    }
+    _pwaPrompt.prompt();
+    var result = await _pwaPrompt.userChoice;
+    if (result.outcome === 'accepted') {
+      if (typeof toast_ === 'function') toast_('LevelUp install\u00e9 ! \uD83C\uDF89', 'ok');
+      var row = document.getElementById('setInstallAppRow');
+      if (row) row.style.display = 'none';
+      _pwaPrompt = null;
+    }
+  };
 
 })();
 
@@ -12150,6 +12587,231 @@ document.addEventListener('lvlUserReady', function() {
     }
   }, 800);
 })();
+
+// ═══════════════════════════════════════════════════════════
+// THÈME (Sombre / Dawn)
+// ═══════════════════════════════════════════════════════════
+window._setTheme = function(mode) {
+  localStorage.setItem('lvl_theme', mode);
+  var isLight = mode === 'light';
+  document.documentElement.classList.toggle('lvl-light', isLight);
+  var dBtn = document.getElementById('setThemeDarkBtn');
+  var lBtn = document.getElementById('setThemeLightBtn');
+  var st   = document.getElementById('setThemeStatus');
+  if (dBtn) { dBtn.style.background = isLight ? '' : 'rgba(168,85,247,.15)'; dBtn.style.borderColor = isLight ? '' : 'rgba(168,85,247,.4)'; dBtn.style.color = isLight ? '' : '#c4b5fd'; }
+  if (lBtn) { lBtn.style.background = isLight ? 'rgba(124,58,237,.15)' : ''; lBtn.style.borderColor = isLight ? 'rgba(124,58,237,.4)' : ''; lBtn.style.color = isLight ? '#7c3aed' : ''; }
+  if (st)   st.textContent = isLight ? 'Mode Dawn (clair)' : 'Interface sombre';
+};
+(function() {
+  var saved = localStorage.getItem('lvl_theme') || 'dark';
+  if (saved === 'light') document.documentElement.classList.add('lvl-light');
+  document.addEventListener('DOMContentLoaded', function() { window._setTheme(saved); });
+})();
+
+// ═══════════════════════════════════════════════════════════
+// SITE OFFICIEL — Iframe mobile vs. nouvel onglet
+// ═══════════════════════════════════════════════════════════
+window._openSiteOfficiel = function() {
+  var isMob = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone;
+  var isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isMob && !isPWA) {
+    var ov = document.createElement('div');
+    ov.id = 'siteOfficielOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#09090b;display:flex;flex-direction:column;font-family:var(--sans)';
+    ov.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;background:#09090b">'
+      + '<button onclick="document.getElementById(\'siteOfficielOverlay\').remove()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.7);padding:7px 12px;cursor:pointer;font-size:.82rem;font-family:inherit;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-arrow-left"></i> Retour</button>'
+      + '<div style="flex:1;overflow:hidden"><span style="font-size:.78rem;color:rgba(255,255,255,.35);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">levelup-ecosystem.com</span></div>'
+      + '<a href="https://levelup-ecosystem.com" target="_blank" rel="noopener" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);border-radius:8px;color:#a855f7;padding:7px 12px;cursor:pointer;font-size:.78rem;text-decoration:none;display:flex;align-items:center;gap:5px"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
+      + '</div>'
+      + '<iframe src="https://levelup-ecosystem.com" style="flex:1;border:none;width:100%;background:#09090b" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>'
+      + '<div style="padding:8px 16px;background:#09090b;border-top:1px solid rgba(255,255,255,.06);font-size:.7rem;color:rgba(255,255,255,.2);text-align:center;flex-shrink:0"><i class="fa-solid fa-shield-halved" style="margin-right:4px;color:rgba(168,85,247,.5)"></i>Aperçu dans l\'app — Certains liens nécessitent le navigateur</div>';
+    document.body.appendChild(ov);
+  } else {
+    window.open('https://levelup-ecosystem.com', '_blank');
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// SUPPRESSION DE COMPTE — Popup 12 jours de suspension
+// ═══════════════════════════════════════════════════════════
+window._openDeleteAccountPopup = function() {
+  if (!window._user || window._user.isKeyAuth) {
+    toast_('Connectez-vous avec un compte pour accéder à cette option', 'warn'); return;
+  }
+  var ud = window._ud || {};
+  // Vérifier délai 1 an
+  var lastDel = ud.lastDeletionRequest;
+  if (lastDel) {
+    var diff = Date.now() - lastDel;
+    var oneYear = 365 * 24 * 3600 * 1000;
+    if (diff < oneYear) {
+      var daysLeft = Math.ceil((oneYear - diff) / (24 * 3600 * 1000));
+      toast_('Vous ne pouvez demander la suppression qu\'une fois par an. Réessayez dans ' + daysLeft + ' jour(s).', 'warn');
+      return;
+    }
+  }
+  // Vérifier si déjà suspendu
+  if (ud.deletionRequested) {
+    var suspDate = ud.suspendedAt ? new Date(ud.suspendedAt + 12*24*3600*1000).toLocaleDateString('fr-FR') : '?';
+    toast_('Votre demande est en cours. Suppression prévue le ' + suspDate, 'info'); return;
+  }
+
+  var ov = document.createElement('div');
+  ov.id = 'deleteAccountPopup';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--sans)';
+  ov.innerHTML = '<div style="background:#0d0b1a;border:1px solid rgba(239,68,68,.2);border-radius:20px;padding:28px 24px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto">'
+    + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
+    + '<div style="width:42px;height:42px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">🗑️</div>'
+    + '<div><h3 style="color:#fff;font-size:1rem;margin:0;font-family:var(--display)">Supprimer mon compte</h3><p style="color:rgba(255,255,255,.35);font-size:.78rem;margin:0">Action soumise à un délai de 12 jours</p></div>'
+    + '</div>'
+    + '<div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:12px;padding:14px;margin-bottom:18px;font-size:.8rem;color:rgba(255,255,255,.55);line-height:1.7">'
+    + '<i class="fa-solid fa-circle-exclamation" style="color:#ef4444;margin-right:6px"></i>'
+    + 'Votre compte sera <strong style="color:rgba(239,68,68,.8)">suspendu immédiatement</strong> pendant <strong style="color:#fff">12 jours</strong>. Si vous ne vous reconnectez pas pour annuler, toutes vos données seront définitivement supprimées. Cette action ne peut être demandée <strong style="color:#fff">qu\'une seule fois par an</strong>.'
+    + '</div>'
+    + '<label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;cursor:pointer">'
+    + '<input type="checkbox" id="delCond1" style="margin-top:2px;accent-color:#ef4444;flex-shrink:0">'
+    + '<span style="font-size:.8rem;color:rgba(255,255,255,.5);line-height:1.55">Je comprends que toutes mes données (profil, historique, clé d\'accès) seront <strong style="color:#fff">définitivement supprimées</strong> après 12 jours.</span>'
+    + '</label>'
+    + '<label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;cursor:pointer">'
+    + '<input type="checkbox" id="delCond2" style="margin-top:2px;accent-color:#ef4444;flex-shrink:0">'
+    + '<span style="font-size:.8rem;color:rgba(255,255,255,.5);line-height:1.55">J\'accepte que mes accès à LevelMovie, LevelMusic et Level IA soient <strong style="color:#fff">révoqués immédiatement</strong>.</span>'
+    + '</label>'
+    + '<div style="display:flex;gap:10px">'
+    + '<button onclick="document.getElementById(\'deleteAccountPopup\').remove()" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>'
+    + '<button onclick="window._confirmDeleteAccount()" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.1);color:#ef4444;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit">Suspendre mon compte</button>'
+    + '</div>'
+    + '</div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click', function(e) { if (e.target === ov) ov.remove(); });
+};
+
+window._confirmDeleteAccount = async function() {
+  var c1 = document.getElementById('delCond1');
+  var c2 = document.getElementById('delCond2');
+  if (!c1 || !c2 || !c1.checked || !c2.checked) {
+    toast_('Veuillez accepter toutes les conditions pour continuer', 'warn'); return;
+  }
+  if (!window._user || !window._db || !window._fb) { toast_('Erreur — veuillez vous reconnecter', 'err'); return; }
+  var btn = document.querySelector('#deleteAccountPopup button:last-child');
+  if (btn) { btn.disabled = true; btn.textContent = 'Traitement…'; }
+  try {
+    var now = Date.now();
+    var deleteAt = now + 12 * 24 * 3600 * 1000;
+    var ref = window._fb.doc(window._db, 'artifacts', 'level-ia-premium', 'users', window._user.uid, 'profile', 'data');
+    await window._fb.setDoc(ref, {
+      status: 'suspended',
+      suspendReason: 'user_deletion_request',
+      deletionRequested: true,
+      suspendedAt: now,
+      deleteScheduledAt: deleteAt,
+      lastDeletionRequest: now
+    }, { merge: true });
+    // Email de confirmation
+    if (window._emailQuota) {
+      window._emailQuota.send({
+        email: (window._ud && window._ud.email) || window._user.email || '',
+        name:  (window._ud && window._ud.displayName) || '',
+        type: 'DELETION_REQUESTED',
+        extra: { deleteAt: new Date(deleteAt).toLocaleDateString('fr-FR') }
+      });
+    }
+    document.getElementById('deleteAccountPopup') && document.getElementById('deleteAccountPopup').remove();
+    // Popup de confirmation
+    var conf = document.createElement('div');
+    conf.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--sans)';
+    conf.innerHTML = '<div style="background:#0d0b1a;border:1px solid rgba(251,191,36,.2);border-radius:20px;padding:32px 24px;max-width:380px;width:100%;text-align:center">'
+      + '<div style="font-size:3rem;margin-bottom:16px">⏳</div>'
+      + '<h3 style="color:#fff;font-size:1.1rem;margin:0 0 10px;font-family:var(--display)">Compte suspendu</h3>'
+      + '<p style="color:rgba(255,255,255,.5);font-size:.85rem;line-height:1.7;margin:0 0 8px">Votre compte est suspendu pour <strong style="color:#fbbf24">12 jours</strong>.</p>'
+      + '<p style="color:rgba(255,255,255,.4);font-size:.8rem;line-height:1.6;margin:0 0 20px">Un email de confirmation a été envoyé. Suppression définitive le <strong style="color:#fff">' + new Date(deleteAt).toLocaleDateString('fr-FR') + '</strong>.</p>'
+      + '<p style="color:rgba(255,255,255,.35);font-size:.75rem;margin:0 0 20px">Vous allez être déconnecté dans quelques secondes.</p>'
+      + '<button onclick="this.closest(\'div\').parentNode.remove()" style="padding:10px 24px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);font-size:.85rem;cursor:pointer;font-family:inherit">Compris</button>'
+      + '</div>';
+    document.body.appendChild(conf);
+    // Déconnexion après 5 secondes
+    setTimeout(async function() {
+      try { await window._fb.signOut(window._auth); } catch(_) {}
+      localStorage.clear();
+      location.reload();
+    }, 5000);
+  } catch(e) {
+    console.warn('deleteAccount:', e);
+    toast_('Erreur lors de la suspension — réessayez', 'err');
+    var btn2 = document.querySelector('#deleteAccountPopup button:last-child');
+    if (btn2) { btn2.disabled = false; btn2.textContent = 'Suspendre mon compte'; }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// VÉRIFIER RÉACTIVATION AU LOGIN (compte suspendu + reconnexion dans les 12j)
+// ═══════════════════════════════════════════════════════════
+window._checkReactivation = async function(uid) {
+  if (!window._db || !window._fb) return;
+  try {
+    var ref  = window._fb.doc(window._db, 'artifacts', 'level-ia-premium', 'users', uid, 'profile', 'data');
+    var snap = await window._fb.getDoc(ref);
+    if (!snap.exists()) return;
+    var data = snap.data();
+    if (data.status !== 'suspended' || !data.deletionRequested) return;
+    var now = Date.now();
+    if (data.deleteScheduledAt && now >= data.deleteScheduledAt) return; // trop tard
+    // Dans les 12 jours — proposer réactivation
+    var daysLeft = Math.ceil((data.deleteScheduledAt - now) / (24 * 3600 * 1000));
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--sans)';
+    ov.innerHTML = '<div style="background:#0d0b1a;border:1px solid rgba(168,85,247,.2);border-radius:20px;padding:32px 24px;max-width:400px;width:100%;text-align:center">'
+      + '<div style="font-size:3rem;margin-bottom:16px">👋</div>'
+      + '<h3 style="color:#fff;font-size:1.1rem;margin:0 0 10px;font-family:var(--display)">Bon retour parmi nous !</h3>'
+      + '<p style="color:rgba(255,255,255,.5);font-size:.85rem;line-height:1.7;margin:0 0 18px">Votre compte est en cours de suppression. Il vous reste <strong style="color:#a855f7">' + daysLeft + ' jour(s)</strong> pour annuler et réactiver votre compte.</p>'
+      + '<div style="display:flex;gap:10px">'
+      + '<button id="reactivateNoBtn" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:.85rem;cursor:pointer;font-family:inherit">Non, supprimer</button>'
+      + '<button id="reactivateYesBtn" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(168,85,247,.35);background:rgba(168,85,247,.12);color:#c4b5fd;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit">✓ Réactiver mon compte</button>'
+      + '</div></div>';
+    document.body.appendChild(ov);
+    document.getElementById('reactivateYesBtn').onclick = async function() {
+      try {
+        await window._fb.setDoc(ref, { status: 'active', deletionRequested: false, suspendedAt: null, deleteScheduledAt: null }, { merge: true });
+        ov.remove();
+        toast_('🎉 Compte réactivé avec succès !', 'ok');
+      } catch(e) { toast_('Erreur de réactivation', 'err'); }
+    };
+    document.getElementById('reactivateNoBtn').onclick = async function() {
+      ov.remove();
+      try { await window._fb.signOut(window._auth); } catch(_) {}
+      localStorage.clear(); location.reload();
+    };
+  } catch(e) { console.warn('checkReactivation:', e); }
+};
+
+// Init auth buttons state + reactivation check
+document.addEventListener('lvlUserReady', function() {
+  // Sync location button
+  (function() {
+    var locPref = localStorage.getItem('lvl_location_pref');
+    if (locPref === 'granted') {
+      var txt = document.getElementById('setLocationBtnTxt');
+      var btn = document.getElementById('setLocationBtn');
+      var st  = document.getElementById('setLocationStatus');
+      if (txt) txt.textContent = 'Désactiver';
+      if (btn) { btn.style.background='rgba(239,68,68,.08)'; btn.style.borderColor='rgba(239,68,68,.2)'; btn.style.color='var(--red)'; }
+      if (st)  st.textContent = 'Localisation active ✓';
+    }
+  })();
+  // Sync app notifs button
+  (function() {
+    var enabled = localStorage.getItem('lvl_app_notifs_enabled') !== 'false';
+    if (enabled) {
+      var txt = document.getElementById('setAppNotifsBtnTxt');
+      var btn = document.getElementById('setAppNotifsBtn');
+      if (txt) txt.textContent = 'Désactiver';
+      if (btn) { btn.style.background='rgba(239,68,68,.08)'; btn.style.borderColor='rgba(239,68,68,.2)'; btn.style.color='var(--red)'; }
+    }
+  })();
+  // Check reactivation si compte suspendu (utilisateur qui se reconnecte)
+  if (window._user && !window._user.isKeyAuth && window._ud && window._ud.deletionRequested) {
+    window._checkReactivation(window._user.uid);
+  }
+});
 </script>
 </body>
 </html>
