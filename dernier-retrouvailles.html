@@ -636,8 +636,15 @@
       const inviteCode = generateInviteCode();
       const data = { nom, email, telephone, inviteCode };
 
+      // Étape critique : l'inscription doit réussir
       await saveInscription(data);
-      await sendInvitationEmail(data);
+
+      // Étape non-critique : l'email peut échouer sans bloquer l'utilisateur
+      try {
+        await sendInvitationEmail(data);
+      } catch (emailErr) {
+        console.error("Inscription enregistrée, mais l'email n'a pas pu être envoyé :", emailErr);
+      }
 
       document.getElementById("formCard").style.display = "none";
       const successCard = document.getElementById("successCard");
@@ -649,7 +656,7 @@
       setTimeout(launchConfetti, 200);
     } catch (err) {
       console.error(err);
-      errorMsg.textContent = `Erreur : ${err.code || err.message || err}. Si ça persiste, contacte les organisateurs sur WhatsApp.`;
+      errorMsg.textContent = "Une erreur est survenue pendant l'inscription. Merci de réessayer, ou de nous contacter directement sur WhatsApp si le problème persiste.";
       errorMsg.style.display = "block";
       submitBtn.disabled = false;
       submitBtn.textContent = "Je m'inscris";
