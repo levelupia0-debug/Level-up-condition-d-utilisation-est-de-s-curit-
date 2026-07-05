@@ -1,1 +1,469 @@
+html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Organisateur - Le Dernier Retrouvailles</title>
+  
+  <!-- Polices -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Librairies PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { brand: { black: '#050505', dark: '#0a0908', card: '#110e0b', gold: '#d4af52', 'gold-dark': '#8a6b1f' } },
+          fontFamily: { sans: ['Poppins', 'sans-serif'], display: ['Bebas Neue', 'sans-serif'] },
+          backgroundImage: { 'radial-gold': 'radial-gradient(circle at top right, rgba(212,175,82,0.15), transparent 40%), radial-gradient(circle at bottom left, rgba(212,175,82,0.05), transparent 40%)' }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    body { background-color: theme('colors.brand.black'); color: #f2ead6; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+    ::-webkit-scrollbar { display: none; }
+    
+    .glass-card {
+      background: rgba(17, 14, 11, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(212, 175, 82, 0.2);
+    }
+    
+    /* Animation du modal (glissement depuis le bas) */
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  </style>
+</head>
+<body class="min-h-screen bg-radial-gold font-sans antialiased overflow-x-hidden pb-10">
+
+  <!-- ========================================== -->
+  <!-- ÉCRAN 1 : CONNEXION GOOGLE UNIQUE -->
+  <!-- ========================================== -->
+  <div id="auth-screen" class="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
+    <div class="glass-card p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl relative">
+      <div class="w-16 h-16 mx-auto bg-brand-gold/10 border border-brand-gold/30 rounded-full flex items-center justify-center mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="text-brand-gold" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      
+      <h1 class="font-display text-4xl text-brand-gold tracking-widest mb-2">ACCÈS VIP</h1>
+      <p class="text-xs text-gray-400 mb-8">Espace réservé aux organisateurs.</p>
+
+      <button id="btn-google-login" class="w-full py-4 px-6 bg-white text-gray-900 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg hover:scale-[1.02] transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+        S'identifier avec Google
+      </button>
+
+      <!-- Spinner de vérification caché -->
+      <div id="auth-loading" class="hidden mt-6 text-brand-gold">
+        <div class="w-8 h-8 mx-auto border-4 border-brand-gold/20 border-t-brand-gold rounded-full animate-spin mb-2"></div>
+        <p class="text-xs uppercase tracking-widest">Vérification des droits...</p>
+      </div>
+
+      <p id="auth-error" class="text-red-400 text-xs mt-6 hidden p-2 bg-red-900/20 rounded-lg border border-red-900/50"></p>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- ÉCRAN 2 : DASHBOARD MOBILE FIRST -->
+  <!-- ========================================== -->
+  <div id="dashboard-screen" class="hidden flex flex-col min-h-screen">
+    
+    <!-- Header -->
+    <header class="glass-card sticky top-0 z-40 px-4 py-4 flex justify-between items-center border-b-0 border-brand-gold/20">
+      <div>
+        <h1 class="font-display text-2xl text-brand-gold tracking-widest leading-none">ORGANISATEUR</h1>
+        <p class="text-[10px] text-gray-400 uppercase tracking-wider" id="admin-email-display">Admin</p>
+      </div>
+      <button id="btn-logout" class="w-10 h-10 rounded-full bg-brand-dark border border-brand-gold/30 flex items-center justify-center text-brand-gold">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </header>
+
+    <main class="flex-1 px-4 py-6 w-full max-w-lg mx-auto">
+      
+      <!-- Stats & PDF Export -->
+      <div class="flex flex-col gap-4 mb-6">
+        <div class="glass-card rounded-2xl p-4 flex items-center justify-between border-brand-gold/30">
+          <div>
+            <p class="text-[10px] text-brand-gold/60 uppercase tracking-widest">Total Inscrits</p>
+            <h2 class="font-display text-4xl text-white mt-1" id="total-count">0</h2>
+          </div>
+          <div class="w-12 h-12 bg-brand-gold/10 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="text-brand-gold" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+        </div>
+        
+        <button id="btn-export-pdf" class="w-full bg-gradient-to-r from-brand-gold to-brand-gold-dark text-brand-black font-bold uppercase tracking-widest rounded-2xl p-4 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(212,175,82,0.3)] active:scale-95 transition-transform">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          TÉLÉCHARGER LE PDF
+        </button>
+      </div>
+
+      <!-- Barre de recherche -->
+      <div class="glass-card rounded-2xl p-3 mb-6 flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="text-brand-gold ml-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Rechercher par nom..." class="w-full bg-transparent border-none text-white focus:outline-none placeholder-gray-500 text-sm">
+      </div>
+
+      <!-- Liste des inscrits -->
+      <div>
+        <h3 class="text-xs text-gray-500 uppercase tracking-widest mb-3 pl-1">Liste des invités</h3>
+        <div id="loading" class="text-center py-10 text-brand-gold text-xs uppercase tracking-widest animate-pulse">Chargement des données...</div>
+        
+        <div id="participants-list" class="flex flex-col gap-2">
+          <!-- Injecté via JS -->
+        </div>
+
+        <div id="empty-state" class="hidden text-center py-10 text-gray-500 text-sm">
+          Aucun invité trouvé.
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- ÉCRAN 3 : MODAL PROFIL DÉTAILLÉ -->
+  <!-- ========================================== -->
+  <div id="profile-modal" class="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-md hidden">
+    <!-- Overlay cliquable pour fermer -->
+    <div class="absolute inset-0 z-0" id="modal-overlay"></div>
+    
+    <div class="glass-card w-full max-w-lg rounded-t-[2rem] animate-slide-up p-6 pb-12 relative z-10 border-b-0 border-x-0 border-brand-gold/30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+      
+      <!-- Petite barre en haut pour faire glisser -->
+      <div class="w-12 h-1.5 bg-brand-gold/30 rounded-full mx-auto mb-6"></div>
+
+      <!-- Entête Profil -->
+      <div class="flex items-center gap-4 mb-6">
+        <div id="modal-initiale" class="w-16 h-16 rounded-full bg-brand-gold text-brand-black flex items-center justify-center font-display text-3xl shadow-[0_0_15px_rgba(212,175,82,0.5)]">
+          A
+        </div>
+        <div>
+          <h2 id="modal-nom" class="text-xl font-bold text-white leading-tight">Nom Complet</h2>
+          <p id="modal-code" class="text-brand-gold font-display text-lg tracking-widest mt-0.5">CODE</p>
+        </div>
+      </div>
+
+      <!-- Tableau d'informations -->
+      <div class="bg-brand-dark/80 rounded-2xl p-4 border border-brand-gold/10 flex flex-col gap-3">
+        
+        <div class="flex justify-between items-center pb-2 border-b border-white/5">
+          <span class="text-[10px] text-gray-400 uppercase tracking-widest">Date d'inscription</span>
+          <span id="modal-date" class="text-xs font-semibold text-brand-gold text-right">--</span>
+        </div>
+
+        <div class="flex justify-between items-center pb-2 border-b border-white/5">
+          <span class="text-[10px] text-gray-400 uppercase tracking-widest">Email</span>
+          <span id="modal-email" class="text-xs font-medium text-white text-right">--</span>
+        </div>
+        
+        <div class="flex justify-between items-center">
+          <span class="text-[10px] text-gray-400 uppercase tracking-widest">Téléphone</span>
+          <span id="modal-telephone" class="text-xs font-medium text-white tracking-widest">--</span>
+        </div>
+      </div>
+
+      <!-- Bouton WhatsApp Dynamique -->
+      <div id="whatsapp-container" class="mt-6"></div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- SCRIPTS FIREBASE -->
+  <!-- ========================================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    // Configuration Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+      authDomain: "levelup-ia.firebaseapp.com",
+      databaseURL: "https://levelup-ia-default-rtdb.firebaseio.com",
+      projectId: "levelup-ia",
+      storageBucket: "levelup-ia.firebasestorage.app",
+      messagingSenderId: "229420004282",
+      appId: "1:229420004282:web:6735f059a947f0936ae383",
+      measurementId: "G-MSRDY2574K"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    // DOM Elements
+    const els = {
+      authScreen: document.getElementById('auth-screen'),
+      dashScreen: document.getElementById('dashboard-screen'),
+      btnGoogle: document.getElementById('btn-google-login'),
+      authLoading: document.getElementById('auth-loading'),
+      authError: document.getElementById('auth-error'),
+      btnLogout: document.getElementById('btn-logout'),
+      adminEmail: document.getElementById('admin-email-display'),
+      listContainer: document.getElementById('participants-list'),
+      loading: document.getElementById('loading'),
+      totalCount: document.getElementById('total-count'),
+      searchInput: document.getElementById('searchInput'),
+      emptyState: document.getElementById('empty-state'),
+      btnExportPdf: document.getElementById('btn-export-pdf'),
+      modal: document.getElementById('profile-modal'),
+      modalOverlay: document.getElementById('modal-overlay'),
+      mInitiale: document.getElementById('modal-initiale'),
+      mNom: document.getElementById('modal-nom'),
+      mDate: document.getElementById('modal-date'),
+      mEmail: document.getElementById('modal-email'),
+      mTelephone: document.getElementById('modal-telephone'),
+      mCode: document.getElementById('modal-code'),
+      waContainer: document.getElementById('whatsapp-container')
+    };
+
+    let allParticipants = [];
+    let unsubscribeFirestore = null;
+
+    // ==========================================
+    // 1. SÉCURITÉ : VÉRIFICATION ADMIN
+    // ==========================================
+    els.btnGoogle.addEventListener('click', async () => {
+      try {
+        els.authError.classList.add('hidden');
+        await signInWithPopup(auth, googleProvider);
+      } catch (error) {
+        if(error.code !== 'auth/popup-closed-by-user') {
+          showError("Erreur Google. Impossible de se connecter.");
+        }
+      }
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        els.btnGoogle.style.display = 'none';
+        els.authLoading.classList.remove('hidden');
+
+        // Vérification 1 : Super Admin (via l'email comme dans tes règles)
+        const isSuperAdmin = ['levelup.ia0@gmail.com', 'richelieubonte@gmail.com'].includes(user.email);
+        
+        let isNormalAdmin = false;
+        
+        // Vérification 2 : Admin normal (dans la collection artifacts/ldc-2026/admins)
+        if (!isSuperAdmin) {
+          try {
+            const adminDoc = await getDoc(doc(db, 'artifacts', 'ldc-2026', 'admins', user.uid));
+            if(adminDoc.exists()) isNormalAdmin = true;
+          } catch(e) {
+            console.log("Vérification doc admin échouée, droits insuffisants.");
+          }
+        }
+
+        if (isSuperAdmin || isNormalAdmin) {
+          els.adminEmail.textContent = user.email;
+          els.authScreen.classList.add('hidden');
+          els.dashScreen.classList.remove('hidden');
+          loadData();
+        } else {
+          showError("Accès refusé : Votre compte Google n'a pas les droits d'Administrateur.");
+          await signOut(auth);
+          resetAuthUI();
+        }
+      } else {
+        els.authScreen.classList.remove('hidden');
+        els.dashScreen.classList.add('hidden');
+        resetAuthUI();
+        if (unsubscribeFirestore) unsubscribeFirestore();
+      }
+    });
+
+    function resetAuthUI() {
+      els.btnGoogle.style.display = 'flex';
+      els.authLoading.classList.add('hidden');
+    }
+
+    function showError(msg) {
+      els.authError.textContent = msg;
+      els.authError.classList.remove('hidden');
+    }
+
+    els.btnLogout.addEventListener('click', () => signOut(auth));
+
+
+    // ==========================================
+    // 2. RÉCUPÉRATION DES DONNÉES
+    // ==========================================
+    function formatDateExact(timestamp) {
+      if (!timestamp) return "Date inconnue";
+      const d = new Date(timestamp.seconds * 1000);
+      return `${d.toLocaleDateString('fr-FR')} à ${d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}`;
+    }
+
+    function loadData() {
+      els.loading.style.display = 'block';
+      
+      // TA BONNE ROUTE
+      const refCollection = collection(db, "artifacts", "ldc-2026", "public", "data", "parties");
+      const q = query(refCollection);
+
+      unsubscribeFirestore = onSnapshot(q, (snapshot) => {
+        allParticipants = [];
+        snapshot.forEach((doc) => {
+          allParticipants.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Trie : les plus récents en premier
+        allParticipants.sort((a, b) => {
+          const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
+          const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+          return timeB - timeA;
+        });
+
+        els.totalCount.textContent = allParticipants.length;
+        renderList(allParticipants);
+        els.loading.style.display = 'none';
+      }, (error) => {
+        els.loading.textContent = "Erreur de lecture de la base.";
+        console.error(error);
+      });
+    }
+
+    // Affichage des tuiles Mobile-First
+    function renderList(dataToRender) {
+      els.listContainer.innerHTML = '';
+
+      if (dataToRender.length === 0) els.emptyState.classList.remove('hidden');
+      else els.emptyState.classList.add('hidden');
+
+      dataToRender.forEach(p => {
+        const nom = p.nom || "Inconnu";
+        const initiale = nom.charAt(0).toUpperCase();
+        
+        const card = document.createElement('div');
+        card.className = "glass-card rounded-2xl p-3 flex items-center justify-between active:scale-[0.98] transition-transform";
+        
+        card.innerHTML = `
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-12 h-12 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold flex items-center justify-center font-display text-2xl shrink-0">
+              ${initiale}
+            </div>
+            <div class="truncate">
+              <h4 class="text-white font-medium text-sm truncate">${nom}</h4>
+              <p class="text-[10px] text-gray-400 tracking-wider truncate">${p.inviteCode || 'Aucun code'}</p>
+            </div>
+          </div>
+          <div class="shrink-0 p-2 text-brand-gold">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        `;
+
+        card.addEventListener('click', () => openModal(p));
+        els.listContainer.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // 3. GESTION DU PROFIL & WHATSAPP
+    // ==========================================
+    function openModal(participant) {
+      const nom = participant.nom || "Inconnu";
+      els.mInitiale.textContent = nom.charAt(0).toUpperCase();
+      els.mNom.textContent = nom;
+      els.mDate.textContent = formatDateExact(participant.timestamp);
+      els.mEmail.textContent = participant.email || "-";
+      els.mTelephone.textContent = participant.telephone || "-";
+      els.mCode.textContent = participant.inviteCode || "N/A";
+
+      // Logique du Bouton WhatsApp (Vérification stricte du format)
+      const tel = participant.telephone || "";
+      const isInternational = tel.includes('+');
+      const digitCount = tel.replace(/[^0-9]/g, '').length;
+      
+      els.waContainer.innerHTML = ''; 
+      
+      // Affiche le bouton SEULEMENT SI c'est un format correct (ex: +33612345678)
+      if (isInternational && digitCount >= 8) {
+        const waNumber = tel.replace(/[^0-9]/g, ''); 
+        const waMsg = encodeURIComponent(`Bonjour ${nom.split(' ')[0]}, nous avons bien validé ton inscription au Dernier Retrouvailles !`);
+        
+        els.waContainer.innerHTML = `
+          <a href="https://wa.me/${waNumber}?text=${waMsg}" target="_blank" class="w-full py-4 bg-[#25D366] active:bg-[#1DA851] text-white font-bold rounded-xl flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(37,211,102,0.3)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+            Ouvrir WhatsApp
+          </a>
+        `;
+      } else {
+        els.waContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center uppercase tracking-widest border border-dashed border-gray-700 p-2 rounded-lg">Numéro invalide pour WhatsApp</p>`;
+      }
+
+      els.modal.classList.remove('hidden');
+    }
+
+    // Fermeture du modal au clic en dehors
+    els.modalOverlay.addEventListener('click', () => {
+      els.modal.classList.add('hidden');
+    });
+
+    // ==========================================
+    // 4. GÉNÉRATION PDF
+    // ==========================================
+    els.btnExportPdf.addEventListener('click', () => {
+      if (allParticipants.length === 0) return;
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFillColor(10, 9, 8);
+      doc.rect(0, 0, 210, 35, 'F');
+      
+      doc.setTextColor(212, 175, 82);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("LISTE DES INSCRITS - VIP", 105, 18, { align: 'center' });
+
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Document généré le : ${new Date().toLocaleString('fr-FR')} | Total : ${allParticipants.length}`, 105, 25, { align: 'center' });
+
+      const tableData = allParticipants.map(p => [
+        p.nom || 'Inconnu',
+        p.telephone || '-',
+        p.inviteCode || '-',
+        formatDateExact(p.timestamp)
+      ]);
+
+      doc.autoTable({
+        startY: 40,
+        head: [['Nom', 'Téléphone', 'Code', 'Date d\'inscription']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [10, 9, 8], textColor: [212, 175, 82] },
+        columnStyles: { 2: { fontStyle: 'bold', textColor: [212, 175, 82] } },
+        styles: { fontSize: 8 }
+      });
+
+      doc.save("Inscriptions_Le_Dernier_Retrouvailles.pdf");
+    });
+
+    // Recherche
+    els.searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = allParticipants.filter(p => 
+        (p.nom && p.nom.toLowerCase().includes(term)) ||
+        (p.inviteCode && p.inviteCode.toLowerCase().includes(term))
+      );
+      renderList(filtered);
+    });
+
+  </script>
+</body>
+</html>
