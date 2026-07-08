@@ -1,592 +1,657 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pour Domie 💛</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>LevelUp Tool Hub — Vos Outils d'Écosystème</title>
+  
+  <!-- Tailwind CSS CDN pour un design moderne ultra-rapide -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome pour charger tes icônes de base de données -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Polices Google Fonts Premium -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Syne', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --black: #0a0a0a;
-      --deep: #111115;
-      --card: #16161c;
-      --gold: #c9a84c;
-      --gold-light: #e8c96a;
-      --gold-dim: rgba(201,168,76,0.18);
-      --white: #f5f0e8;
-      --muted: #7a7a8a;
-      --red: #b03030;
+      --bg: #09090b;
+      --accent: #a855f7;
+      --accent-lo: rgba(168, 85, 247, 0.12);
+      --bdr: rgba(255, 255, 255, 0.08);
     }
-
-    html { scroll-behavior: smooth; }
-
+    
     body {
-      background: var(--black);
-      color: var(--white);
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 300;
+      background-color: var(--bg);
+      color: #f4f4f5;
+      -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
-      min-height: 100vh;
     }
 
-    /* ── PARTICLES ── */
-    #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-    .spark {
+    /* Fond décoratif cinéma */
+    .tech-bg-img {
+      position: fixed;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80') center center/cover no-repeat;
+      z-index: -2;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    .tech-bg-fade {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(9, 9, 11, 0.4) 0%, rgba(9, 9, 11, 0.96) 60%, var(--bg) 100%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Cartes d'application vitre floutée */
+    .app-card {
+      background: rgba(255, 255, 255, 0.015);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .app-card::before {
+      content: '';
       position: absolute;
-      width: 2px; height: 2px;
-      border-radius: 50%;
-      background: var(--gold);
+      top: 0; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
       opacity: 0;
-      animation: drift linear infinite;
+      transition: opacity 0.3s ease;
     }
-    @keyframes drift {
-      0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
-      10%  { opacity: 0.8; }
-      90%  { opacity: 0.4; }
-      100% { transform: translateY(-10vh) translateX(var(--dx)); opacity: 0; }
+    .app-card:hover {
+      background: rgba(255, 255, 255, 0.035);
+      border-color: rgba(168, 85, 247, 0.35);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(168, 85, 247, 0.1);
+    }
+    .app-card:hover::before {
+      opacity: 1;
     }
 
-    /* ── HERO ── */
-    #hero {
-      position: relative;
-      min-height: 100vh;
+    /* Évite la barre de défilement horizontale sur les iframes mobiles */
+    iframe {
+      color-scheme: dark;
+    }
+
+    /* Barre de navigation supérieure adaptative pour le notch */
+    nav {
+      height: calc(60px + env(safe-area-inset-top, 0px));
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* Main container adaptatif */
+    main {
+      padding-top: calc(75px + env(safe-area-inset-top, 0px));
+      padding-bottom: 40px; /* Par défaut sur ordinateur */
+    }
+
+    /* Gestion rigoureuse de la barre d'action mobile du bas */
+    .mobile-bottom-bar {
+      display: none; /* Masquée sur PC */
+    }
+
+    @media (max-width: 768px) {
+      main {
+        /* On augmente la marge du bas sur mobile pour ne pas chevaucher la bottom-bar */
+        padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+      }
+      .mobile-bottom-bar {
+        display: flex; /* Visible uniquement sur mobile */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(65px + env(safe-area-inset-bottom, 0px));
+        background: rgba(9, 9, 11, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--bdr);
+        z-index: 99;
+        align-items: center;
+        justify-content: space-around;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: 16px;
+        padding-right: 16px;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
+      }
+    }
+
+    .bar-btn {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      padding: 2rem;
-      z-index: 1;
-    }
-
-    .crown {
-      font-size: 3.5rem;
-      animation: floatCrown 3s ease-in-out infinite;
-      margin-bottom: 1.2rem;
-      filter: drop-shadow(0 0 18px rgba(201,168,76,0.5));
-    }
-    @keyframes floatCrown {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-
-    .hero-sub {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.35em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 1rem;
-    }
-
-    h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(3.2rem, 9vw, 7rem);
-      font-weight: 300;
-      font-style: italic;
-      line-height: 1.05;
-      color: var(--white);
-      margin-bottom: 0.4rem;
-    }
-    h1 span { color: var(--gold); }
-
-    .hero-line {
-      width: 60px; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      margin: 1.8rem auto;
-    }
-
-    .hero-tagline {
-      font-size: 1rem;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-      max-width: 380px;
-      line-height: 1.7;
-    }
-
-    .scroll-hint {
-      position: absolute;
-      bottom: 2.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
-      color: var(--muted); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
-      animation: fadeBounce 2s ease-in-out infinite;
-    }
-    .scroll-hint::after {
-      content: '';
-      width: 1px; height: 40px;
-      background: linear-gradient(to bottom, var(--gold), transparent);
-    }
-    @keyframes fadeBounce {
-      0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
-      50%  { opacity: 1;   transform: translateX(-50%) translateY(6px); }
-    }
-
-    /* ── SECTION BASE ── */
-    section {
-      position: relative; z-index: 1;
-      padding: 6rem 1.5rem;
-      max-width: 760px;
-      margin: 0 auto;
-    }
-
-    .section-eyebrow {
-      font-size: 0.65rem;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 1.2rem;
-    }
-
-    /* ── MESSAGE CARD ── */
-    .msg-card {
-      background: var(--card);
-      border: 1px solid var(--gold-dim);
-      border-radius: 4px;
-      padding: 3rem 2.5rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .msg-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    }
-
-    .msg-card p {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.15rem, 2.5vw, 1.45rem);
-      font-style: italic;
-      line-height: 1.85;
-      color: #ddd5c4;
-      margin-bottom: 1.4rem;
-    }
-    .msg-card p:last-child { margin-bottom: 0; }
-    .msg-card .highlight { color: var(--gold-light); font-weight: 400; }
-    .msg-card .sig {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.78rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-top: 2.2rem;
-      padding-top: 1.4rem;
-      border-top: 1px solid var(--gold-dim);
-    }
-
-    /* ── GIFT ── */
-    #gift-section { text-align: center; }
-    #gift-section h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2rem, 5vw, 3.2rem);
-      font-weight: 300;
-      font-style: italic;
-      margin-bottom: 0.6rem;
-    }
-    #gift-section .sub {
-      color: var(--muted); font-size: 0.88rem;
-      margin-bottom: 3rem; line-height: 1.7;
-    }
-
-    /* Gift box */
-    #gift-wrap {
-      perspective: 800px;
-      display: inline-block;
-      cursor: pointer;
-      margin-bottom: 2rem;
-    }
-    #gift-box {
-      width: 130px; height: 130px;
-      position: relative;
-      transform-style: preserve-3d;
-      animation: giftIdle 2.5s ease-in-out infinite;
-      transition: transform 0.2s;
-    }
-    #gift-box:hover { animation: none; transform: rotateY(12deg) rotateX(-6deg) scale(1.06); }
-    @keyframes giftIdle {
-      0%, 100% { transform: rotateY(-6deg) rotateX(3deg); }
-      50%       { transform: rotateY(6deg) rotateX(-3deg); }
-    }
-
-    .gift-face {
-      position: absolute; inset: 0;
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 3.5rem;
-      backface-visibility: hidden;
-    }
-    .gift-front {
-      background: linear-gradient(135deg, #1a1208, #2c1f00);
-      border: 2px solid var(--gold);
-      box-shadow: 0 0 40px rgba(201,168,76,0.25), inset 0 0 20px rgba(201,168,76,0.04);
-    }
-
-    /* Ribbon */
-    .gift-ribbon-h, .gift-ribbon-v {
-      position: absolute;
-      background: linear-gradient(90deg, #8a6020, var(--gold), #8a6020);
-      border-radius: 2px;
-      pointer-events: none;
-    }
-    .gift-ribbon-h { top: 50%; left: 0; right: 0; height: 10px; transform: translateY(-50%); }
-    .gift-ribbon-v { left: 50%; top: 0; bottom: 0; width: 10px; transform: translateX(-50%); }
-    .gift-bow {
-      position: absolute;
-      top: -14px; left: 50%; transform: translateX(-50%);
-      font-size: 1.8rem;
-      pointer-events: none;
-      filter: drop-shadow(0 0 6px rgba(201,168,76,0.6));
-    }
-
-    .open-btn {
-      display: inline-block;
-      margin-top: 1rem;
-      padding: 0.85rem 2.8rem;
-      border: 1px solid var(--gold);
-      background: transparent;
-      color: var(--gold);
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.78rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-radius: 2px;
-      transition: background 0.3s, color 0.3s;
-    }
-    .open-btn:hover { background: var(--gold); color: var(--black); }
-
-    /* ── GIFT MODAL ── */
-    #gift-modal {
-      position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,0.92);
-      display: none;
-      align-items: center; justify-content: center;
-      padding: 1.5rem;
-      backdrop-filter: blur(6px);
-    }
-    #gift-modal.open { display: flex; }
-    .modal-inner {
-      background: var(--card);
-      border: 1px solid var(--gold-dim);
-      border-radius: 6px;
-      padding: clamp(2rem, 5vw, 3.5rem);
-      max-width: 640px; width: 100%;
-      max-height: 90vh; overflow-y: auto;
-      position: relative;
-      animation: modalIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
-    }
-    @keyframes modalIn {
-      from { transform: scale(0.88) translateY(24px); opacity: 0; }
-      to   { transform: scale(1) translateY(0); opacity: 1; }
-    }
-    .modal-inner::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    }
-
-    .modal-close {
-      position: absolute; top: 1rem; right: 1.2rem;
-      background: none; border: none;
-      color: var(--muted); font-size: 1.4rem;
-      cursor: pointer; line-height: 1;
-      transition: color 0.2s;
-    }
-    .modal-close:hover { color: var(--white); }
-
-    .modal-crown { font-size: 2.8rem; text-align: center; margin-bottom: 0.8rem; }
-    .modal-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      font-style: italic;
-      font-weight: 300;
-      text-align: center;
-      color: var(--gold-light);
-      margin-bottom: 0.5rem;
-    }
-    .modal-divider {
-      width: 50px; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      margin: 1.2rem auto 1.8rem;
-    }
-
-    .modal-msg {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.05rem, 2.2vw, 1.25rem);
-      font-style: italic;
-      line-height: 1.9;
-      color: #ddd5c4;
-      margin-bottom: 1.2rem;
-    }
-    .modal-msg .hl { color: var(--gold-light); }
-
-    .modal-separator {
-      text-align: center;
-      font-size: 0.75rem;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin: 2rem 0 1.2rem;
-      position: relative;
-    }
-    .modal-separator::before, .modal-separator::after {
-      content: ''; display: inline-block;
-      width: 40px; height: 1px;
-      background: var(--gold-dim); vertical-align: middle;
-      margin: 0 0.8rem;
-    }
-
-    /* Film section inside modal */
-    .film-intro {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.88rem;
-      color: var(--muted);
-      text-align: center;
-      line-height: 1.7;
-      margin-bottom: 1.5rem;
-    }
-    .film-intro span { color: var(--white); }
-
-    .video-wrapper {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      border-radius: 4px;
-      overflow: hidden;
-      border: 1px solid var(--gold-dim);
-      box-shadow: 0 0 40px rgba(0,0,0,0.6);
-    }
-    .video-wrapper iframe {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
+      gap: 4px;
+      color: rgba(255, 255, 255, 0.45);
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: none;
       border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      height: 100%;
+    }
+    .bar-btn:hover, .bar-btn:active {
+      color: var(--accent);
+    }
+    .bar-btn i {
+      font-size: 18px;
     }
 
-    .modal-sign {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-align: center;
-      margin-top: 2rem;
-      padding-top: 1.2rem;
-      border-top: 1px solid var(--gold-dim);
+    /* Correction de l'iframe de l'outil pour respecter le notch */
+    .iframe-topbar {
+      height: calc(56px + env(safe-area-inset-top, 0px));
+      padding-top: env(safe-area-inset-top, 0px);
+      background: #110c1f;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
     }
 
-    /* ── QUOTES STRIP ── */
-    #quotes {
-      overflow: hidden;
-      padding: 3.5rem 0;
-      border-top: 1px solid var(--gold-dim);
-      border-bottom: 1px solid var(--gold-dim);
-      position: relative; z-index: 1;
-    }
-    .quotes-track {
-      display: flex; gap: 4rem;
-      animation: scrollTrack 28s linear infinite;
-      white-space: nowrap;
-      width: max-content;
-    }
-    @keyframes scrollTrack {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
-    }
-    .quote-item {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.05rem;
-      font-style: italic;
-      color: var(--muted);
-      flex-shrink: 0;
-    }
-    .quote-item .dot { color: var(--gold); margin: 0 2rem; }
-
-    /* ── FOOTER ── */
-    footer {
-      position: relative; z-index: 1;
-      text-align: center;
-      padding: 3.5rem 1.5rem 4rem;
-      border-top: 1px solid var(--gold-dim);
-    }
-    footer .f-crown { font-size: 1.6rem; margin-bottom: 0.6rem; }
-    footer p {
-      font-size: 0.72rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    footer .heart { color: var(--gold); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 500px) {
-      .msg-card { padding: 2rem 1.4rem; }
+    /* Cible et redimensionne n'importe quel code SVG brut provenant de Firestore de manière parfaite */
+    .svg-icon-container svg {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      display: block !important;
+      margin: auto !important;
     }
   </style>
 </head>
-<body>
+<body class="font-sans min-h-screen selection:bg-purple-500/30 selection:text-white">
 
-<!-- Particles -->
-<div id="particles"></div>
+  <!-- Arrière-plans d'ambiance violet cinéma -->
+  <div class="tech-bg-img"></div>
+  <div class="tech-bg-fade"></div>
 
-<!-- ══════════ HERO ══════════ -->
-<div id="hero">
-  <div class="crown">👑</div>
-  <p class="hero-sub">Un message pour toi</p>
-  <h1>Ma <span>Reine</span><br>Domie</h1>
-  <div class="hero-line"></div>
-  <p class="hero-tagline">Prcq tu mérites plus qu'un simple message  tu mérites une soirée inoubliable.</p>
-  <div class="scroll-hint">Découvre</div>
-</div>
-
-<!-- ══════════ MESSAGE ══════════ -->
-<section>
-  <p class="section-eyebrow">✦ Pour toi, rien que pour toi</p>
-  <div class="msg-card">
-    <p>
-      Domie,<br>
-      Au début, jte regardais juste <span class="highlight">comme ça</span>  sans vraiment savoir c que tu représenterais pour moi.
-    </p>
-    <p>
-      Mais au fur et à mesure qu'on apprenait à se connaître, quelque chose grandissait en moi. Pas un coup de foudre bruyant. Quelque chose de plus fort — <span class="highlight">une certitude qui s'installe doucement et ne repart plus.</span>
-    </p>
-    <p>
-      Les gens disaient que ça ne durerait pas trois mois. Aujourd'hui, chui là. <span class="highlight">Pas pour leur prouver quelque chose. Pour toi.</span> Parce que ce qu'on a, ça ne se mesure pas en mois — ça se ressent à chaque fois que je pense à toi.
-    </p>
-    <p>
-      T'es <span class="highlight">ma baby, my lady, mon tout.</span> La volonté de Dieu nous a mis sur le même chemin et je n'ai aucune intention de te laisser marcher seule dessus.
-    </p>
-    <div class="sig">Écrit avec tout mon amour ✦ Pour Domie, tjrs</div>
+  <!-- 1. Écran de chargement initial -->
+  <div id="appLoader" class="fixed inset-0 bg-[#09090b] z-[9999] flex flex-col items-center justify-center transition-opacity duration-300">
+    <div class="w-12 h-12 border-4 border-purple-500/10 border-t-purple-500 rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.2)]"></div>
+    <span class="mt-4 text-xs font-bold text-slate-400 tracking-widest uppercase">Chargement de Tool Hub...</span>
   </div>
-</section>
 
-<!-- ══════════ GIFT ══════════ -->
-<section id="gift-section">
-  <p class="section-eyebrow">✦ Une surprise t'attend</p>
-  <h2>Passe une excellente soirée,<br>tu le mérites</h2>
-  <p class="sub">Quelque chose t'attend dedans, mon amour.<br>Clique sur le cadeau pour l'ouvrir. 🎁</p>
-
-  <div id="gift-wrap" onclick="openGift()">
-    <div id="gift-box">
-      <div class="gift-face gift-front">
-        <div class="gift-ribbon-h"></div>
-        <div class="gift-ribbon-v"></div>
-        <div class="gift-bow">🎀</div>
-        <span style="position:relative;z-index:2;">🎁</span>
+  <!-- 2. Barre de Navigation Supérieure (Notch safe) -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-black/85 border-b border-white/5 backdrop-blur-xl flex items-center px-6 gap-4">
+    <a href="/" class="flex items-center gap-2.5 text-white font-extrabold font-display text-base tracking-tight decoration-none">
+      <svg class="w-5 h-5 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" viewBox="0 0 576 512" fill="#a855f7">
+        <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
+      </svg>
+      LevelUp
+    </a>
+    <div class="w-[1px] h-4 bg-white/10"></div>
+    <span class="text-xs font-bold text-[#a855f7] uppercase tracking-wider font-display">Tool Hub</span>
+    
+    <div class="ml-auto flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+        <div class="w-5 h-5 bg-[#a855f7]/10 text-[#a855f7] border border-[#a855f7]/20 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-user text-[10px]"></i>
+        </div>
+        <span id="navUsername" class="text-xs font-semibold text-slate-300">Invité</span>
       </div>
     </div>
-  </div>
-  <br>
-  <button class="open-btn" onclick="openGift()">Ouvrir mon cadeau</button>
-</section>
+  </nav>
 
-<!-- ══════════ QUOTES STRIP ══════════ -->
-<div id="quotes">
-  <div class="quotes-track">
-    <span class="quote-item">Mon tout <span class="dot">✦</span></span>
-    <span class="quote-item">My Baby <span class="dot">✦</span></span>
-    <span class="quote-item">Ma Reine <span class="dot">✦</span></span>
-    <span class="quote-item">My Lady <span class="dot">✦</span></span>
-    <span class="quote-item">Mon Amour <span class="dot">✦</span></span>
-    <span class="quote-item">Pour toujours <span class="dot">✦</span></span>
-    <span class="quote-item">Mon tout <span class="dot">✦</span></span>
-    <span class="quote-item">My Baby <span class="dot">✦</span></span>
-    <span class="quote-item">Ma Reine <span class="dot">✦</span></span>
-    <span class="quote-item">My Lady <span class="dot">✦</span></span>
-    <span class="quote-item">Mon Amour <span class="dot">✦</span></span>
-    <span class="quote-item">Pour toujours <span class="dot">✦</span></span>
-  </div>
-</div>
-
-<!-- ══════════ FOOTER ══════════ -->
-<footer>
-  <div class="f-crown">👑</div>
-  <p>Fait avec <span class="heart">♥</span> pour Domie &nbsp;✦&nbsp; Tu es mon tout</p>
-</footer>
-
-<!-- ══════════ GIFT MODAL ══════════ -->
-<div id="gift-modal">
-  <div class="modal-inner">
-    <button class="modal-close" onclick="closeGift()">✕</button>
-
-    <div class="modal-crown">💌</div>
-    <p class="modal-title">À toi, ma Reine</p>
-    <div class="modal-divider"></div>
-
-    <p class="modal-msg">
-      Domie… je savais pas exactement quoi t'offrir ce soir. 
-      Alors j'ai réfléchi à <span class="hl">toi</span> — à ce que t'aimes, à ce qui te fait briller les yeux.
-    </p>
-    <p class="modal-msg">
-      Tu mérites une soirée où tu te poses, où tu souffles, où tu te laisses emporter.
-      Alors ce soir, <span class="hl">laisse-moi t'offrir ça.</span>
-    </p>
-    <p class="modal-msg">
-      Je t'aime, pas juste en mots — mais dans chaque petite attention, 
-      dans chaque moment où je pense à toi même sans raison. 
-      <span class="hl">Tu es ma place préférée.</span>
-    </p>
-
-    <div class="modal-separator">Et maintenant…</div>
-
-    <p class="film-intro">
-      Je savais pas quoi te proposer ce soir, mais comme tu aimes un peu les trucs intenses, les histoires qui accrochent, les ambiances qui te tiennent en haleine —<br>
-      <span>laisse-moi te proposer ça, bbe. Je t'aime. 🎬</span>
-    </p>
-
-    <div class="video-wrapper">
-      <iframe
-        src="https://www.youtube.com/embed/oMqB-eD3x5s?si=WMKEOiLNvJcr6e7O"
-        title="Film pour Domie"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen>
-      </iframe>
+  <!-- 3. Conteneur principal et Grille des Outils -->
+  <main class="px-6 md:px-12 max-w-7xl mx-auto min-h-screen flex flex-col">
+    <div class="mb-8">
+      <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <span class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>
+        Applications Actives
+      </div>
+      <h1 class="font-display text-2xl md:text-3xl font-extrabold text-white tracking-tight">Vos utilitaires d'écosystème</h1>
     </div>
 
-    <div class="modal-sign">
-      Profite bien, ma reine ✦ Je t'aime 💛
+    <!-- Grille des outils -->
+    <div id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Les cartes d'outils s'injecteront ici de manière dynamique -->
+    </div>
+
+    <!-- État vide (Fallback) -->
+    <div id="emptyState" class="hidden flex-col items-center justify-center py-24 text-center">
+      <div class="w-16 h-16 bg-purple-500/10 text-[#a855f7] border border-purple-500/20 rounded-2xl flex items-center justify-center mb-4">
+        <i class="fa-solid fa-sliders text-2xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white mb-2">Aucun outil actif</h3>
+      <p class="text-sm text-slate-400 max-w-xs mx-auto">Les utilitaires et solutions de l'écosystème sont en cours d'initialisation. Revenez plus tard !</p>
+    </div>
+  </main>
+
+  <!-- 4. Visionneuse d'Outils Plein Écran (Iframe Viewer - Notch safe) -->
+  <div id="iframeOverlay" class="hidden fixed inset-0 bg-[#09090b] z-[200] flex flex-col animate-fade-in">
+    <!-- Barre supérieure de contrôle -->
+    <div class="iframe-topbar flex items-center justify-between px-6">
+      <div class="flex items-center gap-3">
+        <button id="closeIframeBtn" class="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 hover:text-white transition-all rounded-lg">
+          <i class="fa-solid fa-arrow-left"></i> Retour
+        </button>
+        <div class="h-4 w-[1px] bg-white/10"></div>
+        <span id="activeToolTitle" class="text-xs font-bold text-slate-300 tracking-wider uppercase font-sans">
+          Outil Actif
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Recharger l'iframe -->
+        <button id="reloadIframeBtn" class="p-2 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-purple-400 rounded-lg transition-all" title="Actualiser l'outil">
+          <i id="reloadIcon" class="fa-solid fa-rotate-right text-xs"></i>
+        </button>
+        <!-- Ouvrir nouvel onglet -->
+        <button id="externalLinkBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[#a855f7] hover:bg-[#b566ff] text-white rounded-lg transition-all">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> <span class="hidden sm:inline">Nouvel Onglet</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Zone de rendu Iframe -->
+    <div class="flex-1 w-full bg-[#09090b] relative overflow-hidden">
+      <!-- Indicateur de chargement dédié à l'iframe -->
+      <div id="iframeLoader" class="absolute inset-0 bg-[#09090b] flex flex-col items-center justify-center z-20">
+        <div class="w-10 h-10 border-3 border-purple-500/10 border-t-purple-500 rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.2)]"></div>
+        <span class="mt-3 text-[10px] font-bold text-slate-500 tracking-widest uppercase">Lancement de l'outil...</span>
+      </div>
+      <iframe id="toolIframe" class="w-full h-full border-0 bg-transparent" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
     </div>
   </div>
-</div>
 
-<script>
-  // ── Particles ──
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 38; i++) {
-    const s = document.createElement('div');
-    s.className = 'spark';
-    const size = Math.random() * 2.5 + 1;
-    s.style.cssText = `
-      left: ${Math.random()*100}%;
-      width: ${size}px; height: ${size}px;
-      --dx: ${(Math.random()-0.5)*120}px;
-      animation-duration: ${Math.random()*12+8}s;
-      animation-delay: ${Math.random()*10}s;
-      opacity: 0;
-    `;
-    container.appendChild(s);
-  }
+  <!-- 5. Modale d'informations de l'outil (Détails) -->
+  <div id="detailModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000] flex items-center justify-center p-6">
+    <div class="bg-[#0e0a16] border border-[#a855f7]/30 rounded-3xl p-6 max-w-md w-full relative shadow-2xl animate-scale-in">
+      <button id="closeDetailBtn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 border border-white/10 text-slate-300 flex items-center justify-center hover:bg-white/10 transition-all">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+      
+      <div class="w-full h-32 bg-[#a855f7]/5 border-b border-white/5 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
+        <div id="detailIconContainer" class="flex items-center justify-center w-full h-full"></div>
+      </div>
 
-  // ── Gift Modal ──
-  function openGift() {
-    const modal = document.getElementById('gift-modal');
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeGift() {
-    const modal = document.getElementById('gift-modal');
-    modal.classList.remove('open');
-    document.body.style.overflow = '';
-  }
+      <h3 id="detailTitle" class="text-xl font-bold text-white mb-2 font-display">Titre de l'outil</h3>
+      <p id="detailDescription" class="text-sm text-slate-300 mb-8 leading-relaxed max-h-[200px] overflow-y-auto pr-2">Description...</p>
+      
+      <button id="detailLaunchBtn" class="w-full py-3 bg-[#a855f7] hover:bg-[#b566ff] text-white font-bold rounded-xl transition-all shadow-[0_4px_15px_rgba(168,85,247,0.2)]">
+        Ouvrir l'application
+      </button>
+    </div>
+  </div>
 
-  // Close on backdrop click
-  document.getElementById('gift-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeGift();
-  });
-</script>
+  <!-- 6. Barre d'actions mobile du bas (Mobile Bottom Bar - Uniquement visible sur Mobile) -->
+  <div class="mobile-bottom-bar animate-in slide-in-from-bottom duration-300">
+    <button id="mobileHomeBtn" class="bar-btn">
+      <i class="fa-solid fa-house"></i>
+      <span>Accueil</span>
+    </button>
+    <button id="mobileRefreshBtn" class="bar-btn">
+      <i class="fa-solid fa-arrows-rotate"></i>
+      <span>Actualiser</span>
+    </button>
+    <a href="/login" id="mobileLoginBtn" class="bar-btn">
+      <i class="fa-solid fa-user-lock"></i>
+      <span>Connexion</span>
+    </a>
+  </div>
+
+
+  <!-- 7. SCRIPT ENGINE (MODULES DE SERVICES & FIREBASE INTEGRATION) -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { 
+      getAuth, 
+      onAuthStateChanged, 
+      browserLocalPersistence, 
+      setPersistence, 
+      signInAnonymously,
+      signInWithCustomToken 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Chargement de l'environnement Firebase global ou fallback
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: 'AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM',
+      authDomain: 'levelup-ecosystem.com',
+      projectId: 'levelup-ia',
+      storageBucket: 'levelup-ia.firebasestorage.app',
+      messagingSenderId: '229420004282',
+      appId: '1:229420004282:web:6735f059a947f0936ae383'
+    };
+
+    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Identifiant de base de données figé et strict
+    const appId = 'level-ia-premium';
+
+    // État local de l'application
+    const state = {
+      isGuest: true,
+      user: null,
+      tools: [],
+      selectedTool: null
+    };
+
+    // Logger de Débogage sur la console développeur standard
+    function logDebug(message, type = 'info') {
+      if (type === 'error') console.error(`[ToolHub] ${message}`);
+      else if (type === 'warn') console.warn(`[ToolHub] ${message}`);
+      else console.log(`[ToolHub] ${message}`);
+    }
+
+    // Gestion de la clé de connexion unique d'Écosystème (lvl_key)
+    function checkAndHandleSSOKey() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ssoKey = urlParams.get('lvl_key');
+      
+      if (ssoKey && /^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/i.test(ssoKey)) {
+        logDebug(`Clé SSO détectée : ${ssoKey}`, 'info');
+        localStorage.setItem('lvl_sec_k', btoa(ssoKey));
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+        return true;
+      }
+      return false;
+    }
+
+    function getActiveEcosystemKey() {
+      const encoded = localStorage.getItem('lvl_sec_k');
+      if (encoded) {
+        try { return atob(encoded); } catch(e) { return null; }
+      }
+      return null;
+    }
+
+    // Rendu dynamique de l'icône de l'outil avec gestion prioritaire du SVG de la base de données (non altéré !)
+    function getIconHTML(tool) {
+      // Priorité 1 : Rendu du code SVG brut directement dans un conteneur qui force la taille par CSS
+      if (tool.svg && tool.svg.includes('<svg')) {
+        return `<div class="w-14 h-14 flex items-center justify-center svg-icon-container text-[#a855f7] filter drop-shadow-[0_0_12px_rgba(168,85,247,0.5)]">
+          ${tool.svg}
+        </div>`;
+      }
+
+      // Priorité 2 : Image logo_url personnalisée
+      if (tool.logo_url) {
+        return `<img src="${tool.logo_url}" alt="${tool.title}" class="w-14 h-14 object-contain filter drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">`;
+      }
+
+      // Priorité 3 : Icône FontAwesome classique
+      const iconClass = tool.icon || 'fa-solid fa-screwdriver-wrench';
+      const cleanIcon = iconClass.includes('fa-') ? iconClass : `fa-solid ${iconClass}`;
+      return `<div class="w-14 h-14 flex items-center justify-center text-[#a855f7] filter drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]">
+        <i class="${cleanIcon} text-4xl"></i>
+      </div>`;
+    }
+
+    // Rendu complet de la grille des outils sans restriction d'accès ni outils fallbacks par défaut
+    function renderTools() {
+      const grid = document.getElementById('toolsGrid');
+      const emptyState = document.getElementById('emptyState');
+      
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const displayedTools = state.tools; // Affichage strict et exclusif des outils de Firestore
+
+      if (displayedTools.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      // Rendu des cartes d'applications autorisées pour tout le monde
+      displayedTools.forEach((tool) => {
+        const card = document.createElement('div');
+        card.className = 'app-card relative rounded-2xl overflow-hidden flex flex-col justify-between h-[300px]';
+        card.innerHTML = `
+          <div class="app-cover h-28 bg-[#a855f7]/5 border-b border-white/5 flex items-center justify-center cursor-pointer">
+            ${getIconHTML(tool)}
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="text-white font-bold font-display text-base mb-1.5">${tool.title}</h3>
+              <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                ${tool.description}
+              </p>
+            </div>
+            <button class="launch-btn w-full mt-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-gradient-to-r hover:from-purple-600 hover:to-indigo-600 hover:border-transparent text-xs font-bold transition-all shadow-sm">
+              Ouvrir l'outil
+            </button>
+          </div>
+        `;
+
+        // Écouteurs de clics pour le lancement
+        card.querySelector('.launch-btn').addEventListener('click', () => {
+          handleOpenTool(tool);
+        });
+        
+        // Clic sur l'en-tête de la carte pour voir les détails
+        card.querySelector('.app-cover').addEventListener('click', () => {
+          openDetailModal(tool);
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    // Gestion de l'ouverture et du chargement des outils
+    function handleOpenTool(tool) {
+      let finalUrl = tool.url || '#';
+      const ecosystemKey = getActiveEcosystemKey();
+      
+      // Injection transparente de la clé SSO si présente
+      if (ecosystemKey && finalUrl !== '#') {
+        try {
+          const parsedUrl = new URL(finalUrl);
+          parsedUrl.searchParams.set('lvl_key', ecosystemKey);
+          finalUrl = parsedUrl.toString();
+        } catch(e) {
+          logDebug("Erreur lors de l'injection de la clé SSO.", "error");
+        }
+      }
+
+      logDebug(`Ouverture de l'outil : "${tool.title}"`, 'info');
+      
+      const iframe = document.getElementById('toolIframe');
+      const loader = document.getElementById('iframeLoader');
+      const overlay = document.getElementById('iframeOverlay');
+      const titleSpan = document.getElementById('activeToolTitle');
+
+      titleSpan.textContent = tool.title;
+      loader.classList.remove('hidden');
+      iframe.src = finalUrl;
+      overlay.classList.remove('hidden');
+    }
+
+    // Modale de détails
+    function openDetailModal(tool) {
+      state.selectedTool = tool;
+      document.getElementById('detailTitle').textContent = tool.title;
+      document.getElementById('detailDescription').textContent = tool.description;
+      
+      const iconContainer = document.getElementById('detailIconContainer');
+      iconContainer.innerHTML = getIconHTML(tool);
+
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    // Événements d'interface générale
+    document.addEventListener('DOMContentLoaded', () => {
+      // Écouteur de fin de chargement d'iframe
+      const iframe = document.getElementById('toolIframe');
+      if (iframe) {
+        iframe.addEventListener('load', () => {
+          document.getElementById('iframeLoader').classList.add('hidden');
+        });
+      }
+
+      // Fermer l'iframe
+      document.getElementById('closeIframeBtn').addEventListener('click', () => {
+        document.getElementById('iframeOverlay').classList.add('hidden');
+        document.getElementById('toolIframe').src = '';
+      });
+
+      // Rafraîchir l'iframe
+      document.getElementById('reloadIframeBtn').addEventListener('click', () => {
+        const loader = document.getElementById('iframeLoader');
+        loader.classList.remove('hidden');
+        const icon = document.getElementById('reloadIcon');
+        icon.classList.add('animate-spin');
+        iframe.src = iframe.src;
+        setTimeout(() => icon.classList.remove('animate-spin'), 1000);
+      });
+
+      // Ouvrir lien externe
+      document.getElementById('externalLinkBtn').addEventListener('click', () => {
+        if (iframe.src) window.open(iframe.src, '_blank');
+      });
+
+      // Fermer détails
+      document.getElementById('closeDetailBtn').addEventListener('click', () => {
+        document.getElementById('detailModal').classList.add('hidden');
+      });
+
+      document.getElementById('detailLaunchBtn').addEventListener('click', () => {
+        document.getElementById('detailModal').classList.add('hidden');
+        if (state.selectedTool) handleOpenTool(state.selectedTool);
+      });
+
+      // Actions Mobile Bottom Bar
+      document.getElementById('mobileHomeBtn').addEventListener('click', () => {
+        document.getElementById('iframeOverlay').classList.add('hidden');
+        document.getElementById('toolIframe').src = '';
+      });
+      document.getElementById('mobileRefreshBtn').addEventListener('click', () => {
+        window.location.reload();
+      });
+    });
+
+    // Initialisation globale de la base de données & Authentification
+    const initAppProcess = async () => {
+      logDebug("Initialisation de l'authentification Firebase...", "info");
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        checkAndHandleSSOKey();
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          logDebug("Connexion via Custom Token d'écosystème...", "info");
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          logDebug("Connexion en mode Anonyme...", "info");
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        logDebug(`Échec de l'authentification : ${err.message}`, "error");
+      }
+
+      // Écouteur d'état utilisateur
+      onAuthStateChanged(auth, (currentUser) => {
+        const ssoActive = getActiveEcosystemKey();
+
+        if (ssoActive) {
+          state.isGuest = false;
+          state.user = { displayName: 'Partenaire', photoURL: null, role: 'partner' };
+          logDebug("Mode Partenaire validé par clé SSO.", "success");
+        } else if (currentUser && !currentUser.isAnonymous) {
+          state.isGuest = false;
+          state.user = {
+            displayName: currentUser.displayName?.split(' ')[0] || 'Membre',
+            role: 'member'
+          };
+          logDebug(`Utilisateur membre connecté (UID : ${currentUser.uid})`, "success");
+        } else {
+          state.isGuest = true;
+          state.user = null;
+          logDebug("Navigation active en mode Invité.", "warn");
+        }
+
+        // Mise à jour de l'UI Header
+        const nameSpan = document.getElementById('navUsername');
+        if (nameSpan) nameSpan.textContent = state.user ? state.user.displayName : 'Invité';
+
+        // Lancement de l'écouteur des outils Firestore
+        initToolsListener();
+        
+        // Cache le chargeur global de l'application
+        document.getElementById('appLoader').classList.add('opacity-0');
+        setTimeout(() => document.getElementById('appLoader').classList.add('hidden'), 300);
+      });
+    };
+
+    // Connexion en temps réel à ton document de configuration
+    function initToolsListener() {
+      const hubPath = `artifacts/${appId}/public/data/config/tools_hub`;
+      logDebug(`Connexion au document à l'adresse : ${hubPath}`, 'info');
+
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'tools_hub');
+
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          logDebug("Document 'tools_hub' trouvé avec succès ! Lecture de vos outils...", "success");
+          const loadedTools = [];
+
+          Object.keys(data).forEach((key) => {
+            if (key.startsWith('tool_')) {
+              const item = data[key];
+              if (item && item.active === true) {
+                loadedTools.push({
+                  id: key,
+                  title: item.title || item.name || 'Outil sans nom',
+                  description: item.description || 'Aucune description disponible.',
+                  url: item.url || '#',
+                  icon: item.icon || null,
+                  svg: item.svg || null, // Capture du SVG brut sans aucune modification destructive
+                  logo_url: item.logo_url || null,
+                  active: item.active
+                });
+              }
+            }
+          });
+
+          // Tri séquentiel
+          loadedTools.sort((a, b) => {
+            const numA = parseInt(a.id.replace('tool_', ''), 10) || 0;
+            const numB = parseInt(b.id.replace('tool_', ''), 10) || 0;
+            return numA - numB;
+          });
+
+          logDebug(`${loadedTools.length} de tes outils actifs chargés depuis Firestore.`, "success");
+          state.tools = loadedTools;
+          renderTools();
+        } else {
+          logDebug(`Le document 'tools_hub' n'existe pas encore à l'adresse : ${hubPath}`, "warn");
+          state.tools = [];
+          renderTools();
+        }
+      }, (error) => {
+        logDebug(`Sécurité de l'aperçu : ${error.message}`, "warn");
+        state.tools = [];
+        renderTools();
+      });
+    }
+
+    // Exécution du script principal
+    initAppProcess();
+  </script>
 </body>
 </html>
