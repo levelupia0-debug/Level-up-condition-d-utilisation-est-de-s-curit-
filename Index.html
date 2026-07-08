@@ -246,7 +246,7 @@ p.sub{color:var(--muted);font-size:1rem;max-width:600px;margin:24px 0 36px;line-
     <button class="sidebar-close" id="sidebarClose"><i class="fa-solid fa-xmark"></i></button>
   </div>
   <nav class="menu">
-    <a href="https://levelup-ecosystem.com"><i class="fa-solid fa-star"></i> LevelUp Ecosystem</a>
+    <a href="https://levelup-ecosystem.com/hub"><i class="fa-solid fa-star"></i> LevelUp Ecosystem</a>
     
     <!-- LIENS DÉSACTIVÉS (Classe .disabled) -->
     <a href="#" class="disabled"><i class="fa-solid fa-globe"></i> Sites vitrines</a>
@@ -293,7 +293,7 @@ p.sub{color:var(--muted);font-size:1rem;max-width:600px;margin:24px 0 36px;line-
     Vos préférences
   </div>
   <div class="cookie-text">
-    Afin de vous offrir une expérience premium, nous utilisons des cookies pour analyser notre trafic et sécuriser notre écosystème. <a href="https://levelup-ecosystem.com/privacy" target="_blank" rel="noopener">En savoir plus</a>.
+    Afin de vous offrir une expérience premium, nous utilisons des cookies pour analyser notre trafic et sécuriser notre écosystème. <a href="https://levelup-ecosystem.com/privacy">En savoir plus</a>.
   </div>
   <div class="cookie-actions">
     <button class="cookie-btn reject" id="cookieReject">Refuser</button>
@@ -349,7 +349,8 @@ function requireVerification(action) {
 
 function executeAction(action) {
   if (action === 'explore') {
-    window.location.href = 'https://levelup-ecosystem.com/explore';
+    // Redirection vers l'application PWA / le Hub
+    window.location.href = 'https://levelup-ecosystem.com/hub';
   } else if (action === 'menu') {
     sidebar.classList.add('on'); 
     overlay.classList.add('on'); 
@@ -431,6 +432,31 @@ function closeCookieBanner(choice) {
 cookieAccept.addEventListener('click', function() { closeCookieBanner('accepted'); });
 cookieReject.addEventListener('click', function() { closeCookieBanner('rejected'); });
 
+</script>
+
+<!-- ── CONFIGURATION FIREBASE ── -->
+<script type="module">
+  // Importation de Firebase (Version web CDN)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+  
+  // Configuration LevelUp IA
+  const firebaseConfig = {
+    apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+    authDomain: "levelup-ecosystem.com",
+    databaseURL: "https://levelup-ia-default-rtdb.firebaseio.com",
+    projectId: "levelup-ia",
+    storageBucket: "levelup-ia.firebasestorage.app",
+    messagingSenderId: "229420004282",
+    appId: "1:229420004282:web:6735f059a947f0936ae383",
+    measurementId: "G-MSRDY2574K"
+  };
+
+  // Initialisation de Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 </script>
 
 </body>
