@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -13,8 +14,8 @@
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 <!-- Themes & Web App Apple -->
-<meta name="theme-color" content="#a855f7">
-<meta name="msapplication-TileColor" content="#a855f7">
+<meta name="theme-color" content="#FAFAFA">
+<meta name="msapplication-TileColor" content="#6366F1">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LevelUp">
@@ -25,7 +26,7 @@
 <link rel="icon" href="/favicon.png" type="image/png" sizes="48x48">
 <link rel="apple-touch-icon" href="/favicon.png">
 
-<!-- Open Graph (Pour les partages WhatsApp, LinkedIn, Discord...) -->
+<!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="LevelUp - L’univers digital tout-en-un">
 <meta property="og:description" content="Découvrez LevelUp : création de sites web, invitations virtuelles, et une plateforme pratique regroupant outils IA, streaming et musique.">
@@ -55,178 +56,360 @@
 
 <!-- Ressources externes (Polices & Icônes) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-:root{
-  --bg:#f6f4ef;--ink:#141216;--muted:#726c7a;--line:rgba(20,18,22,.12);
-  --accent:#5b3df0;
-  --sans:'Inter',system-ui,sans-serif;
+:root {
+  /* Nouvelle palette Premium (Inspirée SaaS/Apple) */
+  --bg: #FAFAFA;
+  --surface: #FFFFFF;
+  --ink: #0F172A; /* Slate 900 */
+  --muted: #64748B; /* Slate 500 */
+  --line: #E2E8F0; /* Slate 200 */
+  
+  /* Accents */
+  --accent: #6366F1; /* Indigo vibrant */
+  --accent-light: rgba(99, 102, 241, 0.1);
+  --accent-gradient: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+  
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  /* Ombres douces modernes */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 25px -3px rgb(0 0 0 / 0.08), 0 4px 10px -4px rgb(0 0 0 / 0.04);
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100dvh}
-a{color:inherit;text-decoration:none}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; scroll-behavior: smooth; }
+body { 
+  font-family: var(--sans); 
+  background: var(--bg); 
+  color: var(--ink); 
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  opacity: 0;
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
 
 /* ── DEV BANNER ── */
 .dev-banner {
   position: fixed; top: 0; left: 0; right: 0;
   background: var(--ink); color: #fff;
   font-size: 0.8rem; font-weight: 500;
-  padding: 12px 48px 12px 24px;
+  padding: 10px 48px 10px 24px;
   text-align: center;
   z-index: 100;
   display: flex; justify-content: center; align-items: center; gap: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  letter-spacing: 0.02em;
 }
-.dev-banner i.fa-person-digging { color: var(--accent); font-size: 1rem; }
+.dev-banner i.fa-person-digging { color: #A855F7; font-size: 0.9rem; }
 .dev-banner button {
   position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-  background: transparent; border: none; color: rgba(255,255,255,0.6);
-  cursor: pointer; font-size: 1.1rem; padding: 4px; transition: color 0.2s;
+  background: transparent; border: none; color: rgba(255,255,255,0.5);
+  cursor: pointer; font-size: 1.1rem; padding: 4px; transition: color 0.2s ease;
 }
 .dev-banner button:hover { color: #fff; }
 
 /* ── TOPBAR ── */
-.topbar{position:fixed;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:22px 26px;z-index:50;transition:background 0.3s, backdrop-filter 0.3s, box-shadow 0.3s, padding 0.3s, top 0.3s}
-.topbar.scrolled{background:rgba(246,244,239,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);box-shadow:0 4px 30px rgba(0,0,0,0.04);padding:14px 26px}
-.brand{font-weight:700;font-size:1.15rem;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
-.brand-icon{color:var(--accent);font-size:.95rem}
-.brand-text{display:flex;flex-direction:column;line-height:1}
-.brand-sub{font-size:.5rem;color:var(--accent);font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-top:3px}
-.burger{width:42px;height:42px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:4px}
-.burger span{width:16px;height:2px;background:var(--ink);transition:all .25s}
-.burger.open span:nth-child(1){transform:translateY(6px) rotate(45deg)}
-.burger.open span:nth-child(2){opacity:0}
-.burger.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+.topbar {
+  position: fixed; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 32px; z-index: 50;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-bottom: 1px solid transparent;
+}
+.topbar.scrolled {
+  background: rgba(250, 250, 250, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+  padding: 16px 32px;
+}
+.brand {
+  font-weight: 800; font-size: 1.25rem;
+  letter-spacing: -0.03em; display: flex; align-items: center; gap: 10px;
+}
+.brand-icon {
+  color: transparent;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  font-size: 1.1rem;
+}
+.brand-text { display: flex; flex-direction: column; line-height: 1; }
+.brand-sub {
+  font-size: 0.55rem; color: var(--muted);
+  font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 4px;
+}
+.burger {
+  width: 44px; height: 44px; border: none; background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-direction: column; gap: 5px;
+  border-radius: 50%; transition: background 0.2s ease;
+}
+.burger:hover { background: rgba(0,0,0,0.04); }
+.burger span {
+  width: 18px; height: 2px; background: var(--ink);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 2px;
+}
+.burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.burger.open span:nth-child(2) { opacity: 0; transform: translateX(10px); }
+.burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* ── CENTER CONTENT (ULTRA CLEAN B2B) ── */
-main{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:140px 24px 80px; position:relative;}
-h1{font-family:var(--sans);font-weight:800;font-size:clamp(2.2rem, 8vw, 4.5rem);letter-spacing:-.04em;max-width:900px;line-height:1.05;color:var(--ink);margin-bottom:24px;}
-p.sub{color:var(--muted);font-size:1.1rem;max-width:600px;margin:0 auto 48px;line-height:1.6}
-.btn{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:12px;font-weight:600;font-size:.95rem;background:var(--ink);color:#fff;cursor:pointer;transition:transform 0.2s, background 0.2s; border:none;}
-.btn:hover{transform:translateY(-2px); background:#000;}
+main {
+  min-height: 100dvh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  padding: 160px 24px 100px; position: relative;
+}
+h1 {
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  letter-spacing: -0.04em; max-width: 900px; line-height: 1.1;
+  color: var(--ink); margin-bottom: 24px;
+}
+.text-gradient {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+p.sub {
+  color: var(--muted); font-size: 1.15rem; max-width: 600px;
+  margin: 0 auto 56px; line-height: 1.6; font-weight: 400;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 36px; border-radius: 99px; /* Bouton pilule style Apple */
+  font-weight: 600; font-size: 1rem; letter-spacing: -0.01em;
+  background: var(--ink); color: #fff; cursor: pointer;
+  border: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-md);
+}
+.btn:hover {
+  transform: translateY(-2px);
+  background: #000;
+  box-shadow: var(--shadow-lg);
+}
+.btn i { transition: transform 0.3s ease; }
+.btn:hover i { transform: translateX(4px); }
 
 /* ── FEATURES GRID (CLEAN & MINIMAL) ── */
-.features-grid{display:grid;grid-template-columns:1fr;gap:20px;max-width:800px;margin:0 auto 48px;width:100%;text-align:left}
-.feature-card{background:#ffffff;border:1px solid var(--line);padding:32px;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,0.02);transition:all 0.2s ease;display:flex;flex-direction:column;}
-.feature-card:hover{border-color:var(--accent);box-shadow:0 8px 24px rgba(91,61,240,0.08);transform:translateY(-3px);}
-.feature-icon{width:44px;height:44px;color:var(--accent);display:flex;align-items:center;font-size:1.6rem;margin-bottom:20px;}
-.feature-card h3{font-size:1.2rem;font-weight:700;margin-bottom:12px;color:var(--ink);letter-spacing:-.01em;}
-.feature-card p{font-size:0.95rem;color:var(--muted);line-height:1.6}
-
-/* ── ROTATION DES TEXTES ── */
-.rotating-text { transition: opacity 0.5s ease; min-height: 4.8em; /* Garde la carte à la même taille pendant le changement */ }
-.rotating-text.fade-out { opacity: 0; }
-
-.site-footer{padding:40px 24px;text-align:center;border-top:1px solid var(--line);background:var(--bg)}
-.footer-nav{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px;margin-bottom:16px;font-size:.85rem;font-weight:500;color:var(--ink)}
-.footer-nav a{transition:color .2s}
-.footer-nav a:hover{color:var(--accent)}
-.footer-nav span{color:var(--muted)}
-.footer-info p{font-size:.75rem;color:var(--muted);margin-bottom:6px}
-
-/* ── SIDEBAR ── */
-.overlay{position:fixed;inset:0;background:rgba(20,18,22,.35);opacity:0;pointer-events:none;transition:opacity .3s;z-index:60}
-.overlay.on{opacity:1;pointer-events:auto}
-.sidebar{position:fixed;top:0;right:0;bottom:0;width:320px;max-width:85vw;background:#fff;z-index:70;transform:translateX(100%);transition:transform .35s cubic-bezier(.16,1,.3,1);padding:30px;display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.08)}
-.sidebar.on{transform:translateX(0)}
-.sidebar-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px}
-.sidebar-close{width:34px;height:34px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;font-size:1.1rem;color:var(--ink);transition:transform .2s}
-.sidebar-close:hover{transform:scale(1.1)}
-.menu{display:flex;flex-direction:column;gap:4px}
-.menu a{display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:10px;font-size:.95rem;font-weight:600;transition:background .2s, color .2s}
-.menu a:hover:not(.disabled){background:#f6f4ef;color:var(--accent)}
-.menu a i{width:20px;color:var(--accent);font-size:.95rem}
-
-/* Liens Désactivés (Bientôt) */
-.menu a.disabled { opacity: 0.45; pointer-events: none; cursor: not-allowed; }
-.menu a.disabled::after {
-  content: 'Bientôt'; margin-left: auto; font-size: 0.6rem;
-  background: var(--muted); color: #fff; padding: 3px 6px;
-  border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+.features-grid {
+  display: grid; grid-template-columns: 1fr; gap: 24px;
+  max-width: 900px; margin: 0 auto 56px; width: 100%; text-align: left;
+}
+.feature-card {
+  background: var(--surface); border: 1px solid var(--line);
+  padding: 36px; border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex; flex-direction: column;
+}
+.feature-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+.feature-icon {
+  width: 52px; height: 52px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; margin-bottom: 24px;
+  transition: transform 0.3s ease;
+}
+.feature-card:hover .feature-icon { transform: scale(1.05) rotate(-5deg); }
+.feature-card h3 {
+  font-size: 1.25rem; font-weight: 700; margin-bottom: 12px;
+  color: var(--ink); letter-spacing: -0.02em;
 }
 
-.menu-sep{height:1px;background:var(--line);margin:14px 0}
-.menu-spacer{margin-top:20px}
-.sidebar-foot{margin-top:auto;padding-top:20px;border-top:1px solid var(--line)}
-.sidebar-foot p{font-size:.75rem;color:var(--muted);margin-bottom:10px}
-.sidebar-foot .small-link{font-size:.75rem;color:var(--muted);display:block;margin-bottom:6px}
+/* Container fixe pour éviter les sauts lors de la rotation du texte */
+.rotating-text-wrapper { min-height: 4.8em; position: relative; }
+.feature-card p.rotating-text {
+  font-size: 0.95rem; color: var(--muted); line-height: 1.6;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.feature-card p.rotating-text.fade-out { opacity: 0; transform: translateY(4px); }
+
+/* ── FOOTER ── */
+.site-footer {
+  padding: 48px 24px; text-align: center;
+  border-top: 1px solid var(--line); background: var(--surface);
+}
+.footer-nav {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px;
+  margin-bottom: 20px; font-size: 0.9rem; font-weight: 500; color: var(--muted);
+}
+.footer-nav a { transition: color 0.2s ease; }
+.footer-nav a:hover { color: var(--ink); }
+.footer-nav span { color: var(--line); }
+.footer-info p { font-size: 0.8rem; color: #94A3B8; margin-bottom: 6px; }
+
+/* ── SIDEBAR (MENU) ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none; transition: opacity 0.4s ease; z-index: 60;
+}
+.overlay.on { opacity: 1; pointer-events: auto; }
+.sidebar {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 360px; max-width: 85vw;
+  background: var(--surface); z-index: 70;
+  transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 32px; display: flex; flex-direction: column;
+  box-shadow: -20px 0 60px rgba(0,0,0,0.1);
+}
+.sidebar.on { transform: translateX(0); }
+.sidebar-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+.sidebar-close {
+  width: 40px; height: 40px; border: none; background: var(--bg); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 1.1rem; color: var(--muted); transition: all 0.2s ease;
+}
+.sidebar-close:hover { background: var(--line); color: var(--ink); transform: rotate(90deg); }
+.menu { display: flex; flex-direction: column; gap: 6px; }
+.menu a {
+  display: flex; align-items: center; gap: 16px; padding: 14px 16px;
+  border-radius: 12px; font-size: 0.95rem; font-weight: 600; color: var(--ink);
+  transition: all 0.2s ease;
+}
+.menu a:hover:not(.disabled) { background: var(--bg); color: var(--accent); padding-left: 20px; }
+.menu a i { width: 24px; color: var(--muted); font-size: 1.1rem; transition: color 0.2s; text-align: center; }
+.menu a:hover:not(.disabled) i { color: var(--accent); }
+
+/* Liens Désactivés */
+.menu a.disabled { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
+.menu a.disabled::after {
+  content: 'Bientôt'; margin-left: auto; font-size: 0.65rem;
+  background: var(--line); color: var(--muted); padding: 4px 8px;
+  border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;
+}
+
+.menu-sep { height: 1px; background: var(--line); margin: 16px 0; border-radius: 1px; }
+.menu-spacer { margin-top: 24px; }
+.sidebar-foot { margin-top: auto; padding-top: 24px; border-top: 1px solid var(--line); }
+.sidebar-foot p { font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; font-weight: 500;}
+.sidebar-foot .small-link { font-size: 0.8rem; color: var(--muted); display: block; margin-bottom: 8px; transition: color 0.2s;}
+.sidebar-foot .small-link:hover { color: var(--accent); }
 
 /* ── SECURITY POPUP (FULL SCREEN PRO) ── */
-.security-modal-overlay{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.3s ease}
-.security-modal-overlay.active{opacity:1;pointer-events:auto}
-.security-modal{background:transparent;width:100vw;height:100vh;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transform:scale(0.98);transition:all 0.4s cubic-bezier(0.16,1,0.3,1)}
-.security-modal-overlay.active .security-modal{transform:scale(1)}
-.security-modal i.fa-shield-halved{font-size:3.5rem;color:var(--accent);margin-bottom:24px}
-.security-modal h3{font-family:var(--sans);font-size:1.8rem;font-weight:700;color:var(--ink);margin-bottom:14px;letter-spacing:-.02em;}
-.security-modal p{font-size:1rem;color:var(--muted);margin-bottom:34px;line-height:1.6;max-width:500px}
-.cf-turnstile-container{display:flex;justify-content:center;min-height:65px}
-.modal-close-btn{position:absolute;top:24px;right:24px;background:var(--bg);width:40px;height:40px;border-radius:50%;border:none;font-size:1.2rem;color:var(--ink);cursor:pointer;transition:background 0.2s}
-.modal-close-btn:hover{background:var(--line)}
+.security-modal-overlay {
+  position: fixed; inset: 0; background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+  opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+}
+.security-modal-overlay.active { opacity: 1; pointer-events: auto; }
+.security-modal {
+  background: var(--surface); width: 90%; max-width: 440px; padding: 48px 32px;
+  border-radius: 24px; box-shadow: var(--shadow-lg); border: 1px solid var(--line);
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  transform: scale(0.95) translateY(20px); transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
+  position: relative;
+}
+.security-modal-overlay.active .security-modal { transform: scale(1) translateY(0); }
+.security-modal i.fa-shield-halved { font-size: 3.5rem; color: var(--accent); margin-bottom: 24px; }
+.security-modal h3 { font-size: 1.6rem; font-weight: 800; color: var(--ink); margin-bottom: 12px; letter-spacing: -0.02em; }
+.security-modal p { font-size: 0.95rem; color: var(--muted); margin-bottom: 32px; line-height: 1.6; }
+.cf-turnstile-container { display: flex; justify-content: center; min-height: 65px; width: 100%; }
+.modal-close-btn {
+  position: absolute; top: 16px; right: 16px; background: var(--bg);
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  font-size: 1.1rem; color: var(--muted); cursor: pointer; transition: all 0.2s;
+}
+.modal-close-btn:hover { background: var(--line); color: var(--ink); }
 
 /* ── COOKIE BANNER (PREMIUM) ── */
-.cookie-banner{position:fixed;bottom:-120%;left:24px;right:24px;max-width:400px;margin:0 auto;background:rgba(20,18,22,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;padding:24px;border-radius:6px;box-shadow:0 20px 40px rgba(0,0,0,0.3);display:flex;flex-direction:column;gap:16px;z-index:9995;border:1px solid rgba(255,255,255,0.1);transition:bottom 0.6s cubic-bezier(0.16,1,0.3,1)}
-.cookie-banner.show{bottom:24px}
-.cookie-header{display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:1.2rem;font-weight:600}
-.cookie-header i{color:var(--accent);font-size:1.3rem}
-.cookie-text{font-size:0.85rem;line-height:1.5;color:rgba(255,255,255,0.7)}
-.cookie-text a{color:#fff;text-decoration:underline;text-underline-offset:2px;transition:color 0.2s}
-.cookie-text a:hover{color:var(--accent)}
-.cookie-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
-.cookie-btn{padding:10px;border-radius:4px;font-size:0.85rem;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;text-align:center;}
-.cookie-btn.customize{grid-column:span 2;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.2)}
-.cookie-btn.customize:hover{background:rgba(255,255,255,0.1)}
-.cookie-btn.accept{background:var(--accent);color:#fff}
-.cookie-btn.accept:hover{background:#4a2ec6;transform:translateY(-2px)}
-.cookie-btn.reject{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.2)}
-.cookie-btn.reject:hover{background:rgba(255,255,255,0.1)}
+.cookie-banner {
+  position: fixed; bottom: -120%; left: 24px; right: 24px; max-width: 420px;
+  margin: 0 auto; background: rgba(15, 23, 42, 0.95); /* Dark theme for contrast */
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  color: #fff; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; gap: 16px; z-index: 9995;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cookie-banner.show { bottom: 24px; }
+.cookie-header { display: flex; align-items: center; gap: 12px; font-size: 1.15rem; font-weight: 700; }
+.cookie-header i { color: var(--accent); font-size: 1.3rem; }
+.cookie-text { font-size: 0.85rem; line-height: 1.5; color: rgba(255,255,255,0.7); }
+.cookie-text a { color: #fff; text-decoration: underline; text-underline-offset: 3px; transition: color 0.2s; }
+.cookie-text a:hover { color: var(--accent); }
+.cookie-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.cookie-btn {
+  padding: 12px; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.2s; text-align: center;
+}
+.cookie-btn.customize { grid-column: span 2; background: rgba(255,255,255,0.05); color: #fff; }
+.cookie-btn.customize:hover { background: rgba(255,255,255,0.1); }
+.cookie-btn.accept { background: var(--accent); color: #fff; }
+.cookie-btn.accept:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.cookie-btn.reject { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+.cookie-btn.reject:hover { background: rgba(255,255,255,0.1); }
 
-/* ── PREFERENCES COOKIE MODAL (LE NOUVEAU MENU PRO) ── */
-.cookie-prefs-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9998;opacity:0;pointer-events:none;transition:opacity 0.3s ease}
-.cookie-prefs-overlay.active{opacity:1;pointer-events:auto}
-.cookie-prefs-modal{background:#fff;width:90%;max-width:500px;padding:32px;border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,0.2);transform:translateY(20px);transition:transform 0.3s ease;text-align:left;max-height:90vh;overflow-y:auto;}
-.cookie-prefs-overlay.active .cookie-prefs-modal{transform:translateY(0)}
-.cookie-prefs-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.cookie-prefs-header h3{font-size:1.3rem;font-weight:700;color:var(--ink)}
-.cookie-prefs-close{background:transparent;border:none;font-size:1.2rem;color:var(--muted);cursor:pointer;transition:color 0.2s}
-.cookie-prefs-close:hover{color:var(--ink)}
-.cookie-prefs-desc{font-size:0.9rem;color:var(--muted);line-height:1.5;margin-bottom:24px}
-.cookie-option{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:16px 0;border-top:1px solid var(--line)}
-.cookie-option-info h4{font-size:1rem;font-weight:600;color:var(--ink);margin-bottom:4px}
-.cookie-option-info p{font-size:0.85rem;color:var(--muted);line-height:1.4}
+/* ── PREFERENCES COOKIE MODAL ── */
+.cookie-prefs-overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; z-index: 9998;
+  opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+}
+.cookie-prefs-overlay.active { opacity: 1; pointer-events: auto; }
+.cookie-prefs-modal {
+  background: var(--surface); width: 90%; max-width: 520px; padding: 40px;
+  border-radius: 24px; box-shadow: var(--shadow-lg); border: 1px solid var(--line);
+  transform: translateY(30px) scale(0.95); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left; max-height: 90vh; overflow-y: auto;
+}
+.cookie-prefs-overlay.active .cookie-prefs-modal { transform: translateY(0) scale(1); }
+.cookie-prefs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.cookie-prefs-header h3 { font-size: 1.4rem; font-weight: 800; color: var(--ink); letter-spacing: -0.02em;}
+.cookie-prefs-close { background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+.cookie-prefs-close:hover { background: var(--line); color: var(--ink); }
+.cookie-prefs-desc { font-size: 0.95rem; color: var(--muted); line-height: 1.6; margin-bottom: 32px; }
+.cookie-option { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding: 20px 0; border-top: 1px solid var(--line); }
+.cookie-option-info h4 { font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.cookie-option-info p { font-size: 0.9rem; color: var(--muted); line-height: 1.5; }
 
-/* Boutons "Toggle" façon Apple/SaaS */
-.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
-.toggle-switch input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#d4d4d8;transition:.3s;border-radius:24px}
-.toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background-color:white;transition:.3s;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
-input:checked + .toggle-slider{background-color:var(--accent)}
-input:checked + .toggle-slider:before{transform:translateX(20px)}
-input:disabled + .toggle-slider{cursor:not-allowed;opacity:0.6}
-input:disabled:checked + .toggle-slider{background-color:var(--muted)}
+/* Toggles iOS Style */
+.toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; margin-top: 2px;}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--line); transition: .3s; border-radius: 26px; }
+.toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s cubic-bezier(0.16,1,0.3,1); border-radius: 50%; box-shadow: var(--shadow-sm); }
+input:checked + .toggle-slider { background-color: var(--accent); }
+input:checked + .toggle-slider:before { transform: translateX(22px); }
+input:disabled + .toggle-slider { cursor: not-allowed; opacity: 0.5; }
+input:disabled:checked + .toggle-slider { background-color: var(--muted); }
 
-/* ── MEDIA QUERIES (DESKTOP & TABLETS) ── */
+/* ── MEDIA QUERIES (DESKTOP) ── */
 @media (min-width: 768px) {
-  .topbar { padding: 30px 50px; }
-  .topbar.scrolled { padding: 16px 50px; }
-  .brand { font-size: 1.3rem; }
-  .brand-sub { font-size: 0.55rem; }
-  main { padding: 160px 40px 100px; }
-  p.sub { font-size: 1.15rem; max-width: 680px; }
-  .btn { padding: 16px 36px; font-size: 1rem; }
-  
-  /* Grille à 2 colonnes sur PC */
-  .features-grid { grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 56px; max-width: 800px; }
-  
-  /* Modal grand format sur PC */
-  .security-modal i.fa-shield-halved { font-size: 4.5rem; }
-  .security-modal h3 { font-size: 2.2rem; }
-  .security-modal p { font-size: 1.1rem; }
-  
-  /* Cookie Banner PC (en bas à gauche) */
-  .cookie-banner { left: 40px; right: auto; margin: 0; bottom: -100%; }
+  .topbar { padding: 32px 56px; }
+  .topbar.scrolled { padding: 20px 56px; }
+  .brand { font-size: 1.4rem; }
+  .brand-sub { font-size: 0.6rem; }
+  main { padding: 180px 40px 120px; }
+  p.sub { font-size: 1.25rem; max-width: 680px; }
+  .features-grid { grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 72px; max-width: 900px; }
+  .cookie-banner { left: 40px; right: auto; margin: 0; bottom: -100%; width: 380px; }
   .cookie-banner.show { bottom: 40px; }
 }
 </style>
@@ -235,10 +418,11 @@ input:disabled:checked + .toggle-slider{background-color:var(--muted)}
 
 <!-- BANNIÈRE EN DÉVELOPPEMENT -->
 <div class="dev-banner" id="devBanner">
-  <span><i class="fa-solid fa-person-digging"></i> Certaines options sont en cours de développement. Nous serons 100% opérationnels très bientôt !</span>
+  <span><i class="fa-solid fa-person-digging"></i> Certaines options sont en cours de développement. Retour à la normale très bientôt !</span>
   <button id="closeDevBanner" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
 </div>
 
+<!-- NAVBAR -->
 <div class="topbar" id="topbar">
   <div class="brand">
     <i class="fa-solid fa-star brand-icon"></i>
@@ -253,31 +437,40 @@ input:disabled:checked + .toggle-slider{background-color:var(--muted)}
 </div>
 
 <main>
-  <!-- TITRE PLUS SIMPLE ET HONNÊTE -->
-  <h1>Votre espace digital, tout simplement.</h1>
+  <!-- HERO SECTION -->
+  <h1 class="animate-fade-up">Votre espace digital, <br><span class="text-gradient">tout simplement.</span></h1>
   
-  <p class="sub">
-    Une plateforme regroupant nos services de création web, des outils pratiques et un accompagnement pour votre sécurité en ligne.
+  <p class="sub animate-fade-up delay-1">
+    Une plateforme premium regroupant nos services de création web, des outils pratiques et un accompagnement pour votre sécurité en ligne.
   </p>
 
-  <!-- CARTES ULTRA-CLEAN EN 2 COLONNES -->
-  <div class="features-grid">
+  <!-- FEATURES GRID -->
+  <div class="features-grid animate-fade-up delay-2">
+    <!-- Carte 1 -->
     <div class="feature-card" id="card-web">
       <div class="feature-icon"><i class="fa-solid fa-laptop-code"></i></div>
       <h3>Création & Web</h3>
-      <p class="rotating-text">Création de sites vitrines et d'invitations digitales pour donner vie à vos projets.</p>
+      <div class="rotating-text-wrapper">
+        <p class="rotating-text">Création de sites vitrines et d'invitations digitales pour donner vie à vos projets.</p>
+      </div>
     </div>
     
+    <!-- Carte 2 -->
     <div class="feature-card" id="card-platform">
       <div class="feature-icon"><i class="fa-solid fa-star"></i></div>
       <h3>Plateforme & Outils</h3>
-      <p class="rotating-text">Accédez facilement à nos outils d'IA, regardez vos vidéos et écoutez de la musique.</p>
+      <div class="rotating-text-wrapper">
+        <p class="rotating-text">Accédez facilement à nos outils d'IA, regardez vos vidéos et écoutez de la musique.</p>
+      </div>
     </div>
   </div>
 
-  <a href="#" class="btn" id="exploreBtn">Ouvrir le Hub <i class="fa-solid fa-arrow-right"></i></a>
+  <a href="#" class="btn animate-fade-up delay-3" id="exploreBtn">
+    Installer l'app <i class="fa-solid fa-arrow-right"></i>
+  </a>
 </main>
 
+<!-- FOOTER -->
 <footer class="site-footer">
   <div class="footer-nav">
     <a href="https://levelup-ecosystem.com/terms">Conditions d'utilisation</a>
@@ -292,6 +485,7 @@ input:disabled:checked + .toggle-slider{background-color:var(--muted)}
   </div>
 </footer>
 
+<!-- OVERLAY & SIDEBAR -->
 <div class="overlay" id="overlay"></div>
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-head">
@@ -299,11 +493,9 @@ input:disabled:checked + .toggle-slider{background-color:var(--muted)}
     <button class="sidebar-close" id="sidebarClose"><i class="fa-solid fa-xmark"></i></button>
   </div>
   <nav class="menu">
-    <!-- LIENS PRINCIPAUX ACTIFS -->
     <a href="https://levelup-ecosystem.com/mobile"><i class="fa-solid fa-star"></i> LevelUp Ecosystem</a>
     <a href="https://levelup-ecosystem.com/dona"><i class="fa-solid fa-robot"></i> Assistant (Dona)</a>
     
-    <!-- LIENS DÉSACTIVÉS (Classe .disabled) -->
     <a href="#" class="disabled"><i class="fa-solid fa-globe"></i> Sites vitrines</a>
     <a href="#" class="disabled"><i class="fa-solid fa-user-shield"></i> Protection Cyber</a>
     <a href="#" class="disabled"><i class="fa-solid fa-graduation-cap"></i> Formations</a>
@@ -312,37 +504,34 @@ input:disabled:checked + .toggle-slider{background-color:var(--muted)}
     <a href="#" class="disabled"><i class="fa-solid fa-comment-dots"></i> Laisser un avis</a>
     
     <div class="menu-spacer"></div>
-    <div class="menu-sep" style="margin-top:0;"></div>
+    <div class="menu-sep"></div>
     
     <a href="#" class="disabled"><i class="fa-solid fa-circle-info"></i> À propos</a>
-    
-    <!-- SUPPORT ACTIF -->
     <a href="https://levelup-ecosystem.com/help"><i class="fa-solid fa-headset"></i> Aide / Support</a>
     <a href="mailto:support@levelup-ecosystem.com"><i class="fa-solid fa-envelope"></i> Contact</a>
   </nav>
   <div class="sidebar-foot">
     <a class="small-link" href="https://levelup-ecosystem.com/terms">Conditions d'utilisation</a>
     <a class="small-link" href="https://levelup-ecosystem.com/privacy">Politique de confidentialité</a>
-    <p style="margin-top:10px">support@levelup-ecosystem.com</p>
+    <p style="margin-top:12px">support@levelup-ecosystem.com</p>
   </div>
 </aside>
 
-<!-- FENÊTRE POP-UP DE SÉCURITÉ (PLEIN ÉCRAN) -->
+<!-- SÉCURITÉ MODAL -->
 <div class="security-modal-overlay" id="securityModal">
   <div class="security-modal">
     <button class="modal-close-btn" id="closeSecurityModal"><i class="fa-solid fa-xmark"></i></button>
     <i class="fa-solid fa-shield-halved"></i>
     <h3>Vérification de sécurité</h3>
-    <p>Pour des raisons de sécurité, merci de confirmer que vous êtes humain avant d'entrer.</p>
+    <p>Pour garantir un environnement sûr, merci de confirmer que vous êtes humain avant d'accéder au portail.</p>
     
     <div class="cf-turnstile-container">
-      <!-- CLÉ CLOUDFLARE -->
       <div class="cf-turnstile" data-sitekey="0x4AAAAAADMY4-j7dozqyHdf" data-callback="onSecurityCheckSuccess"></div>
     </div>
   </div>
 </div>
 
-<!-- BANNIÈRE DE COOKIES PRINCIPALE -->
+<!-- COOKIES BANNER -->
 <div class="cookie-banner" id="cookieBanner">
   <div class="cookie-header">
     <i class="fa-solid fa-cookie-bite"></i> 
@@ -358,7 +547,7 @@ input:disabled:checked + .toggle-slider{background-color:var(--muted)}
   </div>
 </div>
 
-<!-- FENÊTRE (MODAL) DE PERSONNALISATION DES COOKIES -->
+<!-- COOKIES PREFS MODAL -->
 <div class="cookie-prefs-overlay" id="cookiePrefsOverlay">
   <div class="cookie-prefs-modal">
     <div class="cookie-prefs-header">
@@ -367,20 +556,17 @@ input:disabled:checked + .toggle-slider{background-color:var(--muted)}
     </div>
     <p class="cookie-prefs-desc">Gérez la façon dont nous utilisons les cookies. Vous pouvez modifier ces paramètres à tout moment.</p>
     
-    <!-- Option 1 : Strictement nécessaires -->
     <div class="cookie-option" style="border-top:none; padding-top:0;">
       <div class="cookie-option-info">
         <h4>Strictement nécessaires</h4>
         <p>Requis pour le fonctionnement de base du site (sécurité, navigation). Ils ne peuvent pas être désactivés.</p>
       </div>
       <label class="toggle-switch">
-        <!-- disabled et checked par défaut pour faire "Pro" -->
         <input type="checkbox" checked disabled>
         <span class="toggle-slider"></span>
       </label>
     </div>
 
-    <!-- Option 2 : Analytiques -->
     <div class="cookie-option">
       <div class="cookie-option-info">
         <h4>Analytiques</h4>
@@ -392,7 +578,6 @@ input:disabled:checked + .toggle-slider{background-color:var(--muted)}
       </label>
     </div>
 
-    <!-- Option 3 : Marketing -->
     <div class="cookie-option">
       <div class="cookie-option-info">
         <h4>Marketing</h4>
@@ -404,25 +589,25 @@ input:disabled:checked + .toggle-slider{background-color:var(--muted)}
       </label>
     </div>
 
-    <button class="btn" id="saveCookiePrefsBtn" style="width:100%; justify-content:center; margin-top:16px;">Enregistrer mes choix</button>
+    <button class="btn" id="saveCookiePrefsBtn" style="width:100%; justify-content:center; margin-top:24px;">Enregistrer mes choix</button>
   </div>
 </div>
 
 <script>
-// --- Variables de base ---
-var sidebar = document.getElementById('sidebar');
-var overlay = document.getElementById('overlay');
-var closeBtn = document.getElementById('sidebarClose');
-var burger = document.getElementById('burger');
-var exploreBtn = document.getElementById('exploreBtn');
+// --- Variables ---
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+const closeBtn = document.getElementById('sidebarClose');
+const burger = document.getElementById('burger');
+const exploreBtn = document.getElementById('exploreBtn');
 
-var securityModal = document.getElementById('securityModal');
-var closeSecurityModal = document.getElementById('closeSecurityModal');
+const securityModal = document.getElementById('securityModal');
+const closeSecurityModal = document.getElementById('closeSecurityModal');
 
-// --- Logique de la Bannière "En développement" & Topbar ---
-var devBanner = document.getElementById('devBanner');
-var closeDevBanner = document.getElementById('closeDevBanner');
-var topbarEl = document.getElementById('topbar');
+// --- Dev Banner & Topbar Logic ---
+const devBanner = document.getElementById('devBanner');
+const closeDevBanner = document.getElementById('closeDevBanner');
+const topbarEl = document.getElementById('topbar');
 
 function updateTopbarPosition() {
   if (devBanner.style.display !== 'none') {
@@ -434,13 +619,21 @@ function updateTopbarPosition() {
 window.addEventListener('resize', updateTopbarPosition);
 updateTopbarPosition();
 
-closeDevBanner.addEventListener('click', function() {
+closeDevBanner.addEventListener('click', () => {
   devBanner.style.display = 'none';
   updateTopbarPosition();
 });
 
+// --- Scroll Effect Topbar ---
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 20) {
+    topbarEl.classList.add('scrolled');
+  } else {
+    topbarEl.classList.remove('scrolled');
+  }
+});
 
-// --- Logique de sécurité globale ---
+// --- Security Modal & Menu Logic ---
 let isHumanVerified = false;
 let pendingAction = null;
 
@@ -455,7 +648,7 @@ function requireVerification(action) {
 
 function executeAction(action) {
   if (action === 'explore') {
-    window.location.href = 'https://levelup-ecosystem.com/hub';
+    window.location.href = 'https://levelup-ecosystem.com/mobile';
   } else if (action === 'menu') {
     sidebar.classList.add('on'); 
     overlay.classList.add('on'); 
@@ -469,7 +662,7 @@ function closeMenu() {
   burger.classList.remove('open'); 
 }
 
-burger.addEventListener('click', function(e) {
+burger.addEventListener('click', (e) => {
   e.preventDefault();
   if (sidebar.classList.contains('on')) {
     closeMenu(); 
@@ -478,7 +671,7 @@ burger.addEventListener('click', function(e) {
   }
 });
 
-exploreBtn.addEventListener('click', function(e) {
+exploreBtn.addEventListener('click', (e) => {
   e.preventDefault();
   requireVerification('explore'); 
 });
@@ -486,17 +679,16 @@ exploreBtn.addEventListener('click', function(e) {
 closeBtn.addEventListener('click', closeMenu);
 overlay.addEventListener('click', closeMenu);
 
-closeSecurityModal.addEventListener('click', function() {
+closeSecurityModal.addEventListener('click', () => {
   securityModal.classList.remove('active');
   pendingAction = null; 
 });
 
-// Succès de Cloudflare Turnstile
+// Cloudflare Success
 function onSecurityCheckSuccess(token) {
   isHumanVerified = true; 
   securityModal.classList.remove('active'); 
-  
-  setTimeout(function() {
+  setTimeout(() => {
     if (pendingAction) {
       executeAction(pendingAction);
       pendingAction = null;
@@ -504,77 +696,37 @@ function onSecurityCheckSuccess(token) {
   }, 300); 
 }
 
-// Refuser explicitement l'installation PWA
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault(); 
-});
+// --- Cookie Logic ---
+const cookieBanner = document.getElementById('cookieBanner');
+const cookieAccept = document.getElementById('cookieAccept');
+const cookieReject = document.getElementById('cookieReject');
+const cookieCustomize = document.getElementById('cookieCustomize');
+const cookiePrefsOverlay = document.getElementById('cookiePrefsOverlay');
+const closeCookiePrefs = document.getElementById('closeCookiePrefs');
+const saveCookiePrefsBtn = document.getElementById('saveCookiePrefsBtn');
 
-// Effet d'apparition du dégradé/flou sur la barre de menu au scroll
-window.addEventListener('scroll', function() {
-  if (window.scrollY > 20) {
-    topbarEl.classList.add('scrolled');
-  } else {
-    topbarEl.classList.remove('scrolled');
-  }
-});
-
-// --- Logique de la Bannière Cookies (Avec Menu de Personnalisation) ---
-var cookieBanner = document.getElementById('cookieBanner');
-var cookieAccept = document.getElementById('cookieAccept');
-var cookieReject = document.getElementById('cookieReject');
-var cookieCustomize = document.getElementById('cookieCustomize');
-
-var cookiePrefsOverlay = document.getElementById('cookiePrefsOverlay');
-var closeCookiePrefs = document.getElementById('closeCookiePrefs');
-var saveCookiePrefsBtn = document.getElementById('saveCookiePrefsBtn');
-
-// Afficher la bannière si aucun choix n'a été fait
 if (!localStorage.getItem('levelup_cookie_consent')) {
-  setTimeout(function() {
-    cookieBanner.classList.add('show');
-  }, 1500);
+  setTimeout(() => { cookieBanner.classList.add('show'); }, 1500);
 }
 
-// Fonction pour sauvegarder le choix et fermer les fenêtres
 function saveConsent(preferences) {
   localStorage.setItem('levelup_cookie_consent', JSON.stringify(preferences));
   cookieBanner.classList.remove('show');
   cookiePrefsOverlay.classList.remove('active');
 }
 
-// Bouton : Accepter tout
-cookieAccept.addEventListener('click', function() { 
-  saveConsent({ essential: true, analytics: true, marketing: true }); 
+cookieAccept.addEventListener('click', () => saveConsent({ essential: true, analytics: true, marketing: true }));
+cookieReject.addEventListener('click', () => saveConsent({ essential: true, analytics: false, marketing: false }));
+cookieCustomize.addEventListener('click', () => cookiePrefsOverlay.classList.add('active'));
+closeCookiePrefs.addEventListener('click', () => cookiePrefsOverlay.classList.remove('active'));
+
+saveCookiePrefsBtn.addEventListener('click', () => {
+  const analyticsChecked = document.getElementById('toggleAnalytics').checked;
+  const marketingChecked = document.getElementById('toggleMarketing').checked;
+  saveConsent({ essential: true, analytics: analyticsChecked, marketing: marketingChecked });
 });
 
-// Bouton : Refuser (Garde uniquement les essentiels)
-cookieReject.addEventListener('click', function() { 
-  saveConsent({ essential: true, analytics: false, marketing: false }); 
-});
-
-// Bouton : Personnaliser (Ouvre le modal blanc)
-cookieCustomize.addEventListener('click', function() {
-  cookiePrefsOverlay.classList.add('active');
-});
-
-// Bouton : Fermer le modal de personnalisation (croix)
-closeCookiePrefs.addEventListener('click', function() {
-  cookiePrefsOverlay.classList.remove('active');
-});
-
-// Bouton : Enregistrer mes choix (dans le modal blanc)
-saveCookiePrefsBtn.addEventListener('click', function() {
-  var analyticsChecked = document.getElementById('toggleAnalytics').checked;
-  var marketingChecked = document.getElementById('toggleMarketing').checked;
-  
-  saveConsent({ 
-    essential: true, 
-    analytics: analyticsChecked, 
-    marketing: marketingChecked 
-  });
-});
-
-// --- Logique de défilement des textes des 2 cartes (Inclus Cyber Info) ---
+// --- Rotating Text Logic ---
 const webTexts = [
   "Création de sites vitrines et d'invitations digitales pour donner vie à vos projets.",
   "Des sites web simples et modernes pour vous aider à être visible sur internet.",
@@ -593,25 +745,23 @@ let currentIndex = 0;
 const webTextEl = document.querySelector('#card-web .rotating-text');
 const platformTextEl = document.querySelector('#card-platform .rotating-text');
 
-setInterval(function() {
-  // 1. Déclenche l'animation de fondu (disparition)
+setInterval(() => {
   webTextEl.classList.add('fade-out');
   platformTextEl.classList.add('fade-out');
 
-  // 2. Attend 500ms (la durée de la transition CSS) pour changer le texte pendant qu'il est invisible
-  setTimeout(function() {
+  setTimeout(() => {
     currentIndex = (currentIndex + 1) % webTexts.length;
-    
     webTextEl.textContent = webTexts[currentIndex];
     platformTextEl.textContent = platformTexts[currentIndex];
     
-    // 3. Retire la classe pour faire réapparaître le texte (fondu)
     webTextEl.classList.remove('fade-out');
     platformTextEl.classList.remove('fade-out');
-  }, 500);
+  }, 400); // Temps aligné avec la transition CSS
 
-}, 5000); // 5000 millisecondes = changement toutes les 5 secondes
+}, 5000);
 
+// Refuser l'install PWA natif
+window.addEventListener('beforeinstallprompt', (e) => e.preventDefault());
 </script>
 
 <!-- ── CONFIGURATION FIREBASE ── -->
@@ -638,3 +788,6 @@ setInterval(function() {
 
 </body>
 </html>
+
+
+```
