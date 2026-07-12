@@ -373,6 +373,13 @@ modForceCloseBtn: "Hôte absent",
 modForceCloseTitle: "Fermer en l'absence de l'hôte ?",
 modForceCloseDesc: "En tant que modérateur, vous pouvez fermer définitivement ce salon si l'hôte est injoignable. Cette action est irréversible.",
 modForceCloseConfirm: "Fermer le salon",
+seasonLabel: "Saison",
+episodeLabel: "Épisode",
+noEpisodesFound: "Aucun épisode trouvé pour cette saison.",
+resumeBtn: "Reprendre",
+continueWatching: "Continuer à regarder",
+searchModalTitle: "Rechercher",
+searchModalPlaceholder: "Titres, acteurs, genres...",
 sysJoined: "a rejoint le salon.",
 sysLeft: "a quitté le salon.",
 sysPaused: "signale une pause.",
@@ -606,6 +613,13 @@ modForceCloseBtn: "Host absent",
 modForceCloseTitle: "Close due to absent host?",
 modForceCloseDesc: "As a moderator, you can permanently close this room if the host is unreachable. This action cannot be undone.",
 modForceCloseConfirm: "Close the room",
+seasonLabel: "Season",
+episodeLabel: "Episode",
+noEpisodesFound: "No episodes found for this season.",
+resumeBtn: "Resume",
+continueWatching: "Continue Watching",
+searchModalTitle: "Search",
+searchModalPlaceholder: "Titles, actors, genres...",
 closeLive: "CLOSE LIVE",
 sysJoined: "joined the room.",
 sysLeft: "left the room.",
@@ -717,6 +731,7 @@ const [searchResults, setSearchResults] = useState([]);
 
 const [recentSearches, setRecentSearches] = useState(JSON.parse(localStorage.getItem('lm_recent_searches') || '[]'));
 const [showRecentSearches, setShowRecentSearches] = useState(false);
+const [showSearchModal, setShowSearchModal] = useState(false);
 
 const [partySearchQuery, setPartySearchQuery] = useState('');
 const [partySearchResults, setPartySearchResults] = useState([]);
@@ -1408,12 +1423,15 @@ else await setDoc(ref, newList.find(m => m.id === movie.id));
 } catch(e) {}
 };
 
-const addToHistory = async (movie) => {
+const addToHistory = async (movie, season = null, episode = null) => {
 if (!user || !fbUser) return;
+const existing = recentlyViewed.find(m => m.id === movie.id);
 const dataObj = {
 id: movie.id, title: movie.title || movie.name || movie.original_name,
 poster_path: movie.poster_path, backdrop_path: movie.backdrop_path,
-vote_average: movie.vote_average, media_type: movie.first_air_date ? 'tv' : 'movie', viewedAt: Date.now()
+vote_average: movie.vote_average, media_type: movie.first_air_date ? 'tv' : 'movie', viewedAt: Date.now(),
+season: season !== null ? season : (existing?.season ?? null),
+episode: episode !== null ? episode : (existing?.episode ?? null)
 };
 
 const updatedHistory = [dataObj, ...recentlyViewed.filter(m => m.id !== movie.id)].slice(0, 15);
@@ -2053,6 +2071,62 @@ return (
 })}
 </div>
 
+{/* MODAL RECHERCHE DÉDIÉE */}
+{showSearchModal && (
+<div className="fixed inset-0 z-[9200] bg-[#060608]/98 backdrop-blur-2xl flex flex-col animate-in fade-in duration-200" style={{paddingTop: 'env(safe-area-inset-top, 0px)'}}>
+    <div className="w-full max-w-3xl mx-auto px-4 md:px-0 pt-6 md:pt-10 shrink-0">
+        <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+                <SearchIcon className="w-5 h-5 text-[#a855f7]" /> {t.searchModalTitle}
+            </h2>
+            <button onClick={() => { setShowSearchModal(false); setSearchQuery(''); }} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors outline-none shadow-sm">
+                <X className="w-5 h-5" />
+            </button>
+        </div>
+        <div className="relative">
+            <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+            <input
+                type="text"
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.searchModalPlaceholder}
+                className="w-full bg-[#151520] border border-white/10 text-white text-sm pl-14 pr-5 py-4 rounded-2xl outline-none focus:border-[#a855f7] transition-colors shadow-inner"
+            />
+        </div>
+    </div>
+
+    <div className="flex-1 overflow-y-auto w-full max-w-3xl mx-auto px-4 md:px-0 pb-24 mt-6">
+        {!searchQuery && recentSearches.length > 0 && (
+            <div className="mb-6">
+                <div className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-3">{t.recentSearches}</div>
+                <div className="flex flex-col gap-1">
+                    {recentSearches.map(s => (
+                        <div key={s} className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-white/5 cursor-pointer group transition-colors" onClick={() => setSearchQuery(s)}>
+                            <div className="flex items-center gap-3"><History className="w-4 h-4 text-white/30" /><span className="text-sm text-white/80">{s}</span></div>
+                            <button onClick={(e) => removeRecentSearch(s, e)} className="text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity outline-none"><X className="w-3.5 h-3.5" /></button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
+
+        {searchQuery && (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 md:gap-4">
+                {searchResults.length > 0 ? searchResults.map(movie => {
+                    if(!movie.poster_path) return null;
+                    return (
+                    <div key={movie.id} className="relative cursor-pointer rounded-xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform" onClick={() => { setShowSearchModal(false); setSearchQuery(''); openModal(movie, 'info'); }}>
+                    <img className="object-cover w-full aspect-[2/3]" src={`${IMAGE_BASE_URL}${movie.poster_path}`} loading="lazy" alt="" />
+                    </div>
+                    );
+                }) : <p className="text-white/50 py-10 col-span-full text-center">{t.noResults}</p>}
+            </div>
+        )}
+    </div>
+</div>
+)}
+
 {/* HEADER */}
 {currentCategory !== 'party' && (
 <header className={`safe-top-header fixed top-0 w-full z-50 transition-all duration-500 ease-in-out flex items-center justify-between px-4 md:px-10 pb-3 md:pb-4 ${isScrolled ? 'bg-black/80 backdrop-blur-2xl border-b border-white/5 shadow-xl' : 'bg-gradient-to-b from-[#060608] via-[#060608]/90 to-transparent'}`}>
@@ -2078,28 +2152,10 @@ return (
 </div>
 
 <div className="flex items-center space-x-3 md:space-x-6">
-<div className="flex items-center relative">
-    <input
-    type="text"
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
-    onFocus={() => setShowRecentSearches(true)}
-    onBlur={() => setTimeout(() => setShowRecentSearches(false), 200)}
-    placeholder={t.searchPlaceholder}
-    className="bg-[#151520] border border-white/10 text-white text-xs px-4 py-2 rounded-full outline-none w-48 md:w-80 focus:border-[#a855f7] transition-colors shadow-inner"
-    />
-    {showRecentSearches && recentSearches.length > 0 && !searchQuery && (
-        <div className="absolute top-full left-0 w-full mt-2 bg-[#151520] border border-white/10 rounded-xl shadow-2xl py-2 z-50 animate-in slide-in-from-top-2 duration-200">
-            <div className="px-4 py-1.5 text-[9px] text-white/40 uppercase font-black tracking-widest mb-1">{t.recentSearches}</div>
-            {recentSearches.map(s => (
-                <div key={s} className="flex items-center justify-between px-4 py-2 hover:bg-white/5 cursor-pointer group" onClick={() => { setSearchQuery(s); setShowRecentSearches(false); }}>
-                    <div className="flex items-center gap-2"><History className="w-3 h-3 text-white/30" /><span className="text-xs text-white/80">{s}</span></div>
-                    <button onClick={(e) => removeRecentSearch(s, e)} className="text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity outline-none"><X className="w-3 h-3" /></button>
-                </div>
-            ))}
-        </div>
-    )}
-</div>
+<button onClick={() => setShowSearchModal(true)} className="flex items-center gap-2 bg-[#151520] border border-white/10 text-white/50 hover:text-white hover:border-[#a855f7]/50 text-xs px-4 py-2 rounded-full outline-none w-10 md:w-80 justify-center md:justify-start transition-colors shadow-inner">
+    <SearchIcon className="w-4 h-4 shrink-0 text-[#a855f7]" />
+    <span className="hidden md:inline truncate">{t.searchPlaceholder}</span>
+</button>
 
 <div className="flex items-center gap-3 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer shadow-md outline-none" onClick={() => setShowSettings(true)}>
 <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#151520] flex items-center justify-center overflow-hidden border border-[#a855f7]/40 shadow-inner shrink-0">
@@ -2139,7 +2195,7 @@ return (
 </nav>
 
 {/* CONTENU PRINCIPAL */}
-{currentCategory !== 'party' && searchQuery ? (
+{currentCategory !== 'party' && searchQuery && !showSearchModal ? (
 <div className="pt-24 px-4 md:px-14 pb-24 relative z-30 min-h-screen">
 <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest border-l-4 border-[#a855f7] pl-3">{t.searchResults}</h2>
 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-6">
@@ -2284,11 +2340,27 @@ return (
 {t.recentlyViewed} <History className="w-4 h-4 text-[#a855f7]" />
 </h2>
 <div className="flex overflow-y-hidden overflow-x-scroll py-2 md:py-4 space-x-3 md:space-x-5 no-scrollbar pr-8">
-{recentlyViewed.map(movie => (
-<div key={movie.id} className="relative flex-none cursor-pointer rounded-xl overflow-hidden shadow-lg border border-[#a855f7]/30 bg-[#151520] hover:scale-105 transition-transform" onClick={() => openModal(movie, 'info')}>
+{recentlyViewed.map(movie => {
+const isTvItem = movie.media_type === 'tv';
+const hasProgress = isTvItem && movie.season && movie.episode;
+const openItem = () => {
+    const movieForModal = isTvItem ? { ...movie, first_air_date: movie.first_air_date || '1900-01-01', resumeSeason: movie.season || 1, resumeEpisode: movie.episode || 1 } : movie;
+    openModal(movieForModal, hasProgress ? 'play' : 'info');
+};
+return (
+<div key={movie.id} className="relative flex-none cursor-pointer rounded-xl overflow-hidden shadow-lg border border-[#a855f7]/30 bg-[#151520] hover:scale-105 transition-transform" onClick={openItem}>
 <img className="object-cover w-[140px] md:w-[200px] h-[210px] md:h-[300px]" src={`${IMAGE_BASE_URL}${movie.poster_path}`} loading="lazy" draggable="false" alt=""/>
+{hasProgress && (
+<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-2 flex items-center justify-between">
+<span className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-widest bg-[#a855f7]/90 px-1.5 md:px-2 py-1 rounded shadow-sm">S{movie.season} E{movie.episode}</span>
+<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shrink-0 shadow-md">
+<Play className="w-3 h-3 fill-black text-black ml-0.5" />
 </div>
-))}
+</div>
+)}
+</div>
+);
+})}
 </div>
 </div>
 )}
@@ -2479,7 +2551,7 @@ return (
 <MovieModal
 movie={selectedMovie}
 mode={modalMode}
-onClose={() => { setSelectedMovie(null); }}
+onClose={() => { localStorage.removeItem('lm_now_playing'); setSelectedMovie(null); }}
 onSelectSimilar={(m) => { setSelectedMovie(m); setModalMode('info'); addToHistory(m); }}
 t={t}
 lang={langCode}
@@ -2499,6 +2571,7 @@ handleLeaveParty={handleLeaveParty}
 db={db}
 APP_ID={APP_ID}
 isPartyCategory={currentCategory === 'party'}
+addToHistory={addToHistory}
 />
 )}
 
@@ -2698,7 +2771,7 @@ return (
 }
 
 // --- MOVIE MODAL / THEATER MODE ---
-function MovieModal({ movie, mode, onClose, onSelectSimilar, t, lang, user, userPhoto, defaultUserName, watchlist, toggleWatchlist, showToast, handleCreateParty, partyId, partyData, handleSendPartyMessage, sendSystemAction, handlePartySyncAction, handleLeaveParty, db, APP_ID, isPartyCategory }) {
+function MovieModal({ movie, mode, onClose, onSelectSimilar, t, lang, user, userPhoto, defaultUserName, watchlist, toggleWatchlist, showToast, handleCreateParty, partyId, partyData, handleSendPartyMessage, sendSystemAction, handlePartySyncAction, handleLeaveParty, db, APP_ID, isPartyCategory, addToHistory }) {
 const [details, setDetails] = useState(null);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState(false);
@@ -2706,10 +2779,42 @@ const [modalMode, setModalMode] = useState(mode);
 
 const [showDisclaimer, setShowDisclaimer] = useState(false);
 const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
-const [selectedServer, setSelectedServer] = useState('vidsrc_me');
+const [selectedServer, setSelectedServer] = useState(() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem('lm_now_playing') || 'null');
+        if (saved && saved.id === movie.id && saved.server) return saved.server;
+    } catch(e) {}
+    return 'vidsrc_me';
+});
 const [pendingServer, setPendingServer] = useState('vidsrc_me');
 const [iframeLoading, setIframeLoading] = useState(true);
 const [kbOffset, setKbOffset] = useState(0);
+
+const isTV = movie.first_air_date !== undefined;
+const typeStr = isTV ? 'tv' : 'movie';
+const isAddedToWatchlist = watchlist.includes(movie.id);
+
+// Saison/épisode en cours : priorité à un "reprendre" explicite (venant de "Récemment consultés"),
+// sinon à la session sauvegardée localement (survit à un refresh), sinon S1E1 par défaut.
+const [selectedSeason, setSelectedSeason] = useState(() => {
+    if (movie.resumeSeason) return movie.resumeSeason;
+    try {
+        const saved = JSON.parse(localStorage.getItem('lm_now_playing') || 'null');
+        if (saved && saved.id === movie.id && saved.mediaType === typeStr && saved.season) return saved.season;
+    } catch(e) {}
+    return 1;
+});
+const [selectedEpisode, setSelectedEpisode] = useState(() => {
+    if (movie.resumeEpisode) return movie.resumeEpisode;
+    try {
+        const saved = JSON.parse(localStorage.getItem('lm_now_playing') || 'null');
+        if (saved && saved.id === movie.id && saved.mediaType === typeStr && saved.episode) return saved.episode;
+    } catch(e) {}
+    return 1;
+});
+const [seasonEpisodes, setSeasonEpisodes] = useState([]);
+const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+const [showEpisodesPanel, setShowEpisodesPanel] = useState(false);
 
 // Keyboard handling TikTok-style (mobile)
 React.useEffect(() => {
@@ -2751,10 +2856,6 @@ const [friendResults, setFriendResults] = useState([]);
 
 const [memberMenu, setMemberMenu] = useState(null);
 
-const isTV = movie.first_air_date !== undefined;
-const typeStr = isTV ? 'tv' : 'movie';
-const isAddedToWatchlist = watchlist.includes(movie.id);
-
 useEffect(() => {
 const fetchDetails = async () => {
 try {
@@ -2769,6 +2870,38 @@ setLoading(false);
 };
 fetchDetails();
 }, [movie, typeStr, lang]);
+
+// Récupère la liste des épisodes de la saison sélectionnée (séries uniquement)
+useEffect(() => {
+if (!isTV) return;
+let cancelled = false;
+setLoadingEpisodes(true);
+fetch(`${BASE_URL}/tv/${movie.id}/season/${selectedSeason}?api_key=${API_KEY}&language=${lang}`)
+    .then(r => r.json())
+    .then(d => { if (!cancelled) { setSeasonEpisodes(d.episodes || []); setLoadingEpisodes(false); } })
+    .catch(() => { if (!cancelled) setLoadingEpisodes(false); });
+return () => { cancelled = true; };
+}, [isTV, movie.id, selectedSeason, lang]);
+
+// Sauvegarde en continu la lecture en cours (film/épisode/serveur) pour qu'un refresh
+// de la page reprenne exactement où l'utilisateur en était, sans dépendre d'un salon.
+useEffect(() => {
+if (partyId) return; // dans un salon, la reprise est gérée par la logique de la watch party
+if (modalMode !== 'play') return;
+try {
+    localStorage.setItem('lm_now_playing', JSON.stringify({
+        id: movie.id,
+        mediaType: typeStr,
+        server: selectedServer,
+        season: isTV ? selectedSeason : null,
+        episode: isTV ? selectedEpisode : null,
+        ts: Date.now()
+    }));
+} catch(e) {}
+if (isTV && addToHistory) {
+    addToHistory(movie, selectedSeason, selectedEpisode);
+}
+}, [partyId, modalMode, selectedServer, selectedSeason, selectedEpisode, movie.id, typeStr, isTV]);
 
 // Force movie playback if entering watch party
 useEffect(() => {
@@ -3066,6 +3199,22 @@ setModalMode('play');
 }
 };
 
+// Lance directement un épisode précis (utilisé par le sélecteur de saisons/épisodes
+// et par "Reprendre" depuis la ligne "Récemment consultés" de l'accueil)
+const handlePlayEpisode = (season, episode) => {
+if (season !== selectedSeason) setSelectedEpisode(episode);
+setSelectedSeason(season);
+setSelectedEpisode(episode);
+setIframeLoading(true);
+setShowEpisodesPanel(false);
+if (!disclaimerAccepted && !partyId) {
+    setPendingServer(selectedServer);
+    setShowDisclaimer(true);
+} else {
+    setModalMode('play');
+}
+};
+
 const getFormatRuntime = () => {
 if(!details) return '';
 if (details.runtime) {
@@ -3094,17 +3243,17 @@ let iframeSrc = '';
 if (selectedServer === 'youtube_full' && getYoutubeFullKey()) {
 iframeSrc = `https://www.youtube.com/embed/${getYoutubeFullKey()}?autoplay=1`;
 } else if (selectedServer === 'vidsrc_me') {
-iframeSrc = `https://vidsrc.me/embed/${typeStr}?tmdb=${movie.id}`;
+iframeSrc = isTV ? `https://vidsrc.me/embed/tv?tmdb=${movie.id}&season=${selectedSeason}&episode=${selectedEpisode}` : `https://vidsrc.me/embed/movie?tmdb=${movie.id}`;
 } else if (selectedServer === 'superembed') {
-iframeSrc = `https://multiembed.mov/?video_id=${movie.id}&tmdb=1`;
+iframeSrc = isTV ? `https://multiembed.mov/?video_id=${movie.id}&tmdb=1&s=${selectedSeason}&e=${selectedEpisode}` : `https://multiembed.mov/?video_id=${movie.id}&tmdb=1`;
 } else if (selectedServer === 'vidlink') {
-iframeSrc = `https://vidlink.pro/${typeStr}/${movie.id}`;
+iframeSrc = isTV ? `https://vidlink.pro/tv/${movie.id}/${selectedSeason}/${selectedEpisode}` : `https://vidlink.pro/movie/${movie.id}`;
 } else if (selectedServer === 'vidsrc_to') {
-iframeSrc = `https://vidsrc.to/embed/${typeStr}/${movie.id}`;
+iframeSrc = isTV ? `https://vidsrc.to/embed/tv/${movie.id}/${selectedSeason}/${selectedEpisode}` : `https://vidsrc.to/embed/movie/${movie.id}`;
 } else if (selectedServer === 'vidsrc_pro') {
-iframeSrc = `https://vidsrc.pro/embed/${typeStr}/${movie.id}`;
+iframeSrc = isTV ? `https://vidsrc.pro/embed/tv/${movie.id}/${selectedSeason}/${selectedEpisode}` : `https://vidsrc.pro/embed/movie/${movie.id}`;
 } else if (selectedServer === 'smashy') {
-iframeSrc = `https://player.smashy.stream/${typeStr}/${movie.id}`;
+iframeSrc = isTV ? `https://player.smashy.stream/tv/${movie.id}?s=${selectedSeason}&e=${selectedEpisode}` : `https://player.smashy.stream/movie/${movie.id}`;
 } else if (selectedServer === 'archive') {
 const title = movie.title || movie.name;
 const suffix = lang === 'fr-FR' ? ' film complet' : ' full movie';
@@ -3690,6 +3839,64 @@ return (
     )}
     </div>
     </div>
+
+    {isTV && (
+    <div className="bg-black/40 p-5 md:p-6 rounded-2xl border border-white/5 shadow-inner max-w-5xl mx-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+            <span className="text-[11px] font-black text-white/70 uppercase tracking-widest flex items-center gap-2">
+                <Tv className="w-4 h-4 text-[#a855f7]" /> {t.seasonLabel} {selectedSeason} — {t.episodeLabel} {selectedEpisode}
+            </span>
+            {details?.seasons?.length > 1 && (
+                <div className="flex items-center bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 shadow-inner">
+                    <select
+                        value={selectedSeason}
+                        onChange={(e) => { setSelectedSeason(parseInt(e.target.value)); setSelectedEpisode(1); }}
+                        className="appearance-none bg-transparent text-white/90 font-bold text-[11px] uppercase tracking-widest outline-none cursor-pointer pr-4"
+                    >
+                        {details.seasons.filter(s => s.season_number > 0 || details.seasons.length === 1).map(s => (
+                            <option key={s.season_number} value={s.season_number} className="bg-[#151520] text-white">{t.seasonLabel} {s.season_number}</option>
+                        ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-white/40 -ml-3 pointer-events-none" />
+                </div>
+            )}
+        </div>
+
+        <div className="flex overflow-x-auto gap-3 no-scrollbar pb-2 cursor-grab active:cursor-grabbing">
+            {loadingEpisodes ? (
+                <div className="flex items-center justify-center w-full py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#a855f7]"></div>
+                </div>
+            ) : seasonEpisodes.length === 0 ? (
+                <p className="text-white/40 text-xs py-4">{t.noEpisodesFound}</p>
+            ) : seasonEpisodes.map(ep => {
+                const isCurrent = ep.episode_number === selectedEpisode;
+                return (
+                <div key={ep.id || ep.episode_number} onClick={() => handlePlayEpisode(selectedSeason, ep.episode_number)} className={`relative flex-none w-[220px] cursor-pointer rounded-xl overflow-hidden border transition-all ${isCurrent ? 'border-[#a855f7] shadow-[0_0_20px_rgba(168,85,247,0.3)]' : 'border-white/10 hover:border-white/30'}`}>
+                    <div className="w-full aspect-video bg-[#151520] relative">
+                        {ep.still_path ? (
+                            <img src={`${IMAGE_BASE_URL}${ep.still_path}`} className="w-full h-full object-cover" loading="lazy" draggable="false" alt="" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center"><Film className="w-6 h-6 text-white/20" /></div>
+                        )}
+                        {isCurrent && (
+                            <div className="absolute inset-0 bg-[#a855f7]/30 flex items-center justify-center backdrop-blur-[1px]">
+                                <div className="w-9 h-9 bg-[#a855f7] rounded-full flex items-center justify-center shadow-lg">
+                                    <Play className="w-4 h-4 fill-white text-white ml-0.5" />
+                                </div>
+                            </div>
+                        )}
+                        <span className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest">{t.episodeLabel} {ep.episode_number}</span>
+                    </div>
+                    <div className="p-2.5 bg-[#0a0a0f]">
+                        <p className="text-[11px] font-bold text-white truncate">{ep.name || `${t.episodeLabel} ${ep.episode_number}`}</p>
+                    </div>
+                </div>
+                );
+            })}
+        </div>
+    </div>
+    )}
     )}
 
     {(modalMode === 'info' || modalMode === 'trailer') && details && (
