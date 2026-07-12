@@ -59,8 +59,13 @@ if (ssoKey) {
     shouldUpdateUrl = true;
 }
 
-// 2. Capture de l'invitation Watch Party
-const partyParam = urlParams.get('party');
+// 2. Capture de l'invitation Watch Party (via ?party=CODE OU via une URL propre /movie/CODE)
+let partyParam = urlParams.get('party');
+if (!partyParam) {
+    // Ex: /movie/LVL-AB12CD -> "LVL-AB12CD" (accepte aussi un slash final)
+    const pathMatch = window.location.pathname.match(/\/movie\/([A-Za-z0-9\-]+)\/?$/i);
+    if (pathMatch) partyParam = pathMatch[1];
+}
 if (partyParam) {
     localStorage.setItem('pending_party_join', partyParam);
     urlParams.delete('party');
@@ -428,6 +433,7 @@ partyInfoPinText: "Chaque personne a son propre lecteur. Si vous voyez une publi
 inviteModalTitle: "Partager le Salon",
 inviteModalDesc: "Partagez ce code à vos amis pour qu'ils vous rejoignent. Important : vos amis doivent déjà avoir accès à l'application LevelMovie.",
 copyCodeBtn: "Copier le Code",
+shareLinkBtn: "Partager le lien",
 maintenanceTitle: "MAINTENANCE EN COURS",
 maintenanceDesc: "Nous mettons actuellement à jour nos serveurs pour vous offrir une meilleure expérience. LevelMovie sera de retour très vite !",
 searchFriendModalTitle: "Inviter des amis",
@@ -669,6 +675,7 @@ partyInfoPinText: "Everyone has their own player. If you see an ad, just close i
 inviteModalTitle: "Share Room",
 inviteModalDesc: "Share this code with your friends so they can join you. Note: your friends must already have access to the LevelMovie app.",
 copyCodeBtn: "Copy Code",
+shareLinkBtn: "Share Link",
 maintenanceTitle: "MAINTENANCE IN PROGRESS",
 maintenanceDesc: "We are currently updating our servers to give you a better experience. LevelMovie will be back shortly.",
 searchFriendModalTitle: "Invite Friends",
@@ -3423,12 +3430,30 @@ if (partyId && partyData) {
                         <p className="text-white/60 text-[11px] md:text-xs mb-6 leading-relaxed bg-white/5 p-4 rounded-xl border border-white/5 text-justify shadow-inner">
                             {t.inviteModalDesc}
                         </p>
+
+                        {/* Lien direct : ouvre l'appli et rejoint automatiquement le salon */}
+                        <div className="bg-black/50 border border-white/10 px-4 py-3 rounded-xl mb-3 shadow-inner overflow-hidden">
+                            <span className="text-white/70 font-mono text-[10px] md:text-[11px] break-all">{`${window.location.origin}/movie/${partyId}`}</span>
+                        </div>
+                        <button onClick={() => {
+                            const shareUrl = `${window.location.origin}/movie/${partyId}`;
+                            if (navigator.share) {
+                                navigator.share({ title: 'LevelMovie', text: t.inviteModalDesc, url: shareUrl }).catch(() => {});
+                            } else {
+                                copyToClipboardFallback(shareUrl);
+                                showToast(t.linkCopied, 'success');
+                            }
+                        }} className="w-full mb-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white rounded-xl text-[10px] font-bold uppercase shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-all outline-none flex items-center justify-center gap-2">
+                            <Share2 className="w-3.5 h-3.5" /> {t.shareLinkBtn}
+                        </button>
+
+                        {/* Code brut : pour ceux qui préfèrent le saisir manuellement dans l'appli */}
                         <div className="bg-black/50 border border-white/10 px-4 py-3.5 rounded-xl mb-6 shadow-inner flex items-center justify-center">
                             <span className="text-[#a855f7] font-mono font-black tracking-widest text-lg md:text-xl">{partyId}</span>
                         </div>
                         <div className="flex gap-3 flex-col sm:flex-row">
                             <button onClick={() => setShowInviteModal(false)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl text-[10px] font-bold uppercase transition-colors outline-none">{t.cancel}</button>
-                            <button onClick={() => { copyToClipboardFallback(partyId); showToast(t.linkCopied, 'success'); setShowInviteModal(false); }} className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white rounded-xl text-[10px] font-bold uppercase shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-all outline-none">
+                            <button onClick={() => { copyToClipboardFallback(partyId); showToast(t.linkCopied, 'success'); setShowInviteModal(false); }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase shadow-sm transition-all outline-none">
                                 {t.copyCodeBtn}
                             </button>
                         </div>
