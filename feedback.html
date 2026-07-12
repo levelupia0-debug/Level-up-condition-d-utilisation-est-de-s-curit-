@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avis Clients - LevelUp</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
@@ -76,35 +74,32 @@
 </head>
 <body class="text-zinc-900 selection:bg-zinc-200 selection:text-black pb-16">
 
-    <!-- Navbar Minimaliste -->
     <nav class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-between items-center relative z-10">
         <div class="font-black text-2xl tracking-tighter text-black flex items-center gap-1">
             LEVELUP <span class="w-2 h-2 bg-black rounded-full inline-block"></span>
         </div>
-        <button id="btn-open-auth" class="bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center gap-2">
-            <i class="fas fa-user-check text-zinc-400"></i>
-            <span id="auth-btn-text">Vérifier mon compte</span>
+        <button id="btn-logout-global" class="hidden bg-white border border-zinc-200 text-zinc-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center gap-2">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Se déconnecter</span>
         </button>
     </nav>
 
-    <!-- Notification Toast style Mac OS -->
     <div id="toast" class="fixed top-6 right-6 bg-zinc-900 text-white px-5 py-3.5 rounded-xl shadow-xl transform transition-all duration-300 translate-y-[-150%] opacity-0 z-50 flex items-center gap-3 border border-zinc-700">
         <i id="toast-icon" class="fas fa-check-circle text-white text-lg"></i>
         <span id="toast-message" class="font-medium text-sm">Action réussie !</span>
     </div>
 
-    <!-- Modal d'Authentification LevelUp -->
     <div id="auth-modal" class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="glass-modal w-full max-w-md rounded-2xl p-8 shadow-2xl transform scale-95 transition-transform duration-300" id="auth-modal-content">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-black tracking-tight">Vérification de compte</h3>
+                <h3 class="text-xl font-bold text-black tracking-tight">Vérification par Clé</h3>
                 <button id="btn-close-auth" class="text-zinc-400 hover:text-black transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             
             <p class="text-zinc-500 text-sm mb-8 leading-relaxed">
-                Connectez-vous avec votre clé privée <strong class="text-black">LevelUp</strong> pour certifier votre identité. Ceci débloquera le badge d'utilisateur vérifié pour votre avis.
+                Connectez-vous avec votre clé privée <strong class="text-black">LevelUp</strong> pour certifier votre identité.
             </p>
             
             <form id="auth-form" class="space-y-5">
@@ -123,47 +118,63 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         
-        <!-- En-tête Pro -->
         <div class="mb-14 max-w-3xl animate-review">
             <h1 class="text-4xl md:text-5xl font-extrabold text-black tracking-tight mb-4">
                 Retours clients.
             </h1>
             <p class="text-lg text-zinc-500 leading-relaxed">
-                La transparence est notre priorité. Consultez les avis de notre communauté ou partagez publiquement votre expérience avec LevelUp.
+                La transparence est notre priorité. Consultez les avis de notre communauté ou connectez-vous pour partager publiquement votre expérience avec LevelUp.
             </p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
-            <!-- Colonne de Gauche : Formulaire (Sticky) -->
             <div class="lg:col-span-4 lg:sticky lg:top-8 animate-review" style="animation-delay: 0.1s;">
                 <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-7 relative overflow-hidden">
                     
-                    <!-- Bannière Utilisateur Connecté -->
-                    <div id="user-badge" class="hidden absolute top-0 left-0 w-full bg-black text-white py-2.5 px-7 flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-                        <i class="fas fa-shield-check text-green-400"></i> Mode Vérifié : <span id="user-display-name" class="text-zinc-300"></span>
-                    </div>
-
-                    <h2 class="text-lg font-bold mb-6 text-black tracking-tight" id="form-title" style="margin-top: 10px;">
+                    <h2 class="text-lg font-bold mb-4 text-black tracking-tight" id="form-title">
                         Écrire un avis
                     </h2>
                     
-                    <!-- Message Avis déjà publié -->
-                    <div id="already-posted-msg" class="hidden text-center py-8">
-                        <i class="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
-                        <h3 class="font-bold text-lg text-black">Avis déjà publié</h3>
-                        <p class="text-zinc-500 text-sm mt-2">Vous avez déjà partagé votre expérience. Merci pour votre retour !</p>
+                    <div id="login-section" class="py-4">
+                        <p class="text-sm text-zinc-500 mb-5 leading-relaxed">Vous devez être identifié pour laisser un avis. L'anonymat n'est pas autorisé.</p>
+                        
+                        <div class="space-y-3">
+                            <button id="btn-google-login" class="w-full bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 px-4 py-3 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-3">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                </svg>
+                                <span>Continuer avec Google</span>
+                            </button>
+
+                            <div class="relative flex items-center py-2">
+                                <div class="flex-grow border-t border-zinc-200"></div>
+                                <span class="flex-shrink-0 mx-4 text-zinc-400 text-xs uppercase font-bold tracking-wider">OU</span>
+                                <div class="flex-grow border-t border-zinc-200"></div>
+                            </div>
+
+                            <button id="btn-key-login" class="w-full bg-black border border-black text-white hover:bg-zinc-800 px-4 py-3 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-3">
+                                <i class="fas fa-key text-yellow-400"></i>
+                                <span>Utiliser une Clé LevelUp</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <form id="review-form" class="space-y-5">
-                        <!-- Nom -->
-                        <div id="name-container">
-                            <label for="name" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Pseudonyme</label>
-                            <input type="text" id="name" required placeholder="Votre nom" 
-                                class="w-full px-4 py-2.5 rounded-lg border border-zinc-300 bg-zinc-50 focus:bg-white focus:border-black focus:ring-1 focus:ring-black outline-none transition-all text-sm">
-                        </div>
+                    <div id="user-badge" class="hidden absolute top-0 left-0 w-full text-white py-2.5 px-7 flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                        <i class="fas fa-shield-check text-green-400"></i> <span id="auth-method-text">Mode Vérifié</span> : <span id="user-display-name" class="text-zinc-100 truncate"></span>
+                    </div>
 
-                        <!-- Note -->
+                    <div id="already-posted-msg" class="hidden text-center py-8 mt-6">
+                        <i class="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
+                        <h3 class="font-bold text-lg text-black">Avis déjà publié</h3>
+                        <p class="text-zinc-500 text-sm mt-2">Vous avez déjà partagé votre expérience avec ce compte. Merci !</p>
+                    </div>
+
+                    <form id="review-form" class="space-y-5 hidden mt-8">
+                        
                         <div>
                             <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Note globale</label>
                             <div class="star-rating flex gap-1.5 text-2xl text-zinc-200 cursor-pointer" id="form-stars">
@@ -176,25 +187,21 @@
                             <p id="rating-error" class="text-red-500 text-xs mt-2 hidden font-medium">Une note est requise.</p>
                         </div>
 
-                        <!-- Commentaire -->
                         <div>
                             <label for="comment" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Commentaire</label>
                             <textarea id="comment" required rows="4" placeholder="Détaillez votre expérience..." 
                                 class="w-full px-4 py-3 rounded-lg border border-zinc-300 bg-zinc-50 focus:bg-white focus:border-black focus:ring-1 focus:ring-black outline-none transition-all resize-none text-sm"></textarea>
                         </div>
 
-                        <!-- Bouton Submit -->
-                        <button type="submit" id="btn-submit-review" disabled
-                            class="w-full bg-zinc-200 text-zinc-500 font-semibold py-3 px-6 rounded-lg transition-all flex justify-center items-center gap-2 cursor-not-allowed text-sm mt-2">
-                            <span>Initialisation système...</span>
+                        <button type="submit" id="btn-submit-review"
+                            class="w-full bg-black hover:bg-zinc-800 text-white font-semibold py-3 px-6 rounded-lg shadow-sm transition-all flex justify-center items-center gap-2 text-sm mt-4">
+                            <span>Publier mon avis</span>
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- Colonne de Droite : Liste des Avis -->
             <div class="lg:col-span-8 space-y-4" id="reviews-container">
-                <!-- Skeleton Loading Pro -->
                 <div class="bg-white rounded-2xl p-7 border border-zinc-200 animate-pulse">
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex gap-4">
@@ -216,15 +223,15 @@
         </div>
     </div>
 
-    <!-- Scripts Firebase (Modules) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Ajout de GoogleAuthProvider, signInWithPopup et signOut
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, collectionGroup, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-            authDomain: "levelup-ia.firebaseapp.com",
+            authDomain: "levelup-ecosystem.com",
             databaseURL: "https://levelup-ia-default-rtdb.firebaseio.com",
             projectId: "levelup-ia",
             storageBucket: "levelup-ia.firebasestorage.app",
@@ -237,82 +244,148 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
         
-        let currentUser = null;
-        let verifiedUserData = null;
+        // État de l'utilisateur
+        let currentAuthMethod = null; // 'google' ou 'key'
+        let currentUserData = null; // Stocke { name: string, uid: string, isVerified: boolean, photoURL?: string }
+        
         let currentRating = 0;
         let unsubscribeReviews = null;
-        let globalReviews = []; // Stockage global pour vérifier les doublons
+        let globalReviews = []; 
 
         // DOM Elements
         const formStars = document.querySelectorAll('#form-stars i');
         const reviewsContainer = document.getElementById('reviews-container');
+        
+        // Sections de la carte
+        const loginSection = document.getElementById('login-section');
         const reviewForm = document.getElementById('review-form');
+        const alreadyPostedMsg = document.getElementById('already-posted-msg');
+        
         const btnSubmitReview = document.getElementById('btn-submit-review');
         const toast = document.getElementById('toast');
         const toastMsg = document.getElementById('toast-message');
         const toastIcon = document.getElementById('toast-icon');
 
+        // Boutons de connexion & Modal
+        const btnGoogleLogin = document.getElementById('btn-google-login');
+        const btnKeyLogin = document.getElementById('btn-key-login');
+        const btnLogoutGlobal = document.getElementById('btn-logout-global');
+        
         const authModal = document.getElementById('auth-modal');
         const authModalContent = document.getElementById('auth-modal-content');
-        const btnOpenAuth = document.getElementById('btn-open-auth');
         const btnCloseAuth = document.getElementById('btn-close-auth');
         const authForm = document.getElementById('auth-form');
         const inputKey = document.getElementById('levelup-key');
         const authError = document.getElementById('auth-error');
         const btnSubmitAuth = document.getElementById('btn-submit-auth');
 
-        // Couleurs très sobres pour les avatars anonymes
-        const avatarColors = ['bg-zinc-800', 'bg-zinc-700', 'bg-zinc-600', 'bg-black'];
-
         /* =========================================
-           1. GESTION AUTH
+           1. GESTION DE L'AFFICHAGE ET ACCÈS
            ========================================= */
-        
-        async function initAuth() {
-            try { await signInAnonymously(auth); } 
-            catch (error) { showToast("Erreur serveur", false); }
+
+        // Écoute les changements globaux d'état Google
+        onAuthStateChanged(auth, (user) => {
+            // Ne se déclenche utilement que si on passe par Google dans cette logique
+            if (user && currentAuthMethod !== 'key') {
+                currentAuthMethod = 'google';
+                currentUserData = {
+                    uid: user.uid,
+                    name: user.displayName || 'Utilisateur Google',
+                    photoURL: user.photoURL,
+                    isVerified: false // Google est considéré comme standard, la clé = vérifié (VIP)
+                };
+                updateUIState();
+            }
+            // Toujours charger les avis pour affichage
+            loadReviews(); 
+        });
+
+        function updateUIState() {
+            if (!currentUserData) {
+                // Déconnecté
+                loginSection.classList.remove('hidden');
+                reviewForm.classList.add('hidden');
+                alreadyPostedMsg.classList.add('hidden');
+                btnLogoutGlobal.classList.add('hidden');
+                document.getElementById('user-badge').classList.add('hidden');
+                return;
+            }
+
+            // Connecté, on affiche le bouton de déconnexion globale
+            btnLogoutGlobal.classList.remove('hidden');
+            
+            // Mise à jour de la bannière
+            const badge = document.getElementById('user-badge');
+            badge.classList.remove('hidden');
+            document.getElementById('user-display-name').textContent = currentUserData.name;
+            
+            if (currentAuthMethod === 'key') {
+                badge.className = "absolute top-0 left-0 w-full bg-black text-white py-2.5 px-7 flex items-center gap-2 text-xs font-bold uppercase tracking-wider";
+                document.getElementById('auth-method-text').textContent = "Vérifié (Clé)";
+            } else {
+                badge.className = "absolute top-0 left-0 w-full bg-blue-600 text-white py-2.5 px-7 flex items-center gap-2 text-xs font-bold uppercase tracking-wider";
+                document.getElementById('auth-method-text').textContent = "Connecté via Google";
+            }
+
+            // Cacher la section de login
+            loginSection.classList.add('hidden');
+            
+            evaluateFormAccess();
         }
 
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                enableForm();
-                loadReviews();
+        // Vérifie si l'utilisateur a déjà posté
+        function evaluateFormAccess() {
+            if (!currentUserData) return;
+            
+            // On cherche un avis posté avec cet UID précis (pour Google) ou ce nom précis (pour Clé sans UID propre)
+            let blocked = globalReviews.some(r => {
+                if (currentAuthMethod === 'google') return r.userId === currentUserData.uid;
+                if (currentAuthMethod === 'key') return r.name === currentUserData.name && r.isVerified === true;
+                return false;
+            });
+            
+            if (blocked) {
+                reviewForm.classList.add('hidden');
+                alreadyPostedMsg.classList.remove('hidden');
+            } else {
+                reviewForm.classList.remove('hidden');
+                alreadyPostedMsg.classList.add('hidden');
+            }
+        }
+
+        /* =========================================
+           2. CONNEXIONS (GOOGLE & CLÉ)
+           ========================================= */
+
+        // Google
+        btnGoogleLogin.addEventListener('click', async () => {
+            try {
+                const originalHtml = btnGoogleLogin.innerHTML;
+                btnGoogleLogin.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> Connexion...';
+                await signInWithPopup(auth, googleProvider);
+                btnGoogleLogin.innerHTML = originalHtml;
+                showToast(`Bienvenue, ${auth.currentUser.displayName}`);
+            } catch (error) {
+                console.error(error);
+                btnGoogleLogin.innerHTML = `<i class="fab fa-google text-red-500"></i> Continuer avec Google`;
+                showToast("Erreur lors de la connexion Google", false);
             }
         });
 
-        // Fonction pour vérifier si l'utilisateur a le droit de poster
-        function evaluateFormAccess() {
-            if (!currentUser) return;
-            
-            let blocked = false;
-            
-            if (verifiedUserData) {
-                // Si vérifié : On regarde dans la BDD si ce nom vérifié a déjà posté
-                blocked = globalReviews.some(r => r.isVerified && r.name === verifiedUserData.name);
-            } else {
-                // Si anonyme : On regarde le LocalStorage ET la BDD avec l'UID anonyme
-                const hasLocal = localStorage.getItem('levelup_review_posted') === 'true';
-                const hasDBAuth = globalReviews.some(r => r.userId === currentUser.uid && !r.isVerified);
-                blocked = hasLocal || hasDBAuth;
+        // Déconnexion (Gère Google et Key)
+        btnLogoutGlobal.addEventListener('click', async () => {
+            if (currentAuthMethod === 'google') {
+                await signOut(auth);
             }
-            
-            if (blocked) {
-                document.getElementById('review-form').classList.add('hidden');
-                document.getElementById('already-posted-msg').classList.remove('hidden');
-                document.getElementById('form-title').classList.add('hidden');
-            } else {
-                document.getElementById('review-form').classList.remove('hidden');
-                document.getElementById('already-posted-msg').classList.add('hidden');
-                document.getElementById('form-title').classList.remove('hidden');
-            }
-        }
+            currentAuthMethod = null;
+            currentUserData = null;
+            updateUIState();
+            showToast("Vous êtes déconnecté");
+        });
 
-        /* =========================================
-           2. LOGIQUE CLÉ LEVELUP (PRO)
-           ========================================= */
-
+        // Modal Clé
         const toggleModal = (show) => {
             if (show) {
                 authModal.classList.remove('hidden');
@@ -327,23 +400,7 @@
             }
         };
 
-        btnOpenAuth.addEventListener('click', () => {
-            if (verifiedUserData) {
-                // Déconnexion
-                verifiedUserData = null;
-                btnOpenAuth.innerHTML = '<i class="fas fa-user-check text-zinc-400"></i><span id="auth-btn-text">Vérifier mon compte</span>';
-                btnOpenAuth.className = "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center gap-2";
-                document.getElementById('user-badge').classList.add('hidden');
-                document.getElementById('form-title').style.marginTop = '0px';
-                document.getElementById('name-container').style.display = 'block';
-                document.getElementById('name').value = '';
-                evaluateFormAccess(); // Mettre à jour l'accès au formulaire
-                showToast("Passage en mode public", true);
-            } else {
-                toggleModal(true);
-            }
-        });
-        
+        btnKeyLogin.addEventListener('click', () => toggleModal(true));
         btnCloseAuth.addEventListener('click', () => toggleModal(false));
 
         inputKey.addEventListener('input', function(e) {
@@ -389,25 +446,20 @@
                 }
 
                 if (isValid && userData.banned !== true && userData.disabled !== true) {
-                    verifiedUserData = {
+                    // Si la personne était connectée sur Google, on déconnecte de Google par sécurité
+                    if (auth.currentUser) await signOut(auth);
+
+                    currentAuthMethod = 'key';
+                    currentUserData = {
+                        uid: 'key_' + key, // Fake UID pour les clés
                         name: userData.displayName || userData.name || 'Admin',
-                        role: userData.role || 'user'
+                        isVerified: true
                     };
                     
                     toggleModal(false);
-                    showToast(`Accès autorisé : ${verifiedUserData.name}`);
-                    
-                    btnOpenAuth.innerHTML = '<i class="fas fa-check text-white"></i><span>Vérifié</span>';
-                    btnOpenAuth.className = "bg-black border border-black text-white hover:bg-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center gap-2";
-                    
-                    document.getElementById('user-badge').classList.remove('hidden');
-                    document.getElementById('form-title').style.marginTop = '24px';
-                    document.getElementById('user-display-name').textContent = verifiedUserData.name;
-                    document.getElementById('name-container').style.display = 'none';
-                    document.getElementById('name').value = verifiedUserData.name;
                     inputKey.value = '';
-                    
-                    evaluateFormAccess(); // Mettre à jour l'accès une fois vérifié
+                    showToast(`Accès autorisé : ${currentUserData.name}`);
+                    updateUIState();
                 } else {
                     authError.textContent = "Clé refusée ou expirée.";
                     authError.classList.remove('hidden');
@@ -425,16 +477,11 @@
            3. GESTION DES AVIS 
            ========================================= */
 
-        function enableForm() {
-            btnSubmitReview.disabled = false;
-            btnSubmitReview.className = "w-full bg-black hover:bg-zinc-800 text-white font-semibold py-3 px-6 rounded-lg transition-all flex justify-center items-center gap-2 text-sm mt-4 shadow-sm";
-            btnSubmitReview.innerHTML = '<span>Publier publiquement</span>';
-        }
-
         function loadReviews() {
-            if (!currentUser) return;
             const reviewsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'reviews');
             
+            if (unsubscribeReviews) unsubscribeReviews();
+
             unsubscribeReviews = onSnapshot(reviewsRef, (snapshot) => {
                 const reviews = [];
                 snapshot.forEach((doc) => reviews.push({ id: doc.id, ...doc.data() }));
@@ -445,8 +492,8 @@
                     return timeB - timeA;
                 });
                 
-                globalReviews = reviews; // Stocker pour la vérification des doublons
-                evaluateFormAccess(); // Exécuter la vérification
+                globalReviews = reviews; 
+                evaluateFormAccess(); 
                 renderReviews(reviews);
             });
         }
@@ -458,8 +505,8 @@
                 reviewsContainer.innerHTML = `
                     <div class="bg-white rounded-2xl p-10 text-center border border-zinc-200 border-dashed">
                         <i class="fas fa-inbox text-3xl text-zinc-300 mb-3"></i>
-                        <h3 class="text-sm font-bold text-zinc-600">Aucune donnée trouvée</h3>
-                        <p class="text-xs text-zinc-400 mt-1">La base de données des avis est vide.</p>
+                        <h3 class="text-sm font-bold text-zinc-600">Aucun avis</h3>
+                        <p class="text-xs text-zinc-400 mt-1">Soyez le premier à partager votre expérience !</p>
                     </div>`;
                 return;
             }
@@ -469,35 +516,44 @@
                 card.className = "bg-white rounded-2xl p-7 border border-zinc-200 shadow-sm animate-review transition hover:shadow-md";
                 card.style.animationDelay = `${Math.min(index * 0.05, 0.5)}s`;
 
-                // Système d'étoiles strict (Or)
+                // Système d'étoiles
                 let starsHtml = '';
                 for (let i = 1; i <= 5; i++) {
                     starsHtml += `<i class="fas fa-star text-sm ${i <= review.rating ? 'text-yellow-400' : 'text-zinc-100'}"></i>`;
                 }
 
-                const isVerified = review.isVerified === true;
-                const initial = (review.name || '?').charAt(0).toUpperCase();
-                
                 let dateStr = "À l'instant";
                 if (review.createdAt && review.createdAt.toDate) {
                     dateStr = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(review.createdAt.toDate());
                 }
 
-                // UI Explicite Anonyme vs Vérifié
-                const statusBadge = isVerified 
-                    ? `<div class="bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1.5"><i class="fas fa-check-circle text-green-400"></i> Vérifié</div>`
-                    : `<div class="bg-zinc-100 text-zinc-500 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1.5"><i class="fas fa-user-secret"></i> Anonyme</div>`;
+                // UI selon le type de connexion
+                let statusBadge = "";
+                let avatarHTML = "";
 
-                const avatarStyle = isVerified 
-                    ? `bg-black text-white` 
-                    : `${review.avatarColor || 'bg-zinc-200'} text-white`;
+                if (review.isVerified) {
+                    // Badge Clé
+                    statusBadge = `<div class="bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1.5"><i class="fas fa-check-circle text-green-400"></i> Vérifié</div>`;
+                    avatarHTML = `<div class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm">${(review.name || '?').charAt(0).toUpperCase()}</div>`;
+                } else if (review.authMethod === 'google') {
+                    // Badge Google
+                    statusBadge = `<div class="bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1.5"><i class="fab fa-google"></i> Google</div>`;
+                    
+                    if (review.photoURL) {
+                        avatarHTML = `<img src="${review.photoURL}" alt="${review.name}" class="w-10 h-10 rounded-full object-cover">`;
+                    } else {
+                        avatarHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">${(review.name || '?').charAt(0).toUpperCase()}</div>`;
+                    }
+                } else {
+                    // Fallback (anciens avis anonymes)
+                    statusBadge = `<div class="bg-zinc-100 text-zinc-500 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1.5"><i class="fas fa-history"></i> Archive</div>`;
+                    avatarHTML = `<div class="w-10 h-10 rounded-full bg-zinc-400 text-white flex items-center justify-center font-bold text-sm">${(review.name || '?').charAt(0).toUpperCase()}</div>`;
+                }
 
                 card.innerHTML = `
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full ${avatarStyle} flex items-center justify-center font-bold text-sm">
-                                ${initial}
-                            </div>
+                            ${avatarHTML}
                             <div class="flex flex-col items-start gap-1">
                                 <div class="flex items-center gap-2">
                                     <h3 class="font-bold text-black text-sm">
@@ -522,7 +578,7 @@
 
         reviewForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!currentUser) return;
+            if (!currentUserData) return;
 
             const ratingError = document.getElementById('rating-error');
             if (currentRating === 0) {
@@ -530,11 +586,7 @@
                 return;
             }
 
-            const nameInput = document.getElementById('name').value.trim();
             const commentInput = document.getElementById('comment').value.trim();
-
-            const isVerified = verifiedUserData !== null;
-            const finalName = isVerified ? verifiedUserData.name : nameInput;
 
             const originalBtnHtml = btnSubmitReview.innerHTML;
             btnSubmitReview.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i>';
@@ -544,30 +596,25 @@
                 const reviewsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'reviews');
                 
                 await addDoc(reviewsRef, {
-                    name: finalName,
+                    name: currentUserData.name,
                     rating: currentRating,
                     comment: commentInput,
-                    isVerified: isVerified,
-                    userId: currentUser.uid,
-                    avatarColor: avatarColors[Math.floor(Math.random() * avatarColors.length)],
+                    isVerified: currentUserData.isVerified,
+                    authMethod: currentAuthMethod,
+                    photoURL: currentUserData.photoURL || null,
+                    userId: currentUserData.uid,
                     createdAt: serverTimestamp()
                 });
 
-                if (!isVerified) reviewForm.reset();
-                else document.getElementById('comment').value = '';
-                
+                document.getElementById('comment').value = '';
                 currentRating = 0;
                 updateStarsVisual(0);
-                
-                // Si anonyme, enregistrer dans le navigateur pour bloquer immédiatement
-                if (!isVerified) {
-                    localStorage.setItem('levelup_review_posted', 'true');
-                }
                 
                 showToast("Avis enregistré avec succès.");
 
             } catch (error) {
-                showToast("Erreur système.", false);
+                showToast("Erreur lors de la publication.", false);
+                console.error(error);
             } finally {
                 btnSubmitReview.innerHTML = originalBtnHtml;
                 btnSubmitReview.disabled = false;
@@ -615,8 +662,9 @@
         function escapeHtml(unsafe) {
             return (unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
-
-        initAuth();
+        
+        // Initialiser l'état (Chargement des anciens avis quand même)
+        updateUIState();
 
     </script>
 </body>
