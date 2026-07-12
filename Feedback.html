@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avis Clients - LevelUp</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        zinc: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            300: '#d4d4d8',
+                            400: '#a1a1aa',
+                            500: '#71717a',
+                            600: '#52525b',
+                            700: '#3f3f46',
+                            800: '#27272a',
+                            900: '#18181b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Import d'une police très clean (Inter) */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafafa;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-review { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow { animation: spin 2s linear infinite; }
+
+        /* Scrollbar pro */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+        /* Interactions étoiles */
+        .star-rating i { transition: color 0.15s ease, transform 0.1s ease; }
+        .star-rating i:hover { transform: scale(1.15); }
+        
+        /* Modal pro */
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(228, 228, 231, 0.8);
+        }
+    </style>
+</head>
+<body class="text-zinc-900 selection:bg-zinc-200 selection:text-black pb-16">
+
+    <!-- Navbar Minimaliste -->
+    <nav class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-between items-center relative z-10">
+        <div class="font-black text-2xl tracking-tighter text-black flex items-center gap-1">
+            LEVELUP <span class="w-2 h-2 bg-black rounded-full inline-block"></span>
+        </div>
+        <button id="btn-open-auth" class="bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center gap-2">
+            <i class="fas fa-user-check text-zinc-400"></i>
+            <span id="auth-btn-text">Vérifier mon compte</span>
+        </button>
+    </nav>
+
+    <!-- Notification Toast style Mac OS -->
+    <div id="toast" class="fixed top-6 right-6 bg-zinc-900 text-white px-5 py-3.5 rounded-xl shadow-xl transform transition-all duration-300 translate-y-[-150%] opacity-0 z-50 flex items-center gap-3 border border-zinc-700">
+        <i id="toast-icon" class="fas fa-check-circle text-white text-lg"></i>
+        <span id="toast-message" class="font-medium text-sm">Action réussie !</span>
+    </div>
+
+    <!-- Modal d'Authentification LevelUp -->
+    <div id="auth-modal" class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-modal w-full max-w-md rounded-2xl p-8 shadow-2xl transform scale-95 transition-transform duration-300" id="auth-modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-black tracking-tight">Vérification de compte</h3>
+                <button id="btn-close-auth" class="text-zinc-400 hover:text-black transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <p class="text-zinc-500 text-sm mb-8 leading-relaxed">
+                Connectez-vous avec votre clé privée <strong class="text-black">LevelUp</strong> pour certifier votre identité. Ceci débloquera le badge d'utilisateur vérifié pour votre avis.
+            </p>
+            
+            <form id="auth-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Clé Sécurité</label>
+                    <input type="text" id="levelup-key" placeholder="LVL-XXXXX-XXXXX" class="w-full px-4 py-3 rounded-lg border border-zinc-300 bg-zinc-50 focus:bg-white focus:border-black focus:ring-1 focus:ring-black outline-none uppercase font-mono tracking-widest transition-all text-sm">
+                </div>
+                <div id="auth-error" class="text-red-600 text-sm hidden font-medium bg-red-50 p-3 rounded-lg border border-red-100"></div>
+                
+                <button type="submit" id="btn-submit-auth" class="w-full bg-black hover:bg-zinc-800 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all flex justify-center items-center gap-2 text-sm">
+                    <span>Valider la clé</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        
+        <!-- En-tête Pro -->
+        <div class="mb-14 max-w-3xl animate-review">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-black tracking-tight mb-4">
+                Retours clients.
+            </h1>
+            <p class="text-lg text-zinc-500 leading-relaxed">
+                La transparence est notre priorité. Consultez les avis de notre communauté ou partagez publiquement votre expérience avec LevelUp.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            
+            <!-- Colonne de Gauche : Formulaire (Sticky) -->
+            <div class="lg:col-span-4 lg:sticky lg:top-8 animate-review" style="animation-delay: 0.1s;">
+                <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-7 relative overflow-hidden">
+                    
+                    <!-- Bannière Utilisateur Connecté -->
+                    <div id="user-badge" class="hidden absolute top-0 left-0 w-full bg-black text-white py-2.5 px-7 flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                        <i class="fas fa-shield-check text-green-400"></i> Mode Vérifié : <span id="user-display-name" class="text-zinc-300"></span>
+                    </div>
+
+                    <h2 class="text-lg font-bold mb-6 text-black tracking-tight" id="form-title" style="margin-top: 10px;">
+                        Écrire un avis
+                    </h2>
+                    
+                    <!-- Message Avis déjà publié -->
+                    <div id="already-posted-msg" class="hidden text-center py-8">
+                        <i class="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
+                        <h3 class="font-bold text-lg text-black">Avis déjà publié</h3>
+                        <p class="text-zinc-500 text-sm mt-2">Vous avez déjà partagé votre expérience. Merci pour votre retour !</p>
+                    </div>
+
+                    <form id="review-form" class="space-y-5">
+                        <!-- Nom -->
+                        <div id="name-container">
+                            <label for="name" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Pseudonyme</label>
+                            <input type="text" id="name" required placeholder="Votre nom" 
+                                class="w-full px-4 py-2.5 rounded-lg border border-zinc-300 bg-zinc-50 focus:bg-white focus:border-black focus:ring-1 focus:ring-black outline-none transition-all text-sm">
+                        </div>
+
+                        <!-- Note -->
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Note globale</label>
+                            <div class="star-rating flex gap-1.5 text-2xl text-zinc-200 cursor-pointer" id="form-stars">
+                                <i class="fas fa-star" data-value="1"></i>
+                                <i class="fas fa-star" data-value="2"></i>
+                                <i class="fas fa-star" data-value="3"></i>
+                                <i class="fas fa-star" data-value="4"></i>
+                                <i class="fas fa-star" data-value="5"></i>
+                            </div>
+                            <p id="rating-error" class="text-red-500 text-xs mt-2 hidden font-medium">Une note est requise.</p>
+                        </div>
+
+                        <!-- Commentaire -->
+                        <div>
+                            <label for="comment" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Commentaire</label>
+                            <textarea id="comment" required rows="4" placeholder="Détaillez votre expérience..." 
+                                class="w-full px-4 py-3 rounded-lg border border-zinc-300 bg-zinc-50 focus:bg-white focus:border-black focus:ring-1 focus:ring-black outline-none transition-all resize-none text-sm"></textarea>
+                        </div>
+
+                        <!-- Bouton Submit -->
+                        <button type="submit" id="btn-submit-review" disabled
+                            class="w-full bg-zinc-200 text-zinc-500 font-semibold py-3 px-6 rounded-lg transition-all flex justify-center items-center gap-2 cursor-not-allowed text-sm mt-2">
+                            <span>Initialisation système...</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Colonne de Droite : Liste des Avis -->
+            <div class="lg:col-span-8 space-y-4" id="reviews-container">
+                <!-- Skeleton Loading Pro -->
+                <div class="bg-white rounded-2xl p-7 border border-zinc-200 animate-pulse">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 bg-zinc-200 rounded-full"></div>
+                            <div class="space-y-2">
+                                <div class="h-3 bg-zinc-200 rounded w-24"></div>
+                                <div class="h-2 bg-zinc-100 rounded w-16"></div>
+                            </div>
+                        </div>
+                        <div class="h-4 bg-zinc-100 rounded w-20"></div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-3 bg-zinc-100 rounded w-full"></div>
+                        <div class="h-3 bg-zinc-100 rounded w-5/6"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Firebase (Modules) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, collectionGroup, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
+            authDomain: "levelup-ia.firebaseapp.com",
+            databaseURL: "https://levelup-ia-default-rtdb.firebaseio.com",
+            projectId: "levelup-ia",
+            storageBucket: "levelup-ia.firebasestorage.app",
+            messagingSenderId: "229420004282",
+            appId: "1:229420004282:web:6735f059a947f0936ae383",
+            measurementId: "G-MSRDY2574K"
+        };
+
+        const APP_ID = 'levelup-ecosystem';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let currentUser = null;
+        let verifiedUserData = null;
+        let currentRating = 0;
+        let unsubscribeReviews = null;
+        let globalReviews = []; // Stockage global pour vérifier les doublons
+
+        // DOM Elements
+        const formStars = document.querySelectorAll('#form-stars i');
+        const reviewsContainer = document.getElementById('reviews-container');
+        const reviewForm = document.getElementById('review-form');
+        const btnSubmitReview = document.getElementById('btn-submit-review');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-message');
+        const toastIcon = document.getElementById('toast-icon');
+
+        const authModal = document.getElementById('auth-modal');
+        const authModalContent = document.getElementById('auth-modal-content');
+        const btnOpenAuth = document.getElementById('btn-open-auth');
+        const btnCloseAuth = document.getElementById('btn-close-auth');
+        const authForm = document.getElementById('auth-form');
+        const inputKey = document.getElementById('levelup-key');
+        const authError = document.getElementById('auth-error');
+        const btnSubmitAuth = document.getElementById('btn-submit-auth');
+
+        // Couleurs très sobres pour les avatars anonymes
+        const avatarColors = ['bg-zinc-800', 'bg-zinc-700', 'bg-zinc-600', 'bg-black'];
+
+        /* =========================================
+           1. GESTION AUTH
+           ========================================= */
+        
+        async function initAuth() {
+            try { await signInAnonymously(auth); } 
+            catch (error) { showToast("Erreur serveur", false); }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                enableForm();
+                loadReviews();
+            }
+        });
+
+        // Fonction pour vérifier si l'utilisateur a le droit de poster
+        function evaluateFormAccess() {
+            if (!currentUser) return;
+            
+            let blocked = false;
+            
+            if (verifiedUserData) {
+                // Si vérifié : On regarde dans la BDD si ce nom vérifié a déjà posté
+                blocked = globalReviews.some(r => r.isVerified && r.name === verifiedUserData.name);
+            } else {
+                // Si anonyme : On regarde le LocalStorage ET la BDD avec l'UID anonyme
+                const hasLocal = localStorage.getItem('levelup_review_posted') === 'true';
+                const hasDBAuth = globalReviews.some(r => r.userId === currentUser.uid && !r.isVerified);
+                blocked = hasLocal || hasDBAuth;
+            }
+            
+            if (blocked) {
+                document.getElementById('review-form').classList.add('hidden');
+                document.getElementById('already-posted-msg').classList.remove('hidden');
+                document.getElementById('form-title').classList.add('hidden');
+            } else {
+                document.getElementById('review-form').classList.remove('hidden');
+                document.getElementById('already-posted-msg').classList.add('hidden');
+                document.getElementById('form-title').classList.remove('hidden');
+            }
+        }
+
+        /* =========================================
+           2. LOGIQUE CLÉ LEVELUP (PRO)
+           ========================================= */
+
+        const toggleModal = (show) => {
+            if (show) {
+                authModal.classList.remove('hidden');
+                setTimeout(() => {
+                    authModal.classList.remove('opacity-0');
+                    authModalContent.classList.remove('scale-95');
+                }, 10);
+            } else {
+                authModal.classList.add('opacity-0');
+                authModalContent.classList.add('scale-95');
+                setTimeout(() => authModal.classList.add('hidden'), 300);
+            }
+        };
+
+        btnOpenAuth.addEventListener('click', () => {
+            if (verifiedUserData) {
+                // Déconnexion
+                verifiedUserData = null;
+                btnOpenAuth.innerHTML = '<i class="fas fa-user-check text-zinc-400"></i><span id="auth-btn-text">Vérifier mon compte</span>';
+                btnOpenAuth.className = "bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center gap-2";
+                document.getElementById('user-badge').classList.add('hidden');
+                document.getElementById('form-title').style.marginTop = '0px';
+                document.getElementById('name-container').style.display = 'block';
+                document.getElementById('name').value = '';
+                evaluateFormAccess(); // Mettre à jour l'accès au formulaire
+                showToast("Passage en mode public", true);
+            } else {
+                toggleModal(true);
+            }
+        });
+        
+        btnCloseAuth.addEventListener('click', () => toggleModal(false));
+
+        inputKey.addEventListener('input', function(e) {
+            let val = e.target.value.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
+            if (!val.startsWith('LVL-') && val.length > 0) {
+                val = 'LVL-' + val.replace('LVL', '').replace('-', '');
+            }
+            e.target.value = val;
+        });
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const key = inputKey.value.trim().toUpperCase();
+            
+            if (!/^LVL-[A-Z0-9]{5}-[A-Z0-9]{5}$/i.test(key)) {
+                authError.textContent = "Format invalide (ex: LVL-XXXXX-XXXXX)";
+                authError.classList.remove('hidden');
+                return;
+            }
+
+            authError.classList.add('hidden');
+            const originalBtnHtml = btnSubmitAuth.innerHTML;
+            btnSubmitAuth.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i>';
+            btnSubmitAuth.disabled = true;
+
+            try {
+                let isValid = false;
+                let userData = null;
+
+                const q1 = query(collectionGroup(db, 'security'), where('apiKey', '==', key));
+                const snap1 = await getDocs(q1);
+
+                if (!snap1.empty) {
+                    isValid = true;
+                    userData = snap1.docs[0].data();
+                } else {
+                    const q2 = query(collectionGroup(db, 'security'), where('key', '==', key));
+                    const snap2 = await getDocs(q2);
+                    if (!snap2.empty) {
+                        isValid = true;
+                        userData = snap2.docs[0].data();
+                    }
+                }
+
+                if (isValid && userData.banned !== true && userData.disabled !== true) {
+                    verifiedUserData = {
+                        name: userData.displayName || userData.name || 'Admin',
+                        role: userData.role || 'user'
+                    };
+                    
+                    toggleModal(false);
+                    showToast(`Accès autorisé : ${verifiedUserData.name}`);
+                    
+                    btnOpenAuth.innerHTML = '<i class="fas fa-check text-white"></i><span>Vérifié</span>';
+                    btnOpenAuth.className = "bg-black border border-black text-white hover:bg-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all flex items-center gap-2";
+                    
+                    document.getElementById('user-badge').classList.remove('hidden');
+                    document.getElementById('form-title').style.marginTop = '24px';
+                    document.getElementById('user-display-name').textContent = verifiedUserData.name;
+                    document.getElementById('name-container').style.display = 'none';
+                    document.getElementById('name').value = verifiedUserData.name;
+                    inputKey.value = '';
+                    
+                    evaluateFormAccess(); // Mettre à jour l'accès une fois vérifié
+                } else {
+                    authError.textContent = "Clé refusée ou expirée.";
+                    authError.classList.remove('hidden');
+                }
+            } catch (err) {
+                authError.textContent = "Erreur réseau Firestore.";
+                authError.classList.remove('hidden');
+            } finally {
+                btnSubmitAuth.innerHTML = originalBtnHtml;
+                btnSubmitAuth.disabled = false;
+            }
+        });
+
+        /* =========================================
+           3. GESTION DES AVIS 
+           ========================================= */
+
+        function enableForm() {
+            btnSubmitReview.disabled = false;
+            btnSubmitReview.className = "w-full bg-black hover:bg-zinc-800 text-white font-semibold py-3 px-6 rounded-lg transition-all flex justify-center items-center gap-2 text-sm mt-4 shadow-sm";
+            btnSubmitReview.innerHTML = '<span>Publier publiquement</span>';
+        }
+
+        function loadReviews() {
+            if (!currentUser) return;
+            const reviewsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'reviews');
+            
+            unsubscribeReviews = onSnapshot(reviewsRef, (snapshot) => {
+                const reviews = [];
+                snapshot.forEach((doc) => reviews.push({ id: doc.id, ...doc.data() }));
+
+                reviews.sort((a, b) => {
+                    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+                    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+                    return timeB - timeA;
+                });
+                
+                globalReviews = reviews; // Stocker pour la vérification des doublons
+                evaluateFormAccess(); // Exécuter la vérification
+                renderReviews(reviews);
+            });
+        }
+
+        function renderReviews(reviews) {
+            reviewsContainer.innerHTML = '';
+            
+            if (reviews.length === 0) {
+                reviewsContainer.innerHTML = `
+                    <div class="bg-white rounded-2xl p-10 text-center border border-zinc-200 border-dashed">
+                        <i class="fas fa-inbox text-3xl text-zinc-300 mb-3"></i>
+                        <h3 class="text-sm font-bold text-zinc-600">Aucune donnée trouvée</h3>
+                        <p class="text-xs text-zinc-400 mt-1">La base de données des avis est vide.</p>
+                    </div>`;
+                return;
+            }
+
+            reviews.forEach((review, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl p-7 border border-zinc-200 shadow-sm animate-review transition hover:shadow-md";
+                card.style.animationDelay = `${Math.min(index * 0.05, 0.5)}s`;
+
+                // Système d'étoiles strict (Or)
+                let starsHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    starsHtml += `<i class="fas fa-star text-sm ${i <= review.rating ? 'text-yellow-400' : 'text-zinc-100'}"></i>`;
+                }
+
+                const isVerified = review.isVerified === true;
+                const initial = (review.name || '?').charAt(0).toUpperCase();
+                
+                let dateStr = "À l'instant";
+                if (review.createdAt && review.createdAt.toDate) {
+                    dateStr = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(review.createdAt.toDate());
+                }
+
+                // UI Explicite Anonyme vs Vérifié
+                const statusBadge = isVerified 
+                    ? `<div class="bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1.5"><i class="fas fa-check-circle text-green-400"></i> Vérifié</div>`
+                    : `<div class="bg-zinc-100 text-zinc-500 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1.5"><i class="fas fa-user-secret"></i> Anonyme</div>`;
+
+                const avatarStyle = isVerified 
+                    ? `bg-black text-white` 
+                    : `${review.avatarColor || 'bg-zinc-200'} text-white`;
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full ${avatarStyle} flex items-center justify-center font-bold text-sm">
+                                ${initial}
+                            </div>
+                            <div class="flex flex-col items-start gap-1">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-bold text-black text-sm">
+                                        ${escapeHtml(review.name)}
+                                    </h3>
+                                    ${statusBadge}
+                                </div>
+                                <p class="text-xs text-zinc-400">${dateStr}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-0.5">
+                            ${starsHtml}
+                        </div>
+                    </div>
+                    <p class="text-zinc-600 text-sm leading-relaxed">
+                        ${escapeHtml(review.comment)}
+                    </p>
+                `;
+                reviewsContainer.appendChild(card);
+            });
+        }
+
+        reviewForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const ratingError = document.getElementById('rating-error');
+            if (currentRating === 0) {
+                ratingError.classList.remove('hidden');
+                return;
+            }
+
+            const nameInput = document.getElementById('name').value.trim();
+            const commentInput = document.getElementById('comment').value.trim();
+
+            const isVerified = verifiedUserData !== null;
+            const finalName = isVerified ? verifiedUserData.name : nameInput;
+
+            const originalBtnHtml = btnSubmitReview.innerHTML;
+            btnSubmitReview.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i>';
+            btnSubmitReview.disabled = true;
+
+            try {
+                const reviewsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'reviews');
+                
+                await addDoc(reviewsRef, {
+                    name: finalName,
+                    rating: currentRating,
+                    comment: commentInput,
+                    isVerified: isVerified,
+                    userId: currentUser.uid,
+                    avatarColor: avatarColors[Math.floor(Math.random() * avatarColors.length)],
+                    createdAt: serverTimestamp()
+                });
+
+                if (!isVerified) reviewForm.reset();
+                else document.getElementById('comment').value = '';
+                
+                currentRating = 0;
+                updateStarsVisual(0);
+                
+                // Si anonyme, enregistrer dans le navigateur pour bloquer immédiatement
+                if (!isVerified) {
+                    localStorage.setItem('levelup_review_posted', 'true');
+                }
+                
+                showToast("Avis enregistré avec succès.");
+
+            } catch (error) {
+                showToast("Erreur système.", false);
+            } finally {
+                btnSubmitReview.innerHTML = originalBtnHtml;
+                btnSubmitReview.disabled = false;
+            }
+        });
+
+        /* =========================================
+           4. UTILITAIRES 
+           ========================================= */
+
+        formStars.forEach(star => {
+            star.addEventListener('mouseover', (e) => updateStarsVisual(parseInt(e.currentTarget.getAttribute('data-value'))));
+            star.addEventListener('mouseout', () => updateStarsVisual(currentRating));
+            star.addEventListener('click', (e) => {
+                currentRating = parseInt(e.currentTarget.getAttribute('data-value'));
+                updateStarsVisual(currentRating);
+                document.getElementById('rating-error').classList.add('hidden');
+            });
+        });
+
+        function updateStarsVisual(value) {
+            formStars.forEach(star => {
+                const starValue = parseInt(star.getAttribute('data-value'));
+                if (starValue <= value) {
+                    star.classList.replace('text-zinc-200', 'text-yellow-400');
+                } else {
+                    star.classList.replace('text-yellow-400', 'text-zinc-200');
+                }
+            });
+        }
+
+        function showToast(message, isSuccess = true) {
+            toastMsg.textContent = message;
+            toastIcon.className = `fas ${isSuccess ? 'fa-check-circle text-green-400' : 'fa-times-circle text-red-500'} text-lg`;
+            
+            toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-150%]', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(unsafe) {
+            return (unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        initAuth();
+
+    </script>
+</body>
+</html>
