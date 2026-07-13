@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { email, type, name, ip, country, city, device, date, tools, count,
-            partyCode, movieTitle, inviterName, maskedKey, generatedAt,
+            partyCode, partyLink, movieTitle, inviterName, maskedKey, generatedAt,
             title, message, subject, html, code } = body || {};
 
     if (!email || !type) return res.status(400).json({ error: "L'email et le type sont requis" });
@@ -153,6 +153,9 @@ export default async function handler(req, res) {
       const wPartyCode   = partyCode   || '------';
       const wMovieTitle  = movieTitle  || 'Watch Party';
       const wInviterName = inviterName || displayName;
+      // Lien direct vers le salon : ouvre l'appli et rejoint automatiquement (voir /movie/:code dans vercel.json).
+      // Si aucun lien n'est fourni par le client, on retombe sur la page /movie générique.
+      const wPartyLink   = partyLink   || 'https://levelup-ecosystem.com/movie';
       emailSubject = `🎬 ${wInviterName} t'invite à regarder ${wMovieTitle} ensemble !`;
       contentHtml = `
         <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #1e3a5f;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
@@ -161,15 +164,14 @@ export default async function handler(req, res) {
             <div style="width:60px;height:60px;border-radius:18px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px"><span style="font-size:28px">🎬</span></div>
             <h1 class="title-mobile fluid-text" style="font-size:24px;font-weight:800;margin:0 0 12px;color:#fff">Invitation Watch Party</h1>
             <p class="fluid-text" style="font-size:14px;color:#a1a1aa;line-height:1.6;margin:0 0 24px;max-width:90%"><strong style="color:#fff">${wInviterName}</strong> t'invite à regarder <strong style="color:#fff">${wMovieTitle}</strong> ensemble sur LevelMovie !</p>
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1a1a24;border-radius:16px;margin-bottom:28px;width:100%;border:1px solid rgba(59,130,246,.2)">
-              <tr><td align="center" style="padding:28px 20px">
-                <p style="font-size:11px;color:#60a5fa;text-transform:uppercase;font-weight:800;letter-spacing:1px;margin:0 0 14px">Code d'accès Watch Party</p>
-                <div style="background:#0f1929;border:1px solid rgba(59,130,246,.35);border-radius:14px;padding:22px 20px;font-family:monospace;font-size:2rem;font-weight:900;color:#3b82f6;letter-spacing:.15em">${wPartyCode}</div>
-                <p style="font-size:12px;color:#52525b;margin:14px 0 0">Ce code est valable pour cette session uniquement.</p>
+            <a href="${wPartyLink}" class="btn-mobile" style="display:inline-block;background-color:#3b82f6;color:#fff;text-decoration:none;padding:18px 40px;border-radius:50px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:2px;border:1px solid #60a5fa;margin-bottom:28px">Rejoindre la Watch Party</a>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1a1a24;border-radius:16px;margin-bottom:12px;width:100%;border:1px solid rgba(59,130,246,.2)">
+              <tr><td align="center" style="padding:22px 20px">
+                <p style="font-size:10px;color:#60a5fa;text-transform:uppercase;font-weight:800;letter-spacing:1px;margin:0 0 10px">Ou entre ce code manuellement dans l'appli</p>
+                <div style="background:#0f1929;border:1px solid rgba(59,130,246,.35);border-radius:14px;padding:16px 20px;font-family:monospace;font-size:1.5rem;font-weight:900;color:#3b82f6;letter-spacing:.15em">${wPartyCode}</div>
               </td></tr>
             </table>
-            <a href="https://levelup-ecosystem.com" class="btn-mobile" style="display:inline-block;background-color:#3b82f6;color:#fff;text-decoration:none;padding:18px 40px;border-radius:50px;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:2px;border:1px solid #60a5fa">Rejoindre la Watch Party</a>
-            <p style="font-size:11px;color:#3f3f46;margin-top:24px">Si tu ne connais pas ${wInviterName}, ignore cet email.</p>
+            <p style="font-size:11px;color:#3f3f46;margin-top:12px">Si tu ne connais pas ${wInviterName}, ignore cet email.</p>
           </td></tr>
         </table>`;
 
