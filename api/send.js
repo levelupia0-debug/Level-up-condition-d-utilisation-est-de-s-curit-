@@ -155,7 +155,7 @@ export default async function handler(req, res) {
       const wInviterName = inviterName || displayName;
       // Lien direct vers le salon : ouvre l'appli et rejoint automatiquement (voir /movie/:code dans vercel.json).
       // Si aucun lien n'est fourni par le client, on retombe sur la page /movie générique.
-      const wPartyLink   = partyLink   || 'https://levelup-ecosystem.com/movie';
+      const wPartyLink   = partyLink   || 'https://levelup-ecosystem.com/salon';
       emailSubject = `🎬 ${wInviterName} t'invite à regarder ${wMovieTitle} ensemble !`;
       contentHtml = `
         <table class="responsive-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#111116;border-radius:24px;border:1px solid #1e3a5f;box-shadow:0 20px 40px rgba(0,0,0,0.8);overflow:hidden;margin:0 auto">
