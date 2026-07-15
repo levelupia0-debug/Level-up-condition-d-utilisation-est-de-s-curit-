@@ -91,7 +91,7 @@ ArrowDown, ArrowUp, Eye, EyeOff, Send, Mail, Search as SearchIcon, Reply, UserPl
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collectionGroup, getDocs, doc, setDoc, getDoc, deleteDoc, collection, onSnapshot, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { getFirestore, collectionGroup, getDocs, doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
 // --- NOUVEAU LOGO LEVEL MOVIE PRO ---
 const LevelMovieLogo = ({ className = "w-6 h-6", color = "currentColor" }) => (
@@ -192,6 +192,17 @@ const censorText = (text) => {
         censored = censored.replace(regex, (match) => '*'.repeat(match.length));
     });
     return censored;
+};
+
+// --- FILTRE PARENTAL RÉEL ---
+// Genres TMDB considérés comme explicites/matures : Horreur (27), Guerre (10752), Crime (80).
+const MATURE_GENRE_IDS = [27, 10752, 80];
+const filterMatureContent = (items, parentalFilterActive) => {
+    if (!parentalFilterActive || !Array.isArray(items)) return items;
+    return items.filter(item => {
+        const genreIds = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
+        return !genreIds.some(id => MATURE_GENRE_IDS.includes(id));
+    });
 };
 
 const i18n = {
@@ -407,6 +418,8 @@ bannedModalTitle: "VOUS ÊTES BANNI",
 bannedModalDesc: "Vous avez été définitivement exclu de ce salon par la modération.",
 bannedOkBtn: "Quitter la salle",
 sysBanned: "a banni",
+sysEpisode: "a changé l'épisode :",
+hostOnlyControl: "Hôte/Mod uniquement",
 minimizeRoom: "Réduire",
 leaveNoModWarning: "Vous êtes l'hôte ! Choisissez un modérateur avant de quitter, sinon le salon n'aura plus de chef.",
 closeAnyway: "Fermer quand même",
@@ -654,6 +667,8 @@ bannedModalTitle: "YOU ARE BANNED",
 bannedModalDesc: "You have been permanently excluded from this room by moderation.",
 bannedOkBtn: "Leave Room",
 sysBanned: "banned",
+sysEpisode: "changed the episode to:",
+hostOnlyControl: "Host/Mod only",
 minimizeRoom: "Minimize",
 leaveNoModWarning: "You are the host! Assign a moderator before leaving, or the room will have no leader.",
 closeAnyway: "Close anyway",
@@ -917,6 +932,10 @@ const joinPartyByCode = async (codeStr, currentUser, currentName, currentPhoto) 
 
             const res = await fetch(`${BASE_URL}/${d.mediaType}/${d.movieId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
             const movieData = await res.json();
+            if (d.mediaType === 'tv') {
+                movieData.resumeSeason = d.season || 1;
+                movieData.resumeEpisode = d.episode || 1;
+            }
             setCurrentCategory('party');
             setPartyId(cleanCode);
             localStorage.setItem('active_party_id', cleanCode);
@@ -941,6 +960,10 @@ const joinPartyByCode = async (codeStr, currentUser, currentName, currentPhoto) 
 const rejoinActiveParty = async (pData) => {
     const res = await fetch(`${BASE_URL}/${pData.mediaType}/${pData.movieId}?api_key=${API_KEY}&language=${langCode}`);
     const movieData = await res.json();
+    if (pData.mediaType === 'tv') {
+        movieData.resumeSeason = pData.season || 1;
+        movieData.resumeEpisode = pData.episode || 1;
+    }
     openModal(movieData, 'play');
 };
 
@@ -1018,6 +1041,10 @@ if (prefSnap.exists() && prefSnap.data().activePartyId) {
                         setCurrentCategory('party');
                         const res = await fetch(`${BASE_URL}/${d.mediaType}/${d.movieId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
                         const movieData = await res.json();
+                        if (d.mediaType === 'tv') {
+                            movieData.resumeSeason = d.season || 1;
+                            movieData.resumeEpisode = d.episode || 1;
+                        }
                         openModal(movieData, 'play');
                     }
                 }
@@ -1414,6 +1441,7 @@ const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&language=${
 const data = await res.json();
 let results = data.results?.filter(m => m.media_type === 'movie' || m.media_type === 'tv') || [];
 results = results.filter(m => m.adult !== true);
+results = filterMatureContent(results, parentalFilter);
 setSearchResults(results);
 addRecentSearch(searchQuery);
 } catch (e) {}
@@ -1434,6 +1462,7 @@ const res = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&language=${
 const data = await res.json();
 let results = data.results || [];
 results = results.filter(m => m.adult !== true);
+results = filterMatureContent(results, parentalFilter);
 setPartySearchResults(results);
 } catch (e) {}
 }, 500);
@@ -1495,6 +1524,7 @@ const newPartyId = 'LVL-' + Math.random().toString(36).substring(2, 8).toUpperCa
 const cleanRoomName = censorText((roomName || "").trim() || `Salon de ${defaultUserName}`);
 
 try {
+const isTvShow = movie.first_air_date !== undefined;
 await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', newPartyId), {
 hostUid: user.uid,
 mods: [],
@@ -1502,7 +1532,9 @@ modInvites: [],
 banned: [],
 muted: [],
 movieId: movie.id,
-mediaType: movie.first_air_date ? 'tv' : 'movie',
+mediaType: isTvShow ? 'tv' : 'movie',
+season: isTvShow ? (movie.resumeSeason || 1) : null,
+episode: isTvShow ? (movie.resumeEpisode || 1) : null,
 title: movie.title || movie.name,
 roomName: cleanRoomName,
 status: 'idle',
@@ -2668,6 +2700,8 @@ const combined = [...(data1.results||[]), ...(data2.results||[])];
 
 let valids = combined.filter(m => m.backdrop_path);
 valids = valids.filter(m => m.adult !== true);
+const filtered = filterMatureContent(valids, parentalFilter);
+if (filtered.length > 0) valids = filtered;
 
 setHero(valids[Math.floor(Math.random() * valids.length)]);
 } catch(e) {}
@@ -2741,6 +2775,7 @@ let uniqueMovies = Array.from(new Set(combined.map(a => a.id)))
 .filter(m => m && m.poster_path);
 
 uniqueMovies = uniqueMovies.filter(m => m.adult !== true);
+uniqueMovies = filterMatureContent(uniqueMovies, parentalFilter);
 
 if (shuffle) {
     uniqueMovies = uniqueMovies.sort(() => Math.random() - 0.5);
@@ -2842,6 +2877,8 @@ const [kbOffset, setKbOffset] = useState(0);
 const isTV = movie.first_air_date !== undefined;
 const typeStr = isTV ? 'tv' : 'movie';
 const isAddedToWatchlist = watchlist.includes(movie.id);
+const iAmHost = !!(partyId && partyData && user?.uid === partyData.hostUid);
+const iAmMod = !!(partyId && partyData && partyData.mods?.includes(user?.uid));
 
 // Saison/épisode en cours : priorité à un "reprendre" explicite (venant de "Récemment consultés"),
 // sinon à la session sauvegardée localement (survit à un refresh), sinon S1E1 par défaut.
@@ -2974,6 +3011,13 @@ if (isTV && addToHistory) {
 }
 }, [partyId, modalMode, selectedServer, selectedSeason, selectedEpisode, movie.id, typeStr, isTV]);
 
+// En salon : tout le monde suit l'épisode choisi par l'hôte/modérateur (stocké dans le salon Firestore)
+useEffect(() => {
+if (!partyId || !partyData || !isTV) return;
+if (partyData.season && partyData.season !== selectedSeason) setSelectedSeason(partyData.season);
+if (partyData.episode && partyData.episode !== selectedEpisode) { setSelectedEpisode(partyData.episode); setIframeLoading(true); }
+}, [partyId, partyData?.season, partyData?.episode, isTV]);
+
 // Force movie playback if entering watch party
 useEffect(() => {
 if (mode === 'play' || partyId) {
@@ -3086,7 +3130,7 @@ const handleInviteUser = async (friend) => {
         } catch(_) {}
 
         // Envoi via Resend — type WATCH_PARTY
-        const partyLink = `${window.location.origin}/movie/${partyId}`;
+        const partyLink = `${window.location.origin}/salon/${partyId}`;
         await fetch(emailEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3275,12 +3319,26 @@ setModalMode('play');
 // Lance directement un épisode précis (utilisé par le sélecteur de saisons/épisodes
 // et par "Reprendre" depuis la ligne "Récemment consultés" de l'accueil)
 const handlePlayEpisode = (season, episode) => {
+if (partyId) {
+    // En salon, seul l'hôte ou un modérateur peut changer l'épisode pour tout le monde.
+    if (!(iAmHost || iAmMod)) return;
+    setIframeLoading(true);
+    setShowEpisodesPanel(false);
+    setSelectedSeason(season);
+    setSelectedEpisode(episode);
+    updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), {
+        season: season,
+        episode: episode,
+        messages: arrayUnion({ isSystem: true, action: 'EPISODE', name: defaultUserName, photo: userPhoto || "", season, episode, uid: user.uid, time: Date.now() })
+    }).catch(() => {});
+    return;
+}
 if (season !== selectedSeason) setSelectedEpisode(episode);
 setSelectedSeason(season);
 setSelectedEpisode(episode);
 setIframeLoading(true);
 setShowEpisodesPanel(false);
-if (!disclaimerAccepted && !partyId) {
+if (!disclaimerAccepted) {
     setPendingServer(selectedServer);
     setShowDisclaimer(true);
 } else {
@@ -3400,9 +3458,6 @@ if (partyId && partyData) {
         );
     }
 
-    const iAmHost = user?.uid === partyData.hostUid;
-    const iAmMod = partyData.mods?.includes(user?.uid);
-
     return (
         <div className={isMinimized ? "fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[8000] w-[220px] md:w-[320px] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.7)] border border-white/10 bg-black animate-in fade-in zoom-in duration-300" : "fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden"} style={isMinimized ? {} : {paddingTop: 'env(safe-area-inset-top, 0px)'}}>
 
@@ -3499,18 +3554,18 @@ if (partyId && partyData) {
 
                         {/* Lien direct : ouvre l'appli et rejoint automatiquement le salon */}
                         <div className="bg-black/50 border border-white/10 px-4 py-3 rounded-xl mb-3 shadow-inner overflow-hidden">
-                            <span className="text-white/70 font-mono text-[10px] md:text-[11px] break-all">{`${window.location.origin}/movie/${partyId}`}</span>
+                            <span className="text-white/70 font-mono text-[10px] md:text-[11px] break-all">{`${window.location.origin}/salon/${partyId}`}</span>
                         </div>
                         <div className="flex gap-2 mb-4">
                             <button onClick={() => {
-                                const shareUrl = `${window.location.origin}/movie/${partyId}`;
+                                const shareUrl = `${window.location.origin}/salon/${partyId}`;
                                 copyToClipboardFallback(shareUrl);
                                 showToast(t.linkCopied, 'success');
                             }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase shadow-sm transition-all outline-none flex items-center justify-center gap-2">
                                 <Copy className="w-3.5 h-3.5" /> {t.copyLinkBtnRoom}
                             </button>
                             <button onClick={() => {
-                                const shareUrl = `${window.location.origin}/movie/${partyId}`;
+                                const shareUrl = `${window.location.origin}/salon/${partyId}`;
                                 if (navigator.share) {
                                     navigator.share({ title: 'LevelMovie', text: t.inviteModalDesc, url: shareUrl }).catch(() => {});
                                 } else {
@@ -3701,6 +3756,49 @@ if (partyId && partyData) {
                             <button onClick={() => sendSystemAction('ADS')} className="bg-white/5 hover:bg-white/10 text-yellow-500 p-2 rounded-lg transition-colors outline-none" title="Je vois une pub"><ShieldCheck className="w-3.5 h-3.5"/></button>
                         </div>
 
+                        {/* Sélecteur d'épisode (visible par tous, modifiable par l'hôte/mod uniquement) */}
+                        {isTV && (
+                        <div className="relative shrink-0">
+                            <button onClick={() => setShowEpisodesPanel(!showEpisodesPanel)} className="flex items-center gap-1.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl px-2.5 py-2 shadow-inner transition-colors outline-none">
+                                <Tv className="w-3 h-3 text-[#a855f7] shrink-0" />
+                                <span className="text-white/80 font-bold text-[9px] md:text-[10px] uppercase tracking-widest whitespace-nowrap">S{selectedSeason} E{selectedEpisode}</span>
+                                <ChevronDown className="w-3 h-3 text-white/40" />
+                            </button>
+                            {showEpisodesPanel && (
+                                <div className="absolute bottom-full mb-2 right-0 w-[280px] md:w-[320px] max-h-[360px] overflow-y-auto bg-[#0f0f17] border border-white/10 rounded-2xl shadow-2xl p-3 z-[200]">
+                                    <div className="flex items-center justify-between mb-2 px-1">
+                                        <span className="text-[9px] font-black text-white/50 uppercase tracking-widest">{t.seasonLabel} {selectedSeason}</span>
+                                        {!(iAmHost || iAmMod) && <span className="text-[8px] text-white/30 flex items-center gap-1"><Lock className="w-2.5 h-2.5" /> {t.hostOnlyControl}</span>}
+                                    </div>
+                                    {details?.seasons?.length > 1 && (iAmHost || iAmMod) && (
+                                        <select
+                                            value={selectedSeason}
+                                            onChange={(e) => setSelectedSeason(parseInt(e.target.value))}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 mb-2 text-white/90 text-[10px] font-bold outline-none"
+                                        >
+                                            {details.seasons.filter(s => s.season_number > 0 || details.seasons.length === 1).map(s => (
+                                                <option key={s.season_number} value={s.season_number} className="bg-[#151520]">{t.seasonLabel} {s.season_number}</option>
+                                            ))}
+                                        </select>
+                                    )}
+                                    {loadingEpisodes ? (
+                                        <div className="flex items-center justify-center py-6"><div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#a855f7]"></div></div>
+                                    ) : seasonEpisodes.map(ep => {
+                                        const isCurrent = ep.episode_number === selectedEpisode;
+                                        const canChange = iAmHost || iAmMod;
+                                        return (
+                                            <div key={ep.id || ep.episode_number} onClick={() => canChange && handlePlayEpisode(selectedSeason, ep.episode_number)} className={`flex items-center gap-2 p-1.5 rounded-lg mb-1 ${canChange ? 'cursor-pointer hover:bg-white/5' : 'cursor-default'} ${isCurrent ? 'bg-[#a855f7]/10 border border-[#a855f7]/40' : ''}`}>
+                                                <span className={`w-5 text-center text-[10px] font-black ${isCurrent ? 'text-[#a855f7]' : 'text-white/30'}`}>{ep.episode_number}</span>
+                                                <span className={`flex-1 truncate text-[10.5px] ${isCurrent ? 'text-white font-bold' : 'text-white/60'}`}>{ep.name || `${t.episodeLabel} ${ep.episode_number}`}</span>
+                                                {isCurrent && <Play className="w-3 h-3 text-[#a855f7] fill-[#a855f7] shrink-0" />}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                        )}
+
                         {/* MENU DÉROULANT DES SERVEURS (Design Pro) */}
                         <div className="relative flex items-center bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 shadow-inner group hover:bg-white/10 transition-colors cursor-pointer shrink-0">
                             <Server className="w-3 h-3 text-[#a855f7] mr-1.5 pointer-events-none shrink-0" />
@@ -3790,6 +3888,7 @@ if (partyId && partyData) {
                             else if (msg.action === 'PLAY') sysText = `${t.sysPlayed}`;
                             else if (msg.action === 'ADS') sysText = `${t.sysAds}`;
                             else if (msg.action === 'BAN') sysText = `${t.sysBanned} ${msg.targetName} de la room.`;
+                            else if (msg.action === 'EPISODE') sysText = `${t.sysEpisode} S${msg.season} E${msg.episode}`;
 
                             return (
                                 <div key={i} className={`flex items-start w-full group mb-2 p-1 -mx-1 rounded-lg ${msg.action === 'BAN' ? 'bg-red-500/10 border border-red-500/20' : ''}`}>
