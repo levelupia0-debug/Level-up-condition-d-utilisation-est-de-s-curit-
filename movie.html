@@ -3130,7 +3130,7 @@ const handleInviteUser = async (friend) => {
         } catch(_) {}
 
         // Envoi via Resend — type WATCH_PARTY
-        const partyLink = `${window.location.origin}/salon/${partyId}`;
+        const partyLink = `${window.location.origin}/salon?party=${partyId}`;
         await fetch(emailEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3554,18 +3554,18 @@ if (partyId && partyData) {
 
                         {/* Lien direct : ouvre l'appli et rejoint automatiquement le salon */}
                         <div className="bg-black/50 border border-white/10 px-4 py-3 rounded-xl mb-3 shadow-inner overflow-hidden">
-                            <span className="text-white/70 font-mono text-[10px] md:text-[11px] break-all">{`${window.location.origin}/salon/${partyId}`}</span>
+                            <span className="text-white/70 font-mono text-[10px] md:text-[11px] break-all">{`${window.location.origin}/salon?party=${partyId}`}</span>
                         </div>
                         <div className="flex gap-2 mb-4">
                             <button onClick={() => {
-                                const shareUrl = `${window.location.origin}/salon/${partyId}`;
+                                const shareUrl = `${window.location.origin}/salon?party=${partyId}`;
                                 copyToClipboardFallback(shareUrl);
                                 showToast(t.linkCopied, 'success');
                             }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-bold uppercase shadow-sm transition-all outline-none flex items-center justify-center gap-2">
                                 <Copy className="w-3.5 h-3.5" /> {t.copyLinkBtnRoom}
                             </button>
                             <button onClick={() => {
-                                const shareUrl = `${window.location.origin}/salon/${partyId}`;
+                                const shareUrl = `${window.location.origin}/salon?party=${partyId}`;
                                 if (navigator.share) {
                                     navigator.share({ title: 'LevelMovie', text: t.inviteModalDesc, url: shareUrl }).catch(() => {});
                                 } else {
