@@ -52,7 +52,7 @@ Home, Tv, Clapperboard, History, AlertOctagon, Download, Copy, Lock,
 ArrowDown, ArrowUp, Eye, EyeOff, Send, Mail, Search as SearchIcon, Reply, UserPlus, Power, Pause, ShieldCheck, VolumeX, UserMinus, ShieldAlert, Minimize2
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { getFirestore, collectionGroup, getDocs, doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
 const LevelMovieLogo = ({ className = "w-6 h-6", color = "currentColor" }) => (
@@ -422,7 +422,22 @@ showControls: "Afficher les contrôles",
 maintenanceTitle: "MAINTENANCE EN COURS",
 maintenanceDesc: "Nous mettons actuellement à jour nos serveurs pour vous offrir une meilleure expérience. LevelMovie sera de retour très vite !",
 searchFriendModalTitle: "Inviter des amis",
-roomResumeHost: "Session en cours détectée. Reconnexion automatique au salon..."
+roomResumeHost: "Session en cours détectée. Reconnexion automatique au salon...",
+guestBadge: "INVITÉ",
+guestBanner: "Vous regardez en mode invité",
+guestChatPrompt: "Connectez-vous pour discuter",
+continueWithGoogleBtn: "Continuer avec Google",
+useKeyInstead: "J'ai une clé LevelMovie",
+backToGoogleOption: "Retour",
+guestKeyPlaceholder: "LVL-XXXXX-XXXXX",
+connectBtn: "Se connecter",
+guestDefaultName: "Invité",
+guestLockedFeature: "Connectez-vous pour utiliser cette fonctionnalité.",
+sendPrivateMsg: "Envoyer un message privé",
+privateConvoWith: "Conversation privée avec",
+dmPlaceholder: "Écrire en privé...",
+dmEmpty: "Aucun message. Dites bonjour !",
+dmSessionNote: "Ces messages resteront visibles durant tout le salon, puis seront effacés à sa fermeture."
 },
 en: {
 appTitle: "LevelMovie",
@@ -673,7 +688,22 @@ showControls: "Show controls",
 maintenanceTitle: "MAINTENANCE IN PROGRESS",
 maintenanceDesc: "We are currently updating our servers to give you a better experience. LevelMovie will be back shortly.",
 searchFriendModalTitle: "Invite Friends",
-roomResumeHost: "Active session detected. Auto-reconnecting to your room..."
+roomResumeHost: "Active session detected. Auto-reconnecting to your room...",
+guestBadge: "GUEST",
+guestBanner: "You're watching in guest mode",
+guestChatPrompt: "Log in to chat",
+continueWithGoogleBtn: "Continue with Google",
+useKeyInstead: "I have a LevelMovie key",
+backToGoogleOption: "Back",
+guestKeyPlaceholder: "LVL-XXXXX-XXXXX",
+connectBtn: "Log in",
+guestDefaultName: "Guest",
+guestLockedFeature: "Log in to use this feature.",
+sendPrivateMsg: "Send a private message",
+privateConvoWith: "Private conversation with",
+dmPlaceholder: "Write privately...",
+dmEmpty: "No messages yet. Say hello!",
+dmSessionNote: "These messages stay visible for the duration of the room, then are erased when it closes."
 }
 };
 
@@ -706,7 +736,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #060608; 
 .safe-top-header { padding-top: calc(1rem + env(safe-area-inset-top, 0px)) !important; }
 .safe-bottom-nav { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important; }
 `;
-function SalonRoom({ movie, mode, onClose, onSelectSimilar, t, lang, user, userPhoto, defaultUserName, watchlist, toggleWatchlist, showToast, handleCreateParty, partyId, partyData, handleSendPartyMessage, sendSystemAction, handlePartySyncAction, handleLeaveParty, db, APP_ID, isPartyCategory, addToHistory, isMinimized, setIsMinimized }) {
+function SalonRoom({ movie, mode, onClose, onSelectSimilar, t, lang, user, userPhoto, defaultUserName, watchlist, toggleWatchlist, showToast, handleCreateParty, partyId, partyData, handleSendPartyMessage, sendSystemAction, handlePartySyncAction, handleLeaveParty, db, APP_ID, isPartyCategory, addToHistory, isMinimized, setIsMinimized, isGuest, onGoogleLogin, accessKey, setAccessKey, showKey, setShowKey, authError, isLoadingAuth, handleLogin }) {
 const [details, setDetails] = useState(null);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState(false);
@@ -778,6 +808,44 @@ const [friendResults, setFriendResults] = useState([]);
 
 const [memberMenu, setMemberMenu] = useState(null);
 const [showDashboard, setShowDashboard] = useState(true);
+
+// --- MESSAGES PRIVÉS (PV) ENTRE MEMBRES DU SALON ---
+const [dmWith, setDmWith] = useState(null); // membre { uid, name, photo }
+const [dmInput, setDmInput] = useState('');
+const dmEndRef = useRef(null);
+const dmKey = dmWith ? [user?.uid, dmWith.uid].sort().join('__') : null;
+const dmMessages = (dmKey && partyData?.dms?.[dmKey]) || [];
+
+// --- CONNEXION INVITÉ (Google ou clé) DEPUIS LE CHAT ---
+const [showGuestKeyLogin, setShowGuestKeyLogin] = useState(false);
+
+// --- CORRECTIF SAFARI : empêche le lecteur vidéo de "monter" quand le clavier
+// s'ouvre pour écrire un message. On pilote la hauteur réelle du salon avec
+// window.visualViewport (qui reflète la zone VRAIMENT visible, clavier exclu)
+// au lieu de se fier uniquement à 100dvh, et on ré-ancre la page en (0,0) car
+// Safari a tendance à faire défiler le body "fixed" quand un input à l'intérieur
+// prend le focus, ce qui donne l'impression que la vidéo "monte".
+const salonRootRef = useRef(null);
+useEffect(() => {
+    if (isMinimized) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const applyViewportHeight = () => {
+        if (salonRootRef.current) {
+            salonRootRef.current.style.height = `${vv.height}px`;
+        }
+        if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
+    };
+    applyViewportHeight();
+    vv.addEventListener('resize', applyViewportHeight);
+    vv.addEventListener('scroll', applyViewportHeight);
+    window.addEventListener('scroll', applyViewportHeight, { passive: true });
+    return () => {
+        vv.removeEventListener('resize', applyViewportHeight);
+        vv.removeEventListener('scroll', applyViewportHeight);
+        window.removeEventListener('scroll', applyViewportHeight);
+    };
+}, [isMinimized]);
 
 useEffect(() => {
 const fetchDetails = async () => {
@@ -902,9 +970,15 @@ if (partyData.status === 'play_countdown') {
 
 useEffect(() => {
 if (chatEndRef.current) {
-    chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    chatEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
 }
 }, [partyData?.messages]);
+
+useEffect(() => {
+if (dmEndRef.current) {
+    dmEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+}
+}, [dmMessages.length, dmWith]);
 
 useEffect(() => {
 if (!showUserSearch || friendSearchQuery.trim().length < 1) {
@@ -994,9 +1068,22 @@ const handleInviteUser = async (friend) => {
 };
 
 const openMemberMenu = (member) => {
+    if (isGuest) { showToast(t.guestLockedFeature, "error"); return; }
     if (member.uid !== user.uid) {
         setMemberMenu(member);
     }
+};
+
+const handleSendPrivateMessage = async () => {
+    if (isGuest || !dmWith || !dmInput.trim() || !user) return;
+    const cleanText = censorText(dmInput.trim());
+    const key = [user.uid, dmWith.uid].sort().join('__');
+    try {
+        await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), {
+            [`dms.${key}`]: arrayUnion({ from: user.uid, name: defaultUserName, text: cleanText, time: Date.now() })
+        });
+        setDmInput('');
+    } catch(e) {}
 };
 
 const handlePromoteMod = async (memberUid) => {
@@ -1294,7 +1381,7 @@ if (partyId && partyData) {
     }
 
     return (
-        <div className={isMinimized ? "fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[8000] w-[220px] md:w-[320px] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.7)] border border-white/10 bg-black animate-in fade-in zoom-in duration-300" : "fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden"} style={isMinimized ? {} : {paddingTop: 'env(safe-area-inset-top, 0px)'}}>
+        <div ref={salonRootRef} className={isMinimized ? "fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[8000] w-[220px] md:w-[320px] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.7)] border border-white/10 bg-black animate-in fade-in zoom-in duration-300" : "fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden"} style={isMinimized ? {} : {paddingTop: 'env(safe-area-inset-top, 0px)'}}>
 
             {/* Modal de Modération */}
             {memberMenu && (
@@ -1302,6 +1389,9 @@ if (partyId && partyData) {
                     <div className="bg-[#151520] border border-[#a855f7]/30 rounded-2xl p-5 max-w-xs w-full text-center shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
                         <h3 className="text-white font-black text-sm uppercase tracking-widest mb-4">Gérer {memberMenu.name}</h3>
                         <div className="flex flex-col gap-2">
+                            <button onClick={() => { setDmWith(memberMenu); setMemberMenu(null); }} className="w-full flex items-center justify-center gap-2 py-3 bg-[#a855f7]/15 hover:bg-[#a855f7]/30 text-[#a855f7] border border-[#a855f7]/30 rounded-xl text-[10px] font-bold uppercase transition-colors outline-none">
+                                <Mail className="w-3.5 h-3.5" /> {t.sendPrivateMsg}
+                            </button>
                             {partyData.muted?.some(m => m.uid === memberMenu.uid) ? (
                                 <button onClick={() => handleUnmuteUser(memberMenu)} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-bold uppercase transition-colors outline-none">{t.unmuteUser}</button>
                             ) : (
@@ -1326,6 +1416,68 @@ if (partyId && partyData) {
                             })()}
 
                             <button onClick={() => setMemberMenu(null)} className="w-full py-3 mt-2 text-white/50 hover:text-white text-[10px] font-bold uppercase transition-colors outline-none">{t.menuCancel}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Message Privé (PV entre deux membres, propre à ce salon, effacé à la fermeture) */}
+            {dmWith && (
+                <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setDmWith(null)}>
+                    <div className="bg-[#151520] border border-white/10 sm:border-[#a855f7]/30 rounded-t-3xl sm:rounded-3xl w-full max-w-sm h-[75vh] sm:h-[560px] flex flex-col shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in slide-in-from-bottom sm:zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-[#0c0c10] flex items-center justify-center font-black text-[12px] text-[#a855f7] border border-white/10 shrink-0">
+                                    {dmWith.name?.charAt(0).toUpperCase() || '?'}
+                                </div>
+                                <div className="min-w-0">
+                                    <span className="block text-[9px] text-white/40 uppercase tracking-widest truncate">{t.privateConvoWith}</span>
+                                    <span className="block text-white font-bold text-[13px] truncate">{dmWith.name}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setDmWith(null)} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors outline-none shrink-0"><X className="w-4 h-4" /></button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 no-scrollbar min-h-0">
+                            {dmMessages.length === 0 && (
+                                <div className="flex-1 flex items-center justify-center opacity-40 text-center px-6">
+                                    <span className="text-[11px] uppercase tracking-widest font-bold">{t.dmEmpty}</span>
+                                </div>
+                            )}
+                            {dmMessages.map((m, i) => {
+                                const isMe = m.from === user?.uid;
+                                return (
+                                    <div key={i} className={`max-w-[80%] px-3.5 py-2 rounded-2xl text-[13px] leading-snug break-words ${isMe ? 'self-end bg-gradient-to-br from-[#a855f7] to-[#7c3aed] text-white rounded-br-md' : 'self-start bg-white/10 text-white/90 rounded-bl-md'}`}>
+                                        {m.text}
+                                    </div>
+                                );
+                            })}
+                            <div ref={dmEndRef} className="h-1 shrink-0" />
+                        </div>
+
+                        <div className="px-3 pb-1 shrink-0">
+                            <span className="text-[9px] text-white/30 leading-snug block">{t.dmSessionNote}</span>
+                        </div>
+                        <div className="p-3 border-t border-white/5 shrink-0" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
+                            <div className="relative flex items-center gap-1.5 bg-[#0c0c10] border border-white/10 rounded-2xl pl-4 pr-1.5 py-1.5 focus-within:border-[#a855f7]/60 transition-all">
+                                <input
+                                    type="text"
+                                    maxLength="150"
+                                    value={dmInput}
+                                    onChange={(e) => setDmInput(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSendPrivateMessage(); }}
+                                    onFocus={() => setTimeout(() => { window.scrollTo(0, 0); }, 50)}
+                                    placeholder={t.dmPlaceholder}
+                                    className="w-full bg-transparent py-2 text-[13px] text-white outline-none placeholder:text-white/30"
+                                />
+                                <button
+                                    onClick={handleSendPrivateMessage}
+                                    disabled={!dmInput.trim()}
+                                    className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-[#a855f7] to-[#7c3aed] flex items-center justify-center text-white hover:opacity-90 disabled:opacity-30 disabled:from-white/10 disabled:to-white/10 transition-all outline-none shadow-md active:scale-95"
+                                >
+                                    <Send className="w-4 h-4 ml-0.5" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1629,6 +1781,13 @@ if (partyId && partyData) {
                             <button onClick={() => setIsMinimized(true)} className="flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 rounded-xl px-2.5 py-2.5 transition-colors outline-none text-[9px] font-bold uppercase tracking-widest"><Minimize2 className="w-3.5 h-3.5" /> {t.minimizeRoom}</button>
                         </div>
 
+                        {isGuest ? (
+                            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5">
+                                <Lock className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                                <span className="text-[10px] text-white/50">{t.guestLockedFeature}</span>
+                            </div>
+                        ) : (
+                        <>
                         <div className="h-px bg-white/5 my-0.5"></div>
 
                         <div className="grid grid-cols-3 gap-2">
@@ -1660,6 +1819,8 @@ if (partyId && partyData) {
                             )}
                             <button onClick={() => setShowLeavePartyConfirm(true)} className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 text-red-400 hover:text-white rounded-xl py-2.5 transition-colors outline-none text-[9px] font-bold uppercase tracking-widest"><Power className="w-3.5 h-3.5" /> {iAmHost ? t.closeLive : t.quitLive}</button>
                         </div>
+                        </>
+                        )}
                     </div>
                     )}
                 </div>
@@ -1684,6 +1845,12 @@ if (partyId && partyData) {
                             {isMMod && !isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border-2 border-[#111116] flex items-center justify-center"><ShieldCheck className="w-2 h-2 fill-white text-white"/></div>}
                         </div>
                     )})}
+                    {isGuest && (
+                        <div className="ml-auto flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-2.5 py-1 shrink-0">
+                            <Eye className="w-3 h-3 text-white/40" />
+                            <span className="text-[8px] text-white/50 font-bold uppercase tracking-widest whitespace-nowrap">{t.guestBadge}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Messages du Chat (Style TikTok / Instagram Live sans bulles, propre) */}
@@ -1752,8 +1919,57 @@ if (partyId && partyData) {
                     <div ref={chatEndRef} className="h-2 shrink-0" />
                 </div>
 
-                {/* Input Chat Fixé en bas */}
+                {/* Input Chat Fixé en bas (ou connexion invité si non connecté) */}
                 <div className="p-3 border-t border-white/5 bg-[#0c0c10] shrink-0 z-20" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
+                    {isGuest ? (
+                        <div className="flex flex-col gap-2">
+                            {!showGuestKeyLogin ? (
+                                <>
+                                    <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold text-center mb-0.5">{t.guestChatPrompt}</span>
+                                    <button
+                                        onClick={onGoogleLogin}
+                                        className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl bg-white text-[#1f1f1f] text-[11px] font-bold uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all outline-none shadow-md"
+                                    >
+                                        <GoogleLogoSVG className="w-4 h-4" /> {t.continueWithGoogleBtn}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowGuestKeyLogin(true)}
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 outline-none"
+                                    >
+                                        <Key className="w-3.5 h-3.5 text-[#a855f7]" /> {t.useKeyInstead}
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="relative w-full">
+                                        <input
+                                            type={showKey ? "text" : "password"}
+                                            value={accessKey}
+                                            onChange={(e) => setAccessKey(e.target.value)}
+                                            onFocus={() => setTimeout(() => window.scrollTo(0, 0), 50)}
+                                            placeholder={t.guestKeyPlaceholder}
+                                            className="w-full bg-[#151520] border border-[#a855f7]/40 rounded-xl py-3 pl-4 pr-11 text-center text-white font-mono text-[12px] tracking-widest outline-none focus:border-[#a855f7] transition-all"
+                                        />
+                                        <button onClick={() => setShowKey(!showKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a855f7]/60 hover:text-[#a855f7] transition-colors outline-none">
+                                            {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                    {authError && <p className="text-[10px] text-red-400 font-bold text-center bg-red-500/10 py-1.5 rounded-lg border border-red-500/20">{authError}</p>}
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setShowGuestKeyLogin(false)} className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 outline-none">{t.backToGoogleOption}</button>
+                                        <button
+                                            onClick={handleLogin}
+                                            disabled={isLoadingAuth || !accessKey.trim()}
+                                            className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed outline-none shadow-md"
+                                        >
+                                            {isLoadingAuth ? t.verifyLoading : t.connectBtn}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                    <>
                     {replyingTo && (
                         <div className="flex items-center justify-between bg-white/5 px-3 py-2 rounded-t-xl border-x border-t border-white/10 -mt-8 mb-2">
                             <div className="text-[9px] md:text-[11px] text-white/60 truncate flex-1 flex items-center gap-1.5">
@@ -1769,6 +1985,7 @@ if (partyId && partyData) {
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { handleSendPartyMessage(chatInput, replyingTo); setChatInput(''); setReplyingTo(null); } }}
+                            onFocus={() => setTimeout(() => window.scrollTo(0, 0), 50)}
                             placeholder={t.chatPlaceholder}
                             className="w-full bg-transparent py-2 text-[13px] text-white outline-none placeholder:text-white/30"
                         />
@@ -1780,6 +1997,8 @@ if (partyId && partyData) {
                             <Send className="w-4 h-4 ml-0.5" />
                         </button>
                     </div>
+                    </>
+                    )}
                 </div>
             </div>
             )}
@@ -2173,9 +2392,49 @@ try {
 }
 };
 
-// 4. Rejoindre automatiquement le salon indiqué dans l'URL, une fois authentifié
+// 3bis. Connexion Google (pour un invité qui veut débloquer le chat/les actions du salon)
+const handleGoogleLogin = async () => {
+setAuthError('');
+try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const gUser = result.user;
+    const uid = gUser.uid;
+    const name = gUser.displayName || (gUser.email ? gUser.email.split('@')[0] : t.defaultUser);
+    const email = gUser.email || "";
+    const photo = gUser.photoURL || null;
+
+    setUser({ uid });
+    setUserName(name);
+    setUserEmail(email);
+    if (photo) setUserPhoto(photo);
+
+    // Réutilise le même mécanisme de session que la clé LVL pour la persistance
+    localStorage.setItem('levelmovie_saved_key', `google:${uid}`);
+    localStorage.setItem('levelmovie_user_name', name);
+    localStorage.setItem('levelmovie_user_email', email);
+    localStorage.setItem('levelmovie_user_uid', uid);
+    if (photo) localStorage.setItem('lm_photo', photo);
+} catch (error) {
+    if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request') {
+        setAuthError(lang === 'fr' ? "Connexion Google impossible. Réessayez." : "Google sign-in failed. Please try again.");
+    }
+}
+};
+
+// Mode invité : quiconque arrive avec un lien de salon valide entre directement dans la
+// pièce en lecture seule (vidéo + chat visibles) sans avoir de compte. L'identité "invité"
+// s'appuie sur l'uid Firebase anonyme, et n'est JAMAIS ajoutée à la liste des membres :
+// elle sert uniquement à afficher l'interface, tant que la personne ne s'est pas connectée
+// (Google ou clé LVL) directement depuis le champ de chat.
+const isGuest = !user;
+const guestUser = fbUser ? { uid: fbUser.uid, isGuest: true } : null;
+const effectiveUser = user || guestUser;
+const effectiveUserName = user ? defaultUserName : t.guestDefaultName;
+
+// 4. Rejoindre automatiquement le salon indiqué dans l'URL, une fois authentifié (compte OU invité)
 useEffect(() => {
-if (!user || !fbUser || !ROOM_CODE || partyId) return;
+if (!effectiveUser || !fbUser || !ROOM_CODE || partyId) return;
 
 const autoJoin = async () => {
     setIsJoining(true);
@@ -2191,12 +2450,12 @@ const autoJoin = async () => {
         }
         const d = pSnap.data();
 
-        if (d.banned && d.banned.includes(user.uid)) {
+        if (d.banned && d.banned.includes(effectiveUser.uid)) {
             setJoinError(t.youAreBanned);
             setIsJoining(false);
             return;
         }
-        if (d.members && d.members.length >= 25) {
+        if (!isGuest && d.members && d.members.length >= 25) {
             setJoinError(t.roomFull);
             setIsJoining(false);
             return;
@@ -2212,10 +2471,12 @@ const autoJoin = async () => {
         setPartyId(ROOM_CODE);
         document.body.classList.add('party-mode');
 
-        if (!d.members.some(m => m.uid === user.uid)) {
+        // Un invité ne devient jamais un membre officiel : il regarde/discute en spectateur
+        // jusqu'à ce qu'il se connecte (Google ou clé LVL) depuis le champ de chat.
+        if (!isGuest && !d.members.some(m => m.uid === effectiveUser.uid)) {
             await updateDoc(pRef, {
-                members: arrayUnion({ uid: user.uid, name: defaultUserName, photo: userPhoto || "" }),
-                messages: arrayUnion({ isSystem: true, action: 'JOIN', name: defaultUserName, photo: userPhoto || "", uid: user.uid, time: Date.now() })
+                members: arrayUnion({ uid: effectiveUser.uid, name: effectiveUserName, photo: userPhoto || "" }),
+                messages: arrayUnion({ isSystem: true, action: 'JOIN', name: effectiveUserName, photo: userPhoto || "", uid: effectiveUser.uid, time: Date.now() })
             });
         }
         setIsJoining(false);
@@ -2226,7 +2487,7 @@ const autoJoin = async () => {
     }
 };
 autoJoin();
-}, [user, fbUser, partyId]);
+}, [effectiveUser?.uid, isGuest, fbUser, partyId]);
 
 // 5. Écoute temps réel du salon
 useEffect(() => {
@@ -2235,13 +2496,13 @@ if (!partyId || !fbUser) { setPartyData(null); return; }
 const unsubscribe = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), (docSnap) => {
     if (docSnap.exists() && docSnap.data().status !== 'ended') {
         const data = docSnap.data();
-        if (data.banned && data.banned.includes(user?.uid)) {
+        if (data.banned && data.banned.includes(effectiveUser?.uid)) {
             setJoinError(t.youAreBanned);
             setPartyId(null); setPartyData(null); setSelectedMovie(null);
             document.body.classList.remove('party-mode');
             return;
         }
-        if (data.members && !data.members.some(m => m.uid === user?.uid)) {
+        if (!isGuest && data.members && !data.members.some(m => m.uid === user?.uid)) {
             setPartyId(null); setPartyData(null); setSelectedMovie(null);
             document.body.classList.remove('party-mode');
             return;
@@ -2255,7 +2516,20 @@ const unsubscribe = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'p
 }, () => {});
 
 return () => unsubscribe();
-}, [partyId, user, fbUser]);
+}, [partyId, user, fbUser, isGuest]);
+
+// 5bis. Un invité qui se connecte (Google ou clé) EN COURS DE SALON devient membre à part
+// entière à cet instant précis, sans devoir recharger la page ni rejoindre à nouveau.
+useEffect(() => {
+if (!user || !fbUser || !partyId || !partyData) return;
+if (partyData.members && !partyData.members.some(m => m.uid === user.uid)) {
+    const pRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId);
+    updateDoc(pRef, {
+        members: arrayUnion({ uid: user.uid, name: defaultUserName, photo: userPhoto || "" }),
+        messages: arrayUnion({ isSystem: true, action: 'JOIN', name: defaultUserName, photo: userPhoto || "", uid: user.uid, time: Date.now() })
+    }).catch(() => {});
+}
+}, [user?.uid, partyId, !!partyData]);
 
 // --- Fonctions de gestion du salon (identiques à /movie) ---
 const handleSendPartyMessage = async (text, replyTo = null) => {
@@ -2298,7 +2572,7 @@ try {
                 messages: arrayUnion({ isSystem: true, action: 'LEAVE', name: defaultUserName, photo: userPhoto || "", uid: user.uid, time: Date.now() })
             });
         } else {
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), { status: 'ended' });
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), { status: 'ended', dms: {} });
         }
     } else {
         const memberToRemove = partyData.members.find(m => m.uid === user.uid);
@@ -2334,48 +2608,9 @@ return (
 );
 }
 
-if (!user) {
-return (
-<div className="bg-main flex items-center justify-center p-4 sm:p-8 fixed inset-0 z-[5000]">
-<style>{globalStyles}</style>
-<div className="w-full max-w-sm text-center py-4 relative glass p-8 rounded-[2rem] border border-white/5 shadow-[0_0_50px_rgba(168,85,247,0.15)] animate-in fade-in zoom-in duration-300">
-<LevelMovieLogo className="w-12 h-12 text-[#a855f7] mx-auto mb-4" />
-<h1 className="text-2xl font-black tracking-widest mb-2 shrink-0 drop-shadow-md">
-<span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
-</h1>
-<p className="text-white/50 text-xs mb-8">Tu as été invité(e) dans un salon de visionnage.</p>
-<div className="space-y-6">
-<p className="text-[11px] font-bold text-[#a855f7] uppercase tracking-[0.1em] mb-2 flex items-center justify-center gap-2">
-<Shield className="w-4 h-4" /> {t.enterKey}
-</p>
-<div className="relative w-full">
-<input
-type={showKey ? "text" : "password"}
-value={accessKey}
-onChange={(e) => setAccessKey(e.target.value)}
-placeholder="LVL-XXXXX-XXXXX"
-className="w-full bg-[#030305] border border-[#a855f7]/40 rounded-xl py-4 pl-5 pr-12 text-center text-white font-mono text-[13px] tracking-widest outline-none focus:border-[#a855f7] transition-all shadow-inner"
-/>
-<button onClick={() => setShowKey(!showKey)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#a855f7]/60 hover:text-[#a855f7] transition-colors outline-none">
-{showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-</button>
-</div>
-<button
-onClick={handleLogin}
-disabled={isLoadingAuth || !accessKey.trim()}
-className="w-full bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white py-4 rounded-xl font-black text-[12px] uppercase tracking-[0.1em] hover:opacity-90 active:scale-95 transition-all shadow-[0_0_25px_rgba(168,85,247,0.4)] disabled:opacity-50 disabled:cursor-not-allowed outline-none"
->
-{isLoadingAuth ? t.verifyLoading : t.verifyKey}
-</button>
-<a href="https://levelup-ecosystem.com" target="_blank" rel="noreferrer" className="flex items-center justify-center w-full gap-2 px-6 py-4 rounded-xl bg-white/10 border border-white/20 text-[11px] font-black uppercase tracking-[0.1em] text-white/90 hover:text-white hover:bg-white/20 hover:border-[#a855f7] transition-all duration-300 no-underline outline-none shadow-md">
-<Key className="w-4 h-4 text-[#a855f7]" /> <span>{t.forgotKey}</span>
-</a>
-{authError && <p className="text-[12px] text-red-400 font-bold mt-2 bg-red-500/10 py-2 rounded-lg border border-red-500/20">{authError}</p>}
-</div>
-</div>
-</div>
-);
-}
+// Remarque : il n'y a plus de mur de connexion ici. Un utilisateur qui arrive avec un
+// lien de salon valide entre directement dedans en mode invité (vidéo + chat visibles),
+// et se connecte s'il le souhaite (Google ou clé LVL) via le champ de chat, plus bas.
 
 if (joinError) {
 return (
@@ -2421,9 +2656,9 @@ onClose={() => { window.location.href = 'https://levelup-ecosystem.com/movie'; }
 onSelectSimilar={() => {}}
 t={t}
 lang={lang === 'fr' ? 'fr-FR' : 'en-US'}
-user={user}
+user={effectiveUser}
 userPhoto={userPhoto}
-defaultUserName={defaultUserName}
+defaultUserName={effectiveUserName}
 watchlist={[]}
 toggleWatchlist={() => {}}
 showToast={showToast}
@@ -2439,6 +2674,15 @@ APP_ID={APP_ID}
 isPartyCategory={true}
 addToHistory={addToHistory}
 isMinimized={isMinimized}
+isGuest={isGuest}
+onGoogleLogin={handleGoogleLogin}
+accessKey={accessKey}
+setAccessKey={setAccessKey}
+showKey={showKey}
+setShowKey={setShowKey}
+authError={authError}
+isLoadingAuth={isLoadingAuth}
+handleLogin={handleLogin}
 setIsMinimized={setIsMinimized}
 />
 </div>
