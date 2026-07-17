@@ -6,6 +6,14 @@
 <title>LevelMovie - Salon de Visionnage</title>
 <link rel="icon" href="https://levelup-ecosystem.com/icon.svg" type="image/svg+xml">
 
+<!-- Config Tailwind : les styles hover: ne s'appliquent que sur les appareils qui supportent
+     vraiment le survol (souris). Sans ça, un tap sur mobile laisse le bouton "collé" en état
+     survolé jusqu'au prochain tap ailleurs, ce qui donne l'impression trompeuse que le doigt
+     est resté dessus. -->
+<script>
+    window.tailwind = window.tailwind || {};
+    tailwind.config = { future: { hoverOnlyWhenSupported: true } };
+</script>
 <!-- Tailwind CSS pour le style -->
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -118,7 +126,7 @@ const renderBrowserIcon = (id, className) => {
 
 const firebaseConfig = {
 apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-authDomain: "levelup-ecosystem.com",
+authDomain: "levelup-ia.firebaseapp.com",
 projectId: "levelup-ia",
 storageBucket: "levelup-ia.firebasestorage.app",
 messagingSenderId: "229420004282",
@@ -141,6 +149,15 @@ const formatTimeEstimate = (ms) => {
     const m = Math.floor(totalSeconds / 60);
     const s = totalSeconds % 60;
     return `${m}min ${s}s`;
+};
+
+const formatDuration = (ms) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    if (h > 0) return `${h}h ${String(m).padStart(2, '0')}min`;
+    return `${m}min ${String(s).padStart(2, '0')}s`;
 };
 
 // --- SYSTÈME DE CENSURE ---
@@ -427,7 +444,7 @@ guestBadge: "INVITÉ",
 guestBanner: "Vous regardez en mode invité",
 guestChatPrompt: "Connectez-vous pour discuter",
 continueWithGoogleBtn: "Continuer avec Google",
-useKeyInstead: "J'ai une clé LevelMovie",
+useKeyInstead: "J'ai une clé LevelUp",
 backToGoogleOption: "Retour",
 guestKeyPlaceholder: "LVL-XXXXX-XXXXX",
 connectBtn: "Se connecter",
@@ -437,7 +454,22 @@ sendPrivateMsg: "Envoyer un message privé",
 privateConvoWith: "Conversation privée avec",
 dmPlaceholder: "Écrire en privé...",
 dmEmpty: "Aucun message. Dites bonjour !",
-dmSessionNote: "Ces messages resteront visibles durant tout le salon, puis seront effacés à sa fermeture."
+dmSessionNote: "Ces messages resteront visibles durant tout le salon, puis seront effacés à sa fermeture.",
+navMembers: "Membres",
+navComments: "Commentaires",
+navShare: "Partager",
+navManage: "Gérer",
+isTypingSingle: "est en train d'écrire...",
+isTypingPlural: "sont en train d'écrire...",
+youLabel: "toi",
+inviteFriendModalDesc: "Invite jusqu'à 5 amis par semaine à rejoindre ce salon.",
+searchFriendPlaceholder: "Rechercher par nom...",
+noUserFound: "Aucun utilisateur trouvé",
+typeNameToFindFriends: "Tapez un nom pour trouver vos amis",
+inviteWeeklyLimitNote: "Limite de 5 invitations par semaine, par sécurité.",
+liveEndedTitle: "Le live est terminé",
+durationLabel: "Durée",
+homePageBtn: "Page d'accueil"
 },
 en: {
 appTitle: "LevelMovie",
@@ -693,7 +725,7 @@ guestBadge: "GUEST",
 guestBanner: "You're watching in guest mode",
 guestChatPrompt: "Log in to chat",
 continueWithGoogleBtn: "Continue with Google",
-useKeyInstead: "I have a LevelMovie key",
+useKeyInstead: "I have a LevelUp key",
 backToGoogleOption: "Back",
 guestKeyPlaceholder: "LVL-XXXXX-XXXXX",
 connectBtn: "Log in",
@@ -703,7 +735,22 @@ sendPrivateMsg: "Send a private message",
 privateConvoWith: "Private conversation with",
 dmPlaceholder: "Write privately...",
 dmEmpty: "No messages yet. Say hello!",
-dmSessionNote: "These messages stay visible for the duration of the room, then are erased when it closes."
+dmSessionNote: "These messages stay visible for the duration of the room, then are erased when it closes.",
+navMembers: "Members",
+navComments: "Comments",
+navShare: "Share",
+navManage: "Manage",
+isTypingSingle: "is typing...",
+isTypingPlural: "are typing...",
+youLabel: "you",
+inviteFriendModalDesc: "Invite up to 5 friends per week to join this room.",
+searchFriendPlaceholder: "Search by name...",
+noUserFound: "No user found",
+typeNameToFindFriends: "Type a name to find your friends",
+inviteWeeklyLimitNote: "Limited to 5 invites per week, for safety.",
+liveEndedTitle: "The live has ended",
+durationLabel: "Duration",
+homePageBtn: "Home page"
 }
 };
 
@@ -807,7 +854,73 @@ const [friendSearchQuery, setFriendSearchQuery] = useState('');
 const [friendResults, setFriendResults] = useState([]);
 
 const [memberMenu, setMemberMenu] = useState(null);
-const [showDashboard, setShowDashboard] = useState(true);
+
+// --- NOUVELLE NAVIGATION STYLE TIKTOK/INSTA : un seul panneau actif à la fois ---
+// null | 'members' | 'comments' | 'share' | 'manage'
+const [activeSheet, setActiveSheet] = useState(null);
+const [unreadComments, setUnreadComments] = useState(0);
+const [hasNewDM, setHasNewDM] = useState(false);
+const lastSeenDmRef = useRef({}); // { convoKey: timestamp du dernier message vu }
+const lastMsgCountRef = useRef(0);
+
+// Compte les nouveaux commentaires reçus tant que le panneau Commentaires n'est pas ouvert
+useEffect(() => {
+    const count = partyData?.messages?.length || 0;
+    if (activeSheet === 'comments') {
+        lastMsgCountRef.current = count;
+        setUnreadComments(0);
+        return;
+    }
+    if (count > lastMsgCountRef.current) {
+        const newOnes = partyData.messages.slice(lastMsgCountRef.current).filter(m => !m.isSystem && m.uid !== user?.uid);
+        if (newOnes.length > 0) setUnreadComments(prev => prev + newOnes.length);
+    }
+    lastMsgCountRef.current = count;
+}, [partyData?.messages?.length, activeSheet]);
+
+// Détecte un nouveau message privé (PV) tant que le panneau Membres n'est pas ouvert
+useEffect(() => {
+    if (!partyData?.dms || !user) return;
+    let found = false;
+    Object.entries(partyData.dms).forEach(([key, msgs]) => {
+        if (!key.includes(user.uid) || !msgs?.length) return;
+        const last = msgs[msgs.length - 1];
+        if (last.from === user.uid) return;
+        const seen = lastSeenDmRef.current[key] || 0;
+        if (last.time > seen) found = true;
+    });
+    if (found && activeSheet !== 'members') setHasNewDM(true);
+}, [partyData?.dms, activeSheet, user?.uid]);
+
+useEffect(() => {
+    if (activeSheet === 'members') {
+        setHasNewDM(false);
+        if (dmKey) lastSeenDmRef.current[dmKey] = Date.now();
+    }
+}, [activeSheet]);
+
+// --- INDICATEUR "EST EN TRAIN D'ÉCRIRE..." (commentaires) ---
+const typingThrottleRef = useRef(0);
+const notifyTyping = () => {
+    if (isGuest || !partyId || !db) return;
+    const now = Date.now();
+    if (now - typingThrottleRef.current < 1200) return;
+    typingThrottleRef.current = now;
+    updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), {
+        [`typing.${user.uid}`]: { name: defaultUserName, time: now }
+    }).catch(() => {});
+};
+// Une entrée n'est considérée "active" que pendant 3.5s après la dernière frappe (auto-expire, pas besoin d'écrire pour l'effacer)
+const [, forceTick] = useState(0);
+useEffect(() => {
+    if (!partyData?.typing || Object.keys(partyData.typing).length === 0) return;
+    const iv = setInterval(() => forceTick(x => x + 1), 1000);
+    return () => clearInterval(iv);
+}, [partyData?.typing]);
+const typingUsers = Object.entries(partyData?.typing || {})
+    .filter(([uid, info]) => uid !== user?.uid && info?.time && (Date.now() - info.time) < 3500)
+    .map(([uid, info]) => info.name);
+
 
 // --- MESSAGES PRIVÉS (PV) ENTRE MEMBRES DU SALON ---
 const [dmWith, setDmWith] = useState(null); // membre { uid, name, photo }
@@ -826,6 +939,7 @@ const [showGuestKeyLogin, setShowGuestKeyLogin] = useState(false);
 // Safari a tendance à faire défiler le body "fixed" quand un input à l'intérieur
 // prend le focus, ce qui donne l'impression que la vidéo "monte".
 const salonRootRef = useRef(null);
+const [vvh, setVvh] = useState(null); // hauteur réelle visible (px), utilisée par les pop-ups (commentaires, PV...) pour ne jamais être masqués par le clavier
 useEffect(() => {
     if (isMinimized) return;
     const vv = window.visualViewport;
@@ -834,6 +948,7 @@ useEffect(() => {
         if (salonRootRef.current) {
             salonRootRef.current.style.height = `${vv.height}px`;
         }
+        setVvh(vv.height);
         if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
     };
     applyViewportHeight();
@@ -1381,11 +1496,11 @@ if (partyId && partyData) {
     }
 
     return (
-        <div ref={salonRootRef} className={isMinimized ? "fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[8000] w-[220px] md:w-[320px] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.7)] border border-white/10 bg-black animate-in fade-in zoom-in duration-300" : "fixed inset-0 z-[8000] bg-[#060608] flex flex-col lg:flex-row w-full h-[100dvh] overflow-hidden"} style={isMinimized ? {} : {paddingTop: 'env(safe-area-inset-top, 0px)'}}>
+        <div ref={salonRootRef} className={isMinimized ? "fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[8000] w-[220px] md:w-[320px] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.7)] border border-white/10 bg-black animate-in fade-in zoom-in duration-300" : "fixed inset-0 z-[8000] bg-[#060608] flex flex-col w-full h-[100dvh] overflow-hidden"} style={isMinimized ? {} : {paddingTop: 'env(safe-area-inset-top, 0px)'}}>
 
             {/* Modal de Modération */}
             {memberMenu && (
-                <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setMemberMenu(null)}>
+                <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4" onClick={() => setMemberMenu(null)}>
                     <div className="bg-[#151520] border border-[#a855f7]/30 rounded-2xl p-5 max-w-xs w-full text-center shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
                         <h3 className="text-white font-black text-sm uppercase tracking-widest mb-4">Gérer {memberMenu.name}</h3>
                         <div className="flex flex-col gap-2">
@@ -1423,7 +1538,7 @@ if (partyId && partyData) {
 
             {/* Modal Message Privé (PV entre deux membres, propre à ce salon, effacé à la fermeture) */}
             {dmWith && (
-                <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setDmWith(null)}>
+                <div className="fixed inset-x-0 top-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ height: vvh ? `${vvh}px` : '100dvh' }} onClick={() => setDmWith(null)}>
                     <div className="bg-[#151520] border border-white/10 sm:border-[#a855f7]/30 rounded-t-3xl sm:rounded-3xl w-full max-w-sm h-[75vh] sm:h-[560px] flex flex-col shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in slide-in-from-bottom sm:zoom-in duration-200" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
                             <div className="flex items-center gap-2.5 min-w-0">
@@ -1485,7 +1600,7 @@ if (partyId && partyData) {
 
             {/* Modal Quitter Salon (texte adapté selon le rôle : l'hôte "ferme", les autres "quittent") */}
             {showLeavePartyConfirm && (
-                <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4">
                     <div className="bg-[#0a0a0f] border border-red-500/30 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in duration-300">
                         <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                         <h3 className="text-xl font-black text-white mb-2 uppercase tracking-widest">{iAmHost ? t.leavePartyTitle : t.quitPartyTitle}</h3>
@@ -1500,7 +1615,7 @@ if (partyId && partyData) {
 
             {/* Modal fermeture forcée par un modérateur (hôte absent/injoignable) */}
             {showModForceCloseConfirm && (
-                <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4">
                     <div className="bg-[#0a0a0f] border border-red-500/30 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in duration-300">
                         <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-4" />
                         <h3 className="text-xl font-black text-white mb-2 uppercase tracking-widest">{t.modForceCloseTitle}</h3>
@@ -1515,7 +1630,7 @@ if (partyId && partyData) {
 
             {/* Modal Sélecteur d'épisode (plein écran, hôte/mod uniquement pour changer) */}
             {showEpisodesModal && isTV && (
-                <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowEpisodesModal(false)}>
+                <div className="fixed inset-0 z-[9999] bg-black/90 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowEpisodesModal(false)}>
                     <div className="bg-[#0a0a0f] border border-white/10 sm:border-[#a855f7]/20 rounded-t-3xl sm:rounded-3xl p-5 md:p-6 max-w-lg w-full max-h-[85vh] sm:max-h-[80vh] flex flex-col shadow-[0_0_60px_rgba(168,85,247,0.15)] animate-in slide-in-from-bottom sm:zoom-in duration-300" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-4 shrink-0">
                             <h3 className="text-base md:text-lg font-black text-white uppercase tracking-widest flex items-center gap-2">
@@ -1585,7 +1700,7 @@ if (partyId && partyData) {
             )}
 
             {showHostLeaveWarning && (
-                <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4">
                     <div className="bg-[#0a0a0f] border border-[#a855f7]/30 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in zoom-in duration-300">
                         <ShieldAlert className="w-12 h-12 text-[#a855f7] mx-auto mb-4" />
                         <h3 className="text-xl font-black text-white mb-2 uppercase tracking-widest">Attention</h3>
@@ -1598,15 +1713,23 @@ if (partyId && partyData) {
                 </div>
             )}
 
-            {/* Modal Recherche d'amis (Invitation) */}
+            {/* Modal Recherche d'amis (Invitation) — version pro, plus grande et plus soignée */}
             {showUserSearch && (
-                <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowUserSearch(false)}>
-                    <div className="bg-[#0a0a0f] border border-[#a855f7]/30 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in zoom-in duration-300 flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-center mb-6 shrink-0">
-                            <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
-                                <UserPlus className="w-6 h-6 text-[#a855f7]" /> {t.searchFriendModalTitle}
-                            </h3>
-                            <button onClick={() => setShowUserSearch(false)} className="text-white/40 hover:text-white outline-none bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors shadow-sm active:scale-95"><X className="w-4 h-4" /></button>
+                <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4" onClick={() => setShowUserSearch(false)}>
+                    <div className="bg-gradient-to-b from-[#131318] to-[#0a0a0f] border border-[#a855f7]/25 rounded-[2rem] p-6 md:p-9 max-w-lg w-full shadow-[0_0_70px_rgba(168,85,247,0.25)] animate-in zoom-in duration-300 flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-start mb-7 shrink-0">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-[#a855f7]/25 to-[#7c3aed]/10 border border-[#a855f7]/30 flex items-center justify-center shadow-inner shrink-0">
+                                    <UserPlus className="w-6 h-6 md:w-7 md:h-7 text-[#a855f7]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg md:text-2xl font-black text-white tracking-tight leading-tight">
+                                        {t.searchFriendModalTitle}
+                                    </h3>
+                                    <p className="text-[11px] md:text-[12px] text-white/40 mt-0.5">{t.inviteFriendModalDesc}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowUserSearch(false)} className="text-white/40 hover:text-white outline-none bg-white/5 p-2.5 rounded-full hover:bg-white/10 transition-colors shadow-sm active:scale-95 shrink-0"><X className="w-4 h-4" /></button>
                         </div>
 
                         <div className="relative mb-5 shrink-0">
@@ -1615,54 +1738,64 @@ if (partyId && partyData) {
                                 type="text" 
                                 value={friendSearchQuery}
                                 onChange={(e) => setFriendSearchQuery(e.target.value)}
-                                placeholder="Rechercher par nom..."
-                                className="w-full bg-black/50 border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-sm text-white outline-none focus:border-[#a855f7] shadow-inner transition-colors"
+                                placeholder={t.searchFriendPlaceholder}
+                                className="w-full bg-black/50 border border-white/10 rounded-2xl pl-11 pr-4 py-4 text-sm text-white outline-none focus:border-[#a855f7] shadow-inner transition-colors"
                                 autoFocus
                             />
                         </div>
 
-                        <div className="overflow-y-auto no-scrollbar flex-1 flex flex-col gap-2 min-h-[200px] bg-white/5 rounded-2xl p-2 border border-white/5 shadow-inner">
+                        <div className="overflow-y-auto no-scrollbar flex-1 flex flex-col gap-2 min-h-[220px] bg-white/[0.03] rounded-3xl p-2.5 border border-white/5 shadow-inner">
                             {friendResults.map(friend => (
-                                <div key={friend.uid} className="flex items-center justify-between bg-black/40 hover:bg-black/60 border border-white/5 p-3 rounded-xl transition-colors">
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                        <div className="w-10 h-10 rounded-full bg-[#151520] flex items-center justify-center border border-[#a855f7]/30 shadow-sm shrink-0 font-black text-[#a855f7] text-sm">
+                                <div key={friend.uid} className="flex items-center justify-between bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 hover:border-[#a855f7]/25 p-3.5 rounded-2xl transition-all">
+                                    <div className="flex items-center gap-3.5 overflow-hidden">
+                                        <div className="w-11 h-11 rounded-full bg-[#151520] flex items-center justify-center border-2 border-[#a855f7]/30 shadow-sm shrink-0 font-black text-[#a855f7] text-base">
                                             {friend.name?.charAt(0).toUpperCase() || '?'}
                                         </div>
                                         <div className="flex flex-col min-w-0">
-                                            <span className="text-sm font-bold text-white truncate">
-                                                {friend.name} {friend.uid === user?.uid && <span className="text-[#a855f7] text-[10px] ml-1 uppercase tracking-widest">(Vous)</span>}
+                                            <span className="text-[13px] font-bold text-white truncate">
+                                                {friend.name} {friend.uid === user?.uid && <span className="text-[#a855f7] text-[10px] ml-1 uppercase tracking-widest font-black">({t.youLabel})</span>}
                                             </span>
+                                            {friend.email && <span className="text-[10px] text-white/30 truncate">{friend.email}</span>}
                                         </div>
                                     </div>
                                     {friend.uid !== user?.uid && (
-                                        <button onClick={() => handleInviteUser(friend)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase outline-none shadow-md transition-all active:scale-95 shrink-0 ml-2">
-                                            Envoyer
+                                        <button onClick={() => handleInviteUser(friend)} className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none shadow-md transition-all active:scale-95 shrink-0 ml-2">
+                                            <Send className="w-3 h-3" /> {t.sendLinkBtn}
                                         </button>
                                     )}
                                 </div>
                             ))}
                             {friendSearchQuery.length >= 1 && friendResults.length === 0 && (
-                                <div className="flex flex-col items-center justify-center h-full opacity-50 py-10">
-                                    <SearchIcon className="w-8 h-8 mb-3 text-[#a855f7]" />
-                                    <span className="text-[11px] uppercase tracking-widest font-bold">Aucun utilisateur trouvé</span>
+                                <div className="flex flex-col items-center justify-center h-full opacity-60 py-12">
+                                    <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-3.5">
+                                        <SearchIcon className="w-6 h-6 text-[#a855f7]" />
+                                    </div>
+                                    <span className="text-[11px] uppercase tracking-widest font-bold">{t.noUserFound}</span>
                                 </div>
                             )}
                             {friendSearchQuery.length === 0 && (
-                                <div className="flex flex-col items-center justify-center h-full opacity-30 py-10">
-                                    <Users className="w-8 h-8 mb-3" />
-                                    <span className="text-[10px] uppercase tracking-widest font-bold text-center px-4 leading-relaxed">Tapez un nom pour trouver vos amis</span>
+                                <div className="flex flex-col items-center justify-center h-full opacity-35 py-12">
+                                    <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-3.5">
+                                        <Users className="w-6 h-6" />
+                                    </div>
+                                    <span className="text-[10px] uppercase tracking-widest font-bold text-center px-8 leading-relaxed">{t.typeNameToFindFriends}</span>
                                 </div>
                             )}
+                        </div>
+
+                        <div className="flex items-center gap-2 mt-5 shrink-0 px-1">
+                            <ShieldCheck className="w-3.5 h-3.5 text-white/25 shrink-0" />
+                            <span className="text-[9px] text-white/30 leading-snug">{t.inviteWeeklyLimitNote}</span>
                         </div>
                     </div>
                 </div>
             )}
 
             {/* Colonne Gauche: Vidéo + Contrôles (Épinglée en haut sur mobile grâce à shrink-0) */}
-            <div className={isMinimized ? "w-full flex flex-col relative bg-black" : "w-full lg:flex-1 flex flex-col shrink-0 lg:shrink relative z-[60] bg-black shadow-2xl h-auto max-h-[60vh] lg:max-h-full"}>
+            <div className={isMinimized ? "w-full flex flex-col relative bg-black" : "w-full flex-1 flex flex-col relative z-[60] bg-black shadow-2xl min-h-0"}>
 
-                {/* Lecteur Vidéo Exclusif (Format 16:9 parfait sur mobile, prend tout l'espace restant sur PC) */}
-                <div className={isMinimized ? "w-full aspect-video bg-black relative flex items-center justify-center group" : "w-full aspect-video lg:aspect-auto lg:flex-1 bg-black relative border-b border-white/5 z-40 flex items-center justify-center group"}>
+                {/* Lecteur Vidéo Exclusif (remplit tout l'espace vertical disponible, la barre de nav reste toujours collée en bas) */}
+                <div className={isMinimized ? "w-full aspect-video bg-black relative flex items-center justify-center group" : "w-full flex-1 min-h-0 bg-black relative border-b border-white/5 z-40 flex items-center justify-center group"}>
                     <iframe key={iframeSrc} className={`absolute inset-0 w-full h-full bg-transparent z-10 transition-opacity duration-500 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`} src={iframeSrc} onLoad={() => setIframeLoading(false)} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
 
                     {iframeLoading && (
@@ -1725,11 +1858,9 @@ if (partyId && partyData) {
                     )}
                 </div>
 
-                {/* Barre slim toujours visible + Tableau de bord dépliable */}
+                {/* Barre slim toujours visible (titre + minimiser + quitter). Le reste (pause/épisode/serveur/partage) est maintenant dans les panneaux du bas. */}
                 {!isMinimized && (
                 <div className="w-full bg-[#0a0a0f] shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-30 relative border-t border-white/10">
-
-                    {/* Strip slim */}
                     <div className="w-full p-2.5 md:p-3 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="w-8 h-8 md:w-9 md:h-9 bg-[#a855f7]/20 rounded-lg flex items-center justify-center border border-[#a855f7]/30 shrink-0">
@@ -1739,48 +1870,151 @@ if (partyId && partyData) {
                                 <h2 className="font-black text-[10px] md:text-xs text-white uppercase tracking-widest truncate max-w-[140px] sm:max-w-[220px]">{partyData.roomName || partyData.title}</h2>
                                 <div className="flex items-center gap-1.5 mt-0.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0"></span>
-                                    <span className="text-[8px] text-white/50 uppercase font-bold tracking-widest truncate">{partyData.members?.length || 1} {t.viewersLabel}</span>
+                                    <span className="text-[8px] text-white/50 uppercase font-bold tracking-widest truncate">{(partyData.members?.length || 0) + (partyData.guestViewers?.length || 0) || 1} {t.viewersLabel}</span>
                                 </div>
                             </div>
                         </div>
-                        <button onClick={() => setShowDashboard(!showDashboard)} className="w-8 h-8 md:w-9 md:h-9 shrink-0 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all outline-none shadow-sm" title={showDashboard ? t.hideControls : t.showControls}>
-                            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showDashboard ? '' : 'rotate-180'}`} />
-                        </button>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button onClick={() => setIsMinimized(true)} className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all outline-none shadow-sm" title={t.minimizeRoom}>
+                                <Minimize2 className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setShowLeavePartyConfirm(true)} className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-white/5 hover:bg-red-500 border border-white/10 hover:border-red-500 flex items-center justify-center text-white/70 hover:text-white transition-all outline-none shadow-sm" title={iAmHost ? t.closeLive : t.quitLive}>
+                                <Power className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                )}
+
+                {/* Overlay commentaires style TikTok/Instagram Live, posé sur la vidéo (jamais de scroll de page, jamais de champ de texte ici) */}
+                {!isMinimized && (
+                <div className="absolute inset-x-0 bottom-0 z-50 pointer-events-none flex flex-col justify-end px-3 pb-2 pt-16 bg-gradient-to-t from-black/75 via-black/30 to-transparent" style={{ maxHeight: '42%' }}>
+                    <div className="flex flex-col gap-1.5 overflow-hidden">
+                        {(partyData.messages || []).filter(m => !m.isSystem && !partyData.muted?.some(mu => mu.uid === m.uid)).slice(-4).map((msg, i) => {
+                            const msgIsHost = msg.uid === partyData.hostUid;
+                            const msgIsMod = partyData.mods?.includes(msg.uid);
+                            return (
+                                <div key={i} className="text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words animate-in fade-in slide-in-from-bottom-1 duration-300">
+                                    <span className={`font-black mr-1.5 ${msgIsHost ? 'text-[#a855f7]' : (msgIsMod ? 'text-blue-400' : 'text-white/80')}`}>{msg.name}</span>
+                                    <span className="text-white/90">{msg.text}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {typingUsers.length > 0 && (
+                        <div className="text-[10px] text-white/50 italic mt-1 flex items-center gap-1.5">
+                            <span className="flex gap-0.5">
+                                <span className="w-1 h-1 rounded-full bg-[#a855f7] animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                <span className="w-1 h-1 rounded-full bg-[#a855f7] animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                <span className="w-1 h-1 rounded-full bg-[#a855f7] animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                            </span>
+                            {typingUsers.length === 1 ? `${typingUsers[0]} ${t.isTypingSingle}` : `${typingUsers.length} ${t.isTypingPlural}`}
+                        </div>
+                    )}
+                    <button onClick={() => setActiveSheet('comments')} className="absolute inset-0 w-full h-full pointer-events-auto" aria-label={t.guestChatPrompt}></button>
+                </div>
+                )}
+            </div>
+
+            {/* Barre de navigation du bas : Membres · Commentaires · Partager · Gérer (host/mod). Ouvre un panneau à la fois, façon TikTok/Insta. */}
+            {!isMinimized && (
+            <div className="shrink-0 w-full bg-[#0a0a0f] border-t border-white/10 flex items-stretch z-[70] relative mt-auto" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+                <button onClick={() => setActiveSheet(activeSheet === 'members' ? null : 'members')} className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 relative transition-colors outline-none ${activeSheet === 'members' ? 'text-[#a855f7]' : 'text-white/60 hover:text-white'}`}>
+                    <div className="relative">
+                        <Users className="w-5 h-5" />
+                        {hasNewDM && <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-red-500 border border-[#0a0a0f]"></span>}
+                    </div>
+                    <span className="text-[8px] font-bold uppercase tracking-widest">{t.navMembers}</span>
+                </button>
+                <button onClick={() => setActiveSheet(activeSheet === 'comments' ? null : 'comments')} className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 relative transition-colors outline-none ${activeSheet === 'comments' ? 'text-[#a855f7]' : 'text-white/60 hover:text-white'}`}>
+                    <div className="relative">
+                        <MessageSquare className="w-5 h-5" />
+                        {unreadComments > 0 && <span className="absolute -top-1.5 -right-2 min-w-[15px] h-[15px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center border border-[#0a0a0f]">{unreadComments > 9 ? '9+' : unreadComments}</span>}
+                    </div>
+                    <span className="text-[8px] font-bold uppercase tracking-widest">{t.navComments}</span>
+                </button>
+                <button onClick={() => setActiveSheet(activeSheet === 'share' ? null : 'share')} className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition-colors outline-none ${activeSheet === 'share' ? 'text-[#a855f7]' : 'text-white/60 hover:text-white'}`}>
+                    <Share2 className="w-5 h-5" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest">{t.navShare}</span>
+                </button>
+                {(iAmHost || iAmMod) && (
+                <button onClick={() => setActiveSheet(activeSheet === 'manage' ? null : 'manage')} className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition-colors outline-none ${activeSheet === 'manage' ? 'text-[#a855f7]' : 'text-white/60 hover:text-white'}`}>
+                    <Server className="w-5 h-5" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest">{t.navManage}</span>
+                </button>
+                )}
+            </div>
+            )}
+
+            {/* Panneau du bas (bottom-sheet) : contenu selon activeSheet */}
+            {!isMinimized && activeSheet && (
+            <div className="fixed inset-x-0 top-0 z-[8500] bg-black/70 flex items-end" style={{ height: vvh ? `${vvh}px` : '100dvh' }} onClick={() => setActiveSheet(null)}>
+                <div className="w-full bg-[#111116] border-t border-white/10 rounded-t-3xl max-h-[75vh] flex flex-col shadow-[0_-20px_60px_rgba(0,0,0,0.6)] animate-in slide-in-from-bottom duration-250" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-white/5 shrink-0">
+                        <span className="text-[11px] font-black uppercase tracking-widest text-white/80">
+                            {activeSheet === 'members' && t.navMembers}
+                            {activeSheet === 'comments' && t.navComments}
+                            {activeSheet === 'share' && t.navShare}
+                            {activeSheet === 'manage' && t.navManage}
+                        </span>
+                        <button onClick={() => setActiveSheet(null)} className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white outline-none"><X className="w-4 h-4" /></button>
                     </div>
 
-                    {/* Tableau de bord */}
-                    {showDashboard && (
-                    <div className="px-2.5 md:px-3 pb-3 pt-1 flex flex-col gap-2.5 animate-in slide-in-from-bottom-2 fade-in duration-200">
-
-                        {(iAmHost || iAmMod) && (
-                        <div className="flex gap-2">
-                            <button onClick={() => { sendSystemAction('PAUSE'); handlePartySyncAction('pause'); }} className="flex-1 flex items-center justify-center gap-1.5 bg-[#a855f7]/15 hover:bg-[#a855f7]/30 text-[#a855f7] border border-[#a855f7]/30 py-2 rounded-xl transition-colors outline-none text-[9px] font-bold uppercase tracking-widest"><Pause className="w-3.5 h-3.5 fill-current"/> {t.hostActionPause}</button>
-                            <button onClick={() => { sendSystemAction('PLAY'); handlePartySyncAction('play_countdown'); }} className="flex-1 flex items-center justify-center gap-1.5 bg-[#a855f7]/15 hover:bg-[#a855f7]/30 text-[#a855f7] border border-[#a855f7]/30 py-2 rounded-xl transition-colors outline-none text-[9px] font-bold uppercase tracking-widest"><Play className="w-3.5 h-3.5 fill-current"/> {t.hostActionPlay}</button>
-                        </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-2">
-                            {isTV && (
-                                <button onClick={() => setShowEpisodesModal(true)} className="flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl px-2.5 py-2.5 shadow-inner transition-colors outline-none">
-                                    <Tv className="w-3.5 h-3.5 text-[#a855f7] shrink-0" />
-                                    <span className="text-white/80 font-bold text-[9px] uppercase tracking-widest whitespace-nowrap">S{selectedSeason} E{selectedEpisode}</span>
-                                </button>
-                            )}
-                            <div className={`relative flex items-center bg-white/5 border border-white/10 rounded-xl px-2.5 shadow-inner hover:bg-white/10 transition-colors ${!isTV ? 'col-span-2' : ''}`}>
-                                <Server className="w-3.5 h-3.5 text-[#a855f7] mr-1.5 pointer-events-none shrink-0" />
-                                <select
-                                    value={selectedServer}
-                                    onChange={(e) => handlePlayRequest(e.target.value)}
-                                    className="appearance-none bg-transparent text-white/80 font-bold text-[9px] uppercase tracking-widest outline-none cursor-pointer pr-4 w-full py-2.5"
-                                >
-                                    {AVAILABLE_SERVERS.map(srv => <option key={srv.id} value={srv.id} className="bg-[#151520] text-white">{srv.name}</option>)}
-                                </select>
-                                <ChevronDown className="w-3 h-3 text-white/40 absolute right-2.5 pointer-events-none" />
+                    {/* --- PANNEAU MEMBRES + PV --- */}
+                    {activeSheet === 'members' && (
+                    <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
+                        {partyData.members?.map(m => {
+                            const isMHost = m.uid === partyData.hostUid;
+                            const isMMod = partyData.mods?.includes(m.uid);
+                            const isSelf = m.uid === user?.uid;
+                            return (
+                                <div key={m.uid} onClick={() => { if (!isSelf) openMemberMenu(m); }} className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${isSelf ? '' : 'hover:bg-white/5 cursor-pointer'}`}>
+                                    <div className={`relative w-9 h-9 rounded-full bg-[#151520] flex items-center justify-center font-black text-[13px] text-[#a855f7] border-[2px] shadow-sm shrink-0 ${isMHost ? 'border-[#a855f7]' : (isMMod ? 'border-blue-500' : 'border-white/20')}`}>
+                                        {m.name?.charAt(0).toUpperCase() || '?'}
+                                        {isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#a855f7] rounded-full border-2 border-[#111116] flex items-center justify-center"><Star className="w-2 h-2 fill-white text-white"/></div>}
+                                        {isMMod && !isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border-2 border-[#111116] flex items-center justify-center"><ShieldCheck className="w-2 h-2 fill-white text-white"/></div>}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-white font-bold text-[12px] truncate block">{m.name}{isSelf ? ` (${t.youLabel || 'toi'})` : ''}</span>
+                                        {isMHost && <span className="text-[8px] text-[#a855f7] font-black uppercase tracking-widest">{t.hostBadge}</span>}
+                                        {isMMod && !isMHost && <span className="text-[8px] text-blue-400 font-black uppercase tracking-widest">{t.modBadge}</span>}
+                                    </div>
+                                    {!isSelf && <Mail className="w-4 h-4 text-white/30 shrink-0" />}
+                                </div>
+                            );
+                        })}
+                        {partyData.guestViewers?.filter(g => g.uid !== effectiveUser?.uid || !isGuest).length > 0 && (
+                            <div className="flex items-center gap-2 px-2.5 pt-3 pb-1 opacity-40">
+                                <div className="h-px bg-white/10 flex-1"></div>
+                                <span className="text-[8px] font-black uppercase tracking-widest whitespace-nowrap">{t.guestBadge}</span>
+                                <div className="h-px bg-white/10 flex-1"></div>
                             </div>
-                            <button onClick={() => sendSystemAction('ADS')} className="flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-yellow-500 rounded-xl px-2.5 py-2.5 transition-colors outline-none text-[9px] font-bold uppercase tracking-widest"><ShieldCheck className="w-3.5 h-3.5"/> {t.reportAdBtn}</button>
-                            <button onClick={() => setIsMinimized(true)} className="flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 rounded-xl px-2.5 py-2.5 transition-colors outline-none text-[9px] font-bold uppercase tracking-widest"><Minimize2 className="w-3.5 h-3.5" /> {t.minimizeRoom}</button>
-                        </div>
+                        )}
+                        {partyData.guestViewers?.map(g => {
+                            const isSelfGuest = isGuest && g.uid === effectiveUser?.uid;
+                            return (
+                                <div key={g.uid} className="flex items-center gap-3 p-2.5 rounded-xl opacity-60">
+                                    <div className="w-9 h-9 rounded-full bg-[#151520] flex items-center justify-center border-[2px] border-dashed border-white/20 shadow-sm shrink-0">
+                                        <Eye className="w-3.5 h-3.5 text-white/40" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-white/70 font-bold text-[12px] truncate block">{t.guestDefaultName}{isSelfGuest ? ` (${t.youLabel})` : ''}</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {isGuest && (
+                            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 mt-2">
+                                <Lock className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                                <span className="text-[10px] text-white/50">{t.guestLockedFeature}</span>
+                            </div>
+                        )}
+                    </div>
+                    )}
 
+                    {/* --- PANNEAU PARTAGER --- */}
+                    {activeSheet === 'share' && (
+                    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
                         {isGuest ? (
                             <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5">
                                 <Lock className="w-3.5 h-3.5 text-white/40 shrink-0" />
@@ -1788,214 +2022,227 @@ if (partyId && partyData) {
                             </div>
                         ) : (
                         <>
-                        <div className="h-px bg-white/5 my-0.5"></div>
-
-                        <div className="grid grid-cols-3 gap-2">
-                            <button onClick={() => { copyToClipboardFallback(partyId); showToast(t.linkCopied, 'success'); }} className="flex flex-col items-center justify-center gap-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-2.5 transition-colors outline-none">
-                                <Key className="w-3.5 h-3.5 text-[#a855f7]" /><span className="text-white/70 font-bold text-[8px] uppercase tracking-widest">{t.copyCodeBtn}</span>
-                            </button>
-                            <button onClick={() => {
-                                const shareUrl = `${window.location.origin}/salon?party=${partyId}`;
-                                copyToClipboardFallback(shareUrl);
-                                showToast(t.linkCopied, 'success');
-                            }} className="flex flex-col items-center justify-center gap-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-2.5 transition-colors outline-none">
-                                <Copy className="w-3.5 h-3.5 text-[#a855f7]" /><span className="text-white/70 font-bold text-[8px] uppercase tracking-widest">{t.copyLinkBtnRoom}</span>
-                            </button>
-                            <button onClick={() => {
-                                const shareUrl = `${window.location.origin}/salon?party=${partyId}`;
-                                if (navigator.share) { navigator.share({ title: 'LevelMovie', text: t.inviteModalDesc, url: shareUrl }).catch(() => {}); }
-                                else { copyToClipboardFallback(shareUrl); showToast(t.linkCopied, 'success'); }
-                            }} className="flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-purple-600/30 to-pink-600/30 hover:from-purple-600/50 hover:to-pink-600/50 border border-[#a855f7]/30 rounded-xl py-2.5 transition-colors outline-none">
-                                <Send className="w-3.5 h-3.5 text-[#a855f7]" /><span className="text-white/70 font-bold text-[8px] uppercase tracking-widest">{t.sendLinkBtn}</span>
-                            </button>
+                        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <Key className="w-4 h-4 text-[#a855f7] shrink-0" />
+                                <span className="text-white font-mono text-[13px] tracking-widest truncate">{partyId}</span>
+                            </div>
+                            <button onClick={() => { copyToClipboardFallback(partyId); showToast(t.linkCopied, 'success'); }} className="text-[9px] font-black uppercase tracking-widest text-[#a855f7] bg-[#a855f7]/15 hover:bg-[#a855f7]/25 px-3 py-2 rounded-lg transition-colors outline-none shrink-0">{t.copyCodeBtn}</button>
                         </div>
-
-                        <div className="h-px bg-white/5 my-0.5"></div>
-
-                        <div className="flex gap-2">
-                            <button onClick={() => setShowUserSearch(true)} className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 rounded-xl py-2.5 transition-colors outline-none text-[9px] font-bold uppercase tracking-widest"><UserPlus className="w-3.5 h-3.5" /> {t.inviteFriendBtn}</button>
-                            {iAmMod && !iAmHost && (
-                                <button onClick={() => setShowModForceCloseConfirm(true)} className="flex-1 flex items-center justify-center gap-1.5 bg-orange-500/10 hover:bg-orange-500 border border-orange-500/30 hover:border-orange-500 text-orange-400 hover:text-white rounded-xl py-2.5 transition-colors outline-none text-[9px] font-bold uppercase tracking-widest"><ShieldAlert className="w-3.5 h-3.5" /> {t.modForceCloseBtn}</button>
-                            )}
-                            <button onClick={() => setShowLeavePartyConfirm(true)} className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 text-red-400 hover:text-white rounded-xl py-2.5 transition-colors outline-none text-[9px] font-bold uppercase tracking-widest"><Power className="w-3.5 h-3.5" /> {iAmHost ? t.closeLive : t.quitLive}</button>
+                        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <Copy className="w-4 h-4 text-[#a855f7] shrink-0" />
+                                <span className="text-white/70 text-[11px] truncate">{`${window.location.origin}/salon?party=${partyId}`}</span>
+                            </div>
+                            <button onClick={() => { copyToClipboardFallback(`${window.location.origin}/salon?party=${partyId}`); showToast(t.linkCopied, 'success'); }} className="text-[9px] font-black uppercase tracking-widest text-[#a855f7] bg-[#a855f7]/15 hover:bg-[#a855f7]/25 px-3 py-2 rounded-lg transition-colors outline-none shrink-0">{t.copyLinkBtnRoom}</button>
                         </div>
+                        <button onClick={() => {
+                            const shareUrl = `${window.location.origin}/salon?party=${partyId}`;
+                            if (navigator.share) { navigator.share({ title: 'LevelMovie', text: t.inviteModalDesc, url: shareUrl }).catch(() => {}); }
+                            else { copyToClipboardFallback(shareUrl); showToast(t.linkCopied, 'success'); }
+                        }} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600/30 to-pink-600/30 hover:from-purple-600/50 hover:to-pink-600/50 border border-[#a855f7]/30 rounded-xl py-3 transition-colors outline-none text-[11px] font-bold uppercase tracking-widest text-white">
+                            <Send className="w-4 h-4 text-[#a855f7]" /> {t.sendLinkBtn}
+                        </button>
+
+                        <div className="h-px bg-white/5 my-1"></div>
+
+                        <button onClick={() => setShowUserSearch(true)} className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 rounded-xl py-3 transition-colors outline-none text-[11px] font-bold uppercase tracking-widest"><UserPlus className="w-4 h-4" /> {t.inviteFriendBtn}</button>
                         </>
                         )}
                     </div>
                     )}
-                </div>
-                )}
-            </div>
 
-            {/* Colonne Droite: Chat (Défile à l'intérieur de lui-même) */}
-            {!isMinimized && (
-            <div className="flex-1 lg:w-[350px] xl:w-[400px] flex flex-col bg-[#0c0c10] border-t lg:border-t-0 lg:border-l border-white/5 relative z-40 min-h-0 shadow-[-20px_0_40px_rgba(0,0,0,0.8)]">
-
-                {/* Liste Membres */}
-                <div className="px-3 py-2 border-b border-white/5 flex gap-2 overflow-x-auto no-scrollbar shrink-0 items-center bg-black/20">
-                    {partyData.members?.map(m => {
-                        const isMHost = m.uid === partyData.hostUid;
-                        const isMMod = partyData.mods?.includes(m.uid);
-                        return (
-                        <div key={m.uid} onClick={(e) => { e.stopPropagation(); openMemberMenu(m); }} className={`relative group flex flex-col items-center shrink-0 ${m.uid !== user?.uid ? 'cursor-pointer hover:opacity-80' : ''}`}>
-                            <div className={`w-8 h-8 rounded-full bg-[#151520] flex items-center justify-center font-black text-[12px] text-[#a855f7] border-[2px] shadow-sm overflow-hidden ${isMHost ? 'border-[#a855f7]' : (isMMod ? 'border-blue-500' : 'border-white/20')}`}>
-                                {m.name?.charAt(0).toUpperCase() || '?'}
+                    {/* --- PANNEAU GÉRER (Host/Mod uniquement) --- */}
+                    {activeSheet === 'manage' && (iAmHost || iAmMod) && (
+                    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2.5">
+                        <div className="flex gap-2">
+                            <button onClick={() => { sendSystemAction('PAUSE'); handlePartySyncAction('pause'); }} className="flex-1 flex items-center justify-center gap-1.5 bg-[#a855f7]/15 hover:bg-[#a855f7]/30 text-[#a855f7] border border-[#a855f7]/30 py-3 rounded-xl transition-colors outline-none text-[10px] font-bold uppercase tracking-widest"><Pause className="w-3.5 h-3.5 fill-current"/> {t.hostActionPause}</button>
+                            <button onClick={() => { sendSystemAction('PLAY'); handlePartySyncAction('play_countdown'); }} className="flex-1 flex items-center justify-center gap-1.5 bg-[#a855f7]/15 hover:bg-[#a855f7]/30 text-[#a855f7] border border-[#a855f7]/30 py-3 rounded-xl transition-colors outline-none text-[10px] font-bold uppercase tracking-widest"><Play className="w-3.5 h-3.5 fill-current"/> {t.hostActionPlay}</button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            {isTV && (
+                                <button onClick={() => setShowEpisodesModal(true)} className="flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl px-2.5 py-3 shadow-inner transition-colors outline-none">
+                                    <Tv className="w-3.5 h-3.5 text-[#a855f7] shrink-0" />
+                                    <span className="text-white/80 font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">S{selectedSeason} E{selectedEpisode}</span>
+                                </button>
+                            )}
+                            {isTV && details?.seasons?.filter(s => s.season_number > 0).length > 1 && (
+                                <div className="relative flex items-center bg-white/5 border border-white/10 rounded-xl px-2.5 shadow-inner hover:bg-white/10 transition-colors">
+                                    <Tv className="w-3.5 h-3.5 text-[#a855f7] mr-1.5 pointer-events-none shrink-0" />
+                                    <select
+                                        value={selectedSeason}
+                                        onChange={(e) => { setSelectedSeason(parseInt(e.target.value)); handlePlayEpisode(parseInt(e.target.value), 1); }}
+                                        className="appearance-none bg-transparent text-white/80 font-bold text-[10px] uppercase tracking-widest outline-none cursor-pointer pr-4 w-full py-3"
+                                    >
+                                        {details.seasons.filter(s => s.season_number > 0).map(s => (
+                                            <option key={s.season_number} value={s.season_number} className="bg-[#151520] text-white">{t.seasonLabel} {s.season_number}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="w-3 h-3 text-white/40 absolute right-2.5 pointer-events-none" />
+                                </div>
+                            )}
+                            <div className={`relative flex items-center bg-white/5 border border-white/10 rounded-xl px-2.5 shadow-inner hover:bg-white/10 transition-colors ${!isTV || !(details?.seasons?.filter(s => s.season_number > 0).length > 1) ? 'col-span-2' : ''}`}>
+                                <Server className="w-3.5 h-3.5 text-[#a855f7] mr-1.5 pointer-events-none shrink-0" />
+                                <select
+                                    value={selectedServer}
+                                    onChange={(e) => handlePlayRequest(e.target.value)}
+                                    className="appearance-none bg-transparent text-white/80 font-bold text-[10px] uppercase tracking-widest outline-none cursor-pointer pr-4 w-full py-3"
+                                >
+                                    {AVAILABLE_SERVERS.map(srv => <option key={srv.id} value={srv.id} className="bg-[#151520] text-white">{srv.name}</option>)}
+                                </select>
+                                <ChevronDown className="w-3 h-3 text-white/40 absolute right-2.5 pointer-events-none" />
                             </div>
-                            {isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#a855f7] rounded-full border-2 border-[#111116] flex items-center justify-center"><Star className="w-2 h-2 fill-white text-white"/></div>}
-                            {isMMod && !isMHost && <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border-2 border-[#111116] flex items-center justify-center"><ShieldCheck className="w-2 h-2 fill-white text-white"/></div>}
                         </div>
-                    )})}
-                    {isGuest && (
-                        <div className="ml-auto flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-2.5 py-1 shrink-0">
-                            <Eye className="w-3 h-3 text-white/40" />
-                            <span className="text-[8px] text-white/50 font-bold uppercase tracking-widest whitespace-nowrap">{t.guestBadge}</span>
-                        </div>
-                    )}
-                </div>
+                        <button onClick={() => sendSystemAction('ADS')} className="w-full flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-yellow-500 rounded-xl px-2.5 py-3 transition-colors outline-none text-[10px] font-bold uppercase tracking-widest"><ShieldCheck className="w-3.5 h-3.5"/> {t.reportAdBtn}</button>
 
-                {/* Messages du Chat (Style TikTok / Instagram Live sans bulles, propre) */}
-                <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1 no-scrollbar bg-gradient-to-t from-black/80 via-black/40 to-transparent min-h-0">
-
-                    {/* Nouveau Pinned Message pour expliquer le lecteur */}
-                    <div className="bg-[#a855f7]/10 border border-[#a855f7]/30 p-2.5 rounded-xl mb-3 flex gap-2.5 items-start shrink-0 shadow-inner">
-                        <ShieldCheck className="w-4 h-4 text-[#a855f7] shrink-0 mt-0.5" />
-                        <p className="text-[10px] md:text-[11px] text-[#a855f7] leading-snug">
-                            <strong className="font-black uppercase tracking-widest block mb-0.5">{t.partyInfoPinTitle}</strong>
-                            {t.partyInfoPinText}
-                        </p>
+                        {iAmMod && !iAmHost && (
+                            <button onClick={() => setShowModForceCloseConfirm(true)} className="w-full flex items-center justify-center gap-1.5 bg-orange-500/10 hover:bg-orange-500 border border-orange-500/30 hover:border-orange-500 text-orange-400 hover:text-white rounded-xl py-3 transition-colors outline-none text-[10px] font-bold uppercase tracking-widest"><ShieldAlert className="w-3.5 h-3.5" /> {t.modForceCloseBtn}</button>
+                        )}
                     </div>
+                    )}
 
-                    {partyData.messages?.filter(msg => !partyData.muted?.some(m => m.uid === msg.uid)).map((msg, i) => {
-                        if (msg.isSystem) {
-                            let sysText = msg.text || "";
-                            if (msg.action === 'JOIN') sysText = `${t.sysJoined}`;
-                            else if (msg.action === 'LEAVE') sysText = `${t.sysLeft}`;
-                            else if (msg.action === 'PAUSE') sysText = `${t.sysPaused}`;
-                            else if (msg.action === 'PLAY') sysText = `${t.sysPlayed}`;
-                            else if (msg.action === 'ADS') sysText = `${t.sysAds}`;
-                            else if (msg.action === 'BAN') sysText = `${t.sysBanned} ${msg.targetName} de la room.`;
-                            else if (msg.action === 'EPISODE') sysText = `${t.sysEpisode} S${msg.season} E${msg.episode}`;
+                    {/* --- PANNEAU COMMENTAIRES (liste + saisie, la vidéo ne bouge jamais pendant la frappe) --- */}
+                    {activeSheet === 'comments' && (
+                    <>
+                    <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1 min-h-0">
+                        <div className="bg-[#a855f7]/10 border border-[#a855f7]/30 p-2.5 rounded-xl mb-3 flex gap-2.5 items-start shrink-0 shadow-inner">
+                            <ShieldCheck className="w-4 h-4 text-[#a855f7] shrink-0 mt-0.5" />
+                            <p className="text-[10px] md:text-[11px] text-[#a855f7] leading-snug">
+                                <strong className="font-black uppercase tracking-widest block mb-0.5">{t.partyInfoPinTitle}</strong>
+                                {t.partyInfoPinText}
+                            </p>
+                        </div>
+
+                        {partyData.messages?.filter(msg => !partyData.muted?.some(m => m.uid === msg.uid)).map((msg, i) => {
+                            if (msg.isSystem) {
+                                let sysText = msg.text || "";
+                                if (msg.action === 'JOIN') sysText = `${t.sysJoined}`;
+                                else if (msg.action === 'LEAVE') sysText = `${t.sysLeft}`;
+                                else if (msg.action === 'PAUSE') sysText = `${t.sysPaused}`;
+                                else if (msg.action === 'PLAY') sysText = `${t.sysPlayed}`;
+                                else if (msg.action === 'ADS') sysText = `${t.sysAds}`;
+                                else if (msg.action === 'BAN') sysText = `${t.sysBanned} ${msg.targetName} de la room.`;
+                                else if (msg.action === 'EPISODE') sysText = `${t.sysEpisode} S${msg.season} E${msg.episode}`;
+
+                                return (
+                                    <div key={i} className={`flex items-start w-full group mb-2 p-1 -mx-1 rounded-lg ${msg.action === 'BAN' ? 'bg-red-500/10 border border-red-500/20' : ''}`}>
+                                        <div className={`w-6 h-6 rounded-full border flex items-center justify-center mr-2.5 shrink-0 mt-0.5 shadow-sm ${msg.action === 'BAN' ? 'bg-red-500/20 border-red-500/30' : 'bg-[#a855f7]/20 border-[#a855f7]/30'}`}>
+                                            {msg.action === 'BAN' ? <UserMinus className="w-3 h-3 text-red-500" /> : <Bell className="w-3 h-3 text-[#a855f7]" />}
+                                        </div>
+                                        <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5 text-white/60 italic">
+                                            <span className={`font-bold mr-1 ${msg.action === 'BAN' ? 'text-red-500' : 'text-[#a855f7]'}`}>Alerte</span>
+                                            <span className={msg.action === 'BAN' ? 'text-red-200/80' : 'text-white/60'}>{msg.name} {sysText}</span>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            const msgIsHost = msg.uid === partyData.hostUid;
+                            const msgIsMod = partyData.mods?.includes(msg.uid);
 
                             return (
-                                <div key={i} className={`flex items-start w-full group mb-2 p-1 -mx-1 rounded-lg ${msg.action === 'BAN' ? 'bg-red-500/10 border border-red-500/20' : ''}`}>
-                                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center mr-2.5 shrink-0 mt-0.5 shadow-sm ${msg.action === 'BAN' ? 'bg-red-500/20 border-red-500/30' : 'bg-[#a855f7]/20 border-[#a855f7]/30'}`}>
-                                        {msg.action === 'BAN' ? <UserMinus className="w-3 h-3 text-red-500" /> : <Bell className="w-3 h-3 text-[#a855f7]" />}
-                                    </div>
-                                    <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5 text-white/60 italic">
-                                        <span className={`font-bold mr-1 ${msg.action === 'BAN' ? 'text-red-500' : 'text-[#a855f7]'}`}>Alerte</span>
-                                        <span className={msg.action === 'BAN' ? 'text-red-200/80' : 'text-white/60'}>{msg.name} {sysText}</span>
-                                    </div>
+                            <div key={i} className="flex items-start w-full group mb-2 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-lg transition-colors chat-msg">
+                                <div onClick={(e) => { e.stopPropagation(); if(msg.uid !== user?.uid) openMemberMenu(msg); }} className="w-6 h-6 rounded-full bg-[#151520] flex items-center justify-center font-black text-[10px] text-[#a855f7] mr-2.5 shrink-0 border border-white/10 shadow-sm mt-0.5 hover:opacity-80">
+                                    {msg.name?.charAt(0).toUpperCase() || '?'}
                                 </div>
-                            );
-                        }
-
-                        const msgIsHost = msg.uid === partyData.hostUid;
-                        const msgIsMod = partyData.mods?.includes(msg.uid);
-
-                        return (
-                        <div key={i} className="flex items-start w-full group mb-2 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded-lg transition-colors chat-msg">
-                            {/* Avatar (Ouvre le menu modération) */}
-                            <div onClick={(e) => { e.stopPropagation(); if(msg.uid !== user?.uid) openMemberMenu(msg); }} className="w-6 h-6 rounded-full bg-[#151520] flex items-center justify-center font-black text-[10px] text-[#a855f7] mr-2.5 shrink-0 border border-white/10 shadow-sm mt-0.5 hover:opacity-80">
-                                {msg.name?.charAt(0).toUpperCase() || '?'}
+                                <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5" onClick={() => { if(msg.uid !== user?.uid) setReplyingTo({ name: msg.name, text: msg.text }) }}>
+                                    {msg.replyTo && (
+                                        <div className="text-[9px] text-white/40 mb-0.5 flex items-center gap-1.5 border-l-2 border-[#a855f7] pl-1.5">
+                                            <Reply className="w-2.5 h-2.5" /> <span className="truncate max-w-[200px]"><strong className="text-white/60">{msg.replyTo.name}:</strong> {msg.replyTo.text}</span>
+                                        </div>
+                                    )}
+                                    <span className={`font-black mr-2 ${msgIsHost ? 'text-[#a855f7]' : (msgIsMod ? 'text-blue-400' : 'text-white/70')}`}>
+                                        {msg.name}
+                                        {msgIsHost && <span className="bg-[#a855f7]/20 text-[#a855f7] text-[6px] px-1 py-0.5 rounded uppercase font-black border border-[#a855f7]/30 ml-1.5 align-middle">{t.hostBadge}</span>}
+                                        {msgIsMod && !msgIsHost && <span className="bg-blue-500/20 text-blue-400 text-[6px] px-1 py-0.5 rounded uppercase font-black border border-blue-500/30 ml-1.5 align-middle">{t.modBadge}</span>}
+                                    </span>
+                                    <span className="text-white drop-shadow-sm">{msg.text}</span>
+                                </div>
                             </div>
+                        )})}
+                        <div ref={chatEndRef} className="h-2 shrink-0" />
+                    </div>
 
-                            <div className="flex-1 text-[12px] md:text-[13px] leading-snug drop-shadow-md break-words pt-0.5" onClick={() => { if(msg.uid !== user?.uid) setReplyingTo({ name: msg.name, text: msg.text }) }}>
-                                {/* Reply Indicator */}
-                                {msg.replyTo && (
-                                    <div className="text-[9px] text-white/40 mb-0.5 flex items-center gap-1.5 border-l-2 border-[#a855f7] pl-1.5">
-                                        <Reply className="w-2.5 h-2.5" /> <span className="truncate max-w-[200px]"><strong className="text-white/60">{msg.replyTo.name}:</strong> {msg.replyTo.text}</span>
-                                    </div>
-                                )}
-                                {/* Name + Message Stacked Inline */}
-                                <span className={`font-black mr-2 ${msgIsHost ? 'text-[#a855f7]' : (msgIsMod ? 'text-blue-400' : 'text-white/70')}`}>
-                                    {msg.name}
-                                    {msgIsHost && <span className="bg-[#a855f7]/20 text-[#a855f7] text-[6px] px-1 py-0.5 rounded uppercase font-black border border-[#a855f7]/30 ml-1.5 align-middle">{t.hostBadge}</span>}
-                                    {msgIsMod && !msgIsHost && <span className="bg-blue-500/20 text-blue-400 text-[6px] px-1 py-0.5 rounded uppercase font-black border border-blue-500/30 ml-1.5 align-middle">{t.modBadge}</span>}
-                                </span>
-                                <span className="text-white drop-shadow-sm">{msg.text}</span>
-                            </div>
-                        </div>
-                    )})}
-                    <div ref={chatEndRef} className="h-2 shrink-0" />
-                </div>
-
-                {/* Input Chat Fixé en bas (ou connexion invité si non connecté) */}
-                <div className="p-3 border-t border-white/5 bg-[#0c0c10] shrink-0 z-20" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
-                    {isGuest ? (
-                        <div className="flex flex-col gap-2">
-                            {!showGuestKeyLogin ? (
-                                <>
-                                    <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold text-center mb-0.5">{t.guestChatPrompt}</span>
-                                    <button
-                                        onClick={onGoogleLogin}
-                                        className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl bg-white text-[#1f1f1f] text-[11px] font-bold uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all outline-none shadow-md"
-                                    >
-                                        <GoogleLogoSVG className="w-4 h-4" /> {t.continueWithGoogleBtn}
-                                    </button>
-                                    <button
-                                        onClick={() => setShowGuestKeyLogin(true)}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 outline-none"
-                                    >
-                                        <Key className="w-3.5 h-3.5 text-[#a855f7]" /> {t.useKeyInstead}
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="relative w-full">
-                                        <input
-                                            type={showKey ? "text" : "password"}
-                                            value={accessKey}
-                                            onChange={(e) => setAccessKey(e.target.value)}
-                                            onFocus={() => setTimeout(() => window.scrollTo(0, 0), 50)}
-                                            placeholder={t.guestKeyPlaceholder}
-                                            className="w-full bg-[#151520] border border-[#a855f7]/40 rounded-xl py-3 pl-4 pr-11 text-center text-white font-mono text-[12px] tracking-widest outline-none focus:border-[#a855f7] transition-all"
-                                        />
-                                        <button onClick={() => setShowKey(!showKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a855f7]/60 hover:text-[#a855f7] transition-colors outline-none">
-                                            {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                        </button>
-                                    </div>
-                                    {authError && <p className="text-[10px] text-red-400 font-bold text-center bg-red-500/10 py-1.5 rounded-lg border border-red-500/20">{authError}</p>}
-                                    <div className="flex gap-2">
-                                        <button onClick={() => setShowGuestKeyLogin(false)} className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 outline-none">{t.backToGoogleOption}</button>
+                    {/* Saisie du commentaire (dans le pop-up, jamais collée à la vidéo : plus aucun risque de "remontée" sur Safari) */}
+                    <div className="p-3 border-t border-white/5 bg-[#0c0c10] shrink-0 z-20" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
+                        {isGuest ? (
+                            <div className="flex flex-col gap-2">
+                                {!showGuestKeyLogin ? (
+                                    <>
+                                        <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold text-center mb-0.5">{t.guestChatPrompt}</span>
                                         <button
-                                            onClick={handleLogin}
-                                            disabled={isLoadingAuth || !accessKey.trim()}
-                                            className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed outline-none shadow-md"
+                                            onClick={onGoogleLogin}
+                                            className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl bg-white text-[#1f1f1f] text-[11px] font-bold uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all outline-none shadow-md"
                                         >
-                                            {isLoadingAuth ? t.verifyLoading : t.connectBtn}
+                                            <GoogleLogoSVG className="w-4 h-4" /> {t.continueWithGoogleBtn}
                                         </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    ) : (
-                    <>
-                    {replyingTo && (
-                        <div className="flex items-center justify-between bg-white/5 px-3 py-2 rounded-t-xl border-x border-t border-white/10 -mt-8 mb-2">
-                            <div className="text-[9px] md:text-[11px] text-white/60 truncate flex-1 flex items-center gap-1.5">
-                                <Reply className="w-3.5 h-3.5 text-[#a855f7]" /> <span className="font-bold">{t.replyTo} {replyingTo.name}:</span> <span className="italic">{replyingTo.text}</span>
+                                        <button
+                                            onClick={() => setShowGuestKeyLogin(true)}
+                                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 outline-none"
+                                        >
+                                            <Key className="w-3.5 h-3.5 text-[#a855f7]" /> {t.useKeyInstead}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="relative w-full">
+                                            <input
+                                                type={showKey ? "text" : "password"}
+                                                value={accessKey}
+                                                onChange={(e) => setAccessKey(e.target.value)}
+                                                onFocus={() => setTimeout(() => window.scrollTo(0, 0), 50)}
+                                                placeholder={t.guestKeyPlaceholder}
+                                                className="w-full bg-[#151520] border border-[#a855f7]/40 rounded-xl py-3 pl-4 pr-11 text-center text-white font-mono text-[12px] tracking-widest outline-none focus:border-[#a855f7] transition-all"
+                                            />
+                                            <button onClick={() => setShowKey(!showKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a855f7]/60 hover:text-[#a855f7] transition-colors outline-none">
+                                                {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                        {authError && <p className="text-[10px] text-red-400 font-bold text-center bg-red-500/10 py-1.5 rounded-lg border border-red-500/20">{authError}</p>}
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setShowGuestKeyLogin(false)} className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 outline-none">{t.backToGoogleOption}</button>
+                                            <button
+                                                onClick={handleLogin}
+                                                disabled={isLoadingAuth || !accessKey.trim()}
+                                                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed outline-none shadow-md"
+                                            >
+                                                {isLoadingAuth ? t.verifyLoading : t.connectBtn}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
-                            <button onClick={() => setReplyingTo(null)} className="text-white/40 hover:text-white p-1 outline-none"><X className="w-3.5 h-3.5" /></button>
+                        ) : (
+                        <>
+                        {replyingTo && (
+                            <div className="flex items-center justify-between bg-white/5 px-3 py-2 rounded-t-xl border-x border-t border-white/10 -mt-8 mb-2">
+                                <div className="text-[9px] md:text-[11px] text-white/60 truncate flex-1 flex items-center gap-1.5">
+                                    <Reply className="w-3.5 h-3.5 text-[#a855f7]" /> <span className="font-bold">{t.replyTo} {replyingTo.name}:</span> <span className="italic">{replyingTo.text}</span>
+                                </div>
+                                <button onClick={() => setReplyingTo(null)} className="text-white/40 hover:text-white p-1 outline-none"><X className="w-3.5 h-3.5" /></button>
+                            </div>
+                        )}
+                        <div className={`relative flex items-center gap-1.5 bg-[#151520] border border-white/10 ${replyingTo ? 'rounded-b-2xl rounded-tr-2xl' : 'rounded-2xl'} pl-4 pr-1.5 py-1.5 transition-all focus-within:border-[#a855f7]/60 focus-within:bg-[#181822] shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)]`}>
+                            <input
+                                type="text"
+                                maxLength="150"
+                                value={chatInput}
+                                onChange={(e) => { setChatInput(e.target.value); notifyTyping(); }}
+                                onKeyDown={(e) => { if (e.key === 'Enter') { handleSendPartyMessage(chatInput, replyingTo); setChatInput(''); setReplyingTo(null); } }}
+                                onFocus={() => setTimeout(() => window.scrollTo(0, 0), 50)}
+                                placeholder={t.chatPlaceholder}
+                                className="w-full bg-transparent py-2 text-[13px] text-white outline-none placeholder:text-white/30"
+                            />
+                            <button
+                                onClick={() => { handleSendPartyMessage(chatInput, replyingTo); setChatInput(''); setReplyingTo(null); }}
+                                disabled={!chatInput.trim()}
+                                className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-[#a855f7] to-[#7c3aed] flex items-center justify-center text-white hover:opacity-90 disabled:opacity-30 disabled:from-white/10 disabled:to-white/10 transition-all outline-none shadow-md active:scale-95"
+                            >
+                                <Send className="w-4 h-4 ml-0.5" />
+                            </button>
                         </div>
-                    )}
-                    <div className={`relative flex items-center gap-1.5 bg-[#151520] border border-white/10 ${replyingTo ? 'rounded-b-2xl rounded-tr-2xl' : 'rounded-2xl'} pl-4 pr-1.5 py-1.5 transition-all focus-within:border-[#a855f7]/60 focus-within:bg-[#181822] shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)]`}>
-                        <input 
-                            type="text" 
-                            maxLength="150"
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') { handleSendPartyMessage(chatInput, replyingTo); setChatInput(''); setReplyingTo(null); } }}
-                            onFocus={() => setTimeout(() => window.scrollTo(0, 0), 50)}
-                            placeholder={t.chatPlaceholder}
-                            className="w-full bg-transparent py-2 text-[13px] text-white outline-none placeholder:text-white/30"
-                        />
-                        <button 
-                            onClick={() => { handleSendPartyMessage(chatInput, replyingTo); setChatInput(''); setReplyingTo(null); }} 
-                            disabled={!chatInput.trim()}
-                            className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-[#a855f7] to-[#7c3aed] flex items-center justify-center text-white hover:opacity-90 disabled:opacity-30 disabled:from-white/10 disabled:to-white/10 transition-all outline-none shadow-md active:scale-95"
-                        >
-                            <Send className="w-4 h-4 ml-0.5" />
-                        </button>
+                        </>
+                        )}
                     </div>
                     </>
                     )}
@@ -2309,6 +2556,8 @@ const [toasts, setToasts] = useState([]);
 
 const [partyId, setPartyId] = useState(null);
 const [partyData, setPartyData] = useState(null);
+const partyDataRef = useRef(null);
+const [endSummary, setEndSummary] = useState(null);
 const [selectedMovie, setSelectedMovie] = useState(null);
 const [joinError, setJoinError] = useState('');
 const [isJoining, setIsJoining] = useState(false);
@@ -2471,12 +2720,17 @@ const autoJoin = async () => {
         setPartyId(ROOM_CODE);
         document.body.classList.add('party-mode');
 
-        // Un invité ne devient jamais un membre officiel : il regarde/discute en spectateur
-        // jusqu'à ce qu'il se connecte (Google ou clé LVL) depuis le champ de chat.
+        // Un invité ne devient jamais un membre officiel (pas de droits, pas de PV), mais il
+        // doit rester VISIBLE dans le salon : on l'ajoute à une liste "guestViewers" légère,
+        // séparée de "members", uniquement pour l'affichage du nombre/de la liste de présents.
         if (!isGuest && !d.members.some(m => m.uid === effectiveUser.uid)) {
             await updateDoc(pRef, {
                 members: arrayUnion({ uid: effectiveUser.uid, name: effectiveUserName, photo: userPhoto || "" }),
                 messages: arrayUnion({ isSystem: true, action: 'JOIN', name: effectiveUserName, photo: userPhoto || "", uid: effectiveUser.uid, time: Date.now() })
+            });
+        } else if (isGuest && !(d.guestViewers || []).some(g => g.uid === effectiveUser.uid)) {
+            await updateDoc(pRef, {
+                guestViewers: arrayUnion({ uid: effectiveUser.uid, joinedAt: Date.now() })
             });
         }
         setIsJoining(false);
@@ -2507,9 +2761,20 @@ const unsubscribe = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'p
             document.body.classList.remove('party-mode');
             return;
         }
+        // Auto-répare les salons qui n'ont pas encore de date de création (rétrocompatibilité)
+        if (!data.createdAt && data.hostUid === user?.uid) {
+            updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'parties', partyId), { createdAt: Date.now() }).catch(() => {});
+        }
+        partyDataRef.current = data;
         setPartyData(data);
     } else {
-        setJoinError(t.sessionEnded);
+        const finalData = docSnap.exists() ? docSnap.data() : partyDataRef.current;
+        const totalViewers = (finalData?.members?.length || 0) + (finalData?.guestViewers?.length || 0);
+        setEndSummary({
+            title: finalData?.roomName || finalData?.title || '',
+            durationMs: finalData?.createdAt ? Math.max(0, Date.now() - finalData.createdAt) : null,
+            totalViewers
+        });
         setPartyId(null); setPartyData(null); setSelectedMovie(null);
         document.body.classList.remove('party-mode');
     }
@@ -2602,7 +2867,7 @@ return (
             <AlertOctagon className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h1 className="text-lg font-black uppercase tracking-widest mb-2">Lien invalide</h1>
             <p className="text-white/50 text-sm mb-6">Ce lien de salon n'est pas valide ou incomplet.</p>
-            <a href="https://levelup-ecosystem.com/movie" className="inline-block bg-[#a855f7] text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest no-underline">Aller sur LevelMovie</a>
+            <a href="https://levelup-ecosystem.com/movie" className="inline-block bg-[#a855f7] text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest no-underline">{t.homePageBtn}</a>
         </div>
     </div>
 );
@@ -2610,7 +2875,33 @@ return (
 
 // Remarque : il n'y a plus de mur de connexion ici. Un utilisateur qui arrive avec un
 // lien de salon valide entre directement dedans en mode invité (vidéo + chat visibles),
-// et se connecte s'il le souhaite (Google ou clé LVL) via le champ de chat, plus bas.
+// et se connecte s'il le souhaite (Google ou clé LevelUp) via le champ de chat, plus bas.
+
+if (endSummary) {
+return (
+    <div className="bg-main flex items-center justify-center min-h-screen p-6 text-center">
+        <style>{globalStyles}</style>
+        <div className="max-w-sm w-full glass p-8 rounded-[2rem] border border-white/5 shadow-[0_0_50px_rgba(168,85,247,0.15)] animate-in fade-in zoom-in duration-300">
+            <div className="w-14 h-14 rounded-2xl bg-[#a855f7]/15 border border-[#a855f7]/30 flex items-center justify-center mx-auto mb-4">
+                <Power className="w-7 h-7 text-[#a855f7]" />
+            </div>
+            <h1 className="text-lg font-black uppercase tracking-widest mb-1.5">{t.liveEndedTitle}</h1>
+            {endSummary.title && <p className="text-white/40 text-xs mb-6 truncate">{endSummary.title}</p>}
+            <div className="grid grid-cols-2 gap-3 mb-8">
+                <div className="bg-white/5 border border-white/10 rounded-2xl py-4 px-2">
+                    <span className="block text-[9px] text-white/40 uppercase tracking-widest font-bold mb-1.5">{t.durationLabel}</span>
+                    <span className="block text-white font-black text-lg">{endSummary.durationMs != null ? formatDuration(endSummary.durationMs) : '—'}</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-2xl py-4 px-2">
+                    <span className="block text-[9px] text-white/40 uppercase tracking-widest font-bold mb-1.5">{t.viewersLabel}</span>
+                    <span className="block text-white font-black text-lg">{endSummary.totalViewers || 1}</span>
+                </div>
+            </div>
+            <a href="https://levelup-ecosystem.com/movie" className="inline-block w-full bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white px-6 py-4 rounded-xl text-xs font-black uppercase tracking-widest no-underline shadow-[0_0_25px_rgba(168,85,247,0.4)]">{t.homePageBtn}</a>
+        </div>
+    </div>
+);
+}
 
 if (joinError) {
 return (
@@ -2620,7 +2911,7 @@ return (
             <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h1 className="text-lg font-black uppercase tracking-widest mb-2">Salon inaccessible</h1>
             <p className="text-white/50 text-sm mb-6">{joinError}</p>
-            <a href="https://levelup-ecosystem.com/movie" className="inline-block bg-[#a855f7] text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest no-underline">Aller sur LevelMovie</a>
+            <a href="https://levelup-ecosystem.com/movie" className="inline-block bg-[#a855f7] text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest no-underline">{t.homePageBtn}</a>
         </div>
     </div>
 );
