@@ -212,6 +212,9 @@ const i18n = {
 fr: {
 appTitle: "LevelMovie",
 enterKey: "Clé d'Accès requise",
+loginRequiredDesc: "Connecte-toi pour débloquer cette fonctionnalité (Ma Liste, Salons de visionnage...).",
+guestConnectLabel: "Se connecter",
+guestListLocked: "Connecte-toi pour créer ta liste de favoris",
 verifyKey: "Connexion",
 verifyLoading: "Vérification...",
 forgotKey: "Obtenir ma clé",
@@ -467,6 +470,9 @@ roomResumeHost: "Session en cours détectée. Reconnexion automatique au salon..
 en: {
 appTitle: "LevelMovie",
 enterKey: "Access Key required",
+loginRequiredDesc: "Sign in to unlock this feature (My List, Watch Parties...).",
+guestConnectLabel: "Sign In",
+guestListLocked: "Sign in to build your favorites list",
 verifyKey: "Login",
 verifyLoading: "Verifying...",
 forgotKey: "Get my key",
@@ -794,6 +800,7 @@ const [pinModal, setPinModal] = useState({ show: false, mode: 'create', tempPin:
 const [isNearBottom, setIsNearBottom] = useState(false);
 const [scrollProgress, setScrollProgress] = useState(0);
 const [showKey, setShowKey] = useState(false);
+const [showLoginModal, setShowLoginModal] = useState(false);
 
 const [partyId, setPartyId] = useState(null);
 const [partyData, setPartyData] = useState(null);
@@ -922,6 +929,7 @@ const rejoinActiveParty = async (pData) => {
 };
 
 const triggerJoinParty = (code) => {
+    if (!user) { setShowLoginModal(true); return; }
     const seen = localStorage.getItem('lm_party_tutorial_seen');
     if (!seen) {
         setPendingPartyAction({ type: 'join', code });
@@ -1273,7 +1281,7 @@ const formatAccessKey = (val) => {
     setAccessKey(val); 
 };
 
-const handleLogin = async () => {
+const handleLogin = async (onSuccess) => {
     const finalKey = accessKey.trim();
     if (!finalKey) return;
     setIsLoadingAuth(true);
@@ -1333,6 +1341,7 @@ const handleLogin = async () => {
 
                 showToast(t.loginSuccess, 'success');
                 setIsLoggingIn(false);
+                if (onSuccess) onSuccess();
 
                 const pendingParty = localStorage.getItem('pending_party_join');
                 if (pendingParty) { triggerJoinParty(pendingParty); }
@@ -1414,7 +1423,7 @@ return () => clearTimeout(delayDebounceFn);
 }, [partySearchQuery, lang, parentalFilter, currentCategory]);
 
 const toggleWatchlist = async (movie) => {
-if (!user || !fbUser) return;
+if (!user || !fbUser) { setShowLoginModal(true); return; }
 const isAdded = watchlist.includes(movie.id);
 
 let newList;
@@ -1495,6 +1504,7 @@ window.location.href = `/salon?party=${newPartyId}`;
 };
 
 const triggerCreateParty = (movie) => {
+    if (!user) { setShowLoginModal(true); return; }
     const seen = localStorage.getItem('lm_party_tutorial_seen');
     if (!seen) {
         setPendingPartyAction({ type: 'create', movie });
@@ -1740,22 +1750,18 @@ const handleSubmitReview = async () => {
     setSupportSubmitting(false);
 };
 
-if (!user) {
-return (
-<div className="bg-main flex items-center justify-center p-4 sm:p-8 fixed inset-0 z-[5000]">
+{showLoginModal && (
+<div className="fixed inset-0 z-[9500] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200">
 <style>{globalStyles}</style>
-<button
-onClick={handleLangToggle}
-className="absolute top-6 right-6 flex items-center justify-center min-w-[60px] gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-full transition-all text-white/70 hover:text-white text-[11px] font-bold uppercase tracking-widest backdrop-blur-md z-50 shadow-lg outline-none"
->
-<Globe className="w-4 h-4 text-[#a855f7]" /> {lang === 'fr' ? 'EN' : 'FR'}
+<div className="w-full max-w-sm text-center py-4 relative glass p-8 rounded-[2rem] border border-white/5 shadow-[0_0_50px_rgba(168,85,247,0.15)] animate-in zoom-in duration-300">
+<button onClick={() => { setShowLoginModal(false); setAuthError(''); }} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors outline-none">
+<X className="w-4 h-4" />
 </button>
-
-<div className="w-full max-w-sm text-center py-4 relative glass p-8 rounded-[2rem] border border-white/5 shadow-[0_0_50px_rgba(168,85,247,0.15)] animate-in fade-in zoom-in duration-300">
 <LevelMovieLogo className="w-12 h-12 text-[#a855f7] mx-auto mb-4" />
-<h1 className="text-3xl font-black tracking-widest mb-10 shrink-0 drop-shadow-md">
+<h1 className="text-3xl font-black tracking-widest mb-4 shrink-0 drop-shadow-md">
 <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
 </h1>
+<p className="text-white/50 text-xs mb-6">{t.loginRequiredDesc}</p>
 <div className="space-y-6">
 <p className="text-[11px] font-bold text-[#a855f7] uppercase tracking-[0.1em] mb-2 flex items-center justify-center gap-2">
 <Shield className="w-4 h-4" /> {t.enterKey}
@@ -1776,7 +1782,7 @@ className="absolute right-4 top-1/2 -translate-y-1/2 text-[#a855f7]/60 hover:tex
 </button>
 </div>
 <button
-onClick={handleLogin}
+onClick={() => handleLogin(() => setShowLoginModal(false))}
 disabled={isLoadingAuth || !accessKey.trim()}
 className="w-full bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white py-4 rounded-xl font-black text-[12px] uppercase tracking-[0.1em] hover:opacity-90 active:scale-95 transition-all shadow-[0_0_25px_rgba(168,85,247,0.4)] disabled:opacity-50 disabled:cursor-not-allowed outline-none"
 >
@@ -1791,12 +1797,12 @@ className="w-full bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white py-4 r
 </div>
 </div>
 </div>
-);
-}
+)}
 
 return (
 <div className="bg-main text-white min-h-screen">
 <style>{globalStyles}</style>
+
 
 {/* MODAL INVITATION MODERATEUR */}
 {partyData?.modInvites?.includes(user?.uid) && (
@@ -2064,12 +2070,12 @@ return (
     <span className="hidden md:inline truncate">{t.searchPlaceholder}</span>
 </button>
 
-<div className="flex items-center gap-3 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer shadow-md outline-none" onClick={() => setShowSettings(true)}>
+<div className="flex items-center gap-3 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer shadow-md outline-none" onClick={() => user ? setShowSettings(true) : setShowLoginModal(true)}>
 <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#151520] flex items-center justify-center overflow-hidden border border-[#a855f7]/40 shadow-inner shrink-0">
-{userPhoto ? <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" /> : <span className="text-[12px] md:text-[13px] font-black text-[#a855f7]">{defaultUserName.charAt(0).toUpperCase()}</span>}
+{user ? (userPhoto ? <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" /> : <span className="text-[12px] md:text-[13px] font-black text-[#a855f7]">{defaultUserName.charAt(0).toUpperCase()}</span>) : <Key className="w-3.5 h-3.5 text-[#a855f7]" />}
 </div>
 <div className="hidden md:block min-w-0">
-<p className="text-[12px] font-bold uppercase truncate tracking-wide text-white/90">{defaultUserName}</p>
+<p className="text-[12px] font-bold uppercase truncate tracking-wide text-white/90">{user ? defaultUserName : t.guestConnectLabel}</p>
 </div>
 </div>
 </div>
@@ -2222,9 +2228,16 @@ return (
 <div className="pt-24 px-0 pb-24 min-h-screen">
 <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest pl-4 md:pl-14 mb-6"><Bookmark className="w-6 h-6 text-[#a855f7] inline mr-2" /> {t.myList}</h2>
 {watchlistData.length === 0 ? (
-<div className="flex flex-col items-center justify-center py-32 opacity-50">
-<Bookmark className="w-16 h-16 mb-4" />
-<p className="text-sm uppercase tracking-widest font-bold">{t.emptyList}</p>
+<div className="flex flex-col items-center justify-center py-32 opacity-80 px-6 text-center">
+<Bookmark className="w-16 h-16 mb-4 opacity-50" />
+{!user ? (
+<>
+<p className="text-sm uppercase tracking-widest font-bold mb-4">{t.guestListLocked}</p>
+<button onClick={() => setShowLoginModal(true)} className="bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(168,85,247,0.4)] outline-none">{t.guestConnectLabel}</button>
+</>
+) : (
+<p className="text-sm uppercase tracking-widest font-bold opacity-50">{t.emptyList}</p>
+)}
 </div>
 ) : (
 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-4 md:px-14">
