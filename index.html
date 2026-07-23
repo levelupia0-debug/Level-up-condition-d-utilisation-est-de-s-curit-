@@ -75,6 +75,15 @@ if (partyParam) {
     shouldUpdateUrl = true;
 }
 
+// 3. Capture du film/épisode en cours depuis l'URL (?watch=ID&type=movie|tv&s=SAISON&e=EPISODE)
+// On NE supprime PAS ces paramètres : ils doivent rester dans l'URL tant que la lecture est active.
+const INITIAL_WATCH_PARAMS = {
+    id: urlParams.get('watch'),
+    type: urlParams.get('type') || 'movie',
+    season: urlParams.get('s') ? parseInt(urlParams.get('s')) : null,
+    episode: urlParams.get('e') ? parseInt(urlParams.get('e')) : null
+};
+
 // 3. Appliquer la nouvelle URL propre (si modifiée)
 if (shouldUpdateUrl) {
     let newUrl = window.location.pathname;
@@ -1079,23 +1088,36 @@ if (pendingParty) {
     setActivePartyCode(activeParty);
 } else {
     // Reprise automatique du film/épisode en cours après un refresh (hors watch party)
+    // Priorité à l'URL (?watch=ID) si présente, sinon on retombe sur le localStorage.
     try {
-        const nowPlayingRaw = localStorage.getItem('lm_now_playing');
-        if (nowPlayingRaw) {
-            const np = JSON.parse(nowPlayingRaw);
-            const isRecent = np.ts && (Date.now() - np.ts) < 6 * 60 * 60 * 1000; // 6h
-            if (np.id && np.mediaType && isRecent) {
-                const res = await fetch(`${BASE_URL}/${np.mediaType}/${np.id}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
-                const movieData = await res.json();
-                if (movieData && movieData.id) {
-                    if (np.mediaType === 'tv') {
-                        movieData.resumeSeason = np.season || 1;
-                        movieData.resumeEpisode = np.episode || 1;
-                    }
-                    openModal(movieData, 'play');
+        if (INITIAL_WATCH_PARAMS.id) {
+            const res = await fetch(`${BASE_URL}/${INITIAL_WATCH_PARAMS.type}/${INITIAL_WATCH_PARAMS.id}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
+            const movieData = await res.json();
+            if (movieData && movieData.id) {
+                if (INITIAL_WATCH_PARAMS.type === 'tv') {
+                    movieData.resumeSeason = INITIAL_WATCH_PARAMS.season || 1;
+                    movieData.resumeEpisode = INITIAL_WATCH_PARAMS.episode || 1;
                 }
-            } else {
-                localStorage.removeItem('lm_now_playing');
+                openModal(movieData, 'play');
+            }
+        } else {
+            const nowPlayingRaw = localStorage.getItem('lm_now_playing');
+            if (nowPlayingRaw) {
+                const np = JSON.parse(nowPlayingRaw);
+                const isRecent = np.ts && (Date.now() - np.ts) < 6 * 60 * 60 * 1000; // 6h
+                if (np.id && np.mediaType && isRecent) {
+                    const res = await fetch(`${BASE_URL}/${np.mediaType}/${np.id}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
+                    const movieData = await res.json();
+                    if (movieData && movieData.id) {
+                        if (np.mediaType === 'tv') {
+                            movieData.resumeSeason = np.season || 1;
+                            movieData.resumeEpisode = np.episode || 1;
+                        }
+                        openModal(movieData, 'play');
+                    }
+                } else {
+                    localStorage.removeItem('lm_now_playing');
+                }
             }
         }
     } catch(e) { console.error("Erreur reprise lecture:", e); }
@@ -2608,7 +2630,16 @@ return (
 <MovieModal
 movie={selectedMovie}
 mode={modalMode}
-onClose={() => { localStorage.removeItem('lm_now_playing'); setSelectedMovie(null); }}
+onClose={() => {
+    localStorage.removeItem('lm_now_playing');
+    setSelectedMovie(null);
+    try {
+        const params = new URLSearchParams(window.location.search);
+        params.delete('watch'); params.delete('type'); params.delete('s'); params.delete('e');
+        const q = params.toString();
+        window.history.replaceState({}, '', window.location.pathname + (q ? `?${q}` : ''));
+    } catch(e) {}
+}}
 onSelectSimilar={(m) => { setSelectedMovie(m); setModalMode('info'); addToHistory(m); }}
 t={t}
 lang={langCode}
@@ -3108,6 +3139,8 @@ return () => { cancelled = true; };
 
 // Sauvegarde en continu la lecture en cours (film/épisode/serveur) pour qu'un refresh
 // de la page reprenne exactement où l'utilisateur en était, sans dépendre d'un salon.
+// Met aussi à jour l'URL du navigateur (?watch=ID&type=...&s=...&e=...) pour qu'un lien
+// copié ou un simple refresh retombe toujours sur le même film/épisode.
 useEffect(() => {
 if (partyId) return; // dans un salon, la reprise est gérée par la logique de la watch party
 if (modalMode !== 'play') return;
@@ -3120,6 +3153,14 @@ try {
         episode: isTV ? selectedEpisode : null,
         ts: Date.now()
     }));
+} catch(e) {}
+try {
+    const params = new URLSearchParams(window.location.search);
+    params.set('watch', movie.id);
+    params.set('type', typeStr);
+    if (isTV) { params.set('s', selectedSeason); params.set('e', selectedEpisode); }
+    else { params.delete('s'); params.delete('e'); }
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
 } catch(e) {}
 if (isTV && addToHistory) {
     addToHistory(movie, selectedSeason, selectedEpisode);
