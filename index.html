@@ -2193,7 +2193,7 @@ return (
 
     {/* Bannière Salon en cours */}
     {activePartyCode && (
-        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-[#a855f7]/50 rounded-[2rem] p-6 md:p-8 mb-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
+        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-[#a855f7]/50 rounded-[2rem] p-6 md:p-8 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
             <div className="flex items-center gap-4 text-center md:text-left w-full md:w-auto">
                 <div className="w-14 h-14 bg-[#a855f7] rounded-full flex items-center justify-center shadow-lg animate-pulse shrink-0 mx-auto md:mx-0">
                     <Play className="w-6 h-6 fill-white text-white ml-1" />
@@ -2209,16 +2209,17 @@ return (
         </div>
     )}
 
-    {/* Interface intégrée pour rejoindre/créer */}
-    <div className="w-full bg-gradient-to-r from-[#a855f7]/10 to-transparent border border-white/10 rounded-[2rem] p-6 md:p-12 backdrop-blur-md shadow-2xl mb-12 animate-in fade-in zoom-in duration-500 flex flex-col md:flex-row gap-10 items-center">
-        <div className="flex-1 text-center md:text-left w-full">
-            <div className="w-16 h-16 rounded-full bg-[#a855f7]/20 flex items-center justify-center border border-[#a855f7]/30 shadow-[0_0_20px_rgba(168,85,247,0.3)] mx-auto md:mx-0 mb-4">
+    {/* En-tête : Rejoindre un salon */}
+    <div className="w-full bg-gradient-to-br from-[#a855f7]/10 via-transparent to-transparent border border-white/10 rounded-[2rem] p-6 md:p-10 backdrop-blur-md shadow-2xl mb-4 animate-in fade-in zoom-in duration-500">
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            <div className="w-16 h-16 shrink-0 rounded-2xl bg-[#a855f7]/20 flex items-center justify-center border border-[#a855f7]/30 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
                 <WatchPartySVG className="w-8 h-8 text-[#a855f7]" />
             </div>
-            <h2 className="text-2xl md:text-4xl font-black uppercase tracking-widest mb-2">{t.joinPartyTitle}</h2>
-            <p className="text-white/60 text-xs md:text-sm">{t.joinPartyDesc}</p>
-
-            <div className="flex mt-6 bg-black/50 border border-white/10 rounded-full p-1 shadow-inner focus-within:border-[#a855f7] transition-colors w-full max-w-sm mx-auto md:mx-0">
+            <div className="flex-1 text-center md:text-left w-full">
+                <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest mb-1">{t.joinPartyTitle}</h2>
+                <p className="text-white/50 text-xs md:text-sm">{t.joinPartyDesc}</p>
+            </div>
+            <div className="flex w-full md:w-auto bg-black/50 border border-white/10 rounded-full p-1 shadow-inner focus-within:border-[#a855f7] transition-colors max-w-sm">
                 <input 
                     type="text" 
                     id="partyCodeInput"
@@ -2227,7 +2228,7 @@ return (
                     autoCapitalize="off"
                     spellCheck="false"
                     placeholder={t.partyCodePlaceholder}
-                    className="flex-1 bg-transparent px-4 py-2.5 text-white font-mono text-[11px] md:text-xs outline-none uppercase tracking-[0.1em]"
+                    className="flex-1 md:w-48 bg-transparent px-4 py-2.5 text-white font-mono text-[11px] md:text-xs outline-none uppercase tracking-[0.1em]"
                 />
                 <button 
                     onClick={() => {
@@ -2237,28 +2238,30 @@ return (
                             triggerJoinParty(code);
                         }
                     }}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-6 py-2.5 rounded-full font-black uppercase tracking-widest transition-all active:scale-95 text-[10px] md:text-[11px] shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-6 py-2.5 rounded-full font-black uppercase tracking-widest transition-all active:scale-95 text-[10px] md:text-[11px] shadow-[0_0_15px_rgba(168,85,247,0.4)] shrink-0"
                 >
                     {t.joinBtn}
                 </button>
             </div>
         </div>
+    </div>
 
-        <div className="hidden md:block w-px h-40 bg-white/10"></div>
-
-        <div className="flex-1 w-full mt-6 md:mt-0">
-            <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest mb-2 border-l-4 border-[#a855f7] pl-3">{t.createPartyTitle}</h2>
-            <p className="text-white/60 text-xs md:text-sm mb-4">{t.createPartyDesc}</p>
-            <div className="relative max-w-lg mx-auto md:mx-0">
-                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
-                <input 
-                    type="text" 
-                    value={partySearchQuery}
-                    onChange={(e) => setPartySearchQuery(e.target.value)}
-                    placeholder={t.searchPartyMoviePlaceholder}
-                    className="w-full bg-[#151520] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white text-sm outline-none focus:border-[#a855f7] transition-colors shadow-inner"
-                />
-            </div>
+    {/* En-tête : Créer un salon */}
+    <div className="w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 md:p-8 mb-10">
+        <div className="flex items-center gap-3 mb-1">
+            <Plus className="w-5 h-5 text-[#a855f7]" />
+            <h2 className="text-lg md:text-xl font-black uppercase tracking-widest">{t.createPartyTitle}</h2>
+        </div>
+        <p className="text-white/50 text-xs md:text-sm mb-4">{t.createPartyDesc}</p>
+        <div className="relative max-w-lg">
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+            <input 
+                type="text" 
+                value={partySearchQuery}
+                onChange={(e) => setPartySearchQuery(e.target.value)}
+                placeholder={t.searchPartyMoviePlaceholder}
+                className="w-full bg-[#151520] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white text-sm outline-none focus:border-[#a855f7] transition-colors shadow-inner"
+            />
         </div>
     </div>
 
@@ -2269,8 +2272,13 @@ return (
                 {partySearchResults.length > 0 ? partySearchResults.map(movie => {
                 if(!movie.poster_path) return null;
                 return (
-                <div key={movie.id} className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform" onClick={() => openModal(movie, 'info')}>
+                <div key={movie.id} className="relative group cursor-pointer rounded-2xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform" onClick={() => openModal(movie, 'info')}>
                 <img className="object-cover w-full aspect-[2/3]" src={`${IMAGE_BASE_URL}${movie.poster_path}`} loading="lazy" alt="" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                    <button onClick={(e) => { e.stopPropagation(); triggerCreateParty(movie); }} className="flex items-center justify-center gap-1.5 bg-[#a855f7] hover:bg-purple-500 text-white text-[9px] font-black uppercase tracking-widest px-2 py-2 rounded-lg shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-all active:scale-95 outline-none">
+                        <Plus className="w-3.5 h-3.5" /> {t.createPartyBtn}
+                    </button>
+                </div>
                 </div>
                 );
                 }) : <p className="text-white/50 py-10 col-span-full text-center">{t.noResults}</p>}
@@ -2281,7 +2289,7 @@ return (
             <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-widest border-l-4 border-[#a855f7] pl-3 mb-6 animate-in slide-in-from-left duration-700">{t.watchPartyMovies}</h2>
             <main className="relative space-y-8 md:space-y-10">
                 {rowsConfig.map((row, i) => (
-                    <Row key={i} title={row.title} fetchUrl={row.url} isLarge={row.large} shuffle={row.shuffle} onMovieClick={(m) => openModal(m, 'info')} pageSeed={pageSeed} parentalFilter={parentalFilter} />
+                    <Row key={i} title={row.title} fetchUrl={row.url} isLarge={row.large} shuffle={row.shuffle} onMovieClick={(m) => openModal(m, 'info')} pageSeed={pageSeed} parentalFilter={parentalFilter} quickAction={{ icon: Plus, label: t.createPartyBtn, onClick: (m) => triggerCreateParty(m) }} />
                 ))}
             </main>
         </div>
@@ -2719,7 +2727,7 @@ return (
 }
 
 // --- ROW COMPONENT ---
-function Row({ title, fetchUrl, isLarge, shuffle, onMovieClick, pageSeed, parentalFilter }) {
+function Row({ title, fetchUrl, isLarge, shuffle, onMovieClick, pageSeed, parentalFilter, quickAction }) {
 const [movies, setMovies] = useState([]);
 const rowRef = useRef(null);
 
@@ -2808,8 +2816,13 @@ return (
 <img className={`object-cover ${imgClass} transition-opacity duration-500`} src={imgSrc} loading="lazy" alt="" draggable="false"/>
 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 pointer-events-none">
 <p className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider truncate drop-shadow-md">{movie.title || movie.name}</p>
-<div className="flex items-center gap-2 mt-1 md:mt-2">
+<div className="flex items-center justify-between gap-2 mt-1 md:mt-2">
 <span className="text-[#a855f7] font-bold text-[9px] md:text-[10px]"><Star className="w-3 h-3 inline mb-0.5" /> {movie.vote_average?.toFixed(1)}</span>
+{quickAction && (
+<button onClick={(e) => { e.stopPropagation(); quickAction.onClick(movie); }} className="pointer-events-auto flex items-center gap-1 bg-[#a855f7] hover:bg-purple-500 text-white text-[8px] md:text-[9px] font-black uppercase tracking-widest px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-all active:scale-95 outline-none">
+<quickAction.icon className="w-3 h-3" /> <span className="hidden sm:inline">{quickAction.label}</span>
+</button>
+)}
 </div>
 </div>
 </div>
