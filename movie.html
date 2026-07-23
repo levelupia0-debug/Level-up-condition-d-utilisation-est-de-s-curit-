@@ -208,6 +208,48 @@ const filterMatureContent = (items, parentalFilterActive) => {
     });
 };
 
+// --- ALGORITHME DE SÉLECTION (Ce Soir / Cette Semaine) ---
+// PRNG déterministe (mulberry32) : même graine = même résultat, à chaque visite, pour tout le monde ce jour-là.
+const seededRandom = (seed) => {
+    return function() {
+        seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+};
+const seededShuffle = (array, seed) => {
+    const rand = seededRandom(seed);
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+};
+// Graine du jour, basée sur la date LOCALE de l'utilisateur (donc chaque région tourne à son propre minuit).
+const getDailySeed = () => {
+    const d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+};
+// Graine de la semaine (numéro de semaine ISO + année), aussi en heure locale.
+const getWeekSeed = () => {
+    const d = new Date();
+    const target = new Date(d.valueOf());
+    const dayNr = (d.getDay() + 6) % 7;
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = new Date(target.getFullYear(), 0, 4);
+    const weekNumber = 1 + Math.round(((target - firstThursday) / 86400000 - 3 + ((firstThursday.getDay() + 6) % 7)) / 7);
+    return target.getFullYear() * 100 + weekNumber;
+};
+// Heures restantes avant le renouvellement (minuit local)
+const getHoursUntilMidnight = () => {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    return Math.max(1, Math.round((midnight - now) / 3600000));
+};
+
 const i18n = {
 fr: {
 appTitle: "LevelMovie",
@@ -232,6 +274,11 @@ partyCodePlaceholder: "Code d'accès...",
 searchPartyMoviePlaceholder: "Rechercher un film à regarder...",
 watchPartyMovies: "Parfait pour regarder entre amis",
 trending: "Tendances Mondiales",
+tonightTitle: "Ce Soir",
+tonightBadge: "Sélection du jour",
+thisWeekTitle: "Cette Semaine",
+trailersTitle: "Bandes-Annonces",
+renewsIn: "Renouvellement dans",
 frenchCinema: "Cinéma Francophone",
 frenchSeries: "Séries Francophones",
 freeVOD: "Films Gratuits",
@@ -280,6 +327,11 @@ defaultUser: "Utilisateur",
 premiumActive: "Compte Premium Actif",
 ecosystem: "Écosystème LevelIA",
 settingsTitle: "Préférences Générales",
+settingsTabAccount: "Compte",
+settingsTabPreferences: "Préférences",
+settingsTabPlayback: "Lecture",
+settingsTabSupport: "Support",
+contentOriginDesc: "Filtre les films et séries selon leur langue d'origine dans tout le catalogue.",
 contentOrigin: "Origine des Films",
 worldAll: "Monde (Tous)",
 usEnglish: "Anglais (VO)",
@@ -490,6 +542,11 @@ partyCodePlaceholder: "Access code...",
 searchPartyMoviePlaceholder: "Search for a movie to watch together...",
 watchPartyMovies: "Perfect to watch with friends",
 trending: "Global Trends",
+tonightTitle: "Tonight",
+tonightBadge: "Today's Pick",
+thisWeekTitle: "This Week",
+trailersTitle: "Trailers",
+renewsIn: "Renews in",
 frenchCinema: "French Spoken Movies",
 frenchSeries: "French Spoken TV",
 freeVOD: "Free Movies",
@@ -538,6 +595,11 @@ defaultUser: "User",
 premiumActive: "Premium Account Active",
 ecosystem: "LevelIA Ecosystem",
 settingsTitle: "General Preferences",
+settingsTabAccount: "Account",
+settingsTabPreferences: "Preferences",
+settingsTabPlayback: "Playback",
+settingsTabSupport: "Support",
+contentOriginDesc: "Filters movies and shows by original language across the whole catalog.",
 contentOrigin: "Original Language",
 worldAll: "World (All)",
 usEnglish: "English (Original)",
@@ -787,6 +849,7 @@ const [pageSeed, setPageSeed] = useState(1);
 const [selectedMovie, setSelectedMovie] = useState(null);
 const [modalMode, setModalMode] = useState('info');
 const [showSettings, setShowSettings] = useState(false);
+const [settingsTab, setSettingsTab] = useState('account');
 const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
 const [watchlist, setWatchlist] = useState([]);
@@ -1750,9 +1813,13 @@ const handleSubmitReview = async () => {
     setSupportSubmitting(false);
 };
 
+return (
+<div className="bg-main text-white min-h-screen">
+<style>{globalStyles}</style>
+
+
 {showLoginModal && (
 <div className="fixed inset-0 z-[9500] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200">
-<style>{globalStyles}</style>
 <div className="w-full max-w-sm text-center py-4 relative glass p-8 rounded-[2rem] border border-white/5 shadow-[0_0_50px_rgba(168,85,247,0.15)] animate-in zoom-in duration-300">
 <button onClick={() => { setShowLoginModal(false); setAuthError(''); }} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors outline-none">
 <X className="w-4 h-4" />
@@ -1798,10 +1865,6 @@ className="w-full bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white py-4 r
 </div>
 </div>
 )}
-
-return (
-<div className="bg-main text-white min-h-screen">
-<style>{globalStyles}</style>
 
 
 {/* MODAL INVITATION MODERATEUR */}
@@ -2254,6 +2317,30 @@ return (
 <Banner url={buildUrlNoFilter('/trending/all/week')} onPlay={() => openModal(heroMovie, 'play')} onInfo={() => openModal(heroMovie, 'info')} setHero={setHeroMovie} heroMovie={heroMovie} t={t} pageSeed={pageSeed} parentalFilter={parentalFilter} />
 
 <main className="pb-24 relative z-20 space-y-8 md:space-y-10 mt-6 md:-mt-10">
+<AlgoRow
+    title={t.tonightTitle}
+    fetchUrl={buildUrlNoFilter('/trending/all/week')}
+    seed={getDailySeed()}
+    badge={t.tonightBadge}
+    countdown={`${t.renewsIn} ${getHoursUntilMidnight()}h`}
+    onMovieClick={(m) => openModal(m, 'info')}
+    parentalFilter={parentalFilter}
+/>
+<AlgoRow
+    title={t.thisWeekTitle}
+    fetchUrl={buildUrlNoFilter('/trending/all/week')}
+    seed={getWeekSeed()}
+    onMovieClick={(m) => openModal(m, 'info')}
+    parentalFilter={parentalFilter}
+/>
+<TrailerRow
+    title={t.trailersTitle}
+    fetchUrl={buildUrlNoFilter('/trending/movie/week')}
+    seed={getDailySeed()}
+    onPlayTrailer={(m) => openModal(m, 'trailer')}
+    parentalFilter={parentalFilter}
+    lang={langCode}
+/>
 {recentlyViewed.length > 0 && (
 <div className="group relative ml-4 md:ml-12 animate-in fade-in duration-700">
 <h2 className="text-white/90 text-[13px] md:text-lg font-black mb-3 md:mb-5 uppercase tracking-[0.2em] border-l-4 border-[#a855f7] pl-3 md:pl-4 drop-shadow-sm flex items-center gap-3">
@@ -2294,122 +2381,164 @@ return (
 
 {/* MODAL SETTINGS */}
 {showSettings && (
-<div className="fixed inset-0 z-[9000] flex justify-center items-center p-4 sm:p-8 bg-[#060608]/95 backdrop-blur-3xl overflow-hidden">
-<div className="holo-card relative w-full max-w-3xl rounded-[2rem] p-6 md:p-8 flex flex-col text-center animate-in zoom-in duration-300 z-10 shadow-[0_0_80px_rgba(0,0,0,0.9)] max-h-[95vh] overflow-y-auto no-scrollbar">
+<div className="fixed inset-0 z-[9000] flex justify-center items-center p-0 sm:p-6 md:p-8 bg-[#060608]/95 backdrop-blur-3xl overflow-hidden">
+<div className="relative w-full h-full sm:h-auto sm:max-h-[88vh] max-w-4xl bg-[#0c0c10] sm:rounded-[1.75rem] flex flex-col md:flex-row overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.9)] border border-white/5 animate-in zoom-in duration-300">
 
-<button onClick={() => setShowSettings(false)} className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 hover:bg-red-500 flex items-center justify-center text-white/50 hover:text-white transition-colors shadow-sm z-20 outline-none">
-<X className="w-5 h-5" />
+<button onClick={() => setShowSettings(false)} className="absolute top-4 right-4 md:top-5 md:right-5 w-9 h-9 rounded-full bg-white/5 hover:bg-red-500 flex items-center justify-center text-white/50 hover:text-white transition-colors shadow-sm z-20 outline-none">
+<X className="w-4 h-4" />
 </button>
 
-<div className="flex flex-col items-center mb-6">
-<div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-[#151520] border-2 border-[#a855f7]/50 shadow-[0_0_20px_rgba(168,85,247,0.3)] overflow-hidden mb-4 flex items-center justify-center">
-{userPhoto ? <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" /> : <span className="text-4xl font-black text-[#a855f7]">{defaultUserName.charAt(0).toUpperCase()}</span>}
+{/* Barre latérale (Sidebar) */}
+<div className="w-full md:w-[240px] shrink-0 bg-[#08080b] border-b md:border-b-0 md:border-r border-white/5 p-5 md:p-6 flex flex-col">
+<div className="flex md:flex-col items-center md:items-start gap-4 mb-6 md:mb-8">
+<div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-[#151520] border-2 border-[#a855f7]/50 shadow-[0_0_20px_rgba(168,85,247,0.3)] overflow-hidden flex items-center justify-center shrink-0">
+{userPhoto ? <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" /> : <span className="text-xl md:text-2xl font-black text-[#a855f7]">{defaultUserName.charAt(0).toUpperCase()}</span>}
 </div>
-<h2 className="text-2xl font-black text-white uppercase tracking-widest mb-1 drop-shadow-md">{defaultUserName}</h2>
-<p className="text-xs text-white/50 font-mono mb-4">{userEmail || 'email@inconnu.com'}</p>
+<div className="min-w-0 text-left">
+<h2 className="text-sm md:text-base font-black text-white uppercase tracking-wide truncate">{defaultUserName}</h2>
+<p className="text-[10px] text-white/40 font-mono truncate">{userEmail || t.guestConnectLabel}</p>
+</div>
+</div>
 
-<a href="https://levelup-ecosystem.com" target="_blank" rel="noreferrer" className="px-5 py-2 bg-white/5 hover:bg-white/10 text-white/80 rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/10 transition-colors flex items-center gap-2 no-underline shadow-md hover:border-[#a855f7]/50 outline-none">
-<Star className="w-3 h-3 text-[#a855f7] fill-[#a855f7]" /> {t.ecosystem}
+<nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible no-scrollbar -mx-1 px-1 md:mx-0 md:px-0">
+{[
+    { id: 'account', label: t.settingsTabAccount, icon: Users },
+    { id: 'preferences', label: t.settingsTabPreferences, icon: Filter },
+    { id: 'playback', label: t.settingsTabPlayback, icon: Film },
+    { id: 'support', label: t.settingsTabSupport, icon: Mail }
+].map(tab => (
+    <button key={tab.id} onClick={() => setSettingsTab(tab.id)} className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-colors outline-none whitespace-nowrap shrink-0 ${settingsTab === tab.id ? 'bg-[#a855f7]/15 text-[#a855f7] border border-[#a855f7]/30' : 'text-white/50 hover:text-white hover:bg-white/5 border border-transparent'}`}>
+        <tab.icon className="w-3.5 h-3.5 shrink-0" /> {tab.label}
+    </button>
+))}
+</nav>
+
+<div className="hidden md:block mt-auto pt-6">
+<button onClick={() => setShowLogoutConfirm(true)} className="w-full text-center px-4 py-3 bg-red-500/10 text-[10px] font-bold text-red-400 uppercase tracking-widest hover:bg-red-500/20 border border-red-500/20 rounded-xl transition-colors flex justify-center items-center gap-2 active:scale-95 outline-none">
+<LogOut className="w-3.5 h-3.5" /> {t.logoutBtn}
+</button>
+<p className="text-[8px] text-white/20 uppercase tracking-widest mt-4 text-center">{t.osVersion}</p>
+</div>
+</div>
+
+{/* Contenu de l'onglet */}
+<div className="flex-1 overflow-y-auto p-5 md:p-8">
+
+{settingsTab === 'account' && (
+<div className="space-y-5 animate-in fade-in duration-200">
+<h3 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">{t.settingsTabAccount}</h3>
+
+<a href="https://levelup-ecosystem.com" target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-gradient-to-r from-[#a855f7]/15 to-transparent p-4 rounded-2xl border border-[#a855f7]/20 no-underline hover:border-[#a855f7]/40 transition-colors outline-none">
+<div className="w-10 h-10 bg-[#a855f7]/20 rounded-xl flex items-center justify-center shrink-0"><Star className="w-4 h-4 text-[#a855f7] fill-[#a855f7]" /></div>
+<div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">{t.ecosystem}</p><p className="text-[9px] text-white/40 mt-0.5">levelup-ecosystem.com</p></div>
+<ChevronRight className="w-4 h-4 text-white/30" />
 </a>
+
+<div className="flex items-center justify-between bg-white/[0.03] p-4 rounded-2xl border border-white/5">
+<span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Bookmark className="w-4 h-4 text-[#a855f7]" /> {t.favoriteMovies}</span>
+<span className="px-3 py-1 bg-[#a855f7]/20 text-[#a855f7] rounded-lg text-xs font-bold border border-[#a855f7]/30">{watchlist.length}</span>
 </div>
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full text-left">
-<div className="space-y-4">
-<h3 className="text-[10px] font-black text-[#a855f7] uppercase tracking-widest pl-2 border-l-2 border-[#a855f7]">{t.settingsTitle}</h3>
+<div className="flex items-center justify-between bg-white/[0.03] p-4 rounded-2xl border border-white/5">
+<span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><HardDrive className="w-4 h-4 text-[#a855f7]" /> {t.systemCache}</span>
+<button onClick={handleClearCache} className="px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg text-[10px] font-bold uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/20 outline-none">{t.clearCache}</button>
+</div>
 
-<div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
-<span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Filter className="w-4 h-4 text-[#a855f7]" /> {t.contentOrigin}</span>
-<button onClick={cycleContentLang} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-bold uppercase transition-colors border border-white/20 outline-none text-white tracking-widest text-center min-w-[120px]">
-{getContentLangLabel()}
+<button onClick={() => setShowLogoutConfirm(true)} className="md:hidden w-full text-center px-4 py-3.5 mt-2 bg-red-500/10 text-[11px] font-bold text-red-400 uppercase tracking-widest hover:bg-red-500/20 border border-red-500/20 rounded-2xl transition-colors flex justify-center items-center gap-2 active:scale-95 outline-none">
+<LogOut className="w-4 h-4" /> {t.logoutBtn}
 </button>
 </div>
+)}
 
-<div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
+{settingsTab === 'preferences' && (
+<div className="space-y-5 animate-in fade-in duration-200">
+<h3 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">{t.settingsTabPreferences}</h3>
+
+<div className="flex items-center justify-between bg-white/[0.03] p-4 rounded-2xl border border-white/5">
 <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Globe className="w-4 h-4 text-[#a855f7]" /> {t.interfaceLang}</span>
 <button onClick={handleLangToggle} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold transition-colors flex items-center justify-center min-w-[60px] gap-2 border border-white/20 outline-none text-white">
 {lang === 'fr' ? 'FR' : 'EN'}
 </button>
 </div>
 
-<div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
-<span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Bookmark className="w-4 h-4 text-[#a855f7]" /> {t.favoriteMovies}</span>
-<span className="px-3 py-1 bg-[#a855f7]/20 text-[#a855f7] rounded-lg text-xs font-bold border border-[#a855f7]/30">{watchlist.length}</span>
+<div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5">
+<div className="flex items-center justify-between mb-2">
+<span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Filter className="w-4 h-4 text-[#a855f7]" /> {t.contentOrigin}</span>
+<button onClick={cycleContentLang} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-bold uppercase transition-colors border border-white/20 outline-none text-white tracking-widest text-center min-w-[120px]">
+{getContentLangLabel()}
+</button>
 </div>
+<p className="text-[9.5px] text-white/40 leading-relaxed">{t.contentOriginDesc}</p>
 </div>
 
-<div className="space-y-4">
-<h3 className="text-[10px] font-black text-[#a855f7] uppercase tracking-widest pl-2 border-l-2 border-[#a855f7]">{t.systemVideo}</h3>
+<div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5">
+<div className="flex items-center justify-between mb-2">
+<span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Shield className="w-4 h-4 text-[#a855f7]" /> {t.parentalFilter}</span>
+<div onClick={handleParentalToggle} className="relative inline-flex items-center cursor-pointer outline-none">
+<div className={`w-9 h-5 rounded-full shadow-inner transition-colors ${parentalFilter ? 'bg-[#a855f7]' : 'bg-black/50'}`}>
+<div className={`absolute top-[2px] left-[2px] bg-white/70 border border-white/20 rounded-full h-4 w-4 transition-transform ${parentalFilter ? 'translate-x-full bg-white border-white' : ''}`}></div>
+</div>
+</div>
+</div>
+<p className="text-[9.5px] text-white/40 leading-relaxed">{t.parentalFilterDesc}</p>
+</div>
+</div>
+)}
 
-<div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
+{settingsTab === 'playback' && (
+<div className="space-y-5 animate-in fade-in duration-200">
+<h3 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">{t.settingsTabPlayback}</h3>
+
+<div className="flex items-center justify-between bg-white/[0.03] p-4 rounded-2xl border border-white/5">
 <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Film className="w-4 h-4 text-[#a855f7]" /> {t.videoQuality}</span>
 <span className="px-3 py-1 bg-white/10 text-white/70 rounded-lg text-[10px] font-black tracking-widest border border-white/10 uppercase">{t.auto4k}</span>
 </div>
 
-<div className="flex flex-col bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
-    <div className="flex justify-between items-center mb-2">
-        <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><Shield className="w-4 h-4 text-[#a855f7]" /> {t.parentalFilter}</span>
-        <div onClick={handleParentalToggle} className="relative inline-flex items-center cursor-pointer outline-none">
-            <div className={`w-9 h-5 rounded-full shadow-inner transition-colors ${parentalFilter ? 'bg-[#a855f7]' : 'bg-black/50'}`}>
-                <div className={`absolute top-[2px] left-[2px] bg-white/70 border border-white/20 rounded-full h-4 w-4 transition-transform ${parentalFilter ? 'translate-x-full bg-white border-white' : ''}`}></div>
-            </div>
-        </div>
-    </div>
-    <p className="text-[9.5px] text-white/50 leading-relaxed text-justify mt-1">
-    {t.parentalFilterDesc}
-</p>
-</div>
-
-<div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
-<span className="text-[11px] font-bold text-white/80 uppercase tracking-widest flex items-center gap-3"><HardDrive className="w-4 h-4 text-[#a855f7]" /> {t.systemCache}</span>
-<button onClick={handleClearCache} className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-[10px] font-bold uppercase hover:bg-red-500 hover:text-white transition-all border border-red-500/30 outline-none">{t.clearCache}</button>
-</div>
-</div>
-</div>
-
-<div className="w-full mt-8 pt-6 border-t border-white/10 text-center">
+<div className="pt-4">
 <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest block mb-4">{t.ourPartners}</span>
-<div className="flex justify-center items-center gap-6 opacity-80 flex-wrap">
+<div className="flex items-center gap-6 opacity-70 flex-wrap">
 <span className="text-sm font-black tracking-widest text-[#90cea1]">TMDB</span>
 <span className="text-sm font-black tracking-widest text-[#f5c518]">OMDb</span>
 <span className="text-sm font-black tracking-widest text-[#3c948b]">TVMaze</span>
 <span className="text-sm font-black tracking-widest text-white flex items-center gap-1"><Library className="w-4 h-4"/> ARCHIVE</span>
 </div>
 </div>
-
-<div className="space-y-3 mt-8">
-<h3 className="text-[10px] font-black text-[#a855f7] uppercase tracking-widest pl-2 border-l-2 border-[#a855f7]">Support & Communauté</h3>
-<a href="mailto:support@levelup-ecosystem.com" className="no-underline flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/10 hover:border-[#a855f7]/40 hover:bg-white/10 transition-all active:scale-95 cursor-pointer outline-none">
-    <div className="w-8 h-8 bg-[#a855f7]/20 rounded-lg flex items-center justify-center shrink-0"><Mail className="w-4 h-4 text-[#a855f7]" /></div>
-    <div className="flex-1"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Contacter le support</p><p className="text-[9px] text-white/40 mt-0.5">support@levelup-ecosystem.com</p></div>
-    <ChevronRight className="w-4 h-4 text-white/30" />
-</a>
-<button onClick={() => setShowReportModal(true)} className="w-full flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/10 hover:border-yellow-500/40 hover:bg-white/10 transition-all active:scale-95 outline-none">
-    <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center shrink-0"><AlertTriangle className="w-4 h-4 text-yellow-500" /></div>
-    <div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Signaler un problème</p><p className="text-[9px] text-white/40 mt-0.5">Bugs, erreurs, contenu inadapté</p></div>
-    <ChevronRight className="w-4 h-4 text-white/30" />
-</button>
-<button onClick={() => setShowReviewModal(true)} className="w-full flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/10 hover:border-green-500/40 hover:bg-white/10 transition-all active:scale-95 outline-none">
-    <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0"><Star className="w-4 h-4 text-green-500" /></div>
-    <div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Laisser un avis</p><p className="text-[9px] text-white/40 mt-0.5">Donnez-nous votre avis sur l'app</p></div>
-    <ChevronRight className="w-4 h-4 text-white/30" />
-</button>
-<a href="https://levelup-ecosystem.com/privacy" target="_blank" rel="noreferrer" className="no-underline flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all active:scale-95 outline-none">
-    <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center shrink-0"><Shield className="w-4 h-4 text-white/50" /></div>
-    <div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Politique de confidentialité</p></div>
-    <ChevronRight className="w-4 h-4 text-white/30" />
-</a>
-<a href="https://levelup-ecosystem.com/terms" target="_blank" rel="noreferrer" className="no-underline flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all active:scale-95 outline-none">
-    <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center shrink-0"><Info className="w-4 h-4 text-white/50" /></div>
-    <div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Conditions d'utilisation</p></div>
-    <ChevronRight className="w-4 h-4 text-white/30" />
-</a>
 </div>
+)}
 
-<button onClick={() => setShowLogoutConfirm(true)} className="w-full text-center px-4 py-4 mt-8 bg-red-500/10 text-[11px] font-bold text-red-400 uppercase tracking-widest hover:bg-red-500/20 border border-red-500/20 rounded-xl transition-colors flex justify-center items-center gap-3 active:scale-95 shadow-md outline-none">
-<LogOut className="w-4 h-4" /> {t.logoutBtn}
+{settingsTab === 'support' && (
+<div className="space-y-2.5 animate-in fade-in duration-200">
+<h3 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">{t.settingsTabSupport}</h3>
+<a href="mailto:support@levelup-ecosystem.com" className="no-underline flex items-center gap-3 bg-white/[0.03] p-4 rounded-2xl border border-white/5 hover:border-[#a855f7]/40 hover:bg-white/5 transition-all active:scale-95 outline-none">
+<div className="w-9 h-9 bg-[#a855f7]/20 rounded-xl flex items-center justify-center shrink-0"><Mail className="w-4 h-4 text-[#a855f7]" /></div>
+<div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Contacter le support</p><p className="text-[9px] text-white/40 mt-0.5">support@levelup-ecosystem.com</p></div>
+<ChevronRight className="w-4 h-4 text-white/30" />
+</a>
+<button onClick={() => setShowReportModal(true)} className="w-full flex items-center gap-3 bg-white/[0.03] p-4 rounded-2xl border border-white/5 hover:border-yellow-500/40 hover:bg-white/5 transition-all active:scale-95 outline-none">
+<div className="w-9 h-9 bg-yellow-500/20 rounded-xl flex items-center justify-center shrink-0"><AlertTriangle className="w-4 h-4 text-yellow-500" /></div>
+<div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Signaler un problème</p><p className="text-[9px] text-white/40 mt-0.5">Bugs, erreurs, contenu inadapté</p></div>
+<ChevronRight className="w-4 h-4 text-white/30" />
 </button>
+<button onClick={() => setShowReviewModal(true)} className="w-full flex items-center gap-3 bg-white/[0.03] p-4 rounded-2xl border border-white/5 hover:border-green-500/40 hover:bg-white/5 transition-all active:scale-95 outline-none">
+<div className="w-9 h-9 bg-green-500/20 rounded-xl flex items-center justify-center shrink-0"><Star className="w-4 h-4 text-green-500" /></div>
+<div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Laisser un avis</p><p className="text-[9px] text-white/40 mt-0.5">Donnez-nous votre avis sur l'app</p></div>
+<ChevronRight className="w-4 h-4 text-white/30" />
+</button>
+<a href="https://levelup-ecosystem.com/privacy" target="_blank" rel="noreferrer" className="no-underline flex items-center gap-3 bg-white/[0.03] p-4 rounded-2xl border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all active:scale-95 outline-none">
+<div className="w-9 h-9 bg-white/5 rounded-xl flex items-center justify-center shrink-0"><Shield className="w-4 h-4 text-white/50" /></div>
+<div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Politique de confidentialité</p></div>
+<ChevronRight className="w-4 h-4 text-white/30" />
+</a>
+<a href="https://levelup-ecosystem.com/terms" target="_blank" rel="noreferrer" className="no-underline flex items-center gap-3 bg-white/[0.03] p-4 rounded-2xl border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all active:scale-95 outline-none">
+<div className="w-9 h-9 bg-white/5 rounded-xl flex items-center justify-center shrink-0"><Info className="w-4 h-4 text-white/50" /></div>
+<div className="flex-1 text-left"><p className="text-[11px] font-bold text-white uppercase tracking-widest">Conditions d'utilisation</p></div>
+<ChevronRight className="w-4 h-4 text-white/30" />
+</a>
+<p className="md:hidden text-[8px] text-white/20 uppercase tracking-widest mt-4 text-center">{t.osVersion}</p>
+</div>
+)}
 
-<p className="text-[9px] text-white/20 uppercase tracking-widest mt-6">{t.osVersion}</p>
+</div>
 </div>
 </div>
 )}
@@ -2693,6 +2822,134 @@ return (
 </div>
 </div>
 )
+}
+
+// --- ALGO ROW (Ce Soir / Cette Semaine : sélection déterministe qui change à heure fixe) ---
+function AlgoRow({ title, fetchUrl, seed, badge, countdown, onMovieClick, parentalFilter }) {
+const [movies, setMovies] = useState([]);
+const rowRef = useRef(null);
+
+useEffect(() => {
+const fetchM = async () => {
+try {
+const reqs = [1, 2].map(p => fetch(`${BASE_URL}${fetchUrl}&page=${p}`));
+const responses = await Promise.all(reqs);
+const allData = await Promise.all(responses.map(r => r.json()));
+
+let combined = [];
+allData.forEach(d => { if (d.results) combined = [...combined, ...d.results]; });
+
+let unique = Array.from(new Set(combined.map(a => a.id)))
+    .map(id => combined.find(a => a.id === id))
+    .filter(m => m && m.poster_path && m.backdrop_path);
+
+unique = unique.filter(m => m.adult !== true);
+unique = filterMatureContent(unique, parentalFilter);
+unique = seededShuffle(unique, seed);
+
+setMovies(unique.slice(0, 15));
+} catch(e) {}
+};
+fetchM();
+}, [fetchUrl, seed, parentalFilter]);
+
+const scrollAction = (direction) => {
+if (rowRef.current) rowRef.current.scrollBy({ left: direction === 'left' ? -400 : 400, behavior: 'smooth' });
+};
+
+if (movies.length === 0) return null;
+
+return (
+<div className="group relative ml-4 md:ml-12 animate-in fade-in duration-700">
+<div className="flex items-center justify-between mb-3 md:mb-5 pr-4 md:pr-12">
+<h2 className="text-white/90 text-[13px] md:text-lg font-black uppercase tracking-[0.2em] border-l-4 border-[#a855f7] pl-3 md:pl-4 drop-shadow-sm flex items-center gap-3">
+{title}
+{badge && <span className="bg-gradient-to-r from-[#a855f7] to-[#ec4899] text-white text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-[0_0_10px_rgba(168,85,247,0.5)]">{badge}</span>}
+</h2>
+{countdown && <span className="text-[9px] md:text-[10px] text-white/30 font-bold uppercase tracking-widest shrink-0 hidden sm:inline">{countdown}</span>}
+</div>
+
+<div onClick={() => scrollAction('left')} className="absolute left-0 top-16 bottom-0 z-40 w-10 bg-gradient-to-r from-[#060608] via-[#060608]/80 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-start cursor-pointer transition-opacity duration-300 -ml-4 md:-ml-12 hidden md:flex outline-none">
+<ChevronLeft className="text-white hover:text-[#a855f7] transition-colors w-10 h-10 ml-1 drop-shadow-lg" />
+</div>
+
+<div ref={rowRef} className="flex overflow-y-hidden overflow-x-scroll py-2 space-x-3 md:space-x-5 no-scrollbar pr-8">
+{movies.map(movie => (
+<div key={movie.id} className="relative flex-none cursor-pointer rounded-2xl overflow-hidden shadow-xl border border-[#a855f7]/20 bg-[#151520] hover:scale-105 transition-transform w-[240px] md:w-[320px] h-[135px] md:h-[180px]" onClick={() => onMovieClick(movie)}>
+<img className="object-cover w-full h-full" src={`${IMAGE_BASE_URL}${movie.backdrop_path}`} loading="lazy" draggable="false" alt="" />
+<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent flex flex-col justify-end p-3">
+<p className="text-white font-black text-[11px] md:text-sm uppercase tracking-wider truncate drop-shadow-md">{movie.title || movie.name}</p>
+<span className="text-[#a855f7] font-bold text-[9px] md:text-[10px] mt-0.5"><Star className="w-3 h-3 inline mb-0.5" /> {movie.vote_average?.toFixed(1)}</span>
+</div>
+</div>
+))}
+</div>
+
+<div onClick={() => scrollAction('right')} className="absolute right-0 top-16 bottom-0 z-40 w-12 bg-gradient-to-l from-[#060608] via-[#060608]/80 to-transparent opacity-0 md:group-hover:opacity-100 flex items-center justify-end cursor-pointer transition-opacity duration-300 hidden md:flex outline-none">
+<ChevronRight className="text-white hover:text-[#a855f7] transition-colors w-10 h-10 mr-2 drop-shadow-lg" />
+</div>
+</div>
+);
+}
+
+// --- TRAILER ROW (Carrousel de bandes-annonces) ---
+function TrailerRow({ title, fetchUrl, seed, onPlayTrailer, parentalFilter, lang }) {
+const [items, setItems] = useState([]);
+
+useEffect(() => {
+let cancelled = false;
+const fetchM = async () => {
+try {
+const res = await fetch(`${BASE_URL}${fetchUrl}&page=1`);
+const data = await res.json();
+let results = (data.results || []).filter(m => m.backdrop_path && m.adult !== true);
+results = filterMatureContent(results, parentalFilter);
+results = seededShuffle(results, seed).slice(0, 8);
+
+const withTrailers = await Promise.all(results.map(async (m) => {
+    try {
+        const mediaType = m.first_air_date !== undefined ? 'tv' : 'movie';
+        const vRes = await fetch(`${BASE_URL}/${mediaType}/${m.id}/videos?api_key=${API_KEY}&language=${lang}`);
+        const vData = await vRes.json();
+        let trailer = vData.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+        if (!trailer) {
+            const vResEn = await fetch(`${BASE_URL}/${mediaType}/${m.id}/videos?api_key=${API_KEY}&language=en-US`);
+            const vDataEn = await vResEn.json();
+            trailer = vDataEn.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+        }
+        return trailer ? { ...m, _trailerKey: trailer.key } : null;
+    } catch(e) { return null; }
+}));
+
+if (!cancelled) setItems(withTrailers.filter(Boolean).slice(0, 6));
+} catch(e) {}
+};
+fetchM();
+return () => { cancelled = true; };
+}, [fetchUrl, seed, parentalFilter, lang]);
+
+if (items.length === 0) return null;
+
+return (
+<div className="relative ml-4 md:ml-12 animate-in fade-in duration-700">
+<h2 className="text-white/90 text-[13px] md:text-lg font-black mb-3 md:mb-5 uppercase tracking-[0.2em] border-l-4 border-[#ec4899] pl-3 md:pl-4 drop-shadow-sm flex items-center gap-2">
+{title} <Clapperboard className="w-4 h-4 text-[#ec4899]" />
+</h2>
+<div className="flex overflow-x-scroll py-2 space-x-3 md:space-x-5 no-scrollbar pr-8">
+{items.map(m => (
+<div key={m.id} className="relative flex-none cursor-pointer rounded-2xl overflow-hidden shadow-xl border border-[#ec4899]/20 bg-[#151520] hover:scale-105 transition-transform w-[200px] md:w-[260px] aspect-video group" onClick={() => onPlayTrailer(m)}>
+<img className="object-cover w-full h-full opacity-70 group-hover:opacity-40 transition-opacity" src={`${IMAGE_BASE_URL}${m.backdrop_path}`} loading="lazy" draggable="false" alt="" />
+<div className="absolute inset-0 flex items-center justify-center">
+<div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-black/60 border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-[#ec4899]/90 group-hover:border-[#ec4899] transition-all shadow-lg backdrop-blur-sm">
+<Play className="w-5 h-5 fill-white text-white ml-0.5" />
+</div>
+</div>
+<p className="absolute bottom-2 left-2 right-2 text-white font-bold text-[10px] md:text-[11px] truncate drop-shadow-md">{m.title || m.name}</p>
+</div>
+))}
+</div>
+</div>
+);
 }
 
 // --- MOVIE MODAL / THEATER MODE ---
