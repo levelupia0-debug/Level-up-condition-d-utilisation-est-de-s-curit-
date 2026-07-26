@@ -22,10 +22,14 @@
     "lucide-react": "https://esm.sh/lucide-react@0.292.0",
     "firebase/app": "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js",
     "firebase/auth": "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js",
-    "firebase/firestore": "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js",
+    "firebase/messaging": "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js"
   }
 }
 </script>
+
+<!-- Cloudflare Turnstile : vérification anti-bot avant connexion -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Babel : Traduit le JSX en Javascript lisible par le navigateur -->
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -75,6 +79,15 @@ if (partyParam) {
     shouldUpdateUrl = true;
 }
 
+// 3. Capture du film/épisode en cours depuis l'URL (?watch=ID&type=movie|tv&s=SAISON&e=EPISODE)
+// On NE supprime PAS ces paramètres : ils doivent rester dans l'URL tant que la lecture est active.
+const INITIAL_WATCH_PARAMS = {
+    id: urlParams.get('watch'),
+    type: urlParams.get('type') || 'movie',
+    season: urlParams.get('s') ? parseInt(urlParams.get('s')) : null,
+    episode: urlParams.get('e') ? parseInt(urlParams.get('e')) : null
+};
+
 // 3. Appliquer la nouvelle URL propre (si modifiée)
 if (shouldUpdateUrl) {
     let newUrl = window.location.pathname;
@@ -93,8 +106,9 @@ Home, Tv, Clapperboard, History, AlertOctagon, Download, Copy, Lock,
 ArrowDown, ArrowUp, Eye, EyeOff, Send, Mail, Search as SearchIcon, Reply, UserPlus, Power, Pause, ShieldCheck, VolumeX, UserMinus, ShieldAlert, Minimize2
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collectionGroup, getDocs, doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
+import { getFirestore, collectionGroup, getDocs, doc, setDoc, getDoc, deleteDoc, collection, addDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove, query, orderBy, limit } from 'firebase/firestore';
+import { getMessaging, getToken, onMessage, isSupported as isMessagingSupported } from 'firebase/messaging';
 
 // --- NOUVEAU LOGO LEVEL MOVIE PRO ---
 const LevelMovieLogo = ({ className = "w-6 h-6", color = "currentColor" }) => (
@@ -172,6 +186,18 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const APP_ID = (typeof __app_id !== 'undefined' ? __app_id : "level-ia-premium").replace(/\//g, '_');
+
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+const facebookProvider = new FacebookAuthProvider();
+getRedirectResult(auth).catch(() => {});
+
+const VAPID_KEY = 'BPc3w8mDuNONg6Wl5TyU_x-l8KfUAtd_D868u3PaPpgrM7HUBMJ5qmuCCmR_U05YZlzGdYfFHPoQEzCakFaTjGM';
+// Chemins PARTAGÉS avec le reste de l'écosystème LevelUp (même base Firebase) :
+// un jeton FCM et un flux de notifications valables pour toutes les apps, pas juste LevelMovie.
+const NOTIF_PATH = ['artifacts', 'levelup-ecosystem', 'public', 'data', 'notifications'];
+const FCM_TOKEN_PATH = (uid) => ['artifacts', 'levelup-ecosystem', 'public', 'data', 'fcm_tokens', uid];
+let _messaging = null;
 
 const API_KEY = '027cc951d888c64e5f15dcb853c7347a';
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -256,6 +282,14 @@ appTitle: "LevelMovie",
 enterKey: "Clé d'Accès requise",
 loginRequiredDesc: "Connecte-toi pour débloquer cette fonctionnalité (Ma Liste, Salons de visionnage...).",
 guestConnectLabel: "Se connecter",
+continueWithGoogle: "Continuer avec Google",
+continueWithFacebook: "Continuer avec Facebook",
+loginSecureNotice: "Connexion sécurisée. Nous ne publions jamais rien en votre nom.",
+notifTitle: "Notifications",
+notifEmpty: "Aucune notification pour l'instant",
+pushPromptDesc: "Active les notifications pour ne rien manquer.",
+pushEnableBtn: "Activer",
+pushEnabled: "Notifications activées !",
 guestListLocked: "Connecte-toi pour créer ta liste de favoris",
 verifyKey: "Connexion",
 verifyLoading: "Vérification...",
@@ -524,6 +558,14 @@ appTitle: "LevelMovie",
 enterKey: "Access Key required",
 loginRequiredDesc: "Sign in to unlock this feature (My List, Watch Parties...).",
 guestConnectLabel: "Sign In",
+continueWithGoogle: "Continue with Google",
+continueWithFacebook: "Continue with Facebook",
+loginSecureNotice: "Secure sign-in. We never post anything on your behalf.",
+notifTitle: "Notifications",
+notifEmpty: "No notifications yet",
+pushPromptDesc: "Enable notifications so you never miss anything.",
+pushEnableBtn: "Enable",
+pushEnabled: "Notifications enabled!",
 guestListLocked: "Sign in to build your favorites list",
 verifyKey: "Login",
 verifyLoading: "Verifying...",
@@ -864,10 +906,16 @@ const [isNearBottom, setIsNearBottom] = useState(false);
 const [scrollProgress, setScrollProgress] = useState(0);
 const [showKey, setShowKey] = useState(false);
 const [showLoginModal, setShowLoginModal] = useState(false);
+const [turnstileToken, setTurnstileToken] = useState(null);
+const [loginBackdrops, setLoginBackdrops] = useState([]);
 
 const [partyId, setPartyId] = useState(null);
 const [partyData, setPartyData] = useState(null);
 const [activePartyCode, setActivePartyCode] = useState(null);
+const [notifications, setNotifications] = useState([]);
+const [showNotifPanel, setShowNotifPanel] = useState(false);
+const [lastSeenNotifTs, setLastSeenNotifTs] = useState(parseInt(localStorage.getItem('lm_last_seen_notif') || '0', 10));
+const [pushPermission, setPushPermission] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
 const [showReportModal, setShowReportModal] = useState(false);
 const [showReviewModal, setShowReviewModal] = useState(false);
 const [reportText, setReportText] = useState('');
@@ -895,22 +943,43 @@ const defaultUserName = userName || t.defaultUser;
 
 // 1. Initialiser l'Authentification Firebase EN PREMIER
 useEffect(() => {
-    const initAuth = async () => {
-        try {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                try {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } catch (tokenError) {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUserResult) => {
+        setFbUser(fbUserResult);
+        if (fbUserResult) {
+            if (!fbUserResult.isAnonymous) {
+                // Vraie session (Google / Facebook) : l'identité vient directement de Firebase Auth.
+                const uid = fbUserResult.uid;
+                const name = fbUserResult.displayName || (fbUserResult.email ? fbUserResult.email.split('@')[0] : t.defaultUser);
+                const email = fbUserResult.email || '';
+                const photo = fbUserResult.photoURL || null;
+                setUser({ uid });
+                setUserName(name);
+                setUserEmail(email);
+                if (photo) setUserPhoto(photo);
+                localStorage.setItem('levelmovie_user_uid', uid);
+                localStorage.setItem('levelmovie_user_name', name);
+                localStorage.setItem('levelmovie_user_email', email);
+                if (photo) localStorage.setItem('lm_photo', photo);
+            } else {
+                // Session anonyme : invité, pas de compte
+                setUser(null);
+            }
+            setIsLoadingAuth(false);
+            setIsLoggingIn(false);
+            const pendingParty = localStorage.getItem('pending_party_join');
+            if (pendingParty) { triggerJoinParty(pendingParty); }
+        } else {
+            // Rien de restauré (premier chargement sans session, ou déconnexion) : on part invité.
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    try { await signInWithCustomToken(auth, __initial_auth_token); }
+                    catch (tokenError) { await signInAnonymously(auth); }
+                } else {
                     await signInAnonymously(auth);
                 }
-            } else {
-                await signInAnonymously(auth);
-            }
-        } catch(e) { console.error("Erreur Auth:", e); }
-    };
-    initAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, setFbUser);
+            } catch(e) { console.error("Erreur Auth:", e); }
+        }
+    });
     return () => unsubscribe();
 }, []);
 
@@ -926,6 +995,117 @@ useEffect(() => {
         });
     return () => unsubMaintenance();
 }, [fbUser]);
+
+// 2b. Flux des notifications (PARTAGÉ avec tout l'écosystème LevelUp)
+useEffect(() => {
+    if (!fbUser) return;
+    try {
+        const q = query(collection(db, ...NOTIF_PATH), orderBy('createdAt', 'desc'), limit(30));
+        const unsub = onSnapshot(q, (snap) => {
+            const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            setNotifications(items);
+        }, () => {});
+        return () => unsub();
+    } catch(e) {}
+}, [fbUser]);
+
+// 2c. Notifications push (FCM) : écoute au premier plan + relais des clics venant du Service Worker
+useEffect(() => {
+    if (!fbUser) return;
+    let unsubMsg = () => {};
+    (async () => {
+        try {
+            const supported = await isMessagingSupported();
+            if (!supported) return;
+            _messaging = getMessaging(app);
+            unsubMsg = onMessage(_messaging, (payload) => {
+                const title = payload?.notification?.title || payload?.data?.title || 'LevelMovie';
+                const body = payload?.notification?.body || payload?.data?.body || '';
+                showToast(`${title} — ${body}`, 'success');
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'PAGE_HANDLED_NOTIF',
+                        key: `${title}|${body}|${Math.floor(Date.now() / 15000)}`
+                    });
+                }
+            });
+        } catch(e) {}
+    })();
+
+    // Clic sur une notification native (app en arrière-plan/fermée) relayé par le Service Worker
+    const onSWMessage = (e) => {
+        if (e.data?.type === 'NOTIF_CLICK' && e.data?.url) {
+            handleDeepLink(e.data.url);
+        }
+    };
+    if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', onSWMessage);
+
+    return () => {
+        unsubMsg();
+        if ('serviceWorker' in navigator) navigator.serviceWorker.removeEventListener('message', onSWMessage);
+    };
+}, [fbUser]);
+
+// Interprète l'URL d'une notification/lien partagé et ouvre directement l'endroit concerné dans l'app
+// (au lieu de juste retomber sur l'accueil), sans recharger la page si c'est déjà LevelMovie.
+const handleDeepLink = async (url) => {
+    try {
+        const target = new URL(url, window.location.origin);
+        if (target.origin !== window.location.origin) { window.location.href = url; return; }
+
+        const params = target.searchParams;
+        if (target.pathname.startsWith('/salon') || params.get('party')) {
+            window.location.href = target.pathname + target.search;
+            return;
+        }
+        const watchId = params.get('watch');
+        if (watchId) {
+            const type = params.get('type') || 'movie';
+            const res = await fetch(`${BASE_URL}/${type}/${watchId}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
+            const movieData = await res.json();
+            if (movieData && movieData.id) {
+                if (type === 'tv') {
+                    movieData.resumeSeason = params.get('s') ? parseInt(params.get('s')) : 1;
+                    movieData.resumeEpisode = params.get('e') ? parseInt(params.get('e')) : 1;
+                }
+                setCurrentCategory('home');
+                openModal(movieData, 'play');
+            }
+            return;
+        }
+        // Rien de reconnu : navigation normale
+        if (target.pathname !== window.location.pathname) window.location.href = url;
+    } catch(e) { console.error('Deep-link error:', e); }
+};
+
+// Active les notifications push : permission navigateur + enregistrement du jeton FCM (partagé écosystème)
+const registerPushNotifications = async () => {
+    if (typeof Notification === 'undefined') { showToast(lang === 'fr' ? "Notifications non supportées sur cet appareil." : "Notifications not supported on this device.", "error"); return; }
+    try {
+        let swReg = null;
+        if ('serviceWorker' in navigator) {
+            swReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            await navigator.serviceWorker.ready;
+        }
+        const perm = await Notification.requestPermission();
+        setPushPermission(perm);
+        if (perm !== 'granted') return;
+
+        if (!_messaging) {
+            const supported = await isMessagingSupported();
+            if (!supported) return;
+            _messaging = getMessaging(app);
+        }
+        const token = await getToken(_messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
+        if (!token) return;
+
+        const uid = user?.uid || fbUser?.uid;
+        if (uid) {
+            await setDoc(doc(db, ...FCM_TOKEN_PATH(uid)), { token, uid, email: userEmail || '', app: 'levelmovie', updatedAt: new Date().toISOString() }, { merge: true });
+        }
+        showToast(t.pushEnabled, 'success');
+    } catch(e) { console.error('Erreur activation notifications:', e); showToast(lang === 'fr' ? "Impossible d'activer les notifications." : "Could not enable notifications.", "error"); }
+};
 
 // 3. Logique locale et UI
 useEffect(() => {
@@ -1079,23 +1259,36 @@ if (pendingParty) {
     setActivePartyCode(activeParty);
 } else {
     // Reprise automatique du film/épisode en cours après un refresh (hors watch party)
+    // Priorité à l'URL (?watch=ID) si présente, sinon on retombe sur le localStorage.
     try {
-        const nowPlayingRaw = localStorage.getItem('lm_now_playing');
-        if (nowPlayingRaw) {
-            const np = JSON.parse(nowPlayingRaw);
-            const isRecent = np.ts && (Date.now() - np.ts) < 6 * 60 * 60 * 1000; // 6h
-            if (np.id && np.mediaType && isRecent) {
-                const res = await fetch(`${BASE_URL}/${np.mediaType}/${np.id}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
-                const movieData = await res.json();
-                if (movieData && movieData.id) {
-                    if (np.mediaType === 'tv') {
-                        movieData.resumeSeason = np.season || 1;
-                        movieData.resumeEpisode = np.episode || 1;
-                    }
-                    openModal(movieData, 'play');
+        if (INITIAL_WATCH_PARAMS.id) {
+            const res = await fetch(`${BASE_URL}/${INITIAL_WATCH_PARAMS.type}/${INITIAL_WATCH_PARAMS.id}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
+            const movieData = await res.json();
+            if (movieData && movieData.id) {
+                if (INITIAL_WATCH_PARAMS.type === 'tv') {
+                    movieData.resumeSeason = INITIAL_WATCH_PARAMS.season || 1;
+                    movieData.resumeEpisode = INITIAL_WATCH_PARAMS.episode || 1;
                 }
-            } else {
-                localStorage.removeItem('lm_now_playing');
+                openModal(movieData, 'play');
+            }
+        } else {
+            const nowPlayingRaw = localStorage.getItem('lm_now_playing');
+            if (nowPlayingRaw) {
+                const np = JSON.parse(nowPlayingRaw);
+                const isRecent = np.ts && (Date.now() - np.ts) < 6 * 60 * 60 * 1000; // 6h
+                if (np.id && np.mediaType && isRecent) {
+                    const res = await fetch(`${BASE_URL}/${np.mediaType}/${np.id}?api_key=${API_KEY}&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
+                    const movieData = await res.json();
+                    if (movieData && movieData.id) {
+                        if (np.mediaType === 'tv') {
+                            movieData.resumeSeason = np.season || 1;
+                            movieData.resumeEpisode = np.episode || 1;
+                        }
+                        openModal(movieData, 'play');
+                    }
+                } else {
+                    localStorage.removeItem('lm_now_playing');
+                }
             }
         }
     } catch(e) { console.error("Erreur reprise lecture:", e); }
@@ -1344,85 +1537,92 @@ const formatAccessKey = (val) => {
     setAccessKey(val); 
 };
 
-const handleLogin = async (onSuccess) => {
-    const finalKey = accessKey.trim();
-    if (!finalKey) return;
+// Widget Turnstile : rendu à l'ouverture de la modale de connexion
+useEffect(() => {
+    if (!showLoginModal) { setTurnstileToken(null); return; }
+    window._onTurnstileSuccess = (token) => setTurnstileToken(token);
+    window._onTurnstileExpired = () => setTurnstileToken(null);
+    const renderWidget = () => {
+        const container = document.getElementById('lmTurnstile');
+        if (!container) { setTimeout(renderWidget, 200); return; }
+        if (!window.turnstile) { setTimeout(renderWidget, 200); return; }
+        if (container.dataset.rendered) return;
+        try {
+            window.turnstile.render(container, {
+                sitekey: '0x4AAAAAADMY4-j7dozqyHdf',
+                theme: 'dark',
+                callback: (token) => window._onTurnstileSuccess(token),
+                'expired-callback': () => window._onTurnstileExpired(),
+                'error-callback': () => window._onTurnstileSuccess('__bypass__')
+            });
+            container.dataset.rendered = 'true';
+        } catch(e) {}
+    };
+    renderWidget();
+}, [showLoginModal]);
+
+// Affiches de films en arrière-plan de l'écran de connexion
+useEffect(() => {
+    if (loginBackdrops.length > 0) return;
+    fetch(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}&language=en-US`)
+        .then(r => r.json())
+        .then(d => {
+            const backdrops = (d.results || []).filter(m => m.backdrop_path).slice(0, 12).map(m => m.backdrop_path);
+            setLoginBackdrops(backdrops);
+        }).catch(() => {});
+}, []);
+
+const checkTurnstile = () => {
+    if (turnstileToken === '__bypass__') return true;
+    if (!turnstileToken) {
+        setAuthError(lang === 'fr' ? "Merci de valider la vérification de sécurité." : "Please complete the security check.");
+        return false;
+    }
+    return true;
+};
+
+const handleGoogleSignIn = async (onSuccess) => {
+    if (!checkTurnstile()) return;
     setIsLoadingAuth(true);
     setAuthError('');
     try {
-        if (!auth.currentUser) {
-            await signInAnonymously(auth);
+        const isMobileUA = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || !!window.navigator.standalone;
+        if (isMobileUA) {
+            await signInWithRedirect(auth, googleProvider);
+            return;
         }
-
-        let foundUserData = null;
-
-        try {
-            const res = await fetch('/api/validate-key', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: finalKey, appId: APP_ID })
-            });
-            const data = await res.json();
-            if (res.ok && data.valid) {
-                foundUserData = {
-                    uid: data.uid,
-                    name: data.name,
-                    email: data.email,
-                    role: data.role,
-                    isAdmin: data.isAdmin
-                };
-            } else if (res.status === 400) {
-                // Mauvais format de clé : inutile d'essayer plus loin
-                setAuthError(data.error || (lang === 'fr' ? "Format de clé invalide." : "Invalid key format."));
-                setIsLoadingAuth(false);
-                return;
-            }
-        } catch (err) {
-            console.error("Erreur validate-key:", err);
-        }
-
-        if (foundUserData) {
-            const email = foundUserData.email || "email@inconnu.com";
-            const name = foundUserData.name || email.split('@')[0] || t.defaultUser;
-            const uid = foundUserData.uid || finalKey;
-            const photo = localStorage.getItem('lm_photo') || null;
-
-            setIsLoadingAuth(false);
-            setIsLoggingIn(true);
-
-            setTimeout(() => {
-                setUser({ uid });
-                setUserName(name);
-                setUserEmail(email);
-                if (photo) setUserPhoto(photo);
-
-                localStorage.setItem('levelmovie_saved_key', finalKey);
-                localStorage.setItem('levelmovie_user_name', name);
-                localStorage.setItem('levelmovie_user_email', email);
-                localStorage.setItem('levelmovie_user_uid', uid);
-                if(photo) localStorage.setItem('lm_photo', photo);
-
-                showToast(t.loginSuccess, 'success');
-                setIsLoggingIn(false);
-                if (onSuccess) onSuccess();
-
-                const pendingParty = localStorage.getItem('pending_party_join');
-                if (pendingParty) { triggerJoinParty(pendingParty); }
-
-            }, 2000);
-        } else {
-            setAuthError(t.enterKey || "Clé invalide.");
-            setIsLoadingAuth(false);
-        }
-    } catch (error) {
-        setAuthError(lang === 'fr' ? "Connexion impossible. Vérifiez votre réseau ou votre clé." : "Connection failed. Check your key.");
+        await signInWithPopup(auth, googleProvider);
+        if (onSuccess) onSuccess();
+    } catch (e) {
         setIsLoadingAuth(false);
+        if (e.code !== 'auth/popup-closed-by-user') {
+            setAuthError(lang === 'fr' ? "Connexion Google impossible. Réessaie." : "Google sign-in failed. Try again.");
+        }
     }
 };
 
-const handleLogout = () => {
+const handleFacebookSignIn = async (onSuccess) => {
+    if (!checkTurnstile()) return;
+    setIsLoadingAuth(true);
+    setAuthError('');
+    try {
+        await signInWithPopup(auth, facebookProvider);
+        if (onSuccess) onSuccess();
+    } catch (e) {
+        setIsLoadingAuth(false);
+        if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
+            setAuthError(lang === 'fr' ? "Connexion Facebook impossible. Réessaie." : "Facebook sign-in failed. Try again.");
+        }
+    }
+};
+
+const handleLogout = async () => {
+try { await signOut(auth); } catch(e) {}
 localStorage.clear();
 setUser(null);
+setUserName('');
+setUserEmail('');
+setUserPhoto(null);
 setAccessKey('');
 setShowSettings(false);
 setShowLogoutConfirm(false);
@@ -1819,8 +2019,16 @@ return (
 
 
 {showLoginModal && (
-<div className="fixed inset-0 z-[9500] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200">
-<div className="w-full max-w-sm text-center py-4 relative glass p-8 rounded-[2rem] border border-white/5 shadow-[0_0_50px_rgba(168,85,247,0.15)] animate-in zoom-in duration-300">
+<div className="fixed inset-0 z-[9500] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200 overflow-hidden">
+{/* Fond : collage d'affiches de films tendance */}
+<div className="absolute inset-0 grid grid-cols-4 sm:grid-cols-6 gap-1 opacity-25 pointer-events-none">
+{loginBackdrops.map((bp, i) => (
+<img key={i} src={`${IMAGE_BASE_URL}${bp}`} className="w-full h-full object-cover" alt="" />
+))}
+</div>
+<div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/80 to-[#060608]/95 pointer-events-none"></div>
+
+<div className="w-full max-w-sm text-center py-4 relative glass p-8 rounded-[2rem] border border-white/10 shadow-[0_0_60px_rgba(168,85,247,0.2)] animate-in zoom-in duration-300 z-10">
 <button onClick={() => { setShowLoginModal(false); setAuthError(''); }} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors outline-none">
 <X className="w-4 h-4" />
 </button>
@@ -1828,40 +2036,33 @@ return (
 <h1 className="text-3xl font-black tracking-widest mb-4 shrink-0 drop-shadow-md">
 <span className="text-white">Level</span><span className="text-[#a855f7]">Movie</span>
 </h1>
-<p className="text-white/50 text-xs mb-6">{t.loginRequiredDesc}</p>
-<div className="space-y-6">
-<p className="text-[11px] font-bold text-[#a855f7] uppercase tracking-[0.1em] mb-2 flex items-center justify-center gap-2">
-<Shield className="w-4 h-4" /> {t.enterKey}
-</p>
-<div className="relative w-full">
-<input
-type={showKey ? "text" : "password"}
-value={accessKey}
-onChange={(e) => formatAccessKey(e.target.value)}
-placeholder="LVL-XXXXX-XXXXX"
-className="w-full bg-[#030305] border border-[#a855f7]/40 rounded-xl py-4 pl-5 pr-12 text-center text-white font-mono text-[13px] tracking-widest outline-none focus:border-[#a855f7] transition-all shadow-inner"
-/>
-<button 
-onClick={() => setShowKey(!showKey)} 
-className="absolute right-4 top-1/2 -translate-y-1/2 text-[#a855f7]/60 hover:text-[#a855f7] transition-colors outline-none"
->
-{showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-</button>
-</div>
+<p className="text-white/50 text-xs mb-8">{t.loginRequiredDesc}</p>
+
+<div className="space-y-3">
 <button
-onClick={() => handleLogin(() => setShowLoginModal(false))}
-disabled={isLoadingAuth || !accessKey.trim()}
-className="w-full bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white py-4 rounded-xl font-black text-[12px] uppercase tracking-[0.1em] hover:opacity-90 active:scale-95 transition-all shadow-[0_0_25px_rgba(168,85,247,0.4)] disabled:opacity-50 disabled:cursor-not-allowed outline-none"
+onClick={() => handleGoogleSignIn(() => setShowLoginModal(false))}
+disabled={isLoadingAuth}
+className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-black py-3.5 rounded-xl font-bold text-[13px] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed outline-none active:scale-95"
 >
-{isLoadingAuth ? t.verifyLoading : t.verifyKey}
+<svg className="w-5 h-5" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h11.8c-.5 2.8-2.1 5.1-4.4 6.7v5.5h7.1c4.2-3.8 6.6-9.5 6.6-16.7z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.3c-.4-1.3-.7-2.7-.7-4.3s.3-3 .7-4.3v-5.7H4.5C3 16.9 2 20.3 2 24s1 7.1 2.5 10l7.3-5.7z"/><path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.4 2 8.1 6.9 4.5 14l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/></svg>
+{t.continueWithGoogle}
 </button>
-<div className="mt-4 flex justify-center">
-<a href="https://levelup-ecosystem.com" target="_blank" rel="noreferrer" className="flex items-center justify-center w-full gap-2 px-6 py-4 rounded-xl bg-white/10 border border-white/20 text-[11px] font-black uppercase tracking-[0.1em] text-white/90 hover:text-white hover:bg-white/20 hover:border-[#a855f7] transition-all duration-300 no-underline outline-none shadow-md">
-<Key className="w-4 h-4 text-[#a855f7]" /> <span>{t.forgotKey}</span>
-</a>
+<button
+onClick={() => handleFacebookSignIn(() => setShowLoginModal(false))}
+disabled={isLoadingAuth}
+className="w-full flex items-center justify-center gap-3 bg-[#1877F2] hover:bg-[#166fe5] text-white py-3.5 rounded-xl font-bold text-[13px] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed outline-none active:scale-95"
+>
+<svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+{t.continueWithFacebook}
+</button>
 </div>
-{authError && <p className="text-[12px] text-red-400 font-bold mt-2 bg-red-500/10 py-2 rounded-lg border border-red-500/20">{authError}</p>}
-</div>
+
+<div id="lmTurnstile" className="flex justify-center my-5 min-h-[65px]"></div>
+
+{authError && <p className="text-[12px] text-red-400 font-bold mt-2 mb-2 bg-red-500/10 py-2 rounded-lg border border-red-500/20">{authError}</p>}
+{isLoadingAuth && <p className="text-[11px] text-[#a855f7] font-bold uppercase tracking-widest mt-2 animate-pulse">{t.verifyLoading}</p>}
+
+<p className="text-white/30 text-[10px] mt-6 leading-relaxed">{t.loginSecureNotice}</p>
 </div>
 </div>
 )}
@@ -2047,6 +2248,41 @@ return (
 })}
 </div>
 
+{/* PANNEAU DE NOTIFICATIONS */}
+{showNotifPanel && (
+<>
+<div className="fixed inset-0 z-[9100]" onClick={() => setShowNotifPanel(false)}></div>
+<div className="fixed top-16 md:top-20 right-3 md:right-10 z-[9200] w-[calc(100%-24px)] max-w-sm bg-[#0c0c10] border border-white/10 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+    <div className="flex items-center justify-between p-4 border-b border-white/5">
+        <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2"><Bell className="w-4 h-4 text-[#a855f7]" /> {t.notifTitle}</h3>
+        <button onClick={() => setShowNotifPanel(false)} className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white outline-none"><X className="w-3.5 h-3.5" /></button>
+    </div>
+
+    {pushPermission !== 'granted' && (
+        <div className="p-3 bg-[#a855f7]/10 border-b border-[#a855f7]/10 flex items-center gap-3">
+            <Bell className="w-4 h-4 text-[#a855f7] shrink-0" />
+            <p className="flex-1 text-[10px] text-white/60 leading-snug">{t.pushPromptDesc}</p>
+            <button onClick={registerPushNotifications} className="shrink-0 bg-[#a855f7] hover:bg-purple-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-2 rounded-lg outline-none transition-colors">{t.pushEnableBtn}</button>
+        </div>
+    )}
+
+    <div className="max-h-[60vh] overflow-y-auto">
+        {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-14 opacity-40">
+                <Bell className="w-10 h-10 mb-3" />
+                <p className="text-xs font-bold uppercase tracking-widest">{t.notifEmpty}</p>
+            </div>
+        ) : notifications.map(n => (
+            <div key={n.id} onClick={() => { if (n.url) handleDeepLink(n.url); setShowNotifPanel(false); }} className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors ${n.url ? 'cursor-pointer' : ''}`}>
+                <p className="text-white font-bold text-[12px] mb-1">{n.title}</p>
+                {n.body && <p className="text-white/50 text-[11px] leading-snug">{n.body}</p>}
+            </div>
+        ))}
+    </div>
+</div>
+</>
+)}
+
 {/* MODAL RECHERCHE DÉDIÉE */}
 {showSearchModal && (
 <div className="fixed inset-0 z-[9200] bg-[#060608]/98 backdrop-blur-2xl flex flex-col animate-in fade-in duration-200" style={{paddingTop: 'env(safe-area-inset-top, 0px)'}}>
@@ -2133,6 +2369,13 @@ return (
     <span className="hidden md:inline truncate">{t.searchPlaceholder}</span>
 </button>
 
+<button onClick={() => { setShowNotifPanel(!showNotifPanel); const now = Date.now(); setLastSeenNotifTs(now); localStorage.setItem('lm_last_seen_notif', String(now)); }} className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all outline-none shadow-sm">
+    <Bell className="w-4 h-4" />
+    {notifications.some(n => (n.createdAt?.toMillis ? n.createdAt.toMillis() : new Date(n.createdAt).getTime()) > lastSeenNotifTs) && (
+        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#a855f7] rounded-full border border-[#060608] animate-pulse"></span>
+    )}
+</button>
+
 <div className="flex items-center gap-3 p-1.5 pr-3 md:pr-4 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer shadow-md outline-none" onClick={() => user ? setShowSettings(true) : setShowLoginModal(true)}>
 <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#151520] flex items-center justify-center overflow-hidden border border-[#a855f7]/40 shadow-inner shrink-0">
 {user ? (userPhoto ? <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" /> : <span className="text-[12px] md:text-[13px] font-black text-[#a855f7]">{defaultUserName.charAt(0).toUpperCase()}</span>) : <Key className="w-3.5 h-3.5 text-[#a855f7]" />}
@@ -2193,7 +2436,7 @@ return (
 
     {/* Bannière Salon en cours */}
     {activePartyCode && (
-        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-[#a855f7]/50 rounded-[2rem] p-6 md:p-8 mb-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
+        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-[#a855f7]/50 rounded-[2rem] p-6 md:p-8 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
             <div className="flex items-center gap-4 text-center md:text-left w-full md:w-auto">
                 <div className="w-14 h-14 bg-[#a855f7] rounded-full flex items-center justify-center shadow-lg animate-pulse shrink-0 mx-auto md:mx-0">
                     <Play className="w-6 h-6 fill-white text-white ml-1" />
@@ -2209,16 +2452,17 @@ return (
         </div>
     )}
 
-    {/* Interface intégrée pour rejoindre/créer */}
-    <div className="w-full bg-gradient-to-r from-[#a855f7]/10 to-transparent border border-white/10 rounded-[2rem] p-6 md:p-12 backdrop-blur-md shadow-2xl mb-12 animate-in fade-in zoom-in duration-500 flex flex-col md:flex-row gap-10 items-center">
-        <div className="flex-1 text-center md:text-left w-full">
-            <div className="w-16 h-16 rounded-full bg-[#a855f7]/20 flex items-center justify-center border border-[#a855f7]/30 shadow-[0_0_20px_rgba(168,85,247,0.3)] mx-auto md:mx-0 mb-4">
+    {/* En-tête : Rejoindre un salon */}
+    <div className="w-full bg-gradient-to-br from-[#a855f7]/10 via-transparent to-transparent border border-white/10 rounded-[2rem] p-6 md:p-10 backdrop-blur-md shadow-2xl mb-4 animate-in fade-in zoom-in duration-500">
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            <div className="w-16 h-16 shrink-0 rounded-2xl bg-[#a855f7]/20 flex items-center justify-center border border-[#a855f7]/30 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
                 <WatchPartySVG className="w-8 h-8 text-[#a855f7]" />
             </div>
-            <h2 className="text-2xl md:text-4xl font-black uppercase tracking-widest mb-2">{t.joinPartyTitle}</h2>
-            <p className="text-white/60 text-xs md:text-sm">{t.joinPartyDesc}</p>
-
-            <div className="flex mt-6 bg-black/50 border border-white/10 rounded-full p-1 shadow-inner focus-within:border-[#a855f7] transition-colors w-full max-w-sm mx-auto md:mx-0">
+            <div className="flex-1 text-center md:text-left w-full">
+                <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest mb-1">{t.joinPartyTitle}</h2>
+                <p className="text-white/50 text-xs md:text-sm">{t.joinPartyDesc}</p>
+            </div>
+            <div className="flex w-full md:w-auto bg-black/50 border border-white/10 rounded-full p-1 shadow-inner focus-within:border-[#a855f7] transition-colors max-w-sm">
                 <input 
                     type="text" 
                     id="partyCodeInput"
@@ -2227,7 +2471,7 @@ return (
                     autoCapitalize="off"
                     spellCheck="false"
                     placeholder={t.partyCodePlaceholder}
-                    className="flex-1 bg-transparent px-4 py-2.5 text-white font-mono text-[11px] md:text-xs outline-none uppercase tracking-[0.1em]"
+                    className="flex-1 md:w-48 bg-transparent px-4 py-2.5 text-white font-mono text-[11px] md:text-xs outline-none uppercase tracking-[0.1em]"
                 />
                 <button 
                     onClick={() => {
@@ -2237,28 +2481,30 @@ return (
                             triggerJoinParty(code);
                         }
                     }}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-6 py-2.5 rounded-full font-black uppercase tracking-widest transition-all active:scale-95 text-[10px] md:text-[11px] shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-6 py-2.5 rounded-full font-black uppercase tracking-widest transition-all active:scale-95 text-[10px] md:text-[11px] shadow-[0_0_15px_rgba(168,85,247,0.4)] shrink-0"
                 >
                     {t.joinBtn}
                 </button>
             </div>
         </div>
+    </div>
 
-        <div className="hidden md:block w-px h-40 bg-white/10"></div>
-
-        <div className="flex-1 w-full mt-6 md:mt-0">
-            <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest mb-2 border-l-4 border-[#a855f7] pl-3">{t.createPartyTitle}</h2>
-            <p className="text-white/60 text-xs md:text-sm mb-4">{t.createPartyDesc}</p>
-            <div className="relative max-w-lg mx-auto md:mx-0">
-                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
-                <input 
-                    type="text" 
-                    value={partySearchQuery}
-                    onChange={(e) => setPartySearchQuery(e.target.value)}
-                    placeholder={t.searchPartyMoviePlaceholder}
-                    className="w-full bg-[#151520] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white text-sm outline-none focus:border-[#a855f7] transition-colors shadow-inner"
-                />
-            </div>
+    {/* En-tête : Créer un salon */}
+    <div className="w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 md:p-8 mb-10">
+        <div className="flex items-center gap-3 mb-1">
+            <Plus className="w-5 h-5 text-[#a855f7]" />
+            <h2 className="text-lg md:text-xl font-black uppercase tracking-widest">{t.createPartyTitle}</h2>
+        </div>
+        <p className="text-white/50 text-xs md:text-sm mb-4">{t.createPartyDesc}</p>
+        <div className="relative max-w-lg">
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+            <input 
+                type="text" 
+                value={partySearchQuery}
+                onChange={(e) => setPartySearchQuery(e.target.value)}
+                placeholder={t.searchPartyMoviePlaceholder}
+                className="w-full bg-[#151520] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white text-sm outline-none focus:border-[#a855f7] transition-colors shadow-inner"
+            />
         </div>
     </div>
 
@@ -2269,8 +2515,13 @@ return (
                 {partySearchResults.length > 0 ? partySearchResults.map(movie => {
                 if(!movie.poster_path) return null;
                 return (
-                <div key={movie.id} className="relative cursor-pointer rounded-2xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform" onClick={() => openModal(movie, 'info')}>
+                <div key={movie.id} className="relative group cursor-pointer rounded-2xl overflow-hidden shadow-lg border border-white/5 bg-[#151520] hover:scale-105 transition-transform" onClick={() => openModal(movie, 'info')}>
                 <img className="object-cover w-full aspect-[2/3]" src={`${IMAGE_BASE_URL}${movie.poster_path}`} loading="lazy" alt="" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                    <button onClick={(e) => { e.stopPropagation(); triggerCreateParty(movie); }} className="flex items-center justify-center gap-1.5 bg-[#a855f7] hover:bg-purple-500 text-white text-[9px] font-black uppercase tracking-widest px-2 py-2 rounded-lg shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-all active:scale-95 outline-none">
+                        <Plus className="w-3.5 h-3.5" /> {t.createPartyBtn}
+                    </button>
+                </div>
                 </div>
                 );
                 }) : <p className="text-white/50 py-10 col-span-full text-center">{t.noResults}</p>}
@@ -2281,7 +2532,7 @@ return (
             <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-widest border-l-4 border-[#a855f7] pl-3 mb-6 animate-in slide-in-from-left duration-700">{t.watchPartyMovies}</h2>
             <main className="relative space-y-8 md:space-y-10">
                 {rowsConfig.map((row, i) => (
-                    <Row key={i} title={row.title} fetchUrl={row.url} isLarge={row.large} shuffle={row.shuffle} onMovieClick={(m) => openModal(m, 'info')} pageSeed={pageSeed} parentalFilter={parentalFilter} />
+                    <Row key={i} title={row.title} fetchUrl={row.url} isLarge={row.large} shuffle={row.shuffle} onMovieClick={(m) => openModal(m, 'info')} pageSeed={pageSeed} parentalFilter={parentalFilter} quickAction={{ icon: Plus, label: t.createPartyBtn, onClick: (m) => triggerCreateParty(m) }} />
                 ))}
             </main>
         </div>
@@ -2600,7 +2851,16 @@ return (
 <MovieModal
 movie={selectedMovie}
 mode={modalMode}
-onClose={() => { localStorage.removeItem('lm_now_playing'); setSelectedMovie(null); }}
+onClose={() => {
+    localStorage.removeItem('lm_now_playing');
+    setSelectedMovie(null);
+    try {
+        const params = new URLSearchParams(window.location.search);
+        params.delete('watch'); params.delete('type'); params.delete('s'); params.delete('e');
+        const q = params.toString();
+        window.history.replaceState({}, '', window.location.pathname + (q ? `?${q}` : ''));
+    } catch(e) {}
+}}
 onSelectSimilar={(m) => { setSelectedMovie(m); setModalMode('info'); addToHistory(m); }}
 t={t}
 lang={langCode}
@@ -2719,7 +2979,7 @@ return (
 }
 
 // --- ROW COMPONENT ---
-function Row({ title, fetchUrl, isLarge, shuffle, onMovieClick, pageSeed, parentalFilter }) {
+function Row({ title, fetchUrl, isLarge, shuffle, onMovieClick, pageSeed, parentalFilter, quickAction }) {
 const [movies, setMovies] = useState([]);
 const rowRef = useRef(null);
 
@@ -2808,8 +3068,13 @@ return (
 <img className={`object-cover ${imgClass} transition-opacity duration-500`} src={imgSrc} loading="lazy" alt="" draggable="false"/>
 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 pointer-events-none">
 <p className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider truncate drop-shadow-md">{movie.title || movie.name}</p>
-<div className="flex items-center gap-2 mt-1 md:mt-2">
+<div className="flex items-center justify-between gap-2 mt-1 md:mt-2">
 <span className="text-[#a855f7] font-bold text-[9px] md:text-[10px]"><Star className="w-3 h-3 inline mb-0.5" /> {movie.vote_average?.toFixed(1)}</span>
+{quickAction && (
+<button onClick={(e) => { e.stopPropagation(); quickAction.onClick(movie); }} className="pointer-events-auto flex items-center gap-1 bg-[#a855f7] hover:bg-purple-500 text-white text-[8px] md:text-[9px] font-black uppercase tracking-widest px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-all active:scale-95 outline-none">
+<quickAction.icon className="w-3 h-3" /> <span className="hidden sm:inline">{quickAction.label}</span>
+</button>
+)}
 </div>
 </div>
 </div>
@@ -3095,6 +3360,8 @@ return () => { cancelled = true; };
 
 // Sauvegarde en continu la lecture en cours (film/épisode/serveur) pour qu'un refresh
 // de la page reprenne exactement où l'utilisateur en était, sans dépendre d'un salon.
+// Met aussi à jour l'URL du navigateur (?watch=ID&type=...&s=...&e=...) pour qu'un lien
+// copié ou un simple refresh retombe toujours sur le même film/épisode.
 useEffect(() => {
 if (partyId) return; // dans un salon, la reprise est gérée par la logique de la watch party
 if (modalMode !== 'play') return;
@@ -3107,6 +3374,14 @@ try {
         episode: isTV ? selectedEpisode : null,
         ts: Date.now()
     }));
+} catch(e) {}
+try {
+    const params = new URLSearchParams(window.location.search);
+    params.set('watch', movie.id);
+    params.set('type', typeStr);
+    if (isTV) { params.set('s', selectedSeason); params.set('e', selectedEpisode); }
+    else { params.delete('s'); params.delete('e'); }
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
 } catch(e) {}
 if (isTV && addToHistory) {
     addToHistory(movie, selectedSeason, selectedEpisode);
