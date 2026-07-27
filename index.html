@@ -174,7 +174,7 @@ const renderBrowserIcon = (id, className) => {
 
 const firebaseConfig = {
 apiKey: "AIzaSyA3JgvNu5p-43037jvm4WRDaJHI9ES7uGM",
-authDomain: "levelup-ecosystem.com",
+authDomain: "levelup-ia.firebaseapp.com",
 projectId: "levelup-ia",
 storageBucket: "levelup-ia.firebasestorage.app",
 messagingSenderId: "229420004282",
@@ -290,6 +290,10 @@ notifEmpty: "Aucune notification pour l'instant",
 pushPromptDesc: "Active les notifications pour ne rien manquer.",
 pushEnableBtn: "Activer",
 pushEnabled: "Notifications activées !",
+notifyReleaseBtn: "Me prévenir à la sortie",
+reminderSetBtn: "Rappel activé",
+reminderConfirmed: "On te préviendra dès la sortie !",
+reminderError: "Impossible d'activer le rappel.",
 guestListLocked: "Connecte-toi pour créer ta liste de favoris",
 verifyKey: "Connexion",
 verifyLoading: "Vérification...",
@@ -566,6 +570,10 @@ notifEmpty: "No notifications yet",
 pushPromptDesc: "Enable notifications so you never miss anything.",
 pushEnableBtn: "Enable",
 pushEnabled: "Notifications enabled!",
+notifyReleaseBtn: "Notify me on release",
+reminderSetBtn: "Reminder set",
+reminderConfirmed: "We'll notify you when it's out!",
+reminderError: "Could not set the reminder.",
 guestListLocked: "Sign in to build your favorites list",
 verifyKey: "Login",
 verifyLoading: "Verifying...",
@@ -2248,39 +2256,44 @@ return (
 })}
 </div>
 
-{/* PANNEAU DE NOTIFICATIONS */}
+{/* MODAL NOTIFICATIONS */}
 {showNotifPanel && (
-<>
-<div className="fixed inset-0 z-[9100]" onClick={() => setShowNotifPanel(false)}></div>
-<div className="fixed top-16 md:top-20 right-3 md:right-10 z-[9200] w-[calc(100%-24px)] max-w-sm bg-[#0c0c10] border border-white/10 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-    <div className="flex items-center justify-between p-4 border-b border-white/5">
-        <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2"><Bell className="w-4 h-4 text-[#a855f7]" /> {t.notifTitle}</h3>
-        <button onClick={() => setShowNotifPanel(false)} className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white outline-none"><X className="w-3.5 h-3.5" /></button>
+<div className="fixed inset-0 z-[9200] bg-[#060608]/95 backdrop-blur-2xl flex items-start sm:items-center justify-center p-0 sm:p-6 animate-in fade-in duration-200">
+<div className="w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[85vh] bg-[#0c0c10] sm:rounded-[1.75rem] border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col animate-in sm:zoom-in duration-300">
+    <div className="flex items-center justify-between p-5 md:p-6 border-b border-white/5 shrink-0">
+        <h3 className="text-sm md:text-base font-black text-white uppercase tracking-widest flex items-center gap-3"><Bell className="w-5 h-5 text-[#a855f7]" /> {t.notifTitle}</h3>
+        <button onClick={() => setShowNotifPanel(false)} className="w-9 h-9 rounded-full bg-white/5 hover:bg-red-500 flex items-center justify-center text-white/50 hover:text-white transition-colors outline-none"><X className="w-4 h-4" /></button>
     </div>
 
     {pushPermission !== 'granted' && (
-        <div className="p-3 bg-[#a855f7]/10 border-b border-[#a855f7]/10 flex items-center gap-3">
-            <Bell className="w-4 h-4 text-[#a855f7] shrink-0" />
-            <p className="flex-1 text-[10px] text-white/60 leading-snug">{t.pushPromptDesc}</p>
-            <button onClick={registerPushNotifications} className="shrink-0 bg-[#a855f7] hover:bg-purple-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-2 rounded-lg outline-none transition-colors">{t.pushEnableBtn}</button>
+        <div className="mx-5 md:mx-6 mt-4 p-4 bg-gradient-to-r from-[#a855f7]/15 to-transparent border border-[#a855f7]/20 rounded-2xl flex items-center gap-4 shrink-0">
+            <div className="w-10 h-10 bg-[#a855f7]/20 rounded-xl flex items-center justify-center shrink-0"><Bell className="w-4 h-4 text-[#a855f7]" /></div>
+            <p className="flex-1 text-[11px] text-white/60 leading-snug">{t.pushPromptDesc}</p>
+            <button onClick={registerPushNotifications} className="shrink-0 bg-[#a855f7] hover:bg-purple-500 text-white text-[9px] font-black uppercase tracking-widest px-3.5 py-2.5 rounded-xl outline-none transition-colors shadow-[0_0_15px_rgba(168,85,247,0.4)]">{t.pushEnableBtn}</button>
         </div>
     )}
 
-    <div className="max-h-[60vh] overflow-y-auto">
+    <div className="flex-1 overflow-y-auto p-3 md:p-4">
         {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-14 opacity-40">
-                <Bell className="w-10 h-10 mb-3" />
-                <p className="text-xs font-bold uppercase tracking-widest">{t.notifEmpty}</p>
+            <div className="flex flex-col items-center justify-center py-24 opacity-40">
+                <Bell className="w-14 h-14 mb-4" />
+                <p className="text-sm font-bold uppercase tracking-widest">{t.notifEmpty}</p>
             </div>
         ) : notifications.map(n => (
-            <div key={n.id} onClick={() => { if (n.url) handleDeepLink(n.url); setShowNotifPanel(false); }} className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors ${n.url ? 'cursor-pointer' : ''}`}>
-                <p className="text-white font-bold text-[12px] mb-1">{n.title}</p>
-                {n.body && <p className="text-white/50 text-[11px] leading-snug">{n.body}</p>}
+            <div key={n.id} onClick={() => { if (n.url) handleDeepLink(n.url); setShowNotifPanel(false); }} className={`flex items-start gap-4 p-4 rounded-2xl mb-1.5 transition-colors ${n.url ? 'cursor-pointer hover:bg-white/5' : ''}`}>
+                <div className="w-10 h-10 rounded-xl bg-[#a855f7]/15 border border-[#a855f7]/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <Bell className="w-4 h-4 text-[#a855f7]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-white font-bold text-[13px] mb-1">{n.title}</p>
+                    {n.body && <p className="text-white/50 text-[12px] leading-relaxed">{n.body}</p>}
+                </div>
+                {n.url && <ChevronRight className="w-4 h-4 text-white/20 shrink-0 mt-2" />}
             </div>
         ))}
     </div>
 </div>
-</>
+</div>
 )}
 
 {/* MODAL RECHERCHE DÉDIÉE */}
@@ -3242,6 +3255,8 @@ const typeStr = isTV ? 'tv' : 'movie';
 const isAddedToWatchlist = watchlist.includes(movie.id);
 const iAmHost = !!(partyId && partyData && user?.uid === partyData.hostUid);
 const iAmMod = !!(partyId && partyData && partyData.mods?.includes(user?.uid));
+const releaseDateStr = details?.release_date || details?.first_air_date || movie.release_date || movie.first_air_date || null;
+const isUpcomingRelease = !!(releaseDateStr && new Date(releaseDateStr) > new Date());
 
 // Saison/épisode en cours : priorité à un "reprendre" explicite (venant de "Récemment consultés"),
 // sinon à la session sauvegardée localement (survit à un refresh), sinon S1E1 par défaut.
@@ -3680,6 +3695,33 @@ unique.push(p);
 }
 }
 return unique.length > 0 ? { unique, link: providerData.link } : null;
+};
+
+const [reminderSet, setReminderSet] = useState(false);
+
+useEffect(() => {
+if (!isUpcomingRelease || !user) { setReminderSet(false); return; }
+getDoc(doc(db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'release_reminders', `${movie.id}_${user.uid}`))
+    .then(snap => setReminderSet(snap.exists()))
+    .catch(() => setReminderSet(false));
+}, [movie.id, user, isUpcomingRelease]);
+
+const handleSetReleaseReminder = async (movieObj, detailsObj) => {
+if (!user) { showToast(t.loginRequiredDesc, 'error'); return; }
+try {
+    await setDoc(doc(db, 'artifacts', 'levelup-ecosystem', 'public', 'data', 'release_reminders', `${movieObj.id}_${user.uid}`), {
+        movieId: movieObj.id,
+        mediaType: typeStr,
+        title: movieObj.title || movieObj.name,
+        releaseDate: releaseDateStr,
+        uid: user.uid,
+        app: 'levelmovie',
+        notified: false,
+        createdAt: new Date().toISOString()
+    });
+    setReminderSet(true);
+    showToast(t.reminderConfirmed, 'success');
+} catch(e) { showToast(t.reminderError, 'error'); }
 };
 
 const handlePlayRequest = (serverId) => {
@@ -4548,10 +4590,16 @@ return (
     {/* BOUTONS D'ACTION DU FILM */}
     <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-8">
 
-        {/* Play */}
+        {/* Play OU Me prévenir (si le film/la série n'est pas encore sorti) */}
+        {isUpcomingRelease ? (
+        <button onClick={() => handleSetReleaseReminder(movie, details)} disabled={reminderSet} className={`flex-1 items-center justify-center flex gap-3 px-6 py-4 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest transition-all active:scale-95 outline-none ${reminderSet ? 'bg-green-500/10 border border-green-500/40 text-green-400 cursor-default' : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 shadow-[0_0_30px_rgba(168,85,247,0.4)]'}`}>
+            {reminderSet ? <><CheckCircle className="w-5 h-5" /> <span>{t.reminderSetBtn}</span></> : <><Bell className="w-5 h-5" /> <span>{t.notifyReleaseBtn}</span></>}
+        </button>
+        ) : (
         <button onClick={() => handlePlayRequest(selectedServer)} className="flex-1 items-center justify-center flex gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl text-xs md:text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-[0_0_30px_rgba(168,85,247,0.4)] active:scale-95 outline-none">
             <Play className="w-5 h-5 fill-white" /> <span>{t.playMovie}</span>
         </button>
+        )}
 
         {/* Bande-Annonce */}
         <button
