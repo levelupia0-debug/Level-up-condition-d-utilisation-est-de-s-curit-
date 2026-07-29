@@ -1025,7 +1025,12 @@
                 return { keys: [], globalPrompt: "" };
             }
 
-            async function callGeminiAPI(payload, allKeys) {
+            // ==========================================
+            // STREAMING RÉEL (SSE) - remplace l'ancien appel bloquant generateContent
+            // onChunk(deltaText) est appelé à chaque fragment de texte reçu du modèle,
+            // en temps réel, au fur et à mesure de la génération côté serveur.
+            // ==========================================
+            async function streamGeminiAPI(payload, allKeys, onChunk, signal) {
                 if (!allKeys || allKeys.length === 0) return { error: true, text: "Access to the AI infrastructure is temporarily unavailable. Please verify the stability of your network connection." };
 
                 if (currentKeyIndex === null) {
@@ -1035,32 +1040,63 @@
                 for (let keyAttempt = 0; keyAttempt < allKeys.length; keyAttempt++) {
                     const keyIdx = (currentKeyIndex + keyAttempt) % allKeys.length;
                     const apiKey = allKeys[keyIdx];
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
+                    let fullText = '';
+                    let receivedAny = false;
 
                     try {
                         const response = await fetch(url, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload),
-                            signal: abortController.signal
+                            signal
                         });
 
-                        if (response.ok) {
-                            const data = await response.json();
-                            const aiText = data.candidates[0].content.parts[0].text;
-                            currentKeyIndex = keyIdx; 
-                            return { error: false, text: aiText };
+                        if (!response.ok) {
+                            if (response.status === 429 || response.status === 403 || response.status >= 500) {
+                                console.warn(`[Failover] Clé ${keyIdx} saturée ou erreur (${response.status}). Passage à la suivante...`);
+                                await new Promise(resolve => setTimeout(resolve, 200));
+                                continue;
+                            }
+                            continue;
                         }
 
-                        if (response.status === 429 || response.status === 403 || response.status >= 500) {
-                            console.warn(`[Failover] Clé ${keyIdx} saturée ou erreur (${response.status}). Passage à la suivante...`);
-                            await new Promise(resolve => setTimeout(resolve, 200));
-                            continue; 
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let buffer = '';
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+                            buffer += decoder.decode(value, { stream: true });
+                            const lines = buffer.split('\n');
+                            buffer = lines.pop();
+                            for (const line of lines) {
+                                const trimmed = line.trim();
+                                if (!trimmed.startsWith('data:')) continue;
+                                const jsonStr = trimmed.slice(5).trim();
+                                if (!jsonStr) continue;
+                                try {
+                                    const parsed = JSON.parse(jsonStr);
+                                    const delta = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                                    if (delta) {
+                                        fullText += delta;
+                                        receivedAny = true;
+                                        currentKeyIndex = keyIdx;
+                                        onChunk(delta);
+                                    }
+                                } catch (e) { /* fragment JSON incomplet, on ignore */ }
+                            }
                         }
 
+                        if (receivedAny) return { error: false, text: fullText };
                         continue;
                     } catch (error) {
-                        if (error.name === 'AbortError') throw error;
+                        if (error.name === 'AbortError') {
+                            if (receivedAny) return { error: false, text: fullText, aborted: true };
+                            throw error;
+                        }
+                        if (receivedAny) return { error: false, text: fullText };
                         console.warn(`[Failover] Erreur réseau sur la clé ${keyIdx}. Passage à la suivante...`);
                         continue;
                     }
@@ -1201,29 +1237,181 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 window.openGlobalModal('Full Description', `<p class="text-zinc-300 text-sm leading-relaxed">${desc}</p>`);
             };
 
-            async function parseActionTags(text) {
-                const rememberRegex = /\[ACTION:REMEMBER:(.*?)\]/g;
-                let rememberMatches = [...text.matchAll(rememberRegex)];
-                if (rememberMatches.length > 0) {
-                    let currentHabits = localStorage.getItem('dona_user_habits') ? JSON.parse(localStorage.getItem('dona_user_habits')) : [];
-                    rememberMatches.forEach(m => {
-                        const fact = m[1].trim();
-                        if (!currentHabits.includes(fact)) currentHabits.push(fact);
-                    });
-                    if(currentHabits.length > 15) currentHabits = currentHabits.slice(currentHabits.length - 15);
-                    localStorage.setItem('dona_user_habits', JSON.stringify(currentHabits));
-                    text = text.replace(/\[ACTION:REMEMBER:.*?\]/g, '');
-                }
+            // ==========================================
+            // MOTEUR DE RENDU INCRÉMENTAL (utilisé pendant ET après le streaming)
+            // ==========================================
 
-                const suggestionRegex = /\[SUGGESTION:(.*?)\]/g;
+            // Ne montre jamais un tag "[ACTION:..." coupé en plein milieu pendant le streaming.
+            // On coupe l'affichage juste avant le dernier "[" tant qu'il n'a pas son "]" fermant.
+            function getSafeStreamText(raw) {
+                const lastOpen = raw.lastIndexOf('[');
+                if (lastOpen === -1) return raw;
+                const closeAfter = raw.indexOf(']', lastOpen);
+                if (closeAfter === -1) return raw.substring(0, lastOpen);
+                return raw;
+            }
+
+            function skeletonCardHtml(kind) {
+                const label = kind === 'music'
+                    ? (currentLang === 'fr' ? 'Chargement de la fiche musicale...' : 'Loading music card...')
+                    : (currentLang === 'fr' ? 'Chargement de la fiche...' : 'Loading card...');
+                const iconClass = kind === 'music' ? 'fa-music' : 'fa-clapperboard';
+                return `
+                    <div class="mt-4 rounded-xl bg-[#111116] border border-white/10 shadow-2xl w-full max-w-md overflow-hidden relative">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#a855f7] to-[#3b82f6] z-10 animate-pulse"></div>
+                        <div class="h-32 w-full bg-white/5 flex items-center justify-center animate-pulse">
+                            <i class="fas ${iconClass} text-white/20 text-2xl"></i>
+                        </div>
+                        <div class="p-3 flex items-center gap-2">
+                            <div class="typing-dots flex gap-1.5"><span></span><span></span><span></span></div>
+                            <span class="text-[10px] text-[#a855f7]/70 font-bold uppercase tracking-widest">${label}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Ctx = { cache: Map<fullTag, html>, fetching: Set<fullTag>, processedRemember: Set, onAsyncResolved: fn }
+            function createRenderContext(onAsyncResolved) {
+                return { cache: new Map(), fetching: new Set(), processedRemember: new Set(), onAsyncResolved };
+            }
+
+            async function fetchMovieCard(fullTag, mediaTag, movieQuery, isFav, ctx) {
+                try {
+                    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(movieQuery)}`);
+                    const data = await res.json();
+                    let movie = data.results?.find(m => m.media_type === 'movie' || m.media_type === 'tv');
+
+                    if (movie && (movie.backdrop_path || movie.poster_path)) {
+                        const title = movie.title || movie.name;
+                        const year = (movie.release_date || movie.first_air_date || '').substring(0, 4);
+                        const typeTag = movie.media_type === 'tv' ? 'Series' : 'Movie';
+                        const fullDesc = movie.overview || '';
+                        const shortDesc = fullDesc.length > 90 ? fullDesc.substring(0, 90) + '...' : fullDesc;
+
+                        const descEscaped = fullDesc.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+                        const titleEscaped = title.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                        const favBadge = isFav ? `
+                            <div class="absolute -top-3 -right-2 bg-gradient-to-r from-[#ec4899] to-[#a855f7] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.5)] z-30 flex items-center gap-1.5 border border-white/20">
+                                <i class="fas fa-heart animate-pulse"></i> ${currentLang === 'fr' ? 'Coup de Cœur' : 'Top Pick'}
+                            </div>
+                        ` : '';
+
+                        const cardClasses = isFav
+                            ? "mt-6 rounded-xl bg-[#111116] border border-[#ec4899]/50 shadow-[0_0_25px_rgba(236,72,153,0.15)] w-full max-w-md relative overflow-visible"
+                            : "mt-4 rounded-xl bg-[#111116] border border-white/10 shadow-2xl w-full max-w-md overflow-hidden relative";
+
+                        const topBorderColor = isFav ? "from-[#ec4899] to-[#a855f7]" : "from-[#a855f7] to-[#3b82f6]";
+                        const imageContainerClasses = isFav ? "h-48 w-full relative rounded-t-xl overflow-hidden" : "h-48 w-full relative";
+                        const btnPlayClasses = isFav ? "from-[#ec4899] to-[#d946ef] shadow-[0_0_15px_rgba(236,72,153,0.3)] border border-pink-500/50" : "from-[#a855f7] to-[#9333ea] shadow-[0_0_15px_rgba(168,85,247,0.3)] border border-purple-500/50";
+
+                        ctx.cache.set(fullTag, `
+                            <div class="${cardClasses}">
+                                ${favBadge}
+                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${topBorderColor} z-10 ${isFav ? 'rounded-t-xl' : ''}"></div>
+                                <div class="${imageContainerClasses}">
+                                    <img src="${TMDB_IMAGE_BASE_URL}${movie.backdrop_path || movie.poster_path}" class="block w-full h-full object-cover" alt="Cover">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-[#111116] to-transparent"></div>
+                                    <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-white text-[10px] font-black tracking-widest border border-white/10 flex items-center gap-1.5 shadow-lg">
+                                        <i class="fas fa-star text-yellow-500"></i> ${(movie.vote_average || 0).toFixed(1)}
+                                    </div>
+                                    <div class="absolute bottom-3 left-4 right-4">
+                                        <h4 class="text-white font-black text-[15px] truncate drop-shadow-md">${title} <span class="text-white/50 text-[11px] font-medium">(${year})</span></h4>
+                                        <span class="text-[9px] bg-white/10 backdrop-blur-sm border border-white/10 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider mt-1 inline-block">${typeTag}</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 pt-2">
+                                    ${shortDesc ? `<p class="text-[11px] text-zinc-400 mb-2 leading-relaxed">${shortDesc}</p>` : ''}
+                                    ${fullDesc.length > 90 ? `<button onclick="window.showMovieFullDesc('${descEscaped}')" class="text-[10px] text-[#a855f7] font-bold mb-3 hover:text-purple-400 bg-transparent border-none cursor-pointer p-0 transition-colors">Read more →</button>` : ''}
+                                    <div class="grid grid-cols-3 gap-2 mt-2">
+                                        <button onclick="window.open('https://movie.levelup-ecosystem.com/', '_blank')" class="col-span-1 py-2.5 bg-gradient-to-r ${btnPlayClasses} hover:brightness-110 rounded-lg text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 outline-none">
+                                            <i class="fas fa-play text-[9px]"></i> Play
+                                        </button>
+                                        <button onclick="window.showMovieTrailer('${movie.id}', '${movie.media_type}')" class="col-span-1 py-2.5 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 rounded-lg text-red-400 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 border border-[#ef4444]/30 outline-none">
+                                            <i class="fab fa-youtube text-[11px]"></i> Trailer
+                                        </button>
+                                        <button onclick="window.showMovieSources('${movie.id}', '${movie.media_type}', '${titleEscaped}')" class="col-span-1 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/80 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 border border-white/10 outline-none">
+                                            <i class="fas fa-satellite-dish text-[9px]"></i> Sources
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    } else {
+                        ctx.cache.set(fullTag, `<div class="mt-2 text-[11px] text-yellow-500 italic"><i class="fas fa-info-circle"></i> Visual not available, but you can search for it on LevelMovie.</div>`);
+                    }
+                } catch (e) {
+                    ctx.cache.set(fullTag, '');
+                }
+                ctx.onAsyncResolved();
+            }
+
+            async function fetchMusicCard(fullTag, musicQuery, ctx) {
+                try {
+                    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(musicQuery)}&media=music&limit=1&country=us`);
+                    const data = await res.json();
+                    if (data.results && data.results.length > 0) {
+                        const track = data.results[0];
+                        const artworkHigh = (track.artworkUrl100 || '').replace('100x100', '300x300');
+                        const appleMusicUrl = track.trackViewUrl || '';
+
+                        ctx.cache.set(fullTag, `
+                            <div class="mt-4 rounded-xl bg-[#111116] border border-white/10 shadow-2xl w-full max-w-sm overflow-hidden relative">
+                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#ec4899] to-[#8b5cf6] z-10"></div>
+                                <div class="p-3 flex gap-3.5 items-center">
+                                    ${artworkHigh ? `<img src="${artworkHigh}" class="w-16 h-16 rounded-xl object-cover shadow-lg flex-shrink-0 border border-white/5" alt="Artwork">` : `<div class="w-16 h-16 rounded-xl bg-[#ec4899]/20 flex items-center justify-center flex-shrink-0 border border-white/5"><i class="fas fa-music text-[#ec4899] text-xl"></i></div>`}
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-white font-black text-sm truncate drop-shadow-sm">${track.trackName || musicQuery}</h4>
+                                        <p class="text-zinc-400 text-[11px] truncate font-medium mt-0.5">${track.artistName || ''}</p>
+                                        <div class="flex gap-2 mt-2.5">
+                                            <button onclick="window.open('https://music.levelup-ecosystem.com/', '_blank')" class="flex-1 py-1.5 bg-gradient-to-r from-[#ec4899] to-[#d946ef] text-white rounded-lg text-[10px] font-black uppercase tracking-wider active:scale-95 flex items-center justify-center gap-1 transition-all hover:brightness-110 shadow-[0_0_10px_rgba(236,72,153,0.3)]"><i class="fas fa-play text-[8px]"></i> LevelMusic</button>
+                                            ${appleMusicUrl ? `<a href="${appleMusicUrl}" target="_blank" class="flex-1 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white/80 text-[10px] font-black uppercase tracking-wider active:scale-95 flex items-center justify-center gap-1 no-underline hover:bg-white/10"><i class="fab fa-apple text-[10px]"></i> Apple</a>` : ''}
+                                        </div>
+                                        ${track.previewUrl ? `
+                                        <div class="mt-3 w-full" style="color-scheme: dark;">
+                                            <audio controls class="w-full h-8 outline-none rounded bg-white/5" style="max-height: 35px;">
+                                                <source src="${track.previewUrl}" type="audio/mp4">
+                                            </audio>
+                                        </div>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    } else {
+                        ctx.cache.set(fullTag, `<div class="mt-2 text-[11px] text-yellow-500 italic"><i class="fas fa-music"></i> No musical results found.</div>`);
+                    }
+                } catch (e) {
+                    ctx.cache.set(fullTag, '');
+                }
+                ctx.onAsyncResolved();
+            }
+
+            // Résout un texte (potentiellement tronqué pendant le streaming) en HTML final.
+            // includeSuggestions: seulement true en toute fin de génération (les pills n'ont de sens qu'une fois le message complet).
+            function resolveActionTags(text, ctx, includeSuggestions) {
+                const rememberRegex = /\[ACTION:REMEMBER:(.*?)\]/g;
+                let rMatch;
+                while ((rMatch = rememberRegex.exec(text)) !== null) {
+                    const fact = rMatch[1].trim();
+                    if (!ctx.processedRemember.has(fact)) {
+                        ctx.processedRemember.add(fact);
+                        let currentHabits = localStorage.getItem('dona_user_habits') ? JSON.parse(localStorage.getItem('dona_user_habits')) : [];
+                        if (!currentHabits.includes(fact)) currentHabits.push(fact);
+                        if (currentHabits.length > 15) currentHabits = currentHabits.slice(currentHabits.length - 15);
+                        localStorage.setItem('dona_user_habits', JSON.stringify(currentHabits));
+                    }
+                }
+                text = text.replace(/\[ACTION:REMEMBER:.*?\]/g, '');
+
                 let suggestions = [];
-                let match;
-                while ((match = suggestionRegex.exec(text)) !== null) {
-                    suggestions.push(match[1].trim());
+                if (includeSuggestions) {
+                    const suggestionRegex = /\[SUGGESTION:(.*?)\]/g;
+                    let sMatch;
+                    while ((sMatch = suggestionRegex.exec(text)) !== null) suggestions.push(sMatch[1].trim());
                 }
                 text = text.replace(/\[SUGGESTION:.*?\]/g, '');
 
-                let html = marked.parse(text); 
+                let html = marked.parse(text);
 
                 html = html.replace(/\[ACTION:CONTACT_SUPPORT[^\]]*\]/g, `
                     <div class="mt-4 flex flex-col gap-2.5 w-full max-w-sm">
@@ -1273,128 +1461,35 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 });
 
                 const movieRegex = /\[ACTION:(SHOW_MOVIE|FAV_MOVIE):([^\]\|]+)[^\]]*\]/g;
-                const matches = [...html.matchAll(movieRegex)];
-                for (const match of matches) {
-                    const fullTag = match[0];
-                    const isFav = match[1] === 'FAV_MOVIE';
-                    const movieQuery = match[2].replace(/<[^>]*>?/gm, '').trim();
-                    try {
-                        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(movieQuery)}`);
-                        const data = await res.json();
-                        let movie = data.results?.find(m => m.media_type === 'movie' || m.media_type === 'tv');
-
-                        if (movie && (movie.backdrop_path || movie.poster_path)) {
-                            const title = movie.title || movie.name;
-                            const year = (movie.release_date || movie.first_air_date || '').substring(0, 4);
-                            const typeTag = movie.media_type === 'tv' ? 'Series' : 'Movie';
-                            const fullDesc = movie.overview || '';
-                            const shortDesc = fullDesc.length > 90 ? fullDesc.substring(0, 90) + '...' : fullDesc;
-                            
-                            const descEscaped = fullDesc.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
-                            const titleEscaped = title.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                            
-                            const favBadge = isFav ? `
-                                <div class="absolute -top-3 -right-2 bg-gradient-to-r from-[#ec4899] to-[#a855f7] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.5)] z-30 flex items-center gap-1.5 border border-white/20">
-                                    <i class="fas fa-heart animate-pulse"></i> ${currentLang === 'fr' ? 'Coup de Cœur' : 'Top Pick'}
-                                </div>
-                            ` : '';
-
-                            const cardClasses = isFav 
-                                ? "mt-6 rounded-xl bg-[#111116] border border-[#ec4899]/50 shadow-[0_0_25px_rgba(236,72,153,0.15)] w-full max-w-md relative overflow-visible" 
-                                : "mt-4 rounded-xl bg-[#111116] border border-white/10 shadow-2xl w-full max-w-md overflow-hidden relative";
-
-                            const topBorderColor = isFav ? "from-[#ec4899] to-[#a855f7]" : "from-[#a855f7] to-[#3b82f6]";
-                            const imageContainerClasses = isFav ? "h-48 w-full relative rounded-t-xl overflow-hidden" : "h-48 w-full relative";
-                            const btnPlayClasses = isFav ? "from-[#ec4899] to-[#d946ef] shadow-[0_0_15px_rgba(236,72,153,0.3)] border border-pink-500/50" : "from-[#a855f7] to-[#9333ea] shadow-[0_0_15px_rgba(168,85,247,0.3)] border border-purple-500/50";
-
-                            const movieCardHtml = `
-                                <div class="${cardClasses}">
-                                    ${favBadge}
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${topBorderColor} z-10 ${isFav ? 'rounded-t-xl' : ''}"></div>
-                                    <div class="${imageContainerClasses}">
-                                        <img src="${TMDB_IMAGE_BASE_URL}${movie.backdrop_path || movie.poster_path}" class="block w-full h-full object-cover" alt="Cover">
-                                        <div class="absolute inset-0 bg-gradient-to-t from-[#111116] to-transparent"></div>
-                                        <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-white text-[10px] font-black tracking-widest border border-white/10 flex items-center gap-1.5 shadow-lg">
-                                            <i class="fas fa-star text-yellow-500"></i> ${(movie.vote_average || 0).toFixed(1)}
-                                        </div>
-                                        <div class="absolute bottom-3 left-4 right-4">
-                                            <h4 class="text-white font-black text-[15px] truncate drop-shadow-md">${title} <span class="text-white/50 text-[11px] font-medium">(${year})</span></h4>
-                                            <span class="text-[9px] bg-white/10 backdrop-blur-sm border border-white/10 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider mt-1 inline-block">${typeTag}</span>
-                                        </div>
-                                    </div>
-                                    <div class="p-4 pt-2">
-                                        ${shortDesc ? `<p class="text-[11px] text-zinc-400 mb-2 leading-relaxed">${shortDesc}</p>` : ''}
-                                        ${fullDesc.length > 90 ? `<button onclick="window.showMovieFullDesc('${descEscaped}')" class="text-[10px] text-[#a855f7] font-bold mb-3 hover:text-purple-400 bg-transparent border-none cursor-pointer p-0 transition-colors">Read more →</button>` : ''}
-                                        <div class="grid grid-cols-3 gap-2 mt-2">
-                                            <button onclick="window.open('https://movie.levelup-ecosystem.com/', '_blank')" class="col-span-1 py-2.5 bg-gradient-to-r ${btnPlayClasses} hover:brightness-110 rounded-lg text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 outline-none">
-                                                <i class="fas fa-play text-[9px]"></i> Play
-                                            </button>
-                                            <button onclick="window.showMovieTrailer('${movie.id}', '${movie.media_type}')" class="col-span-1 py-2.5 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 rounded-lg text-red-400 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 border border-[#ef4444]/30 outline-none">
-                                                <i class="fab fa-youtube text-[11px]"></i> Trailer
-                                            </button>
-                                            <button onclick="window.showMovieSources('${movie.id}', '${movie.media_type}', '${titleEscaped}')" class="col-span-1 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/80 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 border border-white/10 outline-none">
-                                                <i class="fas fa-satellite-dish text-[9px]"></i> Sources
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                            html = html.replace(fullTag, movieCardHtml);
-                        } else {
-                            html = html.replace(fullTag, `<div class="mt-2 text-[11px] text-yellow-500 italic"><i class="fas fa-info-circle"></i> Visual not available, but you can search for it on LevelMovie.</div>`);
-                        }
-                    } catch (e) {
-                        html = html.replace(fullTag, '');
+                const movieMatches = [...html.matchAll(movieRegex)];
+                for (const m of movieMatches) {
+                    const fullTag = m[0];
+                    const isFav = m[1] === 'FAV_MOVIE';
+                    const movieQuery = m[2].replace(/<[^>]*>?/gm, '').trim();
+                    if (!ctx.cache.has(fullTag) && !ctx.fetching.has(fullTag)) {
+                        ctx.fetching.add(fullTag);
+                        ctx.cache.set(fullTag, skeletonCardHtml('movie'));
+                        fetchMovieCard(fullTag, m[1], movieQuery, isFav, ctx);
                     }
+                    html = html.replace(fullTag, ctx.cache.get(fullTag));
                 }
 
                 const musicRegex = /\[ACTION:SHOW_MUSIC:([^\]\|]+)[^\]]*\]/g;
                 const musicMatches = [...html.matchAll(musicRegex)];
-                for (const match of musicMatches) {
-                    const fullTag = match[0];
-                    const musicQuery = match[1].replace(/<[^>]*>?/gm, '').trim();
-                    try {
-                        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(musicQuery)}&media=music&limit=1&country=us`);
-                        const data = await res.json();
-                        if (data.results && data.results.length > 0) {
-                            const track = data.results[0];
-                            const artworkHigh = (track.artworkUrl100 || '').replace('100x100', '300x300');
-                            const appleMusicUrl = track.trackViewUrl || '';
-                            
-                            const musicCardHtml = `
-                                <div class="mt-4 rounded-xl bg-[#111116] border border-white/10 shadow-2xl w-full max-w-sm overflow-hidden relative">
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#ec4899] to-[#8b5cf6] z-10"></div>
-                                    <div class="p-3 flex gap-3.5 items-center">
-                                        ${artworkHigh ? `<img src="${artworkHigh}" class="w-16 h-16 rounded-xl object-cover shadow-lg flex-shrink-0 border border-white/5" alt="Artwork">` : `<div class="w-16 h-16 rounded-xl bg-[#ec4899]/20 flex items-center justify-center flex-shrink-0 border border-white/5"><i class="fas fa-music text-[#ec4899] text-xl"></i></div>`}
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="text-white font-black text-sm truncate drop-shadow-sm">${track.trackName || musicQuery}</h4>
-                                            <p class="text-zinc-400 text-[11px] truncate font-medium mt-0.5">${track.artistName || ''}</p>
-                                            <div class="flex gap-2 mt-2.5">
-                                                <button onclick="window.open('https://music.levelup-ecosystem.com/', '_blank')" class="flex-1 py-1.5 bg-gradient-to-r from-[#ec4899] to-[#d946ef] text-white rounded-lg text-[10px] font-black uppercase tracking-wider active:scale-95 flex items-center justify-center gap-1 transition-all hover:brightness-110 shadow-[0_0_10px_rgba(236,72,153,0.3)]"><i class="fas fa-play text-[8px]"></i> LevelMusic</button>
-                                                ${appleMusicUrl ? `<a href="${appleMusicUrl}" target="_blank" class="flex-1 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white/80 text-[10px] font-black uppercase tracking-wider active:scale-95 flex items-center justify-center gap-1 no-underline hover:bg-white/10"><i class="fab fa-apple text-[10px]"></i> Apple</a>` : ''}
-                                            </div>
-                                            ${track.previewUrl ? `
-                                            <div class="mt-3 w-full" style="color-scheme: dark;">
-                                                <audio controls class="w-full h-8 outline-none rounded bg-white/5" style="max-height: 35px;">
-                                                    <source src="${track.previewUrl}" type="audio/mp4">
-                                                </audio>
-                                            </div>` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                            html = html.replace(fullTag, musicCardHtml);
-                        } else {
-                            html = html.replace(fullTag, `<div class="mt-2 text-[11px] text-yellow-500 italic"><i class="fas fa-music"></i> No musical results found.</div>`);
-                        }
-                    } catch (e) {
-                        html = html.replace(fullTag, '');
+                for (const m of musicMatches) {
+                    const fullTag = m[0];
+                    const musicQuery = m[1].replace(/<[^>]*>?/gm, '').trim();
+                    if (!ctx.cache.has(fullTag) && !ctx.fetching.has(fullTag)) {
+                        ctx.fetching.add(fullTag);
+                        ctx.cache.set(fullTag, skeletonCardHtml('music'));
+                        fetchMusicCard(fullTag, musicQuery, ctx);
                     }
+                    html = html.replace(fullTag, ctx.cache.get(fullTag));
                 }
 
                 html = html.replace(/<p><div class="mt-4/g, '<div class="mt-4').replace(/<\/div><\/p>/g, '</div>');
-                
-                if (suggestions.length > 0) {
+
+                if (includeSuggestions && suggestions.length > 0) {
                     let pillsHtml = `<div class="suggestion-container flex flex-wrap gap-2 mt-5 pt-3 border-t border-white/10">`;
                     suggestions.forEach(sug => {
                         const escapedSug = sug.replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -1403,7 +1498,7 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     pillsHtml += `</div>`;
                     html += pillsHtml;
                 }
-                
+
                 html = html.replace(/\[ACTION:SOURCES:(.*?)\]/g, (match, sourcesStr) => {
                     const cleanSourcesStr = sourcesStr.replace(/<[^>]*>?/gm, '');
                     const escapedSources = cleanSourcesStr.replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -1445,8 +1540,15 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                                     let text = "";
                                     msg.parts.forEach(p => { if (p.text) text += p.text; });
                                     if (text.includes('[ACTION:') || text.includes('[SUGGESTION:')) {
-                                        const parsedHtml = await parseActionTags(text);
-                                        displayAIMessage(parsedHtml, false, true);
+                                        const wrap = document.createElement('div'); wrap.className = "flex flex-col gap-2 w-full group pl-1 overflow-hidden";
+                                        const contentEl = document.createElement('div');
+                                        contentEl.className = "prose prose-invert prose-slate text-[15px] max-w-full message-bubble leading-relaxed tracking-normal prose-p:my-3 prose-headings:font-bold prose-headings:text-white prose-strong:text-white prose-strong:font-bold break-words overflow-hidden";
+                                        wrap.appendChild(contentEl);
+                                        document.getElementById('conversationContainer').appendChild(wrap);
+                                        const historyCtx = createRenderContext(() => {
+                                            contentEl.innerHTML = sanitizeHTML(resolveActionTags(text, historyCtx, true));
+                                        });
+                                        contentEl.innerHTML = sanitizeHTML(resolveActionTags(text, historyCtx, true));
                                     } else {
                                         displayAIMessage(text, false, false);
                                     }
@@ -1496,165 +1598,80 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 const content = document.createElement('div'); 
                 content.className = "prose prose-invert prose-slate text-[15px] max-w-full message-bubble leading-relaxed tracking-normal prose-p:my-3 prose-headings:font-bold prose-headings:text-white prose-strong:text-white prose-strong:font-bold break-words overflow-hidden";
                 wrap.appendChild(content); document.getElementById('conversationContainer').appendChild(wrap);
-                
-                if (isRawHtml) {
-                    content.innerHTML = sanitizeHTML(textOrHtml);
-                    stopGeneration();
-                    document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
-                } else {
-                    if (animate) streamText(content, textOrHtml, () => {}); 
-                    else { content.innerHTML = sanitizeHTML(marked.parse(textOrHtml)); stopGeneration(); }
-                }
-            }
 
-            function streamText(container, text, callback) {
-                let i = 8; 
-                document.getElementById('aiTyping').classList.add('hidden'); 
-                container.innerHTML = sanitizeHTML(marked.parse(text.substring(0, i)));
-
-                if (typingInterval) clearInterval(typingInterval);
-                typingInterval = setInterval(() => {
-                    if (!isGenerating) { clearInterval(typingInterval); if(callback) callback(); return; }
-                    if (i < text.length) { 
-                        i += 12; 
-                        container.innerHTML = sanitizeHTML(marked.parse(text.substring(0, i))); 
-                        document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight; 
-                    } else { 
-                        container.innerHTML = sanitizeHTML(marked.parse(text)); 
-                        clearInterval(typingInterval); 
-                        document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight; 
-                        stopGeneration(); 
-                        if(callback) callback(); 
-                    }
-                }, 5);
+                document.getElementById('aiTyping').classList.add('hidden');
+                content.innerHTML = isRawHtml ? sanitizeHTML(textOrHtml) : sanitizeHTML(marked.parse(textOrHtml));
+                document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+                stopGeneration();
             }
 
             function stopGeneration() {
                 isGenerating = false; 
                 if (abortController) abortController.abort(); 
-                if (typingInterval) clearInterval(typingInterval);
-                if (smartTypingInterval) clearInterval(smartTypingInterval); 
                 const sendBtn = document.getElementById('sendBtn'); 
                 if (sendBtn) sendBtn.innerHTML = '<i class="fas fa-arrow-up text-base pointer-events-none"></i>';
                 document.getElementById('aiTyping').classList.add('hidden');
             }
 
-            function startSmartTyping(promptText, hasImage) {
-                const typingTextEl = document.getElementById('smartTypingText');
+            // ==========================================
+            // INDICATEUR DE STATUT - reflète l'état RÉEL de la génération
+            // (pas de phrases qui tournent au hasard : chaque texte correspond à
+            // une étape effectivement en cours : connexion, recherche web, réception...)
+            // ==========================================
+            function setStatusIcon(promptText, hasImage) {
                 const iconWrapper = document.getElementById('aiTypingIconWrapper');
-                if (!typingTextEl) return;
-                
+                if (!iconWrapper) return { isCrisis: false, isRealTime: false };
+
                 const isCrisisMessage = /danger|urgence|hôpital|hospital|suicide|mourir|police|ambulance|agress|au secours|help/i.test(promptText);
-                const isCrisis = isCrisisMessage || window.activeCrisisMode; 
-                
+                const isCrisis = isCrisisMessage || window.activeCrisisMode;
                 const isRealTime = /actu|news|meteo|météo|weather|aujourd'?hui|today|récent|recent|score|match|info|maintenant|now|temps r(?:é|e)el/i.test(promptText);
                 const isMovie = /film|movie|série|series|cinema|netflix|acteur|réalisateur/i.test(promptText);
                 const isAnime = /anime|manga|otaku|crunchyroll|shonen|naruto|one piece/i.test(promptText);
                 const isMusic = /music|musique|chanson|song|audio|playlist|spotify|apple/i.test(promptText);
                 const isGame = /jeu|game|jouer|playstation|xbox|nintendo|steam|esport/i.test(promptText);
-                
-                if (iconWrapper) {
-                    if (isCrisis) {
-                        iconWrapper.innerHTML = `
-                            <svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse">
-                                <path fill="#ef4444" d="M19 10h-5V5c0-1.1-.9-2-2-2s-2 .9-2 2v5H5c-1.1 0-2 .9-2 2s.9 2 2 2h5v5c0 1.1.9 2 2 2s2-.9 2-2v-5h5c1.1 0 2-.9 2-2s-.9-2-2-2z"/>
-                            </svg>
-                        `;
-                    } else if (isWebSearchEnabled || isRealTime) {
-                        iconWrapper.innerHTML = `
-                            <svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] animate-pulse">
-                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                            </svg>
-                        `;
-                    } else if (isAnime) {
-                        iconWrapper.innerHTML = `
-                            <svg viewBox="0 0 512 512" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse">
-                              <defs><linearGradient id="level-grad-anime" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ef4444" /><stop offset="100%" stop-color="#991b1b" /></linearGradient></defs>
-                              <g><path d="M 130 110 L 130 320 C 130 397.3 182.7 450 260 450 L 430 450" fill="none" stroke="url(#level-grad-anime)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" /><path d="M 230 180 C 230 156.9 255.3 142.5 275.3 154.1 L 405.3 229.1 C 425.3 240.6 425.3 269.4 405.3 280.9 L 275.3 355.9 C 255.3 367.5 230 353.1 230 330 Z" fill="url(#level-grad-anime)" /></g>
-                            </svg>
-                        `;
-                    } else if (isMovie) {
-                        iconWrapper.innerHTML = `
-                            <svg viewBox="0 0 512 512" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(236,72,153,0.6)] animate-pulse">
-                              <defs><linearGradient id="level-grad-movie" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a855f7" /><stop offset="100%" stop-color="#ec4899" /></linearGradient></defs>
-                              <g><path d="M 130 110 L 130 320 C 130 397.3 182.7 450 260 450 L 430 450" fill="none" stroke="url(#level-grad-movie)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" /><path d="M 230 180 C 230 156.9 255.3 142.5 275.3 154.1 L 405.3 229.1 C 425.3 240.6 425.3 269.4 405.3 280.9 L 275.3 355.9 C 255.3 367.5 230 353.1 230 330 Z" fill="url(#level-grad-movie)" /></g>
-                            </svg>
-                        `;
-                    } else if (hasImage) {
-                        iconWrapper.innerHTML = `<i class="fas fa-eye text-blue-400 text-[18px] drop-shadow-[0_0_8px_rgba(96,165,250,0.8)] animate-pulse"></i>`;
-                    } else if (isMusic) {
-                        iconWrapper.innerHTML = `
-                            <svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(74,139,255,0.6)] animate-pulse">
-                                <path fill="#4A8BFF" d="M20,3H9C8.4,3,8,3.4,8,4v11.1C7.5,14.4,6.8,14,6,14c-1.7,0-3,1.3-3,3s1.3,3,3,3s3-1.3,3-3V7h10v8.1c-0.5-0.7-1.2-1.1-2-1.1c-1.7,0-3,1.3-3,3s1.3,3,3,3s3-1.3,3-3V4C21,3.4,20.6,3,20,3z"/>
-                            </svg>
-                        `;
-                    } else if (isGame) {
-                        iconWrapper.innerHTML = `<i class="fas fa-gamepad text-emerald-400 text-[18px] drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></i>`;
-                    } else {
-                        iconWrapper.innerHTML = `<i class="fas fa-star text-[#a855f7] text-[18px] drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></i>`;
-                    }
+
+                if (isCrisis) {
+                    iconWrapper.innerHTML = `<svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse"><path fill="#ef4444" d="M19 10h-5V5c0-1.1-.9-2-2-2s-2 .9-2 2v5H5c-1.1 0-2 .9-2 2s.9 2 2 2h5v5c0 1.1.9 2 2 2s2-.9 2-2v-5h5c1.1 0 2-.9 2-2s-.9-2-2-2z"/></svg>`;
+                } else if (isWebSearchEnabled || isRealTime) {
+                    iconWrapper.innerHTML = `<svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] animate-pulse"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>`;
+                } else if (isAnime) {
+                    iconWrapper.innerHTML = `<svg viewBox="0 0 512 512" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse"><defs><linearGradient id="level-grad-anime" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ef4444" /><stop offset="100%" stop-color="#991b1b" /></linearGradient></defs><g><path d="M 130 110 L 130 320 C 130 397.3 182.7 450 260 450 L 430 450" fill="none" stroke="url(#level-grad-anime)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" /><path d="M 230 180 C 230 156.9 255.3 142.5 275.3 154.1 L 405.3 229.1 C 425.3 240.6 425.3 269.4 405.3 280.9 L 275.3 355.9 C 255.3 367.5 230 353.1 230 330 Z" fill="url(#level-grad-anime)" /></g></svg>`;
+                } else if (isMovie) {
+                    iconWrapper.innerHTML = `<svg viewBox="0 0 512 512" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(236,72,153,0.6)] animate-pulse"><defs><linearGradient id="level-grad-movie" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a855f7" /><stop offset="100%" stop-color="#ec4899" /></linearGradient></defs><g><path d="M 130 110 L 130 320 C 130 397.3 182.7 450 260 450 L 430 450" fill="none" stroke="url(#level-grad-movie)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" /><path d="M 230 180 C 230 156.9 255.3 142.5 275.3 154.1 L 405.3 229.1 C 425.3 240.6 425.3 269.4 405.3 280.9 L 275.3 355.9 C 255.3 367.5 230 353.1 230 330 Z" fill="url(#level-grad-movie)" /></g></svg>`;
+                } else if (hasImage) {
+                    iconWrapper.innerHTML = `<i class="fas fa-eye text-blue-400 text-[18px] drop-shadow-[0_0_8px_rgba(96,165,250,0.8)] animate-pulse"></i>`;
+                } else if (isMusic) {
+                    iconWrapper.innerHTML = `<svg viewBox="0 0 24 24" class="w-[18px] h-[18px] drop-shadow-[0_0_8px_rgba(74,139,255,0.6)] animate-pulse"><path fill="#4A8BFF" d="M20,3H9C8.4,3,8,3.4,8,4v11.1C7.5,14.4,6.8,14,6,14c-1.7,0-3,1.3-3,3s1.3,3,3,3s3-1.3,3-3V7h10v8.1c-0.5-0.7-1.2-1.1-2-1.1c-1.7,0-3,1.3-3,3s1.3,3,3,3s3-1.3,3-3V4C21,3.4,20.6,3,20,3z"/></svg>`;
+                } else if (isGame) {
+                    iconWrapper.innerHTML = `<i class="fas fa-gamepad text-emerald-400 text-[18px] drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></i>`;
+                } else {
+                    iconWrapper.innerHTML = `<i class="fas fa-star text-[#a855f7] text-[18px] drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></i>`;
                 }
 
-                const pools = {
-                    fr: {
-                        img: ["Analyse photographique...", "Identification des éléments visuels...", "Génération du rapport détaillé..."],
-                        web: ["Connexion au réseau mondial...", "Extraction des données en temps réel...", "Synthèse des sources d'actualité..."],
-                        anime: ["Connexion à LevelAnime...", "Recherche dans la base de données...", "Structuration des informations..."],
-                        movie: ["Connexion à LevelMovie...", "Analyse du catalogue cinématographique...", "Préparation des recommandations..."],
-                        music: ["Connexion à LevelMusic...", "Analyse des métadonnées audio...", "Génération de la sélection..."],
-                        game: ["Connexion au Game Hub...", "Récupération des données serveurs...", "Structuration de la réponse..."],
-                        crisis: ["Analyse de la situation d'urgence...", "Localisation des protocoles de sécurité...", "Préparation de l'assistance immédiate..."],
-                        general: ["Analyse de la requête...", "Traitement des données...", "Génération de la réponse..."]
-                    },
-                    en: {
-                        img: ["Photographic analysis...", "Identifying visual elements...", "Generating detailed report..."],
-                        web: ["Connecting to global network...", "Extracting real-time data...", "Synthesizing news sources..."],
-                        anime: ["Connecting to LevelAnime...", "Searching database...", "Structuring information..."],
-                        movie: ["Connecting to LevelMovie...", "Analyzing cinematic catalog...", "Preparing recommendations..."],
-                        music: ["Connecting to LevelMusic...", "Analyzing audio metadata...", "Generating selection..."],
-                        game: ["Connecting to Game Hub...", "Retrieving server data...", "Structuring response..."],
-                        crisis: ["Analyzing emergency situation...", "Locating safety protocols...", "Preparing immediate assistance..."],
-                        general: ["Analyzing request...", "Processing data...", "Generating response..."]
-                    }
-                };
+                let colorClass = "text-[#a855f7]/70";
+                if (isCrisis) colorClass = "text-red-500/90";
+                else if (hasImage) colorClass = "text-blue-400/80";
+                else if (isWebSearchEnabled || isRealTime) colorClass = "text-blue-400/80 text-shadow-glow";
+                else if (isAnime) colorClass = "text-red-500/80";
+                else if (isMovie) colorClass = "text-[#ec4899]/80";
+                else if (isMusic) colorClass = "text-[#4A8BFF]/80";
+                else if (isGame) colorClass = "text-emerald-400/80";
 
-                let selectedPool = pools[currentLang].general;
-                let colorClass = "text-[#a855f7]/70"; 
+                const typingTextEl = document.getElementById('smartTypingText');
+                if (typingTextEl) typingTextEl.className = `text-[10px] ${colorClass} font-bold uppercase tracking-widest pl-1 transition-opacity duration-300`;
 
-                if (isCrisis) { selectedPool = pools[currentLang].crisis; colorClass = "text-red-500/90"; }
-                else if (hasImage) { selectedPool = pools[currentLang].img; colorClass = "text-blue-400/80"; }
-                else if (isWebSearchEnabled || isRealTime) { selectedPool = pools[currentLang].web; colorClass = "text-blue-400/80 text-shadow-glow"; }
-                else if (isAnime) { selectedPool = pools[currentLang].anime; colorClass = "text-red-500/80"; }
-                else if (isMovie) { selectedPool = pools[currentLang].movie; colorClass = "text-[#ec4899]/80"; }
-                else if (isMusic) { selectedPool = pools[currentLang].music; colorClass = "text-[#4A8BFF]/80"; }
-                else if (isGame) { selectedPool = pools[currentLang].game; colorClass = "text-emerald-400/80"; }
+                return { isCrisis, isRealTime };
+            }
 
-                typingTextEl.className = `text-[10px] ${colorClass} font-bold uppercase tracking-widest pl-1 transition-opacity duration-300 opacity-0`;
-
-                let phrases = [...selectedPool];
-                phrases.push(currentLang === 'fr' ? "Finalisation..." : "Finalizing...");
-
-                let pIndex = 0;
+            // Met à jour le texte de statut avec le libellé RÉEL de l'étape en cours (pas de simulation).
+            function setStatusPhrase(text) {
+                const typingTextEl = document.getElementById('smartTypingText');
+                if (!typingTextEl) return;
                 typingTextEl.style.opacity = '0';
-                
                 setTimeout(() => {
-                    typingTextEl.innerText = phrases[pIndex];
+                    typingTextEl.innerText = text;
                     typingTextEl.style.opacity = '1';
-                }, 100);
-
-                if (smartTypingInterval) clearInterval(smartTypingInterval);
-                
-                smartTypingInterval = setInterval(() => {
-                    typingTextEl.style.opacity = '0';
-                    setTimeout(() => {
-                        pIndex = Math.min(pIndex + 1, phrases.length - 1); 
-                        typingTextEl.innerText = phrases[pIndex];
-                        typingTextEl.style.opacity = '1';
-                    }, 300); 
-                }, 2500); 
+                }, 150);
             }
 
             // MODIFICATION ICI: FONCTION POUR CACHER LES SUGGESTIONS
@@ -1743,8 +1760,27 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 document.getElementById('aiTyping').classList.remove('hidden'); document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
                 isGenerating = true; abortController = new AbortController();
                 document.getElementById('sendBtn').innerHTML = '<i class="fas fa-square text-base pointer-events-none text-red-500"></i>';
-                
-                startSmartTyping(val, hasImage);
+
+                setStatusIcon(val, hasImage);
+                setStatusPhrase(currentLang === 'fr' ? 'Connexion à l\u2019IA...' : 'Connecting to AI...');
+
+                // --- Cible d'affichage du message en cours de streaming ---
+                const wrap = document.createElement('div'); wrap.className = "flex flex-col gap-2 w-full group pl-1 overflow-hidden";
+                const contentEl = document.createElement('div');
+                contentEl.className = "prose prose-invert prose-slate text-[15px] max-w-full message-bubble leading-relaxed tracking-normal prose-p:my-3 prose-headings:font-bold prose-headings:text-white prose-strong:text-white prose-strong:font-bold break-words overflow-hidden";
+                wrap.appendChild(contentEl);
+
+                let rawBuffer = '';
+                let firstChunkReceived = false;
+                let generationDone = false;
+                const ctx = createRenderContext(() => renderNow());
+
+                function renderNow() {
+                    const textToRender = generationDone ? rawBuffer : getSafeStreamText(rawBuffer);
+                    const html = resolveActionTags(textToRender, ctx, generationDone);
+                    contentEl.innerHTML = sanitizeHTML(html);
+                    document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+                }
 
                 try {
                     const config = await fetchSystemConfig();
@@ -1784,32 +1820,49 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
 
                     if (isWebSearchEnabled || isRealTimeSearch) {
                         payload.tools = [{ "google_search": {} }];
+                        setStatusPhrase(currentLang === 'fr' ? 'Recherche web en temps réel...' : 'Searching the web in real time...');
                     }
 
-                    const result = await callGeminiAPI(payload, config.keys);
-                    
-                    if (result.error) {
+                    const result = await streamGeminiAPI(payload, config.keys, (delta) => {
+                        if (!firstChunkReceived) {
+                            firstChunkReceived = true;
+                            document.getElementById('aiTyping').classList.add('hidden');
+                            document.getElementById('conversationContainer').appendChild(wrap);
+                        }
+                        rawBuffer += delta;
+                        renderNow();
+                    }, abortController.signal);
+
+                    generationDone = true;
+
+                    if (result.error && !firstChunkReceived) {
                         document.getElementById('aiTyping').classList.add('hidden');
                         currentSessionMessages.pop(); 
                         saveHistory();
                         const politeError = currentLang === 'fr' 
                             ? "Je suis actuellement en train de synchroniser mes données avec l'écosystème. Pouvez-vous répéter votre demande dans un instant ?" 
                             : "I am currently syncing my data with the ecosystem. Could you repeat your request in a moment?";
-                        displayAIMessage(politeError, true, false);
+                        displayAIMessage(politeError, false, false);
                     } else {
-                        if (result.text.includes('[ACTION:') || result.text.includes('[SUGGESTION:')) {
-                            const parsedHtml = await parseActionTags(result.text);
-                            document.getElementById('aiTyping').classList.add('hidden');
-                            displayAIMessage(parsedHtml, false, true); 
-                        } else {
-                            document.getElementById('aiTyping').classList.add('hidden');
-                            displayAIMessage(result.text, true, false); 
-                        }
+                        renderNow();
+                        stopGeneration();
                         currentSessionMessages.push({ role: "model", parts: [{ text: result.text }] });
                         saveHistory();
                     }
                 } catch (e) {
-                    if (e.name === 'AbortError') { displayAIMessage("Generation interrupted.", false); stopGeneration(); return; }
+                    if (e.name === 'AbortError') {
+                        generationDone = true;
+                        if (firstChunkReceived && rawBuffer.trim()) {
+                            renderNow();
+                            currentSessionMessages.push({ role: "model", parts: [{ text: rawBuffer }] });
+                            saveHistory();
+                        } else {
+                            currentSessionMessages.pop();
+                            saveHistory();
+                        }
+                        stopGeneration();
+                        return;
+                    }
                     currentSessionMessages.pop();
                     saveHistory();
                     document.getElementById('aiTyping').classList.add('hidden'); stopGeneration();
@@ -1817,7 +1870,7 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     const politeError = currentLang === 'fr' 
                         ? "Je suis actuellement en train de synchroniser mes données avec l'écosystème. Pouvez-vous répéter votre demande dans un instant ?" 
                         : "I am currently syncing my data with the ecosystem. Could you repeat your request in a moment?";
-                    displayAIMessage(politeError, true, false);
+                    displayAIMessage(politeError, false, false);
                 }
             }
 
