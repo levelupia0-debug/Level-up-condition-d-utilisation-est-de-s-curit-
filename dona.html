@@ -1065,29 +1065,43 @@
                         const decoder = new TextDecoder();
                         let buffer = '';
 
+                        // Un événement SSE = un bloc de texte terminé par une ligne vide ("\n\n").
+                        // Gemini envoie parfois le JSON d'un même événement sur PLUSIEURS lignes
+                        // (JSON indenté), donc on ne peut pas se fier à une seule ligne "data:".
+                        // On reconstruit le JSON complet en retirant le préfixe "data:" de chaque
+                        // ligne qui le porte, et en gardant les lignes de continuation telles quelles.
+                        const processEvent = (rawEvent) => {
+                            const jsonStr = rawEvent
+                                .split('\n')
+                                .map(l => l.startsWith('data:') ? l.slice(5) : l)
+                                .join('\n')
+                                .trim();
+                            if (!jsonStr) return;
+                            try {
+                                const parsed = JSON.parse(jsonStr);
+                                const delta = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                                if (delta) {
+                                    fullText += delta;
+                                    receivedAny = true;
+                                    currentKeyIndex = keyIdx;
+                                    onChunk(delta);
+                                }
+                            } catch (e) { /* événement incomplet ou non-JSON, on ignore */ }
+                        };
+
                         while (true) {
                             const { done, value } = await reader.read();
                             if (done) break;
                             buffer += decoder.decode(value, { stream: true });
-                            const lines = buffer.split('\n');
-                            buffer = lines.pop();
-                            for (const line of lines) {
-                                const trimmed = line.trim();
-                                if (!trimmed.startsWith('data:')) continue;
-                                const jsonStr = trimmed.slice(5).trim();
-                                if (!jsonStr) continue;
-                                try {
-                                    const parsed = JSON.parse(jsonStr);
-                                    const delta = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
-                                    if (delta) {
-                                        fullText += delta;
-                                        receivedAny = true;
-                                        currentKeyIndex = keyIdx;
-                                        onChunk(delta);
-                                    }
-                                } catch (e) { /* fragment JSON incomplet, on ignore */ }
+
+                            let boundary;
+                            while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+                                const rawEvent = buffer.slice(0, boundary);
+                                buffer = buffer.slice(boundary + 2);
+                                if (rawEvent.trim()) processEvent(rawEvent);
                             }
                         }
+                        if (buffer.trim()) processEvent(buffer);
 
                         if (receivedAny) return { error: false, text: fullText };
                         continue;
@@ -1411,6 +1425,33 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 }
                 text = text.replace(/\[SUGGESTION:.*?\]/g, '');
 
+                // On extrait les tags film/musique du texte BRUT (avant marked.parse) et on les
+                // remplace par des jetons neutres (@@DONA_CARD_n@@). marked.parse peut échapper
+                // des caractères spéciaux (&, guillemets...) dans le HTML généré, ce qui cassait
+                // la détection quand elle se faisait après coup sur le HTML. Les jetons, eux,
+                // traversent marked.parse sans être altérés.
+                const cardTokens = [];
+                const registerCardTag = (fullTag, kind, query, isFav) => {
+                    if (!ctx.cache.has(fullTag) && !ctx.fetching.has(fullTag)) {
+                        ctx.fetching.add(fullTag);
+                        ctx.cache.set(fullTag, skeletonCardHtml(kind === 'SHOW_MUSIC' ? 'music' : 'movie'));
+                        if (kind === 'SHOW_MUSIC') fetchMusicCard(fullTag, query, ctx);
+                        else fetchMovieCard(fullTag, kind, query, isFav, ctx);
+                    }
+                    const token = `@@DONA_CARD_${cardTokens.length}@@`;
+                    cardTokens.push({ token, fullTag });
+                    return token;
+                };
+
+                text = text.replace(/\[ACTION:(SHOW_MOVIE|FAV_MOVIE):([^\]\|]+)[^\]]*\]/g, (fullTag, kind, rawQuery) => {
+                    const query = rawQuery.replace(/<[^>]*>?/gm, '').trim();
+                    return registerCardTag(fullTag, kind, query, kind === 'FAV_MOVIE');
+                });
+                text = text.replace(/\[ACTION:SHOW_MUSIC:([^\]\|]+)[^\]]*\]/g, (fullTag, rawQuery) => {
+                    const query = rawQuery.replace(/<[^>]*>?/gm, '').trim();
+                    return registerCardTag(fullTag, 'SHOW_MUSIC', query, false);
+                });
+
                 let html = marked.parse(text);
 
                 html = html.replace(/\[ACTION:CONTACT_SUPPORT[^\]]*\]/g, `
@@ -1460,32 +1501,12 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                     return `<a href="${url}" target="_blank" class="text-[#d8b4fe] hover:text-[#f3e8ff] font-bold underline underline-offset-4 decoration-[#a855f7]/50 hover:decoration-[#d8b4fe] transition-all inline-flex items-center gap-1 px-1">${actionText} ${name}<i class="fas ${icon} text-[9px] opacity-70 mb-[1px]"></i></a>`;
                 });
 
-                const movieRegex = /\[ACTION:(SHOW_MOVIE|FAV_MOVIE):([^\]\|]+)[^\]]*\]/g;
-                const movieMatches = [...html.matchAll(movieRegex)];
-                for (const m of movieMatches) {
-                    const fullTag = m[0];
-                    const isFav = m[1] === 'FAV_MOVIE';
-                    const movieQuery = m[2].replace(/<[^>]*>?/gm, '').trim();
-                    if (!ctx.cache.has(fullTag) && !ctx.fetching.has(fullTag)) {
-                        ctx.fetching.add(fullTag);
-                        ctx.cache.set(fullTag, skeletonCardHtml('movie'));
-                        fetchMovieCard(fullTag, m[1], movieQuery, isFav, ctx);
-                    }
-                    html = html.replace(fullTag, ctx.cache.get(fullTag));
-                }
-
-                const musicRegex = /\[ACTION:SHOW_MUSIC:([^\]\|]+)[^\]]*\]/g;
-                const musicMatches = [...html.matchAll(musicRegex)];
-                for (const m of musicMatches) {
-                    const fullTag = m[0];
-                    const musicQuery = m[1].replace(/<[^>]*>?/gm, '').trim();
-                    if (!ctx.cache.has(fullTag) && !ctx.fetching.has(fullTag)) {
-                        ctx.fetching.add(fullTag);
-                        ctx.cache.set(fullTag, skeletonCardHtml('music'));
-                        fetchMusicCard(fullTag, musicQuery, ctx);
-                    }
-                    html = html.replace(fullTag, ctx.cache.get(fullTag));
-                }
+                // Substitution des jetons par le HTML réel de la fiche (squelette tant que le
+                // fetch TMDB/iTunes n'est pas résolu, puis fiche finale une fois prête - ctx.cache
+                // est partagé entre tous les rendus successifs, donc la mise à jour est automatique).
+                cardTokens.forEach(({ token, fullTag }) => {
+                    html = html.replace(token, ctx.cache.get(fullTag) || '');
+                });
 
                 html = html.replace(/<p><div class="mt-4/g, '<div class="mt-4').replace(/<\/div><\/p>/g, '</div>');
 
@@ -1771,15 +1792,52 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                 wrap.appendChild(contentEl);
 
                 let rawBuffer = '';
+                let revealedLength = 0;
+                let revealTimer = null;
                 let firstChunkReceived = false;
+                let networkDone = false;
                 let generationDone = false;
                 const ctx = createRenderContext(() => renderNow());
 
                 function renderNow() {
-                    const textToRender = generationDone ? rawBuffer : getSafeStreamText(rawBuffer);
+                    const textToRender = generationDone ? rawBuffer : getSafeStreamText(rawBuffer.substring(0, revealedLength));
                     const html = resolveActionTags(textToRender, ctx, generationDone);
                     contentEl.innerHTML = sanitizeHTML(html);
                     document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+                }
+
+                // Effet "machine à écrire" branché sur les vraies données déjà reçues du réseau
+                // (rawBuffer). Ça ne fabrique rien : ça révèle ce qui est déjà arrivé, à un rythme
+                // fluide, au lieu d'un gros bloc de texte qui apparaît d'un coup à chaque paquet réseau.
+                function ensureRevealLoop() {
+                    if (revealTimer) return;
+                    revealTimer = setInterval(() => {
+                        if (revealedLength < rawBuffer.length) {
+                            const remaining = rawBuffer.length - revealedLength;
+                            const step = remaining > 300 ? Math.ceil(remaining / 8) : Math.max(2, Math.ceil(remaining / 15));
+                            revealedLength = Math.min(rawBuffer.length, revealedLength + step);
+                            renderNow();
+                        }
+                        if (revealedLength >= rawBuffer.length) {
+                            clearInterval(revealTimer);
+                            revealTimer = null;
+                            if (networkDone) finalizeGeneration();
+                        }
+                    }, 16);
+                }
+
+                let finalized = false;
+                function finalizeGeneration() {
+                    if (finalized) return;
+                    finalized = true;
+                    generationDone = true;
+                    revealedLength = rawBuffer.length;
+                    renderNow();
+                    stopGeneration();
+                    if (rawBuffer.trim()) {
+                        currentSessionMessages.push({ role: "model", parts: [{ text: rawBuffer }] });
+                        saveHistory();
+                    }
                 }
 
                 try {
@@ -1830,10 +1888,10 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                             document.getElementById('conversationContainer').appendChild(wrap);
                         }
                         rawBuffer += delta;
-                        renderNow();
+                        ensureRevealLoop();
                     }, abortController.signal);
 
-                    generationDone = true;
+                    networkDone = true;
 
                     if (result.error && !firstChunkReceived) {
                         document.getElementById('aiTyping').classList.add('hidden');
@@ -1843,26 +1901,25 @@ INCORRECT: [SUGGESTION:Veux-tu voir la bande-annonce ?]`;
                             ? "Je suis actuellement en train de synchroniser mes données avec l'écosystème. Pouvez-vous répéter votre demande dans un instant ?" 
                             : "I am currently syncing my data with the ecosystem. Could you repeat your request in a moment?";
                         displayAIMessage(politeError, false, false);
-                    } else {
-                        renderNow();
-                        stopGeneration();
-                        currentSessionMessages.push({ role: "model", parts: [{ text: result.text }] });
-                        saveHistory();
+                    } else if (revealedLength >= rawBuffer.length) {
+                        finalizeGeneration();
                     }
+                    // sinon : le reveal loop est toujours en train de rattraper le texte reçu,
+                    // il appellera finalizeGeneration() lui-même dès qu'il aura tout affiché.
                 } catch (e) {
                     if (e.name === 'AbortError') {
-                        generationDone = true;
+                        networkDone = true;
+                        if (revealTimer) { clearInterval(revealTimer); revealTimer = null; }
                         if (firstChunkReceived && rawBuffer.trim()) {
-                            renderNow();
-                            currentSessionMessages.push({ role: "model", parts: [{ text: rawBuffer }] });
-                            saveHistory();
+                            finalizeGeneration();
                         } else {
                             currentSessionMessages.pop();
                             saveHistory();
+                            stopGeneration();
                         }
-                        stopGeneration();
                         return;
                     }
+                    if (revealTimer) { clearInterval(revealTimer); revealTimer = null; }
                     currentSessionMessages.pop();
                     saveHistory();
                     document.getElementById('aiTyping').classList.add('hidden'); stopGeneration();
