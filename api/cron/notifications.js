@@ -5,7 +5,7 @@
 //   2. Relance "viens finir ton film" (contenu ouvert il y a 2-5 jours, jamais revenu depuis)
 //
 // Tourne sur VERCEL (pas Firebase Cloud Functions) via la config "crons" de vercel.json —
-// gratuit sur le plan Hobby. Utilise le même FIREBASE_SERVICE_ACCOUNT que /api/validate-key.js,
+// gratuit sur le plan Hobby. Utilise le même FIREBASE_SERVICE_ACCOUNT que /api/validate-key.js
 // donc aucune nouvelle variable d'environnement à ajouter si elle existe déjà.
 //
 // Vercel appelle cette route automatiquement à l'heure programmée dans vercel.json, avec un header
